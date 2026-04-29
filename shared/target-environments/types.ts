@@ -125,9 +125,9 @@ export type TActionMetadata = Partial<{
 }>
 
 /**
- * The base argument type for a target.
+ * The base parameter type for a target.
  */
-export type TBaseArg = {
+export type TBaseTargetParameter = {
   /**
    * The ID of the argument.
    */
@@ -203,9 +203,9 @@ export type TBaseArg = {
 }
 
 /**
- * The JSON representation of the base argument type for a target.
+ * The JSON representation of the base parameter type for a target.
  */
-export type TBaseArgJson = {
+export type TBaseTargetParameterJson = {
   /**
    * The ID of the argument.
    */

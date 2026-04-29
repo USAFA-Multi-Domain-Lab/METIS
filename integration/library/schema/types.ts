@@ -7,4 +7,4 @@ export type {
   TTargetScript,
 } from '../../../server/target-environments/schema/TargetSchema'
 
-export type { TTargetArgJson } from '../../../shared/target-environments/args/Arg'
+export type { TTargetParameterJson } from '../../../shared/target-environments/parameters/TargetParameter'

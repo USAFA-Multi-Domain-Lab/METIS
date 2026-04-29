@@ -2,8 +2,8 @@ import type {
   TargetSchema,
   TTargetScript,
 } from '@server/target-environments/schema/TargetSchema'
-import type { TTargetArg } from '@shared/target-environments/args/Arg'
-import { Arg } from '@shared/target-environments/args/Arg'
+import type { TTargetParameter } from '@shared/target-environments/parameters/TargetParameter'
+import { TargetParameter } from '@shared/target-environments/parameters/TargetParameter'
 import { Target } from '@shared/target-environments/targets/Target'
 import type { TTargetEnvExposedTarget } from './context/TargetEnvContext'
 import { ServerTargetEnvironment } from './ServerTargetEnvironment'
@@ -23,7 +23,7 @@ export class ServerTarget extends Target<TMetisServerComponents> {
     _id: string,
     name: string,
     description: string,
-    args: TTargetArg[] = [],
+    parameters: TTargetParameter[] = [],
     environment: ServerTargetEnvironment,
     /**
      * The function used to execute an effect on the target.
@@ -40,7 +40,7 @@ export class ServerTarget extends Target<TMetisServerComponents> {
      */
     public migrationRegistry: TargetMigrationRegistry,
   ) {
-    super(_id, name, description, args, environment)
+    super(_id, name, description, parameters, environment)
   }
 
   /**
@@ -81,7 +81,7 @@ export class ServerTarget extends Target<TMetisServerComponents> {
       schema._id,
       schema.name,
       schema.description,
-      Arg.fromJson(schema.args),
+      TargetParameter.fromJson(schema.parameters),
       environment,
       schema.script,
       path,

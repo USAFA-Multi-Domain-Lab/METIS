@@ -13,7 +13,7 @@ const Delay = new TargetSchema({
   name: 'Delay',
   description: '',
   script: async (context) => {
-    let args = context.effect.args
+    let args = context.effect.arguments
     let delayTimeSeconds = args[secondsArgId]
     let delayTimeMinutes = args[minutesArgId]
     let delayTimeHours = args[hoursArgId]

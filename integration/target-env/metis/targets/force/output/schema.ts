@@ -9,7 +9,7 @@ const Output = new TargetSchema({
   script: async (context) => {
     // Extract the effect and its arguments from the context.
     const { effect } = context
-    const { forceMetadata, message } = effect.args
+    const { forceMetadata, message } = effect.arguments
     const { forceKey } = forceMetadata as TForceMetadata
     let to = forceKey ? { forceKey } : undefined
 

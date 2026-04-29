@@ -1,4 +1,4 @@
-import type { TTargetArgJson } from '@shared/target-environments/args/Arg'
+import type { TTargetParameterJson } from '@shared/target-environments/parameters/TargetParameter'
 import type { TTargetJson } from '@shared/target-environments/targets/Target'
 import type { TTargetScriptExposedContext } from '../context/TargetScriptContext'
 import { TargetMigrationRegistry } from '../TargetMigrationRegistry'
@@ -56,11 +56,11 @@ export class TargetSchema {
   }
 
   /**
-   * The arguments used to create the effect on the target.
+   * The parameters used to create the effect on the target.
    */
-  private _args: TTargetArgJson[]
-  public get args(): TTargetArgJson[] {
-    return this._args
+  private _parameters: TTargetParameterJson[]
+  public get parameters(): TTargetParameterJson[] {
+    return this._parameters
   }
 
   /**
@@ -90,7 +90,7 @@ export class TargetSchema {
     this._name = options.name
     this._description = options.description
     this._script = options.script
-    this._args = options.args
+    this._parameters = options.parameters
     this.migrationRegistry = options.migrations ?? new TargetMigrationRegistry()
   }
 }

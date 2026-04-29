@@ -82,7 +82,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
       this.host.generateEffectOrder(this.trigger as never),
       this.description,
       context,
-      this.args,
+      this.arguments,
       localKey,
     )
   }
@@ -126,7 +126,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
           return this.sourceMission
         },
       },
-      ClientEffect.DEFAULT_SESSION_PROPERTIES.args,
+      ClientEffect.DEFAULT_SESSION_PROPERTIES.arguments,
       mission.generateEffectKey(),
     )
   }
@@ -170,7 +170,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
           return this.sourceAction
         },
       },
-      ClientEffect.DEFAULT_EXEC_PROPERTIES.args,
+      ClientEffect.DEFAULT_EXEC_PROPERTIES.arguments,
       action.generateEffectKey(),
     )
   }
@@ -209,7 +209,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
           return sourceMission
         },
       },
-      json.args,
+      json.arguments,
       json.localKey,
     )
   }
@@ -248,7 +248,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
           return this.sourceAction
         },
       },
-      json.args,
+      json.arguments,
       json.localKey,
     )
   }

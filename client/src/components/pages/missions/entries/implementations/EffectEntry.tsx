@@ -13,7 +13,7 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailLocked } from '../../../../content/form/DetailLocked'
 import { DetailString } from '../../../../content/form/DetailString'
-import ArgEntry from '../../target-effects/args/ArgEntry'
+import TargetParameterEntry from '../../target-effects/parameters/TargetParameterEntry'
 import Entry from '../Entry'
 
 /**
@@ -30,13 +30,13 @@ export default function EffectEntry<TType extends TEffectType>({
   )
   const effectState = useObjectFormSync(
     effect,
-    ['name', 'trigger', 'description', 'args'],
+    ['name', 'trigger', 'description', 'arguments'],
     { onChange: () => onChange(effect) },
   )
   const [name, setName] = effectState.name
   const [trigger, setTrigger] = effectState.trigger
   const [description, setDescription] = effectState.description
-  const [effectArgs, setEffectArgs] = effectState.args
+  const [targetArguments, setTargetArguments] = effectState.arguments
   const svgEngine = useButtonSvgEngine({
     elements: [
       {
@@ -107,10 +107,10 @@ export default function EffectEntry<TType extends TEffectType>({
         value={target?.name ?? 'No target selected.'}
         disabled={viewMode === 'preview'}
       />
-      <ArgEntry
+      <TargetParameterEntry
         effect={effect}
-        effectArgs={effectArgs}
-        setEffectArgs={setEffectArgs}
+        targetArguments={targetArguments}
+        setTargetArguments={setTargetArguments}
       />
     </Entry>
   )

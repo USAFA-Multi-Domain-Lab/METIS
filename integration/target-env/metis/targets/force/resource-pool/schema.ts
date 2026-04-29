@@ -13,7 +13,7 @@ const ResourcePool = new TargetSchema({
   script: async (context) => {
     // Extract the effect and its arguments from the context.
     const { effect } = context
-    const { operation, amount, poolMetadata } = effect.args
+    const { operation, amount, poolMetadata } = effect.arguments
     const { forceKey, poolKey } = poolMetadata as TPoolMetadata
 
     // Set the error message.

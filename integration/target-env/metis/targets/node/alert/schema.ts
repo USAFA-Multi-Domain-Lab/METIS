@@ -102,9 +102,9 @@ const NodeAlert = new TargetSchema({
   name: 'Node Alert',
   description: 'Adds an alert to a node.',
   script: async (context) => {
-    let nodeMetadata: TNodeMetadata = context.effect.args.nodeMetadata
-    let message = context.effect.args.message
-    let severityLevel = context.effect.args.severityLevel
+    let nodeMetadata: TNodeMetadata = context.effect.arguments.nodeMetadata
+    let message = context.effect.arguments.message
+    let severityLevel = context.effect.arguments.severityLevel
     let { forceKey, nodeKey } = nodeMetadata
     context.addNodeAlert(message, severityLevel, { forceKey, nodeKey })
   },

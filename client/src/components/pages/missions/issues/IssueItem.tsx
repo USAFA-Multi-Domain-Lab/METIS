@@ -71,11 +71,11 @@ export default function IssueItem({
         // Call the API to migrate the effect arguments.
         setPendingFix(true)
         let results =
-          await ClientTargetEnvironment.$migrateEffectArgs(component)
+          await ClientTargetEnvironment.$migrateTargetArguments(component)
 
         // Store the migrated data in the component.
         component.targetEnvironmentVersion = results.version
-        component.args = results.data
+        component.arguments = results.data
 
         onChange(component)
         setCheckForIssues(true)

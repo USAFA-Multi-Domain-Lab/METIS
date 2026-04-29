@@ -45,9 +45,9 @@ declare global {
 
   // Forward type exports:
 
-  export type TBaseArg = TargetEnvTypes.TBaseArg
-  export type TBaseArgJson = TargetEnvTypes.TBaseArgJson
-  export type TTargetArgJson = TargetEnvTypes.TTargetArgJson
+  export type TBaseTargetParameter = TargetEnvTypes.TBaseTargetParameter
+  export type TBaseTargetParameterJson = TargetEnvTypes.TBaseTargetParameterJson
+  export type TTargetParameterJson = TargetEnvTypes.TTargetParameterJson
   export type TForceMetadata = TargetEnvTypes.TForceMetadata
   export type TPoolMetadata = TargetEnvTypes.TPoolMetadata
   export type TNodeMetadata = TargetEnvTypes.TNodeMetadata

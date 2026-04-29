@@ -106,7 +106,7 @@ export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientCompo
     })
   }
 
-  public static async $migrateEffectArgs(
+  public static async $migrateTargetArguments(
     effect: ClientEffect,
   ): Promise<TEffectMigrationResult> {
     try {

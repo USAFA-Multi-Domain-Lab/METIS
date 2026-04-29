@@ -12,7 +12,7 @@ const ResourceCostMod = new TargetSchema({
   script: async (context) => {
     // Gather details.
     const { actionMetadata, resourceMetadata, resourceCost } =
-      context.effect.args
+      context.effect.arguments
     const { forceKey, nodeKey, actionKey } = actionMetadata as TActionMetadata
     const { resourceId } = resourceMetadata as Required<TResourceMetadata>
 

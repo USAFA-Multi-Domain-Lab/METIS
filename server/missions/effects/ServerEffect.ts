@@ -13,8 +13,8 @@ import type {
   TEffectType,
 } from '@shared/missions/effects/Effect'
 import { Effect } from '@shared/missions/effects/Effect'
-import { ForceArg } from '@shared/target-environments/args/mission-component/ForceArg'
-import { NodeArg } from '@shared/target-environments/args/mission-component/NodeArg'
+import { ForceTargetParameter } from '@shared/target-environments/parameters/mission-component/ForceTargetParameter'
+import { NodeTargetParameter } from '@shared/target-environments/parameters/mission-component/NodeTargetParameter'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import type { ServerMissionAction } from '../actions/ServerMissionAction'
 import type { ServerMission } from '../ServerMission'
@@ -47,16 +47,16 @@ export class ServerEffect<
    * @param args The arguments to extract the necessary properties from.
    * @returns The modified arguments.
    */
-  public argsToTargetEnvContext(args: TAnyObject): TAnyObject {
+  public argumentsToTargetEnvContext(args: TAnyObject): TAnyObject {
     // Copy the arguments.
     let argsCopy = structuredClone(args)
 
     Object.entries(argsCopy).forEach(([key, value]) => {
-      if (value[ForceArg.FORCE_NAME] !== undefined) {
-        delete argsCopy[key][ForceArg.FORCE_NAME]
+      if (value[ForceTargetParameter.FORCE_NAME] !== undefined) {
+        delete argsCopy[key][ForceTargetParameter.FORCE_NAME]
       }
-      if (value[NodeArg.NODE_NAME] !== undefined) {
-        delete argsCopy[key][NodeArg.NODE_NAME]
+      if (value[NodeTargetParameter.NODE_NAME] !== undefined) {
+        delete argsCopy[key][NodeTargetParameter.NODE_NAME]
       }
     })
 
@@ -100,7 +100,7 @@ export class ServerEffect<
         return self.environment ? self.environment.toTargetEnvContext() : null
       },
       get args() {
-        return self.argsToTargetEnvContext(self.args)
+        return self.argumentsToTargetEnvContext(self.arguments)
       },
     }
   }
@@ -121,7 +121,7 @@ export class ServerEffect<
       trigger: self.trigger,
       description: self.description,
       order: self.order,
-      args: structuredClone(self.args),
+      arguments: structuredClone(self.arguments),
       versionCursor: this.targetEnvironmentVersion,
       get mission() {
         return self.mission.toTargetEnvContext()
@@ -147,7 +147,7 @@ export class ServerEffect<
       get result() {
         return {
           version: this.versionCursor,
-          data: structuredClone(this.args),
+          data: structuredClone(this.arguments),
         }
       },
     }
@@ -194,7 +194,7 @@ export class ServerEffect<
           return this.sourceMission
         },
       },
-      ServerEffect.DEFAULT_SESSION_PROPERTIES.args,
+      ServerEffect.DEFAULT_SESSION_PROPERTIES.arguments,
       mission.generateEffectKey(),
     )
   }
@@ -238,7 +238,7 @@ export class ServerEffect<
           return this.sourceAction
         },
       },
-      ServerEffect.DEFAULT_EXEC_PROPERTIES.args,
+      ServerEffect.DEFAULT_EXEC_PROPERTIES.arguments,
       action.generateEffectKey(),
     )
   }
@@ -277,7 +277,7 @@ export class ServerEffect<
           return this.sourceMission
         },
       },
-      json.args,
+      json.arguments,
       json.localKey,
     )
   }
@@ -316,7 +316,7 @@ export class ServerEffect<
           return this.sourceAction
         },
       },
-      json.args,
+      json.arguments,
       json.localKey,
     )
   }

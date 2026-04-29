@@ -2,22 +2,22 @@ import { afterEach, beforeEach, describe, expect, test } from '@jest/globals'
 import { Effect } from '@shared/missions/effects/Effect'
 import { Mission } from '@shared/missions/Mission'
 import { MissionPrototype } from '@shared/missions/nodes/MissionPrototype'
-import type { TBooleanArg } from '@shared/target-environments/args/BooleanArg'
-import type { TDropdownArg } from '@shared/target-environments/args/DropdownArg'
-import type { TLargeStringArg } from '@shared/target-environments/args/LargeStringArg'
-import { LargeStringArg } from '@shared/target-environments/args/LargeStringArg'
-import type { TMissionComponentArg } from '@shared/target-environments/args/mission-component/MissionComponentArg'
-import { MissionComponentArg } from '@shared/target-environments/args/mission-component/MissionComponentArg'
-import type { TNumberArg } from '@shared/target-environments/args/NumberArg'
-import type { TStringArg } from '@shared/target-environments/args/StringArg'
-import { StringArg } from '@shared/target-environments/args/StringArg'
+import type { TBooleanTargetParameter } from '@shared/target-environments/parameters/BooleanTargetParameter'
+import type { TDropdownTargetParameter } from '@shared/target-environments/parameters/DropdownTargetParameter'
+import type { TLargeStringTargetParameter } from '@shared/target-environments/parameters/LargeStringTargetParameter'
+import { LargeStringTargetParameter } from '@shared/target-environments/parameters/LargeStringTargetParameter'
+import type { TMissionComponentTargetParameter } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
+import { MissionComponentTargetParameter } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
+import type { TNumberTargetParameter } from '@shared/target-environments/parameters/NumberTargetParameter'
+import type { TStringTargetParameter } from '@shared/target-environments/parameters/StringTargetParameter'
+import { StringTargetParameter } from '@shared/target-environments/parameters/StringTargetParameter'
 import { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
 import { TargetEnvRegistry } from '@shared/target-environments/TargetEnvRegistry'
 import { Target } from '@shared/target-environments/targets/Target'
 import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 
-let ACTIVE_REGISTRY: TargetEnvRegistry
+let activeRegistry: TargetEnvRegistry
 
 function createExecutionContext(
   mission: TestMission,
@@ -54,11 +54,11 @@ function createExecutionContext(
 
 describe('Effect.additionalIssues', () => {
   beforeEach(() => {
-    ACTIVE_REGISTRY = new TargetEnvRegistry()
+    activeRegistry = new TargetEnvRegistry()
   })
 
   afterEach(() => {
-    ACTIVE_REGISTRY.clear()
+    activeRegistry.clear()
   })
 
   test('returns a general issue when the target environment or target cannot be found', () => {
@@ -71,7 +71,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'missing-target',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {},
+      arguments: {},
     })
 
     expect(effect.issues).toHaveLength(1)
@@ -107,7 +107,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {},
+      arguments: {},
     })
 
     expect(effect.issues).toHaveLength(1)
@@ -143,7 +143,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         unknownArgId: 'some value',
       },
     })
@@ -155,7 +155,7 @@ describe('Effect.additionalIssues', () => {
   })
 
   test('returns a general issue when a required argument exists but has no value', () => {
-    let requiredArg: TStringArg = {
+    let requiredArg: TStringTargetParameter = {
       _id: 'arg-1',
       name: 'Arg 1',
       required: true,
@@ -183,7 +183,7 @@ describe('Effect.additionalIssues', () => {
 
     environment.targets = [target]
 
-    let args: TAnyObject = {
+    let targetArguments: TAnyObject = {
       'arg-1': undefined,
     }
 
@@ -193,7 +193,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args,
+      arguments: targetArguments,
     })
 
     expect(effect.issues).toHaveLength(1)
@@ -201,7 +201,7 @@ describe('Effect.additionalIssues', () => {
   })
 
   test('returns a general issue when a boolean argument exists but has no value', () => {
-    let toggleArg: TBooleanArg = {
+    let toggleArg: TBooleanTargetParameter = {
       _id: 'toggle',
       name: 'Toggle',
       groupingId: 'group-1',
@@ -233,7 +233,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         toggle: undefined,
       },
     })
@@ -244,7 +244,7 @@ describe('Effect.additionalIssues', () => {
   })
 
   test('returns a general issue when a boolean argument is missing from effect args', () => {
-    let toggleArg: TBooleanArg = {
+    let toggleArg: TBooleanTargetParameter = {
       _id: 'toggle',
       name: 'Toggle',
       groupingId: 'group-1',
@@ -276,7 +276,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {},
+      arguments: {},
     })
 
     expect(effect.issues).toHaveLength(1)
@@ -286,7 +286,7 @@ describe('Effect.additionalIssues', () => {
   })
 
   test('returns a general issue when a required target argument is missing from effect args', () => {
-    let requiredArg: TStringArg = {
+    let requiredArg: TStringTargetParameter = {
       _id: 'arg-1',
       name: 'Arg 1',
       required: true,
@@ -320,7 +320,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {},
+      arguments: {},
     })
 
     expect(effect.issues).toHaveLength(1)
@@ -354,7 +354,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: (Effect as any).LEGACY_INFER_ENV_ID,
       targetEnvironmentVersion: '1.0.0',
-      args: {},
+      arguments: {},
     })
 
     expect(effect.issues).toHaveLength(1)
@@ -408,7 +408,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: Effect.LEGACY_INFER_ENV_ID,
       targetEnvironmentVersion: '1.0.0',
-      args: {},
+      arguments: {},
     })
 
     expect(effect.issues).toHaveLength(1)
@@ -419,13 +419,14 @@ describe('Effect.additionalIssues', () => {
   })
 
   test('returns a general issue when the effect targets a force that cannot be found', () => {
-    let forceArg: TMissionComponentArg = MissionComponentArg.fromJson({
-      _id: 'forceRef',
-      name: 'Force',
-      groupingId: 'group-1',
-      type: 'force',
-      required: true,
-    })
+    let forceArg: TMissionComponentTargetParameter =
+      MissionComponentTargetParameter.fromJson({
+        _id: 'forceRef',
+        name: 'Force',
+        groupingId: 'group-1',
+        type: 'force',
+        required: true,
+      })
 
     let environment = new TestTargetEnvironment(
       'env-1',
@@ -452,7 +453,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         forceRef: {
           forceKey: 'force-1',
           forceName: 'Force 1',
@@ -468,13 +469,14 @@ describe('Effect.additionalIssues', () => {
   })
 
   test("returns a general issue when a required force argument is 'self' but the effect has no source force", () => {
-    let forceArg: TMissionComponentArg = MissionComponentArg.fromJson({
-      _id: 'forceRef',
-      name: 'Force',
-      groupingId: 'group-1',
-      type: 'force',
-      required: true,
-    })
+    let forceArg: TMissionComponentTargetParameter =
+      MissionComponentTargetParameter.fromJson({
+        _id: 'forceRef',
+        name: 'Force',
+        groupingId: 'group-1',
+        type: 'force',
+        required: true,
+      })
 
     let environment = new TestTargetEnvironment(
       'env-1',
@@ -501,7 +503,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         forceRef: {
           forceKey: 'self',
           forceName: '(self)',
@@ -517,13 +519,14 @@ describe('Effect.additionalIssues', () => {
   })
 
   test("does not return an issue when a required force argument is 'self' and the effect has a source force", () => {
-    let forceArg: TMissionComponentArg = MissionComponentArg.fromJson({
-      _id: 'forceRef',
-      name: 'Force',
-      groupingId: 'group-1',
-      type: 'force',
-      required: true,
-    })
+    let forceArg: TMissionComponentTargetParameter =
+      MissionComponentTargetParameter.fromJson({
+        _id: 'forceRef',
+        name: 'Force',
+        groupingId: 'group-1',
+        type: 'force',
+        required: true,
+      })
 
     let environment = new TestTargetEnvironment(
       'env-1',
@@ -565,7 +568,7 @@ describe('Effect.additionalIssues', () => {
         targetId: 'target-1',
         environmentId: 'env-1',
         targetEnvironmentVersion: '1.0.0',
-        args: {
+        arguments: {
           forceRef: {
             forceKey: 'self',
             forceName: '(self)',
@@ -579,13 +582,14 @@ describe('Effect.additionalIssues', () => {
   })
 
   test('returns a general issue when the effect targets a node that cannot be found', () => {
-    let nodeArg: TMissionComponentArg = MissionComponentArg.fromJson({
-      _id: 'nodeRef',
-      name: 'Node',
-      groupingId: 'group-1',
-      type: 'node',
-      required: true,
-    })
+    let nodeArg: TMissionComponentTargetParameter =
+      MissionComponentTargetParameter.fromJson({
+        _id: 'nodeRef',
+        name: 'Node',
+        groupingId: 'group-1',
+        type: 'node',
+        required: true,
+      })
 
     let environment = new TestTargetEnvironment(
       'env-1',
@@ -618,7 +622,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         nodeRef: {
           forceKey: 'force-1',
           forceName: 'Force 1',
@@ -636,13 +640,14 @@ describe('Effect.additionalIssues', () => {
   })
 
   test("does not return an issue when a required node argument is 'self' and the effect has a source force and node", () => {
-    let nodeArg: TMissionComponentArg = MissionComponentArg.fromJson({
-      _id: 'nodeRef',
-      name: 'Node',
-      groupingId: 'group-1',
-      type: 'node',
-      required: true,
-    })
+    let nodeArg: TMissionComponentTargetParameter =
+      MissionComponentTargetParameter.fromJson({
+        _id: 'nodeRef',
+        name: 'Node',
+        groupingId: 'group-1',
+        type: 'node',
+        required: true,
+      })
 
     let environment = new TestTargetEnvironment(
       'env-1',
@@ -684,7 +689,7 @@ describe('Effect.additionalIssues', () => {
         targetId: 'target-1',
         environmentId: 'env-1',
         targetEnvironmentVersion: '1.0.0',
-        args: {
+        arguments: {
           nodeRef: {
             forceKey: 'self',
             forceName: '(self)',
@@ -700,13 +705,14 @@ describe('Effect.additionalIssues', () => {
   })
 
   test("returns a general issue when a required node argument is 'self' but the effect has no source node", () => {
-    let nodeArg: TMissionComponentArg = MissionComponentArg.fromJson({
-      _id: 'nodeRef',
-      name: 'Node',
-      groupingId: 'group-1',
-      type: 'node',
-      required: true,
-    })
+    let nodeArg: TMissionComponentTargetParameter =
+      MissionComponentTargetParameter.fromJson({
+        _id: 'nodeRef',
+        name: 'Node',
+        groupingId: 'group-1',
+        type: 'node',
+        required: true,
+      })
 
     let environment = new TestTargetEnvironment(
       'env-1',
@@ -750,7 +756,7 @@ describe('Effect.additionalIssues', () => {
         targetId: 'target-1',
         environmentId: 'env-1',
         targetEnvironmentVersion: '1.0.0',
-        args: {
+        arguments: {
           nodeRef: {
             forceKey: 'self',
             forceName: '(self)',
@@ -770,12 +776,13 @@ describe('Effect.additionalIssues', () => {
   })
 
   test('returns a general issue when the effect targets an action that cannot be found', () => {
-    let actionArg: TMissionComponentArg = MissionComponentArg.fromJson({
-      _id: 'actionRef',
-      name: 'Action',
-      type: 'action',
-      required: true,
-    })
+    let actionArg: TMissionComponentTargetParameter =
+      MissionComponentTargetParameter.fromJson({
+        _id: 'actionRef',
+        name: 'Action',
+        type: 'action',
+        required: true,
+      })
 
     let environment = new TestTargetEnvironment(
       'env-1',
@@ -811,7 +818,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         actionRef: {
           forceKey: 'force-1',
           forceName: 'Force 1',
@@ -831,12 +838,13 @@ describe('Effect.additionalIssues', () => {
   })
 
   test("does not return an issue when a required action argument is 'self' and the effect has a source force, node, and action", () => {
-    let actionArg: TMissionComponentArg = MissionComponentArg.fromJson({
-      _id: 'actionRef',
-      name: 'Action',
-      type: 'action',
-      required: true,
-    })
+    let actionArg: TMissionComponentTargetParameter =
+      MissionComponentTargetParameter.fromJson({
+        _id: 'actionRef',
+        name: 'Action',
+        type: 'action',
+        required: true,
+      })
 
     let environment = new TestTargetEnvironment(
       'env-1',
@@ -878,7 +886,7 @@ describe('Effect.additionalIssues', () => {
         targetId: 'target-1',
         environmentId: 'env-1',
         targetEnvironmentVersion: '1.0.0',
-        args: {
+        arguments: {
           actionRef: {
             forceKey: 'self',
             forceName: '(self)',
@@ -896,13 +904,14 @@ describe('Effect.additionalIssues', () => {
   })
 
   test('returns a general issue when the effect targets a file that cannot be found', () => {
-    let fileArg: TMissionComponentArg = MissionComponentArg.fromJson({
-      _id: 'fileRef',
-      name: 'File',
-      groupingId: 'group-1',
-      type: 'file',
-      required: true,
-    })
+    let fileArg: TMissionComponentTargetParameter =
+      MissionComponentTargetParameter.fromJson({
+        _id: 'fileRef',
+        name: 'File',
+        groupingId: 'group-1',
+        type: 'file',
+        required: true,
+      })
 
     let environment = new TestTargetEnvironment(
       'env-1',
@@ -929,7 +938,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         fileRef: {
           fileId: 'file-1',
           fileName: 'File 1',
@@ -945,13 +954,14 @@ describe('Effect.additionalIssues', () => {
   })
 
   test('does not return an issue when the effect targets a file that exists', () => {
-    let fileArg: TMissionComponentArg = MissionComponentArg.fromJson({
-      _id: 'fileRef',
-      name: 'File',
-      groupingId: 'group-1',
-      type: 'file',
-      required: true,
-    })
+    let fileArg: TMissionComponentTargetParameter =
+      MissionComponentTargetParameter.fromJson({
+        _id: 'fileRef',
+        name: 'File',
+        groupingId: 'group-1',
+        type: 'file',
+        required: true,
+      })
 
     let environment = new TestTargetEnvironment(
       'env-1',
@@ -984,7 +994,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         fileRef: {
           fileId: 'file-1',
           fileName: 'File 1',
@@ -996,15 +1006,15 @@ describe('Effect.additionalIssues', () => {
   })
 
   test('does not return an issue when dependencies are not met and a dependent required argument is missing from effect args', () => {
-    let toggleArg: TBooleanArg = {
+    let toggleArg: TBooleanTargetParameter = {
       _id: 'toggle',
       name: 'Toggle',
       groupingId: 'group-1',
       type: 'boolean',
     }
 
-    let dependentArg: TStringArg = {
-      ...StringArg.fromJson({
+    let dependentArg: TStringTargetParameter = {
+      ...StringTargetParameter.fromJson({
         _id: 'dependent',
         name: 'Dependent',
         required: true,
@@ -1040,7 +1050,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         toggle: false,
       },
     })
@@ -1049,15 +1059,15 @@ describe('Effect.additionalIssues', () => {
   })
 
   test('returns a general issue when dependencies are met and a dependent required argument is missing from effect args', () => {
-    let toggleArg: TBooleanArg = {
+    let toggleArg: TBooleanTargetParameter = {
       _id: 'toggle',
       name: 'Toggle',
       groupingId: 'group-1',
       type: 'boolean',
     }
 
-    let dependentArg: TStringArg = {
-      ...StringArg.fromJson({
+    let dependentArg: TStringTargetParameter = {
+      ...StringTargetParameter.fromJson({
         _id: 'dependent',
         name: 'Dependent',
         required: true,
@@ -1093,7 +1103,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         toggle: true,
       },
     })
@@ -1105,15 +1115,15 @@ describe('Effect.additionalIssues', () => {
   })
 
   test("returns a general issue when an argument's dependencies are not met but the argument has a value", () => {
-    let toggleArg: TBooleanArg = {
+    let toggleArg: TBooleanTargetParameter = {
       _id: 'toggle',
       name: 'Toggle',
       groupingId: 'group-1',
       type: 'boolean',
     }
 
-    let dependentArg: TStringArg = {
-      ...StringArg.fromJson({
+    let dependentArg: TStringTargetParameter = {
+      ...StringTargetParameter.fromJson({
         _id: 'dependent',
         name: 'Dependent',
         required: true,
@@ -1149,7 +1159,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         toggle: false,
         dependent: 'value that should not exist',
       },
@@ -1160,7 +1170,7 @@ describe('Effect.additionalIssues', () => {
   })
 
   test('returns a general issue when a dropdown selection is not one of the target options', () => {
-    let dropdownArg: TDropdownArg = {
+    let dropdownArg: TDropdownTargetParameter = {
       _id: 'choice',
       name: 'Choice',
       required: false,
@@ -1205,7 +1215,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         choice: 3,
       },
     })
@@ -1215,15 +1225,15 @@ describe('Effect.additionalIssues', () => {
   })
 
   test('does not return a required-arg issue when dependencies are not met and the arg has no value', () => {
-    let toggleArg: TBooleanArg = {
+    let toggleArg: TBooleanTargetParameter = {
       _id: 'toggle',
       name: 'Toggle',
       groupingId: 'group-1',
       type: 'boolean',
     }
 
-    let dependentArg: TStringArg = {
-      ...StringArg.fromJson({
+    let dependentArg: TStringTargetParameter = {
+      ...StringTargetParameter.fromJson({
         _id: 'dependent',
         name: 'Dependent',
         required: true,
@@ -1259,7 +1269,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         toggle: false,
         dependent: undefined,
       },
@@ -1269,7 +1279,7 @@ describe('Effect.additionalIssues', () => {
   })
 
   test("returns a general issue when a number argument's value is not a number", () => {
-    let numberArg: TNumberArg = {
+    let numberArg: TNumberTargetParameter = {
       _id: 'numArg',
       name: 'Number Arg',
       groupingId: 'group-1',
@@ -1303,7 +1313,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         numArg: 'not-a-number',
       },
     })
@@ -1315,7 +1325,7 @@ describe('Effect.additionalIssues', () => {
   })
 
   test("does not return an issue when a number argument's value matches the expected number type", () => {
-    let numberArg: TNumberArg = {
+    let numberArg: TNumberTargetParameter = {
       _id: 'numArg',
       name: 'Number Arg',
       groupingId: 'group-1',
@@ -1349,7 +1359,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         numArg: 42,
       },
     })
@@ -1358,7 +1368,7 @@ describe('Effect.additionalIssues', () => {
   })
 
   test("returns a general issue when a boolean argument's value is not a boolean", () => {
-    let booleanArg: TBooleanArg = {
+    let booleanArg: TBooleanTargetParameter = {
       _id: 'boolArg',
       name: 'Boolean Arg',
       groupingId: 'group-1',
@@ -1390,7 +1400,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         boolArg: 'not-a-boolean',
       },
     })
@@ -1402,7 +1412,7 @@ describe('Effect.additionalIssues', () => {
   })
 
   test("does not return an issue when a boolean argument's value matches the expected boolean type", () => {
-    let booleanArg: TBooleanArg = {
+    let booleanArg: TBooleanTargetParameter = {
       _id: 'boolArg',
       name: 'Boolean Arg',
       groupingId: 'group-1',
@@ -1434,7 +1444,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         boolArg: true,
       },
     })
@@ -1443,8 +1453,8 @@ describe('Effect.additionalIssues', () => {
   })
 
   test("returns a general issue when a string argument's value is not a string", () => {
-    let stringArg: TStringArg = {
-      ...StringArg.fromJson({
+    let stringArg: TStringTargetParameter = {
+      ...StringTargetParameter.fromJson({
         _id: 'strArg',
         name: 'String Arg',
         groupingId: 'group-1',
@@ -1479,7 +1489,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         strArg: 12345,
       },
     })
@@ -1491,8 +1501,8 @@ describe('Effect.additionalIssues', () => {
   })
 
   test("does not return an issue when a string argument's value matches the expected string type", () => {
-    let stringArg: TStringArg = {
-      ...StringArg.fromJson({
+    let stringArg: TStringTargetParameter = {
+      ...StringTargetParameter.fromJson({
         _id: 'strArg',
         name: 'String Arg',
         groupingId: 'group-1',
@@ -1527,7 +1537,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         strArg: 'This is a string',
       },
     })
@@ -1536,8 +1546,8 @@ describe('Effect.additionalIssues', () => {
   })
 
   test("returns a general issue when a large-string argument's value is not a string", () => {
-    let largeStringArg: TLargeStringArg = {
-      ...LargeStringArg.fromJson({
+    let largeStringTargetParameter: TLargeStringTargetParameter = {
+      ...LargeStringTargetParameter.fromJson({
         _id: 'largeStrArg',
         name: 'Large String Arg',
         groupingId: 'group-1',
@@ -1559,7 +1569,7 @@ describe('Effect.additionalIssues', () => {
       'target-1',
       'Target 1',
       'Test target',
-      [largeStringArg],
+      [largeStringTargetParameter],
       environment,
       [],
     )
@@ -1572,7 +1582,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         largeStrArg: 12345,
       },
     })
@@ -1584,8 +1594,8 @@ describe('Effect.additionalIssues', () => {
   })
 
   test("does not return an issue when a large-string argument's value matches the expected string type", () => {
-    let largeStringArg: TLargeStringArg = {
-      ...LargeStringArg.fromJson({
+    let largeStringTargetParameter: TLargeStringTargetParameter = {
+      ...LargeStringTargetParameter.fromJson({
         _id: 'largeStrArg',
         name: 'Large String Arg',
         groupingId: 'group-1',
@@ -1607,7 +1617,7 @@ describe('Effect.additionalIssues', () => {
       'target-1',
       'Target 1',
       'Test target',
-      [largeStringArg],
+      [largeStringTargetParameter],
       environment,
       [],
     )
@@ -1620,7 +1630,7 @@ describe('Effect.additionalIssues', () => {
       targetId: 'target-1',
       environmentId: 'env-1',
       targetEnvironmentVersion: '1.0.0',
-      args: {
+      arguments: {
         largeStrArg: 'This is a large string',
       },
     })
@@ -1646,7 +1656,7 @@ class TestTargetEnvironment extends TargetEnvironment {
   }
 
   public register(): this {
-    ACTIVE_REGISTRY.register(this)
+    activeRegistry.register(this)
     return this
   }
 }
@@ -1665,7 +1675,7 @@ class TestTarget extends Target {
     _id: Target['_id'],
     name: Target['name'],
     description: Target['description'],
-    args: Target['args'],
+    args: Target['parameters'],
     environment: Target['environment'],
     migrationVersions: Target['migrationVersions'],
   ) {
@@ -1687,7 +1697,7 @@ class TestEffect extends Effect {
       targetId: Effect['targetId']
       environmentId: Effect['environmentId']
       targetEnvironmentVersion: Effect['targetEnvironmentVersion']
-      args: Effect['args']
+      arguments: Effect['arguments']
     },
     options: {
       context?: Effect['context']
@@ -1720,7 +1730,7 @@ class TestEffect extends Effect {
       0,
       'Test effect description',
       context,
-      data.args,
+      data.arguments,
       'local-key-1',
     )
   }
@@ -1729,15 +1739,13 @@ class TestEffect extends Effect {
     targetId: string,
     environmentId: string,
   ): TestTarget | null {
-    if (!ACTIVE_REGISTRY) return null
+    if (!activeRegistry) return null
 
     if (environmentId === Effect.LEGACY_INFER_ENV_ID) {
-      return (
-        (ACTIVE_REGISTRY.inferTarget(targetId) as TestTarget | null) ?? null
-      )
+      return (activeRegistry.inferTarget(targetId) as TestTarget | null) ?? null
     }
 
-    let environment = ACTIVE_REGISTRY.get(environmentId)
+    let environment = activeRegistry.get(environmentId)
     if (!environment) return null
 
     return (environment.getTarget(targetId) as TestTarget | null) ?? null

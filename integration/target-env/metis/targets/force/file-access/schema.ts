@@ -9,7 +9,7 @@ const FileAccess = new TargetSchema({
   script: async (context) => {
     // Extract the effect and its arguments from the context.
     const { effect } = context
-    const { fileMetadata, forceMetadata, access } = effect.args
+    const { fileMetadata, forceMetadata, access } = effect.arguments
     const { forceKey } = forceMetadata as TForceMetadata
     const { fileId } = fileMetadata as TFileMetadata
 

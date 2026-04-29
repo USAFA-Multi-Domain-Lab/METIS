@@ -6,7 +6,7 @@ let migrations = new TargetMigrationRegistry()
 // Migrates awards to be compatible with new multi-resource
 // system added in v2.4.0 of METIS.
 migrations.register('2.4.0', (effect) => {
-  let { forceKey, forceName } = effect.args.forceMetadata as TForceMetadata
+  let { forceKey, forceName } = effect.arguments.forceMetadata as TForceMetadata
 
   // Find force
   let force: typeof effect.sourceForce | undefined = effect.sourceForce // Default to source force.
@@ -30,13 +30,13 @@ migrations.register('2.4.0', (effect) => {
 
   // Update args to include pool metadata instead
   // of simple force metadata.
-  effect.args.poolMetadata = {
+  effect.arguments.poolMetadata = {
     forceKey,
     forceName,
     poolKey: firstPool.localKey,
     poolName: firstPool.name,
   } satisfies TPoolMetadata
-  delete effect.args.forceMetadata
+  delete effect.arguments.forceMetadata
 })
 
 export { migrations }

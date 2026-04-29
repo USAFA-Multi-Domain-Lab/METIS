@@ -1,7 +1,7 @@
 import { MetisComponent } from '../../MetisComponent'
 import type { TAnyObject } from '../../toolbox/objects/ObjectToolbox'
-import type { TTargetArg, TTargetArgJson } from '../args/Arg'
-import { Arg } from '../args/Arg'
+import type { TTargetParameter, TTargetParameterJson } from '../parameters/TargetParameter'
+import { TargetParameter } from '../parameters/TargetParameter'
 import type { TTargetEnv } from '../TargetEnvironment'
 
 /**
@@ -40,9 +40,9 @@ export abstract class Target<
     public description: string,
 
     /**
-     * The arguments used to create the effect on the target.
+     * The parameters used to create the effect on the target.
      */
-    public args: TTargetArg[],
+    public parameters: TTargetParameter[],
     /**
      * The environment in which the target exists.
      */
@@ -51,7 +51,7 @@ export abstract class Target<
     super(_id, name, false)
 
     this.description = description
-    this.args = args
+    this.parameters = parameters
     this.environment = environment
   }
 
@@ -68,17 +68,17 @@ export abstract class Target<
       name: this.name,
       description: this.description,
       migrationVersions: this.migrationVersions,
-      args: Arg.toJson(this.args),
+      parameters: TargetParameter.toJson(this.parameters),
     }
   }
 
   /**
-   * Retrieves an argument by its ID.
-   * @param argId The ID of the argument to retrieve.
-   * @returns The argument with the specified ID, or undefined if not found.
+   * Retrieves a parameter by its ID.
+   * @param parameterId The ID of the parameter to retrieve.
+   * @returns The parameter with the specified ID, or undefined if not found.
    */
-  public getArgById(argId: string): TTargetArg | undefined {
-    return this.args.find((arg) => arg._id === argId)
+  public getParameterById(parameterId: string): TTargetParameter | undefined {
+    return this.parameters.find((param) => param._id === parameterId)
   }
 
   /**
@@ -90,7 +90,7 @@ export abstract class Target<
     name: 'Select a target',
     description: 'This is a default target.',
     migrationVersions: [],
-    args: [],
+    parameters: [],
   }
 
   /**
@@ -169,9 +169,9 @@ export interface TTargetJson {
    */
   description: string
   /**
-   * The arguments used to create the effect on the target.
+   * The parameters used to create the effect on the target.
    */
-  args: TTargetArgJson[]
+  parameters: TTargetParameterJson[]
   /**
    * Target environment versions for the target for which
    * the target has a migration script.

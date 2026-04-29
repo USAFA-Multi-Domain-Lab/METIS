@@ -1,5 +1,5 @@
-import type { TTargetArg } from '@shared/target-environments/args/Arg'
-import { Arg } from '@shared/target-environments/args/Arg'
+import type { TTargetParameter } from '@shared/target-environments/parameters/TargetParameter'
+import { TargetParameter } from '@shared/target-environments/parameters/TargetParameter'
 import type { TTargetJson } from '@shared/target-environments/targets/Target'
 import { Target } from '@shared/target-environments/targets/Target'
 import type { TMetisClientComponents } from '..'
@@ -23,11 +23,11 @@ export class ClientTarget extends Target<TMetisClientComponents> {
     _id: string,
     name: string,
     description: string,
-    args: TTargetArg[],
+    parameters: TTargetParameter[],
     migrationVersions: string[],
     environment: ClientTargetEnvironment,
   ) {
-    super(_id, name, description, args, environment)
+    super(_id, name, description, parameters, environment)
     this._migrationVersions = migrationVersions
   }
 
@@ -42,7 +42,7 @@ export class ClientTarget extends Target<TMetisClientComponents> {
       ClientTarget.DEFAULT_PROPERTIES._id,
       ClientTarget.DEFAULT_PROPERTIES.name,
       ClientTarget.DEFAULT_PROPERTIES.description,
-      Arg.fromJson(ClientTarget.DEFAULT_PROPERTIES.args),
+      TargetParameter.fromJson(ClientTarget.DEFAULT_PROPERTIES.parameters),
       ClientTarget.DEFAULT_PROPERTIES.migrationVersions,
       environment,
     )
@@ -62,7 +62,7 @@ export class ClientTarget extends Target<TMetisClientComponents> {
       json._id,
       json.name,
       json.description,
-      Arg.fromJson(json.args),
+      TargetParameter.fromJson(json.parameters),
       json.migrationVersions,
       environment,
     )

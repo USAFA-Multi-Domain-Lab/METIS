@@ -9,7 +9,7 @@ const SuccessChanceMod = new TargetSchema({
   description: '',
   script: async (context) => {
     // Gather details.
-    const { actionMetadata, successChance } = context.effect.args
+    const { actionMetadata, successChance } = context.effect.arguments
     const { forceKey, nodeKey, actionKey } = actionMetadata as TActionMetadata
 
     context.modifySuccessChance(successChance / 100, {

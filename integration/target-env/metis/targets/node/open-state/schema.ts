@@ -64,7 +64,7 @@ const NodeOpenState = new TargetSchema({
   description: 'Opens or closes a node, revealing or hiding its descendants',
   script: async (context) => {
     // Extract the effect arguments configured in the mission editor.
-    const { nodeMetadata, openState } = context.effect.args
+    const { nodeMetadata, openState } = context.effect.arguments
     const { forceKey, nodeKey } = nodeMetadata as TNodeMetadata
 
     // Execute the appropriate operation based on the configured open state.

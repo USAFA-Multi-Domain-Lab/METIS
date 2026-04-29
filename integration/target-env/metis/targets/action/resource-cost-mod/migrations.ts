@@ -16,7 +16,7 @@ migrations.register('2.4.0', (effect) => {
     )
   }
 
-  effect.args.resourceMetadata = {
+  effect.arguments.resourceMetadata = {
     resourceId: firstResource._id,
     resourceName: firstResource.name,
   } satisfies TResourceMetadata

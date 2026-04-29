@@ -15,7 +15,7 @@ const ProcessTimeMod = new TargetSchema({
   name: 'Process Time Modifier',
   description: '',
   script: async (context) => {
-    const args = context.effect.args
+    const args = context.effect.arguments
     const actionMetadata = args[actionArgId]
     const processTimeSeconds = args[secondsArgId]
     const processTimeMinutes = args[minutesArgId]

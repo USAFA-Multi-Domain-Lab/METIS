@@ -53,7 +53,7 @@ export interface TMigratableEffect extends TTargetEnvExposedEffect {
   /**
    * Data that can be migrated by a {@link TargetMigration}.
    */
-  args: TAnyObject
+  arguments: TAnyObject
   /**
    * Tracks the current version for the effect data. This will allow
    * the migration system to perform multiple migrations in a row and

@@ -8,7 +8,7 @@ const BlockStatus = new TargetSchema({
   description: '',
   script: async (context) => {
     // Extract the arguments from the effect.
-    const { nodeMetadata, blockStatus } = context.effect.args
+    const { nodeMetadata, blockStatus } = context.effect.arguments
     const { forceKey, nodeKey } = nodeMetadata as TNodeMetadata
 
     // Update the block status of the node.

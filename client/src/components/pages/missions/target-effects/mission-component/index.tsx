@@ -7,16 +7,16 @@ import { ClientResourcePool } from '@client/missions/forces/ClientResourcePool'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks'
-import { ActionArg } from '@shared/target-environments/args/mission-component/ActionArg'
-import { FileArg } from '@shared/target-environments/args/mission-component/FileArg'
-import { ForceArg } from '@shared/target-environments/args/mission-component/ForceArg'
+import { ActionTargetParameter as ActionTargetParameterClass } from '@shared/target-environments/parameters/mission-component/ActionTargetParameter'
+import { FileTargetParameter as FileTargetParameterClass } from '@shared/target-environments/parameters/mission-component/FileTargetParameter'
+import { ForceTargetParameter as ForceTargetParameterClass } from '@shared/target-environments/parameters/mission-component/ForceTargetParameter'
 import type {
-  TMissionComponentArg,
+  TMissionComponentTargetParameter,
   TMissionComponentMetadata,
-} from '@shared/target-environments/args/mission-component/MissionComponentArg'
-import { NodeArg } from '@shared/target-environments/args/mission-component/NodeArg'
-import { PoolArg } from '@shared/target-environments/args/mission-component/PoolArg'
-import { ResourceArg } from '@shared/target-environments/args/mission-component/ResourceArg'
+} from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
+import { NodeTargetParameter as NodeTargetParameterClass } from '@shared/target-environments/parameters/mission-component/NodeTargetParameter'
+import { PoolTargetParameter as PoolTargetParameterClass } from '@shared/target-environments/parameters/mission-component/PoolTargetParameter'
+import { ResourceTargetParameter as ResourceTargetParameterClass } from '@shared/target-environments/parameters/mission-component/ResourceTargetParameter'
 import type {
   TActionMetadata,
   TFileMetadata,
@@ -27,45 +27,45 @@ import type {
 } from '@shared/target-environments/types'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useEffect, useState } from 'react'
-import ArgAction from './ArgAction'
-import ArgFile from './ArgFile'
-import ArgForce from './ArgForce'
-import ArgNode from './ArgNode'
-import ArgPool from './ArgPool'
-import ArgResource from './ArgResource'
+import ActionTargetParameter from './ActionTargetParameter'
+import FileTargetParameter from './FileTargetParameter'
+import ForceTargetParameter from './ForceTargetParameter'
+import NodeTargetParameter from './NodeTargetParameter'
+import PoolTargetParameter from './PoolTargetParameter'
+import ResourceTargetParameter from './ResourceTargetParameter'
 
 /**
  * Renders dropdowns for the argument whose type is `"force"`, `"node"`, `"action"`, `"file"`, `"pool"`, or `"resource"`.
  */
-export default function ArgMissionComponent({
+export default function MissionComponentTargetParameter({
   effect,
   effect: { mission, sourceForce, sourceNode, sourceAction },
   arg,
   arg: { _id, type, required },
   initialize,
-  effectArgs,
-  setEffectArgs,
-}: TArgMissionComponent_P): TReactElement | null {
+  targetArguments,
+  setTargetArguments,
+}: TMissionComponentTargetParameter_P): TReactElement | null {
   /* -- CONSTANTS -- */
 
   const isRequired: boolean = required
   const isOptional: boolean = !required
-  const existsInEffectArgs: boolean = effectArgs[_id] !== undefined
+  const existsInTargetArguments: boolean = targetArguments[_id] !== undefined
 
-  // Metadata keys used in the effect.args for
+  // Metadata keys used in the effect.arguments for
   // the mission component argument types.
-  const forceKey = ForceArg.FORCE_KEY
-  const forceName = ForceArg.FORCE_NAME
-  const nodeKey = NodeArg.NODE_KEY
-  const nodeName = NodeArg.NODE_NAME
-  const actionKey = ActionArg.ACTION_KEY
-  const actionName = ActionArg.ACTION_NAME
-  const fileId = FileArg.FILE_ID
-  const fileName = FileArg.FILE_NAME
-  const poolKey = PoolArg.POOL_KEY
-  const poolName = PoolArg.POOL_NAME
-  const resourceId = ResourceArg.RESOURCE_ID
-  const resourceName = ResourceArg.RESOURCE_NAME
+  const forceKey = ForceTargetParameterClass.FORCE_KEY
+  const forceName = ForceTargetParameterClass.FORCE_NAME
+  const nodeKey = NodeTargetParameterClass.NODE_KEY
+  const nodeName = NodeTargetParameterClass.NODE_NAME
+  const actionKey = ActionTargetParameterClass.ACTION_KEY
+  const actionName = ActionTargetParameterClass.ACTION_NAME
+  const fileId = FileTargetParameterClass.FILE_ID
+  const fileName = FileTargetParameterClass.FILE_NAME
+  const poolKey = PoolTargetParameterClass.POOL_KEY
+  const poolName = PoolTargetParameterClass.POOL_NAME
+  const resourceId = ResourceTargetParameterClass.RESOURCE_ID
+  const resourceName = ResourceTargetParameterClass.RESOURCE_NAME
 
   /* -- STATE -- */
 
@@ -185,7 +185,7 @@ export default function ArgMissionComponent({
     useState<ClientMissionForce | null>(() => {
       // If the argument is optional and the argument's value
       // is in the effect's arguments...
-      if (isOptional && existsInEffectArgs) {
+      if (isOptional && existsInTargetArguments) {
         // Search for the force in the mission.
         let forceInMission = effect.getForceFromArgs(_id)
         // If the force is found then return the force.
@@ -215,7 +215,7 @@ export default function ArgMissionComponent({
   const [forceValue, setForceValue] = useState<ClientMissionForce>(() => {
     // If the argument is required and the argument's value
     // is in the effect's arguments...
-    if (isRequired && existsInEffectArgs) {
+    if (isRequired && existsInTargetArguments) {
       // Search for the force in the mission.
       let forceInMission = effect.getForceFromArgs(_id)
       // If the force is found then return the force.
@@ -248,7 +248,7 @@ export default function ArgMissionComponent({
   const [poolValue, setPoolValue] = useState<ClientResourcePool>(() => {
     // If the argument is required and the argument's value
     // is in the effect's arguments...
-    if (isRequired && existsInEffectArgs) {
+    if (isRequired && existsInTargetArguments) {
       // Search for the pool in the mission.
       let poolInMission = effect.getPoolFromArgs(_id)
       // If the pool is found then return the pool.
@@ -279,7 +279,7 @@ export default function ArgMissionComponent({
     useState<ClientResourcePool | null>(() => {
       // If the argument is optional and the argument's value
       // is in the effect's arguments...
-      if (isOptional && existsInEffectArgs) {
+      if (isOptional && existsInTargetArguments) {
         // Search for the pool in the mission.
         let poolInMission = effect.getPoolFromArgs(_id)
         // If the pool is found then return the pool.
@@ -312,7 +312,7 @@ export default function ArgMissionComponent({
   const [nodeValue, setNodeValue] = useState<ClientMissionNode>(() => {
     // If the argument is required and the argument's value
     // is in the effect's arguments...
-    if (isRequired && existsInEffectArgs) {
+    if (isRequired && existsInTargetArguments) {
       // Search for the node in the mission.
       let nodeInMission = effect.getNodeFromArgs(_id)
       // If the node is found then return the node.
@@ -343,7 +343,7 @@ export default function ArgMissionComponent({
     useState<ClientMissionNode | null>(() => {
       // If the argument is optional and the argument's value
       // is in the effect's arguments...
-      if (isOptional && existsInEffectArgs) {
+      if (isOptional && existsInTargetArguments) {
         // Search for the node in the mission.
         let nodeInMission = effect.getNodeFromArgs(_id)
         // If the node is found then return the node.
@@ -376,7 +376,7 @@ export default function ArgMissionComponent({
   const [actionValue, setActionValue] = useState<ClientMissionAction>(() => {
     // If the argument is required and the argument's value
     // is in the effect's arguments...
-    if (isRequired && existsInEffectArgs) {
+    if (isRequired && existsInTargetArguments) {
       // Search for the action in the mission.
       let actionInMission = effect.getActionFromArgs(_id)
       // If the action is found then return the action.
@@ -406,7 +406,7 @@ export default function ArgMissionComponent({
     useState<ClientMissionAction | null>(() => {
       // If the argument is optional and the argument's value
       // is in the effect's arguments...
-      if (isOptional && existsInEffectArgs) {
+      if (isOptional && existsInTargetArguments) {
         // Search for the action in the mission.
         let actionInMission = effect.getActionFromArgs(_id)
         // If the action is found then return the action.
@@ -438,7 +438,7 @@ export default function ArgMissionComponent({
   const [fileValue, setFileValue] = useState<ClientMissionFile>(() => {
     // If the argument is required and the argument's value
     // is in the effect's arguments...
-    if (isRequired && existsInEffectArgs) {
+    if (isRequired && existsInTargetArguments) {
       // Search for the file in the mission.
       let fileInMission = effect.getFileFromArgs(_id)
       // If the file is found then return the file.
@@ -466,7 +466,7 @@ export default function ArgMissionComponent({
     useState<ClientMissionFile | null>(() => {
       // If the argument is optional and the argument's value
       // is in the effect's arguments...
-      if (isOptional && existsInEffectArgs) {
+      if (isOptional && existsInTargetArguments) {
         // Search for the file in the mission.
         let fileInMission = effect.getFileFromArgs(_id)
         // If the file is found then return the file.
@@ -496,7 +496,7 @@ export default function ArgMissionComponent({
     () => {
       // If the argument is required and the argument's value
       // is in the effect's arguments...
-      if (isRequired && existsInEffectArgs) {
+      if (isRequired && existsInTargetArguments) {
         // Search for the resource in the mission.
         let resourceInMission = effect.getResourceFromArgs(_id)
         // If the resource is found then return the resource.
@@ -525,7 +525,7 @@ export default function ArgMissionComponent({
     useState<ClientMissionResource | null>(() => {
       // If the argument is optional and the argument's value
       // is in the effect's arguments...
-      if (isOptional && existsInEffectArgs) {
+      if (isOptional && existsInTargetArguments) {
         // Search for the resource in the mission.
         let resourceInMission = effect.getResourceFromArgs(_id)
         // If the resource is found then return the resource.
@@ -596,7 +596,7 @@ export default function ArgMissionComponent({
     // If the argument is optional, a force hasn't been selected,
     // yet the argument exists in the effect's arguments then remove
     // the force value from the effect's arguments.
-    if (isOptional && optionalForceValue === null && existsInEffectArgs) {
+    if (isOptional && optionalForceValue === null && existsInTargetArguments) {
       return true
     }
 
@@ -712,7 +712,7 @@ export default function ArgMissionComponent({
     // from the effect's arguments.
     if (
       isOptional &&
-      existsInEffectArgs &&
+      existsInTargetArguments &&
       (!optionalForceValue || !optionalPoolValue)
     ) {
       return true
@@ -798,7 +798,7 @@ export default function ArgMissionComponent({
     // from the effect's arguments.
     if (
       isOptional &&
-      existsInEffectArgs &&
+      existsInTargetArguments &&
       (!optionalForceValue || !optionalNodeValue)
     ) {
       return true
@@ -932,7 +932,7 @@ export default function ArgMissionComponent({
       optionalNodeValue !== null &&
       optionalForceValue.nodes.includes(optionalNodeValue) &&
       optionalActionValue === null &&
-      existsInEffectArgs
+      existsInTargetArguments
     ) {
       return true
     }
@@ -1046,7 +1046,7 @@ export default function ArgMissionComponent({
     // If the argument is optional, a file hasn't been selected,
     // yet the argument exists in the effect's arguments then remove
     // the file value from the effect's arguments.
-    if (isOptional && optionalFileValue === null && existsInEffectArgs) {
+    if (isOptional && optionalFileValue === null && existsInTargetArguments) {
       return true
     }
 
@@ -1115,7 +1115,7 @@ export default function ArgMissionComponent({
     // If the argument is optional, a resource hasn't been selected,
     // yet the argument exists in the effect's arguments then remove
     // the resource value from the effect's arguments.
-    if (isOptional && optionalResourceValue === null && existsInEffectArgs) {
+    if (isOptional && optionalResourceValue === null && existsInTargetArguments) {
       return true
     }
 
@@ -1335,7 +1335,7 @@ export default function ArgMissionComponent({
     if (upsertResource) data = resourceMetadata
 
     // Update the effect's arguments with the new data.
-    setEffectArgs((prev) => ({
+    setTargetArguments((prev) => ({
       ...prev,
       [_id]: {
         ...prev[_id],
@@ -1348,7 +1348,7 @@ export default function ArgMissionComponent({
    * Removes the argument from the effect's arguments.
    */
   const remove = () => {
-    setEffectArgs((prev) => {
+    setTargetArguments((prev) => {
       if (removeForce) {
         delete prev[_id][forceKey]
         delete prev[_id][forceName]
@@ -1396,17 +1396,17 @@ export default function ArgMissionComponent({
 
   return (
     <>
-      <ArgForce
+      <ForceTargetParameter
         effect={effect}
         arg={arg}
-        existsInEffectArgs={existsInEffectArgs}
+        existsInTargetArguments={existsInTargetArguments}
         forceIsActive={forceIsActive}
         forceValue={[forceValue, setForceValue]}
         optionalForceValue={[optionalForceValue, setOptionalForceValue]}
       />
-      <ArgPool
+      <PoolTargetParameter
         arg={arg}
-        existsInEffectArgs={existsInEffectArgs}
+        existsInTargetArguments={existsInTargetArguments}
         poolIsActive={poolIsActive}
         isRequired={isRequired}
         isOptional={isOptional}
@@ -1415,9 +1415,9 @@ export default function ArgMissionComponent({
         poolValue={[poolValue, setPoolValue]}
         optionalPoolValue={[optionalPoolValue, setOptionalPoolValue]}
       />
-      <ArgNode
+      <NodeTargetParameter
         arg={arg}
-        existsInEffectArgs={existsInEffectArgs}
+        existsInTargetArguments={existsInTargetArguments}
         nodeIsActive={nodeIsActive}
         isRequired={isRequired}
         isOptional={isOptional}
@@ -1426,9 +1426,9 @@ export default function ArgMissionComponent({
         optionalForceValue={[optionalForceValue, setOptionalForceValue]}
         optionalNodeValue={[optionalNodeValue, setOptionalNodeValue]}
       />
-      <ArgAction
+      <ActionTargetParameter
         arg={arg}
-        existsInEffectArgs={existsInEffectArgs}
+        existsInTargetArguments={existsInTargetArguments}
         actionIsActive={actionIsActive}
         isRequired={isRequired}
         isOptional={isOptional}
@@ -1439,18 +1439,18 @@ export default function ArgMissionComponent({
         optionalNodeValue={[optionalNodeValue, setOptionalNodeValue]}
         optionalActionValue={[optionalActionValue, setOptionalActionValue]}
       />
-      <ArgFile
+      <FileTargetParameter
         effect={effect}
         arg={arg}
-        existsInEffectArgs={existsInEffectArgs}
+        existsInTargetArguments={existsInTargetArguments}
         fileIsActive={fileIsActive}
         fileValue={[fileValue, setFileValue]}
         optionalFileValue={[optionalFileValue, setOptionalFileValue]}
       />
-      <ArgResource
+      <ResourceTargetParameter
         effect={effect}
         arg={arg}
-        existsInEffectArgs={existsInEffectArgs}
+        existsInTargetArguments={existsInTargetArguments}
         resourceIsActive={resourceIsActive}
         resourceValue={[resourceValue, setResourceValue]}
         optionalResourceValue={[
@@ -1467,7 +1467,7 @@ export default function ArgMissionComponent({
 /**
  * The props for the `ArgMissionComponent` component.
  */
-type TArgMissionComponent_P = {
+type TMissionComponentTargetParameter_P = {
   /**
    * The effect that the arguments belong to.
    */
@@ -1475,7 +1475,7 @@ type TArgMissionComponent_P = {
   /**
    * The mission component argument to render.
    */
-  arg: TMissionComponentArg
+  arg: TMissionComponentTargetParameter
   /**
    * Determines if the argument needs to be initialized.
    */
@@ -1483,10 +1483,10 @@ type TArgMissionComponent_P = {
   /**
    * The arguments that the effect uses to modify the target.
    */
-  effectArgs: ClientEffect['args']
+  targetArguments: ClientEffect['arguments']
   /**
    * Function that updates the value of the effect's arguments
    * stored in the state.
    */
-  setEffectArgs: TReactSetter<ClientEffect['args']>
+  setTargetArguments: TReactSetter<ClientEffect['arguments']>
 }

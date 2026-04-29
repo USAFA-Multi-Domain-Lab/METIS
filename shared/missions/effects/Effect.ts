@@ -1,5 +1,5 @@
-import type { TMissionComponentArg } from '@shared/target-environments/args/mission-component/MissionComponentArg'
-import type { TTargetArg } from '../../target-environments/args/Arg'
+import type { TMissionComponentTargetParameter } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
+import type { TTargetParameter } from '../../target-environments/parameters/TargetParameter'
 import type { TargetDependency } from '../../target-environments/targets/TargetDependency'
 import type {
   TActionMetadata,
@@ -173,12 +173,12 @@ export abstract class Effect<
       ]
     }
 
-    // Check the effect's arguments against the target's arguments.
-    let argIssues = this.checkEffectArgs(target)
+    // Check the effect's arguments against the target's parameters.
+    let argIssues = this.checkTargetArguments(target)
     if (argIssues.length) return constructIssues(...argIssues)
 
     // Check to see if there are any missing arguments.
-    let missingArg = this.checkForMissingArg()
+    let missingArg = this.checkForMissingArgument()
     if (missingArg) {
       return constructIssues(
         `The required argument "${missingArg.name}" within the effect "${this.name}" is missing.`,
@@ -221,7 +221,7 @@ export abstract class Effect<
    * The arguments to pass to the script in the
    * target that will enact the effect.
    */
-  public args: TAnyObject
+  public arguments: TAnyObject
 
   /**
    * A key for the effect, used to identify it within the action.
@@ -282,7 +282,7 @@ export abstract class Effect<
     this.context = context
     this.order = order
     this.description = description
-    this.args = args
+    this.arguments = args
     this.localKey = localKey
   }
 
@@ -298,11 +298,11 @@ export abstract class Effect<
   ): T['target'] | null
 
   /**
-   * Checks the effect's arguments against the target's arguments.
+   * Checks the effect's arguments against the target's parameters.
    * @param target The target to check the effect's arguments against.
    * @returns Any issues found with the effect's arguments.
    */
-  private checkEffectArgs(target: T['target']): string[] {
+  private checkTargetArguments(target: T['target']): string[] {
     let issues: string[] = []
 
     // Utility function to quickly process different
@@ -313,11 +313,11 @@ export abstract class Effect<
       }
     }
 
-    for (let argId in this.args) {
-      let targetArg = target.getArgById(argId)
-      let effectArgValue = this.args[argId]
+    for (let argId in this.arguments) {
+      let targetParam = target.getParameterById(argId)
+      let effectArgValue = this.arguments[argId]
 
-      if (!targetArg) {
+      if (!targetParam) {
         issues.push(
           `The effect, "${this.name}", has an argument, "${argId}", that couldn't be found within the target, "${target.name}." ` +
             `Please delete the effect and create a new one.`,
@@ -325,25 +325,25 @@ export abstract class Effect<
         continue
       }
 
-      let dependenciesMet = this.allDependenciesMet(targetArg.dependencies)
+      let dependenciesMet = this.allDependenciesMet(targetParam.dependencies)
 
       pushIfNotNull(
         this.checkDependencyAlignment(
-          targetArg,
+          targetParam,
           effectArgValue,
           dependenciesMet,
         ),
       )
       pushIfNotNull(
-        this.checkRequiredArgs(targetArg, effectArgValue, dependenciesMet),
+        this.checkRequiredArgs(targetParam, effectArgValue, dependenciesMet),
       )
       pushIfNotNull(
-        this.checkValueMatchesType(targetArg, effectArgValue, dependenciesMet),
+        this.checkValueMatchesType(targetParam, effectArgValue, dependenciesMet),
       )
-      pushIfNotNull(this.checkValidDropdownOption(targetArg, effectArgValue))
-      pushIfNotNull(this.checkMissionComponentArg(targetArg, effectArgValue))
+      pushIfNotNull(this.checkValidDropdownOption(targetParam, effectArgValue))
+      pushIfNotNull(this.checkMissionComponentArg(targetParam, effectArgValue))
       pushIfNotNull(
-        this.checkStringArgAgainstPattern(targetArg, effectArgValue),
+        this.checkStringArgAgainstPattern(targetParam, effectArgValue),
       )
     }
 
@@ -359,15 +359,15 @@ export abstract class Effect<
    * @note Utility method of {@link checkEffectArgs}.
    */
   private checkRequiredArgs(
-    targetArg: TTargetArg,
+    targetParam: TTargetParameter,
     effectArgValue: unknown,
     dependenciesMet: boolean,
   ): string | null {
     // * Note: Boolean arguments are always required because
     // * they always have a value (true or false). Therefore,
     // * they don't contain the required property.
-    let isBoolean = targetArg.type === 'boolean'
-    let required = targetArg.type === 'boolean' || targetArg.required
+    let isBoolean = targetParam.type === 'boolean'
+    let required = targetParam.type === 'boolean' || targetParam.required
     let valueMissing = effectArgValue === undefined
     let renterValueText: string = 'Please enter a value'
 
@@ -377,7 +377,7 @@ export abstract class Effect<
 
     if (required && valueMissing && dependenciesMet) {
       return (
-        `The argument, "${targetArg.name}", within the effect, "${this.name}", is required, yet has no value. ` +
+        `The argument, "${targetParam.name}", within the effect, "${this.name}", is required, yet has no value. ` +
         `${renterValueText}, or delete the effect and create a new one.`
       )
     }
@@ -394,7 +394,7 @@ export abstract class Effect<
    * match the type specified in the target argument.
    */
   private checkValueMatchesType(
-    targetArg: TTargetArg,
+    targetParam: TTargetParameter,
     effectArgValue: unknown,
     dependenciesMet: boolean,
   ): string | null {
@@ -403,7 +403,7 @@ export abstract class Effect<
     }
 
     let typesToCheck = ['boolean', 'number', 'string']
-    let expectedType = targetArg.type
+    let expectedType = targetParam.type
     let actualType = typeof effectArgValue
 
     // Consolidate similar types for checking.
@@ -417,7 +417,7 @@ export abstract class Effect<
     // return an issue.
     if (shouldCheckType && actualType !== expectedType) {
       return (
-        `The argument, "${targetArg.name}", within the effect, "${this.name}", is expected to be of type, "${expectedType}", ` +
+        `The argument, "${targetParam.name}", within the effect, "${this.name}", is expected to be of type, "${expectedType}", ` +
         `but received a value of type, "${actualType}". Please update the value, or delete the effect and create a new one (ERR 30382).`
       )
     } else {
@@ -436,13 +436,13 @@ export abstract class Effect<
    * @note Utility method of {@link checkEffectArgs}.
    */
   private checkDependencyAlignment(
-    targetArg: TTargetArg,
+    targetParam: TTargetParameter,
     effectArgValue: unknown,
     dependenciesMet: boolean,
   ): string | null {
     if (!dependenciesMet && effectArgValue !== undefined) {
       return (
-        `The effect, "${this.name}", has an argument, "${targetArg.name}", that doesn't belong. ` +
+        `The effect, "${this.name}", has an argument, "${targetParam.name}", that doesn't belong. ` +
         `Please delete the effect and create a new one.`
       )
     }
@@ -460,12 +460,12 @@ export abstract class Effect<
    * @note Utility method of {@link checkEffectArgs}.
    */
   private checkValidDropdownOption(
-    targetArg: TTargetArg,
+    targetParam: TTargetParameter,
     effectArgValue: unknown,
   ): string | null {
     if (
-      targetArg.type === 'dropdown' &&
-      !targetArg.options.find((option) => option.value === effectArgValue)
+      targetParam.type === 'dropdown' &&
+      !targetParam.options.find((option) => option.value === effectArgValue)
     ) {
       return (
         `The effect, "${this.name}", has an invalid option selected. ` +
@@ -486,10 +486,10 @@ export abstract class Effect<
    * @note Utility method of {@link checkEffectArgs}.
    */
   private checkMissionComponentArg(
-    targetArg: TTargetArg,
+    targetParam: TTargetParameter,
     effectArgValue: unknown,
   ): string | null {
-    let { _id: argId, type } = targetArg
+    let { _id: argId, type } = targetParam
 
     const isMissionComponentRef =
       type === 'action' ||
@@ -574,21 +574,21 @@ export abstract class Effect<
    * @note Utility method of {@link checkEffectArgs}.
    */
   private checkStringArgAgainstPattern(
-    targetArg: TTargetArg,
+    targetParam: TTargetParameter,
     effectArgValue: unknown,
   ): string | null {
-    if (targetArg.type !== 'string' || typeof effectArgValue !== 'string') {
+    if (targetParam.type !== 'string' || typeof effectArgValue !== 'string') {
       return null
     }
 
-    if (!targetArg.required && effectArgValue === undefined) {
+    if (!targetParam.required && effectArgValue === undefined) {
       return null
     }
 
-    const pattern = targetArg.pattern
+    const pattern = targetParam.pattern
     if (pattern instanceof RegExp && !pattern.test(effectArgValue)) {
       return (
-        `The argument, "${targetArg.name}", within the effect, "${this.name}", does not match the required format. ` +
+        `The argument, "${targetParam.name}", within the effect, "${this.name}", does not match the required format. ` +
         `Please update the value, or delete the effect and create a new one.`
       )
     }
@@ -603,7 +603,7 @@ export abstract class Effect<
    * @returns The error message.
    */
   private buildComponentNotFoundMessage(
-    componentType: TMissionComponentArg['type'],
+    componentType: TMissionComponentTargetParameter['type'],
     componentName?: string,
   ): string {
     let verb = 'targets'
@@ -625,10 +625,10 @@ export abstract class Effect<
   }
 
   /**
-   * Checks if there are any required target-arguments missing in the effect.
-   * @returns The missing argument if there is one.
+   * Checks if there are any required target parameters missing in the effect.
+   * @returns The missing parameter if there is one.
    */
-  private checkForMissingArg(): TTargetArg | undefined {
+  private checkForMissingArgument(): TTargetParameter | undefined {
     // If the target is not set, throw an error.
     if (!this.target) {
       throw new Error(
@@ -637,20 +637,20 @@ export abstract class Effect<
       )
     }
 
-    for (let arg of this.target.args) {
-      // Check if all the dependencies for the argument are met.
+    for (let param of this.target.parameters) {
+      // Check if all the dependencies for the parameter are met.
       let allDependenciesMet: boolean = this.allDependenciesMet(
-        arg.dependencies,
+        param.dependencies,
       )
 
       // If all the dependencies are met and the argument is not in the effect's arguments...
-      if (allDependenciesMet && !(arg._id in this.args)) {
-        // ...and the argument's type is a boolean or the argument is required, then return
-        // the argument.
-        // *** Note: A boolean argument is always required because it's value
+      if (allDependenciesMet && !(param._id in this.arguments)) {
+        // ...and the parameter's type is a boolean or the parameter is required, then return
+        // the parameter.
+        // *** Note: A boolean parameter is always required because its value
         // *** is always defined.
-        if (arg.type === 'boolean' || arg.required) {
-          return arg
+        if (param.type === 'boolean' || param.required) {
+          return param
         }
       }
     }
@@ -669,7 +669,7 @@ export abstract class Effect<
       order: this.order,
       name: this.name,
       description: this.description,
-      args: structuredClone(this.args),
+      arguments: structuredClone(this.arguments),
       localKey: this.localKey,
     }
   }
@@ -732,7 +732,7 @@ export abstract class Effect<
    */
   public allDependenciesMet = (
     dependencies: TargetDependency[] = [],
-    args: TAnyObject = this.args,
+    targetArguments: TAnyObject = this.arguments,
   ): boolean => {
     // If the argument has no dependencies, then the argument is always displayed.
     if (!dependencies || dependencies.length === 0) {
@@ -748,8 +748,8 @@ export abstract class Effect<
     // Iterate through the dependencies.
     dependencies.forEach((dependency) => {
       // Grab the dependency argument.
-      let dependencyArg: TTargetArg | undefined = this.target?.args.find(
-        (arg: TTargetArg) => arg._id === dependency.dependentId,
+      let dependencyArg: TTargetParameter | undefined = this.target?.parameters.find(
+        (arg: TTargetParameter) => arg._id === dependency.dependentId,
       )
 
       // If the dependency argument is found then check if
@@ -807,7 +807,7 @@ export abstract class Effect<
         }
         // Otherwise, check if the condition is met.
         else {
-          dependencyMet = dependency.condition(args[dependency.dependentId])
+          dependencyMet = dependency.condition(targetArguments[dependency.dependentId])
         }
 
         // If the dependency is met then push true to the
@@ -838,7 +838,7 @@ export abstract class Effect<
   public getForceMetadataInArgs = (
     argId: string,
   ): Required<TForceMetadata> | undefined => {
-    const forceInArgs: TForceMetadata | undefined = this.args[argId]
+    const forceInArgs: TForceMetadata | undefined = this.arguments[argId]
 
     // If the force argument is not found, then return undefined.
     if (!forceInArgs) return undefined
@@ -868,7 +868,7 @@ export abstract class Effect<
   public getNodeMetadataInArgs = (
     argId: string,
   ): Required<TNodeMetadata> | undefined => {
-    let nodeInArgs: TNodeMetadata | undefined = this.args[argId]
+    let nodeInArgs: TNodeMetadata | undefined = this.arguments[argId]
 
     // If the node argument is not found, then return undefined.
     if (!nodeInArgs) return undefined
@@ -905,7 +905,7 @@ export abstract class Effect<
   public getActionMetadataInArgs = (
     argId: string,
   ): Required<TActionMetadata> | undefined => {
-    let actionInArgs: TActionMetadata | undefined = this.args[argId]
+    let actionInArgs: TActionMetadata | undefined = this.arguments[argId]
 
     // If the action argument is not found, then return undefined.
     if (!actionInArgs) return undefined
@@ -958,7 +958,7 @@ export abstract class Effect<
   public getResourceMetadataInArgs = (
     argId: string,
   ): Required<TResourceMetadata> | undefined => {
-    const resourceInArgs: TResourceMetadata | undefined = this.args[argId]
+    const resourceInArgs: TResourceMetadata | undefined = this.arguments[argId]
 
     // If the resource argument is not found, then return undefined.
     if (!resourceInArgs) return undefined
@@ -981,7 +981,7 @@ export abstract class Effect<
   public getPoolMetadataInArgs = (
     argId: string,
   ): Required<TPoolMetadata> | undefined => {
-    const poolInArgs: TPoolMetadata | undefined = this.args[argId]
+    const poolInArgs: TPoolMetadata | undefined = this.arguments[argId]
 
     // If the pool argument is not found, then return undefined.
     if (!poolInArgs) return undefined
@@ -1013,7 +1013,7 @@ export abstract class Effect<
   public getFileMetadataInArgs = (
     argId: string,
   ): Required<TFileMetadata> | undefined => {
-    const fileInArgs: TFileMetadata | undefined = this.args[argId]
+    const fileInArgs: TFileMetadata | undefined = this.arguments[argId]
 
     // If the file argument is not found, then return undefined.
     if (!fileInArgs) return undefined
@@ -1035,7 +1035,7 @@ export abstract class Effect<
    */
   public getForceFromArgs = (argId: string): T['force'] | undefined => {
     // Get the force argument.
-    const forceInArgs: TForceMetadata | undefined = this.args[argId]
+    const forceInArgs: TForceMetadata | undefined = this.arguments[argId]
     // Extract the metadata.
     let forceKey = forceInArgs?.forceKey
     // Handle force keys that are set to 'self'.
@@ -1054,7 +1054,7 @@ export abstract class Effect<
    */
   public getNodeFromArgs = (argId: string): T['node'] | undefined => {
     // Get the node argument.
-    const nodeInArgs: TNodeMetadata | undefined = this.args[argId]
+    const nodeInArgs: TNodeMetadata | undefined = this.arguments[argId]
     // Extract the metadata.
     let forceKey = nodeInArgs?.forceKey
     let nodeKey = nodeInArgs?.nodeKey
@@ -1078,7 +1078,7 @@ export abstract class Effect<
    */
   public getActionFromArgs = (argId: string): T['action'] | undefined => {
     // Get the action argument.
-    const actionInArgs: TActionMetadata | undefined = this.args[argId]
+    const actionInArgs: TActionMetadata | undefined = this.arguments[argId]
     // Extract the metadata.
     let forceKey = actionInArgs?.forceKey
     let nodeKey = actionInArgs?.nodeKey
@@ -1115,7 +1115,7 @@ export abstract class Effect<
    */
   public getResourceFromArgs = (argId: string): T['resource'] | undefined => {
     // Get the resource argument.
-    const resourceInArgs: TResourceMetadata | undefined = this.args[argId]
+    const resourceInArgs: TResourceMetadata | undefined = this.arguments[argId]
     // Extract the metadata.
     const resourceId = resourceInArgs?.resourceId
     // Get the resource from the mission.
@@ -1128,7 +1128,7 @@ export abstract class Effect<
    * @returns The pool if found, otherwise undefined.
    */
   public getPoolFromArgs = (argId: string): ResourcePool<T> | undefined => {
-    const poolInArgs: TPoolMetadata | undefined = this.args[argId]
+    const poolInArgs: TPoolMetadata | undefined = this.arguments[argId]
     let forceKey = poolInArgs?.forceKey
     let poolKey = poolInArgs?.poolKey
     // Handle force keys that are set to 'self'.
@@ -1149,7 +1149,7 @@ export abstract class Effect<
    */
   public getFileFromArgs = (argId: string): T['missionFile'] | undefined => {
     // Get the file argument.
-    const fileInArgs: TFileMetadata | undefined = this.args[argId]
+    const fileInArgs: TFileMetadata | undefined = this.arguments[argId]
     // Extract the metadata.
     const fileId = fileInArgs?.fileId
     // Get the file from the mission.
@@ -1185,7 +1185,7 @@ export abstract class Effect<
       order: 0,
       name: 'New Effect',
       description: '',
-      args: {},
+      arguments: {},
     }
   }
 
@@ -1355,7 +1355,7 @@ const JSON_PROPERTIES_RAW = {
     '_id',
     'name',
     'description',
-    'args',
+    'arguments',
     'targetId',
     'environmentId',
     'targetEnvironmentVersion',
