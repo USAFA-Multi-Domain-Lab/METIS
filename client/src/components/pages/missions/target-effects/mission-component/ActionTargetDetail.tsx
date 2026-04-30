@@ -14,7 +14,7 @@ import { useState } from 'react'
 /**
  * Renders a dropdown for the argument whose type is `"action"`.
  */
-export default function ActionTargetParameter({
+export default function ActionTargetDetail({
   arg: { name, type, tooltipDescription },
   existsInTargetArguments,
   actionIsActive,
@@ -26,7 +26,7 @@ export default function ActionTargetParameter({
   optionalNodeValue: [optionalNodeValue],
   actionValue: [actionValue, setActionValue],
   optionalActionValue: [optionalActionValue, setOptionalActionValue],
-}: TArgAction_P): TReactElement | null {
+}: TActionTargetDetail_P): TReactElement | null {
   /* -- STATE -- */
 
   /**
@@ -235,7 +235,7 @@ export default function ActionTargetParameter({
 /**
  * The props for the `ArgAction` component.
  */
-type TArgAction_P = {
+type TActionTargetDetail_P = {
   /**
    * The mission component argument to render.
    */

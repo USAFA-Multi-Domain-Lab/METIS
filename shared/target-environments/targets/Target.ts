@@ -1,6 +1,9 @@
 import { MetisComponent } from '../../MetisComponent'
 import type { TAnyObject } from '../../toolbox/objects/ObjectToolbox'
-import type { TTargetParameter, TTargetParameterJson } from '../parameters/TargetParameter'
+import type {
+  TTargetParameter,
+  TTargetParameterJson,
+} from '../parameters/TargetParameter'
 import { TargetParameter } from '../parameters/TargetParameter'
 import type { TTargetEnv } from '../TargetEnvironment'
 
@@ -40,7 +43,9 @@ export abstract class Target<
     public description: string,
 
     /**
-     * The parameters used to create the effect on the target.
+     * The parameters which define the arguments that must
+     * be provided to the target's script to enact the effect
+     * on the target.
      */
     public parameters: TTargetParameter[],
     /**
@@ -169,7 +174,9 @@ export interface TTargetJson {
    */
   description: string
   /**
-   * The parameters used to create the effect on the target.
+   * The parameters which define the arguments that must
+   * be provided to the target's script to enact the effect
+   * on the target.
    */
   parameters: TTargetParameterJson[]
   /**

@@ -77,7 +77,7 @@ const NodeOpenState = new TargetSchema({
     }
     // If openState is 'no-change', do nothing (skip the operation).
   },
-  args: [
+  parameters: [
     {
       type: 'node',
       _id: nodeMetadataArg._id,

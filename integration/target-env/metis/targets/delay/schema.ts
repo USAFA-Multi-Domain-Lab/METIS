@@ -27,7 +27,7 @@ const Delay = new TargetSchema({
     // Only resolve after the delay time has passed.
     await context.sleep(delayTime)
   },
-  args: [
+  parameters: [
     {
       type: 'number',
       _id: hoursArgId,

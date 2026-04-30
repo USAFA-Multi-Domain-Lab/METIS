@@ -178,7 +178,7 @@ export abstract class Effect<
     if (argIssues.length) return constructIssues(...argIssues)
 
     // Check to see if there are any missing arguments.
-    let missingArg = this.checkForMissingArgument()
+    let missingArg = this.getFirstUnfulfilledParameter()
     if (missingArg) {
       return constructIssues(
         `The required argument "${missingArg.name}" within the effect "${this.name}" is missing.`,
@@ -314,10 +314,10 @@ export abstract class Effect<
     }
 
     for (let argId in this.arguments) {
-      let targetParam = target.getParameterById(argId)
-      let effectArgValue = this.arguments[argId]
+      let parameter = target.getParameterById(argId)
+      let argument = this.arguments[argId]
 
-      if (!targetParam) {
+      if (!parameter) {
         issues.push(
           `The effect, "${this.name}", has an argument, "${argId}", that couldn't be found within the target, "${target.name}." ` +
             `Please delete the effect and create a new one.`,
@@ -325,26 +325,20 @@ export abstract class Effect<
         continue
       }
 
-      let dependenciesMet = this.allDependenciesMet(targetParam.dependencies)
+      let dependenciesMet = this.allDependenciesMet(parameter.dependencies)
 
       pushIfNotNull(
-        this.checkDependencyAlignment(
-          targetParam,
-          effectArgValue,
-          dependenciesMet,
-        ),
+        this.checkDependencyAlignment(parameter, argument, dependenciesMet),
       )
       pushIfNotNull(
-        this.checkRequiredArgs(targetParam, effectArgValue, dependenciesMet),
+        this.checkRequiredArgs(parameter, argument, dependenciesMet),
       )
       pushIfNotNull(
-        this.checkValueMatchesType(targetParam, effectArgValue, dependenciesMet),
+        this.checkValueMatchesType(parameter, argument, dependenciesMet),
       )
-      pushIfNotNull(this.checkValidDropdownOption(targetParam, effectArgValue))
-      pushIfNotNull(this.checkMissionComponentArg(targetParam, effectArgValue))
-      pushIfNotNull(
-        this.checkStringArgAgainstPattern(targetParam, effectArgValue),
-      )
+      pushIfNotNull(this.checkValidDropdownOption(parameter, argument))
+      pushIfNotNull(this.checkMissionComponentArg(parameter, argument))
+      pushIfNotNull(this.checkStringArgAgainstPattern(parameter, argument))
     }
 
     return issues
@@ -352,23 +346,23 @@ export abstract class Effect<
 
   /**
    * Checks if an argument is required and, if so, is missing a value.
-   * @param targetArg The target argument to check.
-   * @param effectArgValue The value of the argument in the effect.
+   * @param parameter The target parameter to check.
+   * @param argument The value of the argument in the effect.
    * @returns An issue message if the argument is required and
    * missing a value.
-   * @note Utility method of {@link checkEffectArgs}.
+   * @note Utility method of {@link checkTargetArguments}.
    */
   private checkRequiredArgs(
-    targetParam: TTargetParameter,
-    effectArgValue: unknown,
+    parameter: TTargetParameter,
+    argument: unknown,
     dependenciesMet: boolean,
   ): string | null {
     // * Note: Boolean arguments are always required because
     // * they always have a value (true or false). Therefore,
     // * they don't contain the required property.
-    let isBoolean = targetParam.type === 'boolean'
-    let required = targetParam.type === 'boolean' || targetParam.required
-    let valueMissing = effectArgValue === undefined
+    let isBoolean = parameter.type === 'boolean'
+    let required = parameter.type === 'boolean' || parameter.required
+    let valueMissing = argument === undefined
     let renterValueText: string = 'Please enter a value'
 
     if (isBoolean) {
@@ -377,7 +371,7 @@ export abstract class Effect<
 
     if (required && valueMissing && dependenciesMet) {
       return (
-        `The argument, "${targetParam.name}", within the effect, "${this.name}", is required, yet has no value. ` +
+        `The argument, "${parameter.name}", within the effect, "${this.name}", is required, yet has no value. ` +
         `${renterValueText}, or delete the effect and create a new one.`
       )
     }
@@ -387,14 +381,14 @@ export abstract class Effect<
 
   /**
    * Checks if an argument's value matches the type specified
-   * in the target argument.
-   * @param targetArg The target argument to check.
+   * in the target parameter.
+   * @param parameter The target parameter to check.
    * @param effectArgValue The value of the argument in the effect.
    * @returns An issue message if the argument's value does not
-   * match the type specified in the target argument.
+   * match the type specified in the target parameter.
    */
   private checkValueMatchesType(
-    targetParam: TTargetParameter,
+    parameter: TTargetParameter,
     effectArgValue: unknown,
     dependenciesMet: boolean,
   ): string | null {
@@ -403,7 +397,7 @@ export abstract class Effect<
     }
 
     let typesToCheck = ['boolean', 'number', 'string']
-    let expectedType = targetParam.type
+    let expectedType = parameter.type
     let actualType = typeof effectArgValue
 
     // Consolidate similar types for checking.
@@ -417,7 +411,7 @@ export abstract class Effect<
     // return an issue.
     if (shouldCheckType && actualType !== expectedType) {
       return (
-        `The argument, "${targetParam.name}", within the effect, "${this.name}", is expected to be of type, "${expectedType}", ` +
+        `The argument, "${parameter.name}", within the effect, "${this.name}", is expected to be of type, "${expectedType}", ` +
         `but received a value of type, "${actualType}". Please update the value, or delete the effect and create a new one (ERR 30382).`
       )
     } else {
@@ -429,20 +423,20 @@ export abstract class Effect<
    * Checks if an arguments dependencies align with the current
    * value in the effect. Specifically, if the dependencies are not met,
    * the argument should not have a current value.
-   * @param targetArg The target argument to check.
+   * @param parameter The target parameter to check.
    * @param effectArgValue The value of the argument in the effect.
    * @returns An issue message if the argument's dependencies do not align
    * with the effect's argument value.
-   * @note Utility method of {@link checkEffectArgs}.
+   * @note Utility method of {@link checkTargetArguments}.
    */
   private checkDependencyAlignment(
-    targetParam: TTargetParameter,
+    parameter: TTargetParameter,
     effectArgValue: unknown,
     dependenciesMet: boolean,
   ): string | null {
     if (!dependenciesMet && effectArgValue !== undefined) {
       return (
-        `The effect, "${this.name}", has an argument, "${targetParam.name}", that doesn't belong. ` +
+        `The effect, "${this.name}", has an argument, "${parameter.name}", that doesn't belong. ` +
         `Please delete the effect and create a new one.`
       )
     }
@@ -454,18 +448,18 @@ export abstract class Effect<
    * Checks if a dropdown argument is valid. Specifically,
    * that the provided value is one of the available options
    * in the dropdown.
-   * @param targetArg The target argument to check.
-   * @param effectArgValue The value of the argument in the effect.
+   * @param parameter The target parameter to check.
+   * @param argument The value of the argument in the effect.
    * @returns An issue message if the dropdown option is invalid.
-   * @note Utility method of {@link checkEffectArgs}.
+   * @note Utility method of {@link checkTargetArguments}.
    */
   private checkValidDropdownOption(
-    targetParam: TTargetParameter,
-    effectArgValue: unknown,
+    parameter: TTargetParameter,
+    argument: unknown,
   ): string | null {
     if (
-      targetParam.type === 'dropdown' &&
-      !targetParam.options.find((option) => option.value === effectArgValue)
+      parameter.type === 'dropdown' &&
+      !parameter.options.find((option) => option.value === argument)
     ) {
       return (
         `The effect, "${this.name}", has an invalid option selected. ` +
@@ -479,17 +473,17 @@ export abstract class Effect<
   /**
    * Checks if a mission-component argument is valid. Specifically,
    * it verifies the existence of referenced mission components.
-   * @param targetArg The target argument to check.
-   * @param effectArgValue The value of the argument in the effect.
+   * @param parameter The target parameter to check.
+   * @param argument The value of the argument in the effect.
    * @returns An issue message if the mission component reference
    * is invalid.
-   * @note Utility method of {@link checkEffectArgs}.
+   * @note Utility method of {@link checkTargetArguments}.
    */
   private checkMissionComponentArg(
-    targetParam: TTargetParameter,
-    effectArgValue: unknown,
+    parameter: TTargetParameter,
+    argument: unknown,
   ): string | null {
-    let { _id: argId, type } = targetParam
+    let { _id: argId, type } = parameter
 
     const isMissionComponentRef =
       type === 'action' ||
@@ -498,7 +492,7 @@ export abstract class Effect<
       type === 'force' ||
       type === 'file'
 
-    if (!isMissionComponentRef || effectArgValue === undefined) {
+    if (!isMissionComponentRef || argument === undefined) {
       return null
     }
 
@@ -567,28 +561,28 @@ export abstract class Effect<
   /**
    * Checks if a string argument's value matches the required pattern specified
    * in the target argument.
-   * @param targetArg The target argument to check.
-   * @param effectArgValue The value of the argument in the effect.
+   * @param parameter The target parameter to check.
+   * @param argument The value of the argument in the effect.
    * @returns An issue message if the string argument's value does not match
    * the required pattern.
-   * @note Utility method of {@link checkEffectArgs}.
+   * @note Utility method of {@link checkTargetArguments}.
    */
   private checkStringArgAgainstPattern(
-    targetParam: TTargetParameter,
-    effectArgValue: unknown,
+    parameter: TTargetParameter,
+    argument: unknown,
   ): string | null {
-    if (targetParam.type !== 'string' || typeof effectArgValue !== 'string') {
+    if (parameter.type !== 'string' || typeof argument !== 'string') {
       return null
     }
 
-    if (!targetParam.required && effectArgValue === undefined) {
+    if (!parameter.required && argument === undefined) {
       return null
     }
 
-    const pattern = targetParam.pattern
-    if (pattern instanceof RegExp && !pattern.test(effectArgValue)) {
+    const pattern = parameter.pattern
+    if (pattern instanceof RegExp && !pattern.test(argument)) {
       return (
-        `The argument, "${targetParam.name}", within the effect, "${this.name}", does not match the required format. ` +
+        `The argument, "${parameter.name}", within the effect, "${this.name}", does not match the required format. ` +
         `Please update the value, or delete the effect and create a new one.`
       )
     }
@@ -625,10 +619,11 @@ export abstract class Effect<
   }
 
   /**
-   * Checks if there are any required target parameters missing in the effect.
-   * @returns The missing parameter if there is one.
+   * @returns The first required parameter that is not fulfilled
+   * by the effect's current arguments, or `undefined` if all required
+   * parameters are fulfilled.
    */
-  private checkForMissingArgument(): TTargetParameter | undefined {
+  private getFirstUnfulfilledParameter(): TTargetParameter | undefined {
     // If the target is not set, throw an error.
     if (!this.target) {
       throw new Error(
@@ -637,20 +632,20 @@ export abstract class Effect<
       )
     }
 
-    for (let param of this.target.parameters) {
+    for (let parameter of this.target.parameters) {
       // Check if all the dependencies for the parameter are met.
       let allDependenciesMet: boolean = this.allDependenciesMet(
-        param.dependencies,
+        parameter.dependencies,
       )
 
       // If all the dependencies are met and the argument is not in the effect's arguments...
-      if (allDependenciesMet && !(param._id in this.arguments)) {
+      if (allDependenciesMet && !(parameter._id in this.arguments)) {
         // ...and the parameter's type is a boolean or the parameter is required, then return
         // the parameter.
         // *** Note: A boolean parameter is always required because its value
         // *** is always defined.
-        if (param.type === 'boolean' || param.required) {
-          return param
+        if (parameter.type === 'boolean' || parameter.required) {
+          return parameter
         }
       }
     }
@@ -725,9 +720,10 @@ export abstract class Effect<
   }
 
   /**
-   * Determines if all the dependencies passed are met.
+   * Determines if all the dependencies passed are met based on the
+   * the provided target arguments.
    * @param dependencies The dependencies to check if all are met.
-   * @param args The arguments to check the dependencies against.
+   * @param targetArguments The arguments to check the dependencies against.
    * @returns If all the dependencies are met.
    */
   public allDependenciesMet = (
@@ -748,9 +744,10 @@ export abstract class Effect<
     // Iterate through the dependencies.
     dependencies.forEach((dependency) => {
       // Grab the dependency argument.
-      let dependencyArg: TTargetParameter | undefined = this.target?.parameters.find(
-        (arg: TTargetParameter) => arg._id === dependency.dependentId,
-      )
+      let dependencyArg: TTargetParameter | undefined =
+        this.target?.parameters.find(
+          (arg: TTargetParameter) => arg._id === dependency.dependentId,
+        )
 
       // If the dependency argument is found then check if
       // the dependency is met.
@@ -807,7 +804,9 @@ export abstract class Effect<
         }
         // Otherwise, check if the condition is met.
         else {
-          dependencyMet = dependency.condition(targetArguments[dependency.dependentId])
+          dependencyMet = dependency.condition(
+            targetArguments[dependency.dependentId],
+          )
         }
 
         // If the dependency is met then push true to the

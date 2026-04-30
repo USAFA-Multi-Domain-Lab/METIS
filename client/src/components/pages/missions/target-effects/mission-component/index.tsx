@@ -7,16 +7,16 @@ import { ClientResourcePool } from '@client/missions/forces/ClientResourcePool'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks'
-import { ActionTargetParameter as ActionTargetParameterClass } from '@shared/target-environments/parameters/mission-component/ActionTargetParameter'
-import { FileTargetParameter as FileTargetParameterClass } from '@shared/target-environments/parameters/mission-component/FileTargetParameter'
-import { ForceTargetParameter as ForceTargetParameterClass } from '@shared/target-environments/parameters/mission-component/ForceTargetParameter'
+import { ActionTargetParameter } from '@shared/target-environments/parameters/mission-component/ActionTargetParameter'
+import { FileTargetParameter } from '@shared/target-environments/parameters/mission-component/FileTargetParameter'
+import { ForceTargetParameter } from '@shared/target-environments/parameters/mission-component/ForceTargetParameter'
 import type {
-  TMissionComponentTargetParameter,
   TMissionComponentMetadata,
+  TMissionComponentTargetParameter,
 } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
-import { NodeTargetParameter as NodeTargetParameterClass } from '@shared/target-environments/parameters/mission-component/NodeTargetParameter'
-import { PoolTargetParameter as PoolTargetParameterClass } from '@shared/target-environments/parameters/mission-component/PoolTargetParameter'
-import { ResourceTargetParameter as ResourceTargetParameterClass } from '@shared/target-environments/parameters/mission-component/ResourceTargetParameter'
+import { NodeTargetParameter } from '@shared/target-environments/parameters/mission-component/NodeTargetParameter'
+import { PoolTargetParameter } from '@shared/target-environments/parameters/mission-component/PoolTargetParameter'
+import { ResourceTargetParameter } from '@shared/target-environments/parameters/mission-component/ResourceTargetParameter'
 import type {
   TActionMetadata,
   TFileMetadata,
@@ -27,17 +27,17 @@ import type {
 } from '@shared/target-environments/types'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useEffect, useState } from 'react'
-import ActionTargetParameter from './ActionTargetParameter'
-import FileTargetParameter from './FileTargetParameter'
-import ForceTargetParameter from './ForceTargetParameter'
-import NodeTargetParameter from './NodeTargetParameter'
-import PoolTargetParameter from './PoolTargetParameter'
-import ResourceTargetParameter from './ResourceTargetParameter'
+import ActionTargetDetail from './ActionTargetDetail'
+import FileTargetDetail from './FileTargetDetail'
+import ForceTargetDetail from './ForceTargetDetail'
+import NodeTargetDetail from './NodeTargetDetail'
+import PoolTargetDetail from './PoolTargetDetail'
+import ResourceTargetDetail from './ResourceTargetDetail'
 
 /**
  * Renders dropdowns for the argument whose type is `"force"`, `"node"`, `"action"`, `"file"`, `"pool"`, or `"resource"`.
  */
-export default function MissionComponentTargetParameter({
+export default function MissionComponentTargetDetail({
   effect,
   effect: { mission, sourceForce, sourceNode, sourceAction },
   arg,
@@ -45,7 +45,7 @@ export default function MissionComponentTargetParameter({
   initialize,
   targetArguments,
   setTargetArguments,
-}: TMissionComponentTargetParameter_P): TReactElement | null {
+}: TMissionComponentTargetDetail_P): TReactElement | null {
   /* -- CONSTANTS -- */
 
   const isRequired: boolean = required
@@ -54,18 +54,18 @@ export default function MissionComponentTargetParameter({
 
   // Metadata keys used in the effect.arguments for
   // the mission component argument types.
-  const forceKey = ForceTargetParameterClass.FORCE_KEY
-  const forceName = ForceTargetParameterClass.FORCE_NAME
-  const nodeKey = NodeTargetParameterClass.NODE_KEY
-  const nodeName = NodeTargetParameterClass.NODE_NAME
-  const actionKey = ActionTargetParameterClass.ACTION_KEY
-  const actionName = ActionTargetParameterClass.ACTION_NAME
-  const fileId = FileTargetParameterClass.FILE_ID
-  const fileName = FileTargetParameterClass.FILE_NAME
-  const poolKey = PoolTargetParameterClass.POOL_KEY
-  const poolName = PoolTargetParameterClass.POOL_NAME
-  const resourceId = ResourceTargetParameterClass.RESOURCE_ID
-  const resourceName = ResourceTargetParameterClass.RESOURCE_NAME
+  const forceKey = ForceTargetParameter.FORCE_KEY
+  const forceName = ForceTargetParameter.FORCE_NAME
+  const nodeKey = NodeTargetParameter.NODE_KEY
+  const nodeName = NodeTargetParameter.NODE_NAME
+  const actionKey = ActionTargetParameter.ACTION_KEY
+  const actionName = ActionTargetParameter.ACTION_NAME
+  const fileId = FileTargetParameter.FILE_ID
+  const fileName = FileTargetParameter.FILE_NAME
+  const poolKey = PoolTargetParameter.POOL_KEY
+  const poolName = PoolTargetParameter.POOL_NAME
+  const resourceId = ResourceTargetParameter.RESOURCE_ID
+  const resourceName = ResourceTargetParameter.RESOURCE_NAME
 
   /* -- STATE -- */
 
@@ -1115,7 +1115,11 @@ export default function MissionComponentTargetParameter({
     // If the argument is optional, a resource hasn't been selected,
     // yet the argument exists in the effect's arguments then remove
     // the resource value from the effect's arguments.
-    if (isOptional && optionalResourceValue === null && existsInTargetArguments) {
+    if (
+      isOptional &&
+      optionalResourceValue === null &&
+      existsInTargetArguments
+    ) {
       return true
     }
 
@@ -1396,7 +1400,7 @@ export default function MissionComponentTargetParameter({
 
   return (
     <>
-      <ForceTargetParameter
+      <ForceTargetDetail
         effect={effect}
         arg={arg}
         existsInTargetArguments={existsInTargetArguments}
@@ -1404,7 +1408,7 @@ export default function MissionComponentTargetParameter({
         forceValue={[forceValue, setForceValue]}
         optionalForceValue={[optionalForceValue, setOptionalForceValue]}
       />
-      <PoolTargetParameter
+      <PoolTargetDetail
         arg={arg}
         existsInTargetArguments={existsInTargetArguments}
         poolIsActive={poolIsActive}
@@ -1415,7 +1419,7 @@ export default function MissionComponentTargetParameter({
         poolValue={[poolValue, setPoolValue]}
         optionalPoolValue={[optionalPoolValue, setOptionalPoolValue]}
       />
-      <NodeTargetParameter
+      <NodeTargetDetail
         arg={arg}
         existsInTargetArguments={existsInTargetArguments}
         nodeIsActive={nodeIsActive}
@@ -1426,7 +1430,7 @@ export default function MissionComponentTargetParameter({
         optionalForceValue={[optionalForceValue, setOptionalForceValue]}
         optionalNodeValue={[optionalNodeValue, setOptionalNodeValue]}
       />
-      <ActionTargetParameter
+      <ActionTargetDetail
         arg={arg}
         existsInTargetArguments={existsInTargetArguments}
         actionIsActive={actionIsActive}
@@ -1439,7 +1443,7 @@ export default function MissionComponentTargetParameter({
         optionalNodeValue={[optionalNodeValue, setOptionalNodeValue]}
         optionalActionValue={[optionalActionValue, setOptionalActionValue]}
       />
-      <FileTargetParameter
+      <FileTargetDetail
         effect={effect}
         arg={arg}
         existsInTargetArguments={existsInTargetArguments}
@@ -1447,7 +1451,7 @@ export default function MissionComponentTargetParameter({
         fileValue={[fileValue, setFileValue]}
         optionalFileValue={[optionalFileValue, setOptionalFileValue]}
       />
-      <ResourceTargetParameter
+      <ResourceTargetDetail
         effect={effect}
         arg={arg}
         existsInTargetArguments={existsInTargetArguments}
@@ -1467,7 +1471,7 @@ export default function MissionComponentTargetParameter({
 /**
  * The props for the `ArgMissionComponent` component.
  */
-type TMissionComponentTargetParameter_P = {
+type TMissionComponentTargetDetail_P = {
   /**
    * The effect that the arguments belong to.
    */

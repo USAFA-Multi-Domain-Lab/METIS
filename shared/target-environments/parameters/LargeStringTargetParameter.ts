@@ -10,7 +10,9 @@ export class LargeStringTargetParameter {
    * @param arg The large string argument to convert.
    * @returns The large string argument as JSON.
    */
-  public static toJson = (arg: TLargeStringTargetParameter): TLargeStringTargetParameterJson => {
+  public static toJson = (
+    arg: TLargeStringTargetParameter,
+  ): TLargeStringTargetParameterJson => {
     // Return the appropriate properties based on
     // whether the argument is required or not.
     return arg.required
@@ -44,7 +46,9 @@ export class LargeStringTargetParameter {
    * @param arg The large string argument as JSON to convert.
    * @returns The large string argument.
    */
-  public static fromJson = (arg: TLargeStringTargetParameterJson): TLargeStringTargetParameter => {
+  public static fromJson = (
+    arg: TLargeStringTargetParameterJson,
+  ): TLargeStringTargetParameter => {
     // Return the appropriate properties based on
     // whether the argument is required or not.
     return arg.required
@@ -80,7 +84,10 @@ export class LargeStringTargetParameter {
  * The large character string parameter type for a target.
  */
 export type TLargeStringTargetParameter = TBaseTargetParameter &
-  (TLargeStringTargetParameterOptional | TLargeStringTargetParameterRequired) & {
+  (
+    | TLargeStringTargetParameterOptional
+    | TLargeStringTargetParameterRequired
+  ) & {
     /**
      * The argument's input type.
      * @note This will render as an input that accepts any string.
@@ -114,7 +121,10 @@ type TLargeStringTargetParameterRequired = {
  * The large character string parameter type for a target.
  */
 export type TLargeStringTargetParameterJson = TBaseTargetParameterJson &
-  (TLargeStringTargetParameterOptionalJson | TLargeStringTargetParameterRequiredJson) & {
+  (
+    | TLargeStringTargetParameterOptionalJson
+    | TLargeStringTargetParameterRequiredJson
+  ) & {
     /**
      * The argument's input type.
      * @note This will render as an input that accepts any string.

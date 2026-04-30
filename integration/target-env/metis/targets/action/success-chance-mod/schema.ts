@@ -18,7 +18,7 @@ const SuccessChanceMod = new TargetSchema({
       actionKey,
     })
   },
-  args: [
+  parameters: [
     {
       type: 'action',
       _id: 'actionMetadata',

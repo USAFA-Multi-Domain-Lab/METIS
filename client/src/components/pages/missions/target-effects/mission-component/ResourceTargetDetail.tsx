@@ -7,14 +7,14 @@ import type { TMissionComponentArg } from '@shared/target-environments/parameter
 /**
  * Renders a dropdown for the argument whose type is `"resource"`.
  */
-export default function ResourceTargetParameter({
+export default function ResourceTargetDetail({
   effect: { mission },
   arg: { name, type, tooltipDescription, required },
   existsInTargetArguments,
   resourceIsActive,
   resourceValue: [resourceValue, setResourceValue],
   optionalResourceValue: [optionalResourceValue, setOptionalResourceValue],
-}: TArgResource_P): TReactElement | null {
+}: TResourceTargetDetail_P): TReactElement | null {
   /* -- COMPUTED -- */
 
   /**
@@ -107,7 +107,7 @@ export default function ResourceTargetParameter({
 /**
  * The props for the `ArgResource` component.
  */
-type TArgResource_P = {
+type TResourceTargetDetail_P = {
   /**
    * The effect that the arguments belong to.
    */

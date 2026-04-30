@@ -18,7 +18,7 @@ const BlockStatus = new TargetSchema({
       context.unblockNode({ forceKey, nodeKey })
     }
   },
-  args: [
+  parameters: [
     {
       type: 'node',
       _id: 'nodeMetadata',

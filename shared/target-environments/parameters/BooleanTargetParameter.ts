@@ -10,7 +10,9 @@ export class BooleanTargetParameter {
    * @param arg The boolean argument to convert.
    * @returns The boolean argument as JSON.
    */
-  public static toJson = (arg: TBooleanTargetParameter): TBooleanTargetParameterJson => {
+  public static toJson = (
+    arg: TBooleanTargetParameter,
+  ): TBooleanTargetParameterJson => {
     return {
       _id: arg._id,
       name: arg.name,
@@ -29,7 +31,9 @@ export class BooleanTargetParameter {
    * @param arg The boolean argument as JSON to convert.
    * @returns The boolean argument.
    */
-  public static fromJson = (arg: TBooleanTargetParameterJson): TBooleanTargetParameter => {
+  public static fromJson = (
+    arg: TBooleanTargetParameterJson,
+  ): TBooleanTargetParameter => {
     return {
       _id: arg._id,
       name: arg.name,

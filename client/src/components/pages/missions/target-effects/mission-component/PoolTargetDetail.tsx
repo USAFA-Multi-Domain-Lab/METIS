@@ -13,7 +13,7 @@ import { useState } from 'react'
 /**
  * Renders a dropdown for the argument whose type is `"pool"`.
  */
-export default function PoolTargetParameter({
+export default function PoolTargetDetail({
   arg: { name, type, tooltipDescription },
   existsInTargetArguments,
   poolIsActive,
@@ -23,7 +23,7 @@ export default function PoolTargetParameter({
   optionalForceValue: [optionalForceValue],
   poolValue: [poolValue, setPoolValue],
   optionalPoolValue: [optionalPoolValue, setOptionalPoolValue],
-}: TArgPool_P): TReactElement | null {
+}: TPoolTargetDetail_P): TReactElement | null {
   /* -- STATE -- */
 
   /**
@@ -213,7 +213,7 @@ export default function PoolTargetParameter({
 /**
  * The props for the `ArgPool` component.
  */
-type TArgPool_P = {
+type TPoolTargetDetail_P = {
   /**
    * The mission component argument to render.
    */

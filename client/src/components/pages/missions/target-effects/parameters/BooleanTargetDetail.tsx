@@ -1,20 +1,22 @@
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { usePostInitEffect } from '@client/toolbox/hooks'
-import type { TBooleanArg } from '@shared/target-environments/parameters/BooleanTargetParameter'
+import type { TBooleanTargetParameter } from '@shared/target-environments/parameters/BooleanTargetParameter'
 import { useEffect, useState } from 'react'
 import { DetailToggle } from '../../../../content/form/DetailToggle'
 
 /**
  * Renders a toggle switch for the argument whose type is `"boolean"`.
  */
-export default function BooleanTargetParameter({
-  arg,
+export default function BooleanTargetDetail({
+  parameter,
   initialize,
   targetArguments,
   setTargetArguments,
-}: TBooleanTargetParameter_P): TReactElement | null {
+}: TBooleanTargetDetail_P): TReactElement | null {
   /* -- STATE -- */
-  const [value, setValue] = useState<boolean>(targetArguments[arg._id] ?? false)
+  const [value, setValue] = useState<boolean>(
+    targetArguments[parameter._id] ?? false,
+  )
 
   /* -- EFFECTS -- */
 
@@ -27,7 +29,7 @@ export default function BooleanTargetParameter({
   // when the argument's value changes.
   // *** Note: this doesn't execute on the first render. ***
   usePostInitEffect(
-    () => setTargetArguments((prev) => ({ ...prev, [arg._id]: value })),
+    () => setTargetArguments((prev) => ({ ...prev, [parameter._id]: value })),
     [value],
   )
 
@@ -41,22 +43,22 @@ export default function BooleanTargetParameter({
     // same as the default value, then manually update the
     // effect's arguments by adding this argument and its
     // value.
-    if (arg.default !== undefined && value === arg.default) {
+    if (parameter.default !== undefined && value === parameter.default) {
       // *** Note: An argument's value in the effect's
       // *** arguments is automatically set if the value
       // *** stored in this state changes. If the value
       // *** in the state doesn't change then the value
       // *** needs to be set manually.
-      setTargetArguments((prev) => ({ ...prev, [arg._id]: value }))
+      setTargetArguments((prev) => ({ ...prev, [parameter._id]: value }))
     }
     // Or, if the argument has a default value and the
     // value stored in the state is not the default value,
     // then update the value in the state to the default value.
-    else if (arg.default !== undefined && value !== arg.default) {
+    else if (parameter.default !== undefined && value !== parameter.default) {
       // *** Note: When this value in the state changes,
       // *** the effect's arguments automatically updates
       // *** with the current value.
-      setValue(arg.default)
+      setValue(parameter.default)
     }
     // Otherwise, manually set the argument's value in the
     // effect's arguments to `false`.
@@ -66,7 +68,7 @@ export default function BooleanTargetParameter({
       // *** stored in this state changes. If the value
       // *** in the state doesn't change then the value
       // *** needs to be set manually.
-      setTargetArguments((prev) => ({ ...prev, [arg._id]: false }))
+      setTargetArguments((prev) => ({ ...prev, [parameter._id]: false }))
     }
   }
 
@@ -74,11 +76,11 @@ export default function BooleanTargetParameter({
   return (
     <DetailToggle
       fieldType='required'
-      label={arg.name}
+      label={parameter.name}
       value={value}
       setValue={setValue}
-      tooltipDescription={arg.tooltipDescription}
-      key={`arg-${arg._id}_name-${arg.name}_type-${arg.type}_required`}
+      tooltipDescription={parameter.tooltipDescription}
+      key={`arg-${parameter._id}_name-${parameter.name}_type-${parameter.type}_required`}
     />
   )
 }
@@ -88,17 +90,18 @@ export default function BooleanTargetParameter({
 /**
  * The props for the `BooleanArg` component.
  */
-type TBooleanTargetParameter_P = {
+type TBooleanTargetDetail_P = {
   /**
-   * The boolean argument to render.
+   * The number parameter defining the requirements for the argument.
    */
-  arg: TBooleanArg
+  parameter: TBooleanTargetParameter
   /**
    * Determines if the argument needs to be initialized.
    */
   initialize: boolean
   /**
-   * The arguments that the effect uses to modify the target.
+   * The arguments that the effect passed to the script
+   * of the target.
    */
   targetArguments: ClientEffect['arguments']
   /**

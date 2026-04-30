@@ -33,7 +33,7 @@ const ProcessTimeMod = new TargetSchema({
       context.modifyProcessTime(processTime, { forceKey, nodeKey, actionKey })
     }
   },
-  args: [
+  parameters: [
     {
       type: 'mission-component',
       _id: 'modifierScope',

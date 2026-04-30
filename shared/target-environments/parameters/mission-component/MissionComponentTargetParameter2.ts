@@ -1,4 +1,7 @@
-import type { TBaseTargetParameter, TBaseTargetParameterJson } from '../../types'
+import type {
+  TBaseTargetParameter,
+  TBaseTargetParameterJson,
+} from '../../types'
 import { TargetParameter } from '../TargetParameter'
 
 /**

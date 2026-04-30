@@ -4,18 +4,18 @@ import type { TTargetParameter } from '@shared/target-environments/parameters/Ta
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useEffect, useState } from 'react'
-import MissionComponentTargetParameter from '../mission-component'
-import MissionComponentTargetParameter2 from '../mission-component/MissionComponentTargetParameter'
-import './TargetParameter.scss'
-import BooleanTargetParameter from './BooleanTargetParameter'
-import DropdownTargetParameter from './DropdownTargetParameter'
-import LargeStringTargetParameter from './LargeStringTargetParameter'
-import NumberTargetParameter from './NumberTargetParameter'
-import StringTargetParameter from './StringTargetParameter'
+import MissionComponentTargetDetail from '../mission-component'
+import BooleanTargetDetail from './BooleanTargetDetail'
+import DropdownTargetDetail from './DropdownTargetDetail'
+import LargeStringTargetDetail from './LargeStringTargetDetail'
+import MissionComponentTargetDetail2 from './MissionComponentTargetDetail'
+import NumberTargetDetail from './NumberTargetDetail'
+import StringTargetDetail from './StringTargetDetail'
+import './TargetDetail.scss'
 
-export default function TargetParameter({
+export default function TargetDetail({
   effect,
-  arg,
+  parameter,
   targetArguments,
   setTargetArguments,
 }: TTargetParameter_P): TReactElement | null {
@@ -28,7 +28,7 @@ export default function TargetParameter({
    * Determines if all the argument's dependencies have been met.
    */
   const allDependenciesMet = compute<boolean>(() =>
-    effect.allDependenciesMet(arg.dependencies, targetArguments),
+    effect.allDependenciesMet(parameter.dependencies, targetArguments),
   )
 
   /**
@@ -36,7 +36,7 @@ export default function TargetParameter({
    */
   const className = compute<string>(() => {
     const classList = new ClassList('Arg').add(
-      StringToolbox.toCamelCase(arg.type),
+      StringToolbox.toCamelCase(parameter.type),
     )
 
     return classList.value
@@ -49,13 +49,16 @@ export default function TargetParameter({
   useEffect(() => {
     // If all the dependencies have been met and the argument is
     // not in the effect's arguments then initialize the argument.
-    if (allDependenciesMet && targetArguments[arg._id] === undefined) {
+    if (allDependenciesMet && targetArguments[parameter._id] === undefined) {
       setInitializeArg(true)
     }
     // Otherwise, remove the argument from the effect's arguments.
-    else if (!allDependenciesMet && targetArguments[arg._id] !== undefined) {
+    else if (
+      !allDependenciesMet &&
+      targetArguments[parameter._id] !== undefined
+    ) {
       setTargetArguments((prev) => {
-        delete prev[arg._id]
+        delete prev[parameter._id]
         return prev
       })
     }
@@ -67,13 +70,13 @@ export default function TargetParameter({
   // return anything.
   if (!allDependenciesMet) return null
 
-  switch (arg.type) {
+  switch (parameter.type) {
     case 'dropdown':
       return (
         <div className={className}>
-          <ArgDropdown
+          <DropdownTargetDetail
             effect={effect}
-            arg={arg}
+            parameter={parameter}
             initialize={initializeArg}
             targetArguments={targetArguments}
             setTargetArguments={setTargetArguments}
@@ -83,8 +86,8 @@ export default function TargetParameter({
     case 'number':
       return (
         <div className={className}>
-          <ArgNumber
-            arg={arg}
+          <NumberTargetDetail
+            parameter={parameter}
             initialize={initializeArg}
             targetArguments={targetArguments}
             setTargetArguments={setTargetArguments}
@@ -94,8 +97,8 @@ export default function TargetParameter({
     case 'string':
       return (
         <div className={className}>
-          <ArgString
-            arg={arg}
+          <StringTargetDetail
+            parameter={parameter}
             initialize={initializeArg}
             targetArguments={targetArguments}
             setTargetArguments={setTargetArguments}
@@ -105,8 +108,8 @@ export default function TargetParameter({
     case 'large-string':
       return (
         <div className={className}>
-          <ArgLargeString
-            arg={arg}
+          <LargeStringTargetDetail
+            parameter={parameter}
             initialize={initializeArg}
             targetArguments={targetArguments}
             setTargetArguments={setTargetArguments}
@@ -116,8 +119,8 @@ export default function TargetParameter({
     case 'boolean':
       return (
         <div className={className}>
-          <ArgBoolean
-            arg={arg}
+          <BooleanTargetDetail
+            parameter={parameter}
             initialize={initializeArg}
             targetArguments={targetArguments}
             setTargetArguments={setTargetArguments}
@@ -131,9 +134,9 @@ export default function TargetParameter({
     case 'file':
     case 'resource':
       return (
-        <MissionComponentTargetParameter
+        <MissionComponentTargetDetail
           effect={effect}
-          arg={arg}
+          arg={parameter}
           initialize={initializeArg}
           targetArguments={targetArguments}
           setTargetArguments={setTargetArguments}
@@ -141,9 +144,9 @@ export default function TargetParameter({
       )
     case 'mission-component':
       return (
-        <MissionComponentTargetParameter2
+        <MissionComponentTargetDetail2
           effect={effect}
-          arg={arg}
+          parameter={parameter}
           initialize={initializeArg}
           targetArguments={targetArguments}
           setTargetArguments={setTargetArguments}
@@ -165,9 +168,9 @@ export type TTargetParameter_P = {
    */
   effect: ClientEffect
   /**
-   * The argument to render.
+   * The string parameter defining the requirements for the argument.
    */
-  arg: TTargetParameter
+  parameter: TTargetParameter
   /**
    * The arguments that the effect uses to modify the target.
    */

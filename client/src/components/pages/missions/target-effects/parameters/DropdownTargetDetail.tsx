@@ -2,7 +2,7 @@ import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks'
 import type {
-  TDropdownArg,
+  TDropdownTargetParameter,
   TDropdownTargetParameterOption,
 } from '@shared/target-environments/parameters/DropdownTargetParameter'
 import { useEffect, useState } from 'react'
@@ -11,46 +11,47 @@ import { DetailDropdown } from '../../../../content/form/dropdowns/standard/Deta
 /**
  * Renders a dropdown for the argument whose type is `"dropdown"`.
  */
-export default function DropdownTargetParameter({
+export default function DropdownTargetDetail({
   effect,
-  arg,
+  parameter,
   initialize,
   targetArguments,
   setTargetArguments,
-}: TDropdownTargetParameter_P): TReactElement | null {
+}: TDropdownTargetDetail_P): TReactElement | null {
   /* -- STATE -- */
-  const [requiredValue, setRequiredValue] = useState<TDropdownTargetParameterOption>(() => {
-    // If the argument is a dropdown and the argument's value
-    // is in the effect's arguments then set the dropdown value.
-    if (arg.type === 'dropdown' && arg.required) {
-      // Grab the dropdown option.
-      let option = arg.options.find(
-        (option) => option.value === targetArguments[arg._id],
-      )
-
-      // If the option is found then set the dropdown value.
-      if (option) {
-        return option
-      } else {
-        return arg.default
-      }
-    }
-
-    // Otherwise, return a temporary option.
-    return {
-      _id: 'temporary-option',
-      name: 'Select an option',
-      value: null,
-    }
-  })
-  const [optionalValue, setOptionalValue] = useState<TDropdownTargetParameterOption | null>(
-    () => {
+  const [requiredValue, setRequiredValue] =
+    useState<TDropdownTargetParameterOption>(() => {
       // If the argument is a dropdown and the argument's value
       // is in the effect's arguments then set the dropdown value.
-      if (arg.type === 'dropdown' && !arg.required) {
+      if (parameter.type === 'dropdown' && parameter.required) {
         // Grab the dropdown option.
-        let option = arg.options.find(
-          (option) => option.value === targetArguments[arg._id],
+        let option = parameter.options.find(
+          (option) => option.value === targetArguments[parameter._id],
+        )
+
+        // If the option is found then set the dropdown value.
+        if (option) {
+          return option
+        } else {
+          return parameter.default
+        }
+      }
+
+      // Otherwise, return a temporary option.
+      return {
+        _id: 'temporary-option',
+        name: 'Select an option',
+        value: null,
+      }
+    })
+  const [optionalValue, setOptionalValue] =
+    useState<TDropdownTargetParameterOption | null>(() => {
+      // If the argument is a dropdown and the argument's value
+      // is in the effect's arguments then set the dropdown value.
+      if (parameter.type === 'dropdown' && !parameter.required) {
+        // Grab the dropdown option.
+        let option = parameter.options.find(
+          (option) => option.value === targetArguments[parameter._id],
         )
 
         // If the option is found then set the dropdown value.
@@ -63,8 +64,7 @@ export default function DropdownTargetParameter({
 
       // Otherwise, return null
       return null
-    },
-  )
+    })
 
   /* -- COMPUTED -- */
 
@@ -73,8 +73,8 @@ export default function DropdownTargetParameter({
    * dependencies of the argument's options.
    */
   const availableOptions: TDropdownTargetParameterOption[] = compute(() =>
-    arg.type === 'dropdown'
-      ? arg.options.filter((option) =>
+    parameter.type === 'dropdown'
+      ? parameter.options.filter((option) =>
           effect.allDependenciesMet(option.dependencies, targetArguments),
         )
       : [],
@@ -93,8 +93,11 @@ export default function DropdownTargetParameter({
   usePostInitEffect(() => {
     // If the argument is required, then update the
     // required value in the effect's arguments.
-    if (arg.required) {
-      setTargetArguments((prev) => ({ ...prev, [arg._id]: requiredValue.value }))
+    if (parameter.required) {
+      setTargetArguments((prev) => ({
+        ...prev,
+        [parameter._id]: requiredValue.value,
+      }))
     }
     // Or, if the argument is optional...
     else {
@@ -104,15 +107,18 @@ export default function DropdownTargetParameter({
       if (optionalValue !== null) {
         setTargetArguments((prev) => ({
           ...prev,
-          [arg._id]: optionalValue.value,
+          [parameter._id]: optionalValue.value,
         }))
       }
       // Or, if the optional value is null and the
       // argument is in the effect's arguments, then
       // remove the argument from the effect's arguments.
-      else if (optionalValue === null && targetArguments[arg._id] !== undefined) {
+      else if (
+        optionalValue === null &&
+        targetArguments[parameter._id] !== undefined
+      ) {
         setTargetArguments((prev) => {
-          delete prev[arg._id]
+          delete prev[parameter._id]
           return prev
         })
       }
@@ -131,18 +137,21 @@ export default function DropdownTargetParameter({
     // value to the default value.
     // *** Note: The default value is mandatory if the
     // *** argument is required.
-    if (arg.required) {
+    if (parameter.required) {
       // If the required value stored in the state is the
       // same as the default value, then manually update the
       // effect's arguments by adding this argument and its
       // value.
-      if (requiredValue === arg.default) {
+      if (requiredValue === parameter.default) {
         // *** Note: An argument's value in the effect's
         // *** arguments is automatically set if the value
         // *** stored in this state changes. If the value
         // *** in the state doesn't change then the value
         // *** needs to be set manually.
-        setTargetArguments((prev) => ({ ...prev, [arg._id]: requiredValue.value }))
+        setTargetArguments((prev) => ({
+          ...prev,
+          [parameter._id]: requiredValue.value,
+        }))
       }
       // Otherwise, set the required value to the default value.
       // *** Note: The default value is mandatory if the
@@ -151,49 +160,49 @@ export default function DropdownTargetParameter({
         // *** Note: When this value in the state changes,
         // *** the effect's arguments automatically updates
         // *** with the current value.
-        setRequiredValue(arg.default)
+        setRequiredValue(parameter.default)
       }
     }
   }
 
   /* -- RENDER -- */
 
-  if (arg.required) {
+  if (parameter.required) {
     return (
       <DetailDropdown<TDropdownTargetParameterOption>
         fieldType={'required'}
-        label={arg.name}
+        label={parameter.name}
         options={availableOptions}
         value={requiredValue}
         setValue={setRequiredValue}
         isExpanded={false}
-        tooltipDescription={arg.tooltipDescription}
+        tooltipDescription={parameter.tooltipDescription}
         getKey={({ _id }) => _id}
         render={({ name }) => name}
         handleInvalidOption={{
           method: 'setToDefault',
-          defaultValue: arg.default,
+          defaultValue: parameter.default,
         }}
-        key={`arg-${arg._id}_type-${arg.type}_required`}
+        key={`arg-${parameter._id}_type-${parameter.type}_required`}
       />
     )
   } else {
     return (
       <DetailDropdown<TDropdownTargetParameterOption>
         fieldType={'optional'}
-        label={arg.name}
+        label={parameter.name}
         options={availableOptions}
         value={optionalValue}
         setValue={setOptionalValue}
         isExpanded={false}
-        tooltipDescription={arg.tooltipDescription}
+        tooltipDescription={parameter.tooltipDescription}
         getKey={(option) => option?._id}
         render={(option) => option?.name}
         handleInvalidOption={{
           method: 'setToDefault',
           defaultValue: null,
         }}
-        key={`arg-${arg._id}_type-${arg.type}_optional`}
+        key={`arg-${parameter._id}_type-${parameter.type}_optional`}
       />
     )
   }
@@ -204,21 +213,22 @@ export default function DropdownTargetParameter({
 /**
  * The props for the `DropdownArg` component.
  */
-type TDropdownTargetParameter_P = {
+type TDropdownTargetDetail_P = {
   /**
    * The effect that the arguments belong to.
    */
   effect: ClientEffect
   /**
-   * The dropdown argument to render.
+   * The dropdown parameter defining the requirements for the argument.
    */
-  arg: TDropdownArg
+  parameter: TDropdownTargetParameter
   /**
    * Determines if the argument needs to be initialized.
    */
   initialize: boolean
   /**
-   * The arguments that the effect uses to modify the target.
+   * The arguments that the effect passed to the script
+   * of the target.
    */
   targetArguments: ClientEffect['arguments']
   /**

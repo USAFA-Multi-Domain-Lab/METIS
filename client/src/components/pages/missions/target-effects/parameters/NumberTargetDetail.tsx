@@ -1,18 +1,18 @@
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { usePostInitEffect } from '@client/toolbox/hooks'
-import type { TNumberArg } from '@shared/target-environments/parameters/NumberTargetParameter'
+import type { TNumberTargetParameter } from '@shared/target-environments/parameters/NumberTargetParameter'
 import { useEffect, useState } from 'react'
 import { DetailNumber } from '../../../../content/form/DetailNumber'
 
 /**
  * Renders a number input box for the argument whose type is `"number"`.
  */
-export default function NumberTargetParameter({
-  arg,
+export default function NumberTargetDetail({
+  parameter: arg,
   initialize,
   targetArguments,
   setTargetArguments,
-}: TNumberTargetParameter_P): TReactElement | null {
+}: TNumberTargetDetail_P): TReactElement | null {
   /* -- STATE -- */
   const [requiredValue, setRequiredValue] = useState<number>(() => {
     // If the argument is a number and the argument's value
@@ -54,7 +54,10 @@ export default function NumberTargetParameter({
       // Or, if the optional value is null and the
       // argument is in the effect's arguments then
       // remove the argument from the effect's arguments.
-      else if (optionalValue === null && targetArguments[arg._id] !== undefined) {
+      else if (
+        optionalValue === null &&
+        targetArguments[arg._id] !== undefined
+      ) {
         setTargetArguments((prev) => {
           delete prev[arg._id]
           return prev
@@ -142,17 +145,18 @@ export default function NumberTargetParameter({
 /**
  * The props for the `NumberArg` component.
  */
-type TNumberTargetParameter_P = {
+type TNumberTargetDetail_P = {
   /**
-   * The number argument to render.
+   * The number parameter defining the requirements for the argument.
    */
-  arg: TNumberArg
+  parameter: TNumberTargetParameter
   /**
    * Determines if the argument needs to be initialized.
    */
   initialize: boolean
   /**
-   * The arguments that the effect uses to modify the target.
+   * The arguments that the effect passed to the script
+   * of the target.
    */
   targetArguments: ClientEffect['arguments']
   /**

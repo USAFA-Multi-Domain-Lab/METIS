@@ -5,30 +5,29 @@ import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
 import { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
-import { useMountHandler } from '@client/toolbox/hooks'
 import type {
   TMissionComponentTargetParameter2,
   TMissionComponentType,
 } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter2'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { TMissionOutlineItem } from '../../structures/MissionOutline'
 import MissionOutline, {
   computeOutlineIconStyling,
 } from '../../structures/MissionOutline'
-import './MissionComponentTargetParameter.scss'
+import './MissionComponentTargetDetail.scss'
 
 /**
  * Renders dropdowns for the argument whose type is `"force"`, `"node"`, `"action"`, `"file"`, `"pool"`, or `"resource"`.
  */
-export default function MissionComponentTargetParameter2({
+export default function MissionComponentTargetDetail2({
   effect,
   effect: { mission, sourceForce, sourceNode, sourceAction },
-  arg,
-  arg: { _id, type, required, tooltipDescription },
+  parameter,
+  parameter: { _id, type, required, tooltipDescription },
   initialize,
   targetArguments,
   setTargetArguments,
-}: TArgMissionComponent_P): TReactElement | null {
+}: TMissionComponentTargetDetail_P): TReactElement | null {
   const [value, setValue] = useState<TMissionOutlineItem[]>([])
 
   /* -- COMPUTED -- */
@@ -36,7 +35,7 @@ export default function MissionComponentTargetParameter2({
   // A list of JS classes. If an outline item is an instance
   // of any of these classes, then it is selectable in the outline.
   let selectableOutlineItemTypes = useMemo(() => {
-    let { validComponentTypes = ['any'] } = arg
+    let { validComponentTypes = ['any'] } = parameter
     let typeToClassMap = {
       mission: ClientMission,
       force: ClientMissionForce,
@@ -66,7 +65,7 @@ export default function MissionComponentTargetParameter2({
         }),
       ),
     )
-  }, [arg.validComponentTypes])
+  }, [parameter.validComponentTypes])
   // A list of JS classes. If an outline item is an instance
   // of any of these classes, then it will be displayed in the
   // outline. This is different from selectableOutlineItemTypes
@@ -116,22 +115,22 @@ export default function MissionComponentTargetParameter2({
 
   /* -- EFFECTS -- */
 
-  useMountHandler((done) => {
-    done()
-  })
+  // useMountHandler((done) => {
+  //   done()
+  // })
 
-  useEffect(() => {
-    setTargetArguments((prevArgs) => {
-      prevArgs
-    })
-  }, [value])
+  // useEffect(() => {
+  //   setTargetArguments((prevArgs) => {
+  //     prevArgs
+  //   })
+  // }, [value])
 
   /* -- RENDER -- */
 
   return (
-    <div className='ArgMissionComponent'>
+    <div className='TargetDetail MissionComponentTargetDetail'>
       <DetailMultiSelect<TMissionOutlineItem>
-        label={arg.name}
+        label={parameter.name}
         tooltipDescription={tooltipDescription}
         value={value}
         setValue={setValue}
@@ -253,21 +252,21 @@ function deserialize(
 /**
  * The props for the `ArgMissionComponent` component.
  */
-type TArgMissionComponent_P = {
+type TMissionComponentTargetDetail_P = {
   /**
    * The effect that the arguments belong to.
    */
   effect: ClientEffect
   /**
-   * The mission component argument to render.
+   * The string parameter defining the requirements for the argument.
    */
-  arg: TMissionComponentTargetParameter2
+  parameter: TMissionComponentTargetParameter2
   /**
    * Determines if the argument needs to be initialized.
    */
   initialize: boolean
   /**
-   * The arguments that the effect uses to modify the target.
+   * The arguments that the effect uses to call the target script.
    */
   targetArguments: ClientEffect['arguments']
   /**

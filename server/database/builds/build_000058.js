@@ -1,5 +1,5 @@
 // Rename args → arguments on all effect subdocuments
-// (session effects and execution effects) in mission documents.
+// (session-triggered root effects and execution-triggered action effects).
 
 let dbName = 'metis'
 
@@ -15,19 +15,20 @@ let cursorMissions = db.missions.find({})
 
 while (cursorMissions.hasNext()) {
   let mission = cursorMissions.next()
-
   let forces = mission.forces
+  let effects = mission.effects ?? []
+
+  for (let effect of effects) {
+    if ('args' in effect) {
+      effect['arguments'] = effect.args
+      delete effect.args
+    }
+  }
 
   for (let force of forces) {
     for (let node of force.nodes) {
       for (let action of node.actions) {
-        for (let effect of action.sessionEffects) {
-          if ('args' in effect) {
-            effect['arguments'] = effect.args
-            delete effect.args
-          }
-        }
-        for (let effect of action.executionEffects) {
+        for (let effect of action.effects) {
           if ('args' in effect) {
             effect['arguments'] = effect.args
             delete effect.args
@@ -37,7 +38,7 @@ while (cursorMissions.hasNext()) {
     }
   }
 
-  db.missions.updateOne({ _id: mission._id }, { $set: { forces } })
+  db.missions.updateOne({ _id: mission._id }, { $set: { forces, effects } })
 }
 
 print('Migration complete.')

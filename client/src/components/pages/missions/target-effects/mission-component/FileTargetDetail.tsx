@@ -7,14 +7,14 @@ import type { TMissionComponentArg } from '@shared/target-environments/parameter
 /**
  * Renders a dropdown for the argument whose type is `"file"`.
  */
-export default function FileTargetParameter({
+export default function FileTargetDetail({
   effect: { mission },
   arg: { name, type, tooltipDescription, required },
   existsInTargetArguments,
   fileIsActive,
   fileValue: [fileValue, setFileValue],
   optionalFileValue: [optionalFileValue, setOptionalFileValue],
-}: TArgFile_P): TReactElement | null {
+}: TFileTargetDetail_P): TReactElement | null {
   /* -- COMPUTED -- */
 
   /**
@@ -107,7 +107,7 @@ export default function FileTargetParameter({
 /**
  * The props for the `ArgFile` component.
  */
-type TArgFile_P = {
+type TFileTargetDetail_P = {
   /**
    * The effect that the arguments belong to.
    */

@@ -2,8 +2,8 @@ import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { compute } from '@client/toolbox'
 import type { TTargetParameter } from '@shared/target-environments/parameters/TargetParameter'
 import Divider from '../../../../content/form/Divider'
+import TargetParameterGrouping from './TargetArgumentGrouping'
 import './TargetParameterEntry.scss'
-import TargetParameterGrouping from './TargetParameterGrouping'
 
 /**
  * Entry fields for the effect's arguments.
@@ -73,7 +73,7 @@ export default function TargetParameterEntry({
       <Divider />
       {groupings.map(([groupingId, grouping]) => {
         return (
-          <ArgGrouping
+          <TargetParameterGrouping
             effect={effect}
             grouping={grouping}
             targetArguments={targetArguments}

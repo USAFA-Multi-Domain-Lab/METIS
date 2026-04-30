@@ -13,7 +13,7 @@ import { useState } from 'react'
 /**
  * Renders a dropdown for the argument whose type is `"node"`.
  */
-export default function NodeTargetParameter({
+export default function NodeTargetDetail({
   arg: { name, type, tooltipDescription },
   existsInTargetArguments,
   nodeIsActive,
@@ -23,7 +23,7 @@ export default function NodeTargetParameter({
   optionalForceValue: [optionalForceValue],
   nodeValue: [nodeValue, setNodeValue],
   optionalNodeValue: [optionalNodeValue, setOptionalNodeValue],
-}: TArgNode_P): TReactElement | null {
+}: TNodeTargetDetail_P): TReactElement | null {
   /* -- STATE -- */
 
   /**
@@ -212,7 +212,7 @@ export default function NodeTargetParameter({
 /**
  * The props for the `ArgNode` component.
  */
-type TArgNode_P = {
+type TNodeTargetDetail_P = {
   /**
    * The mission component argument to render.
    */

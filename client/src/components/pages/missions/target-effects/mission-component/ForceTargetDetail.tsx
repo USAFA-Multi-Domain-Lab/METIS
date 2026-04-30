@@ -7,14 +7,14 @@ import type { TMissionComponentArg } from '@shared/target-environments/parameter
 /**
  * Renders a dropdown for the argument whose type is `"force"`.
  */
-export default function ForceTargetParameter({
+export default function ForceTargetDetail({
   effect: { mission },
   arg: { name, type, tooltipDescription, required },
   existsInTargetArguments,
   forceIsActive,
   forceValue: [forceValue, setForceValue],
   optionalForceValue: [optionalForceValue, setOptionalForceValue],
-}: TArgForce_P): TReactElement | null {
+}: TForceTargetDetail_P): TReactElement | null {
   /* -- COMPUTED -- */
 
   /**
@@ -107,7 +107,7 @@ export default function ForceTargetParameter({
 /**
  * The props for the `ArgForce` component.
  */
-type TArgForce_P = {
+type TForceTargetDetail_P = {
   /**
    * The effect that the arguments belong to.
    */

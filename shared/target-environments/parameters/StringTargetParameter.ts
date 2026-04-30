@@ -28,7 +28,9 @@ export class StringTargetParameter {
    * @param arg The string argument to convert.
    * @returns The string argument as JSON.
    */
-  public static toJson = (arg: TStringTargetParameter): TStringTargetParameterJson => {
+  public static toJson = (
+    arg: TStringTargetParameter,
+  ): TStringTargetParameterJson => {
     // Return the appropriate properties based on
     // whether the argument is required or not.
     return arg.required
@@ -70,7 +72,9 @@ export class StringTargetParameter {
    * @param arg The string argument as JSON to convert.
    * @returns The string argument.
    */
-  public static fromJson = (arg: TStringTargetParameterJson): TStringTargetParameter => {
+  public static fromJson = (
+    arg: TStringTargetParameterJson,
+  ): TStringTargetParameter => {
     // Return the appropriate properties based on
     // whether the argument is required or not.
     return arg.required

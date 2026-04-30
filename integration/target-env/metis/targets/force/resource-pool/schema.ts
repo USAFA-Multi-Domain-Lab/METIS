@@ -39,7 +39,7 @@ const ResourcePool = new TargetSchema({
         )
     }
   },
-  args: [
+  parameters: [
     {
       type: 'pool',
       _id: 'poolMetadata',

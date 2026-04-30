@@ -31,7 +31,7 @@ const FileAccess = new TargetSchema({
         break
     }
   },
-  args: [
+  parameters: [
     {
       type: 'force',
       _id: 'forceMetadata',

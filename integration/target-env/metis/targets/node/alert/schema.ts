@@ -108,7 +108,7 @@ const NodeAlert = new TargetSchema({
     let { forceKey, nodeKey } = nodeMetadata
     context.addNodeAlert(message, severityLevel, { forceKey, nodeKey })
   },
-  args: [nodeMetadataArg, severityLevelArg, messageArg],
+  parameters: [nodeMetadataArg, severityLevelArg, messageArg],
 })
 
 export default NodeAlert

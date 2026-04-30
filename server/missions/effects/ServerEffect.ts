@@ -99,7 +99,7 @@ export class ServerEffect<
       get environment() {
         return self.environment ? self.environment.toTargetEnvContext() : null
       },
-      get args() {
+      get arguments() {
         return self.argumentsToTargetEnvContext(self.arguments)
       },
     }

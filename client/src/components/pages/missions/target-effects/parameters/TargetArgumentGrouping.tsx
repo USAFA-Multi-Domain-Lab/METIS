@@ -4,8 +4,8 @@ import type { TTargetParameter } from '@shared/target-environments/parameters/Ta
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import Divider from '../../../../content/form/Divider'
 import { useMissionPageContext } from '../../context'
-import TargetParameter from './TargetParameter'
-import './TargetParameterGrouping.scss'
+import './TargetArgumentGrouping.scss'
+import TargetDetail from './TargetDetail'
 
 /**
  * Renders a group of arguments and their entry components based on the argument's type.
@@ -49,7 +49,7 @@ export default function TargetParameterGrouping({
    */
   const rootClassName: string = compute(() => {
     // Create a default list of class names.
-    let classList = new ClassList('ArgGrouping')
+    let classList = new ClassList('TargetArgumentGrouping')
 
     // If no arguments in the grouping are displayed
     // then hide the grouping.
@@ -68,9 +68,9 @@ export default function TargetParameterGrouping({
     <div className={rootClassName}>
       {grouping.map((arg) => {
         return (
-          <Arg
+          <TargetDetail
             effect={effect}
-            arg={arg}
+            parameter={arg}
             targetArguments={targetArguments}
             setTargetArguments={setTargetArguments}
             key={arg._id}
@@ -85,7 +85,7 @@ export default function TargetParameterGrouping({
 /* ---------------------------- TYPES FOR ARG GROUPING ---------------------------- */
 
 /**
- * The props for the `ArgGrouping` component.
+ * The props for the `TargetParameterGrouping` component.
  */
 type TTargetParameterGrouping_P = {
   /**
@@ -93,11 +93,12 @@ type TTargetParameterGrouping_P = {
    */
   effect: ClientEffect
   /**
-   * The grouping of arguments to render.
+   * The grouping of parameters to render.
    */
   grouping: TTargetParameter[]
   /**
-   * The arguments that the effect uses to modify the target.
+   * The arguments that the effect that are passed to
+   * the target script.
    */
   targetArguments: ClientEffect['arguments']
   /**

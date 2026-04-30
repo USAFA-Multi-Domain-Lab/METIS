@@ -16,7 +16,7 @@ const Output = new TargetSchema({
     // Output the message to the force.
     context.sendOutput(message, to)
   },
-  args: [
+  parameters: [
     {
       type: 'force',
       _id: 'forceMetadata',

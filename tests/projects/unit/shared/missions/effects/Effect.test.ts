@@ -1675,11 +1675,11 @@ class TestTarget extends Target {
     _id: Target['_id'],
     name: Target['name'],
     description: Target['description'],
-    args: Target['parameters'],
+    parameters: Target['parameters'],
     environment: Target['environment'],
     migrationVersions: Target['migrationVersions'],
   ) {
-    super(_id, name, description, args, environment)
+    super(_id, name, description, parameters, environment)
 
     this._migrationVersions = migrationVersions
   }

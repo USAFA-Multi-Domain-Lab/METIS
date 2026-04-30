@@ -10,7 +10,9 @@ export class NumberTargetParameter {
    * @param arg The number argument to convert.
    * @returns The number argument as JSON.
    */
-  public static toJson = (arg: TNumberTargetParameter): TNumberTargetParameterJson => {
+  public static toJson = (
+    arg: TNumberTargetParameter,
+  ): TNumberTargetParameterJson => {
     // Return the appropriate properties based on
     // whether the argument is required or not.
     return arg.required
@@ -52,7 +54,9 @@ export class NumberTargetParameter {
    * @param arg The number argument as JSON to convert.
    * @returns The number argument.
    */
-  public static fromJson = (arg: TNumberTargetParameterJson): TNumberTargetParameter => {
+  public static fromJson = (
+    arg: TNumberTargetParameterJson,
+  ): TNumberTargetParameter => {
     // Return the appropriate properties based on
     // whether the argument is required or not.
     return arg.required

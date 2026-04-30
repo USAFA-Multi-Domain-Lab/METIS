@@ -1,19 +1,19 @@
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks'
-import type { TStringArg } from '@shared/target-environments/parameters/StringTargetParameter'
+import type { TStringTargetParameter } from '@shared/target-environments/parameters/StringTargetParameter'
 import { useEffect, useState } from 'react'
 import { DetailString } from '../../../../content/form/DetailString'
 
 /**
  * Renders a string input box for the argument whose type is `"string"`.
  */
-export default function StringTargetParameter({
-  arg,
+export default function StringTargetDetail({
+  parameter: arg,
   initialize,
   targetArguments,
   setTargetArguments,
-}: TStringTargetParameter_P): TReactElement | null {
+}: TStringTargetDetail_P): TReactElement | null {
   /* -- STATE -- */
   const [defaultValue] = useState<''>('')
   const [value, setValue] = useState<string>(
@@ -97,29 +97,29 @@ export default function StringTargetParameter({
   /**
    * Determines the validation error message for a string value.
    * @param value The string value to validate.
-   * @param arg The string argument that contains the pattern and title for validation.
+   * @param parameter The string parameter that contains the pattern and title for validation.
    * @returns The error message if invalid, otherwise undefined.
    */
   const resolvePatternErrorMessage = (
     value: string,
-    arg: TStringArg,
+    parameter: TStringTargetParameter,
   ): string | undefined => {
     const defaultMessage =
       'This field cannot be left empty. Please enter a value.'
     const emptyStringPattern = /^\s*$/
     const valueIsEmptyString = emptyStringPattern.test(value)
-    const defaultValueIsEmptyString = arg.required
-      ? emptyStringPattern.test(arg.default)
+    const defaultValueIsEmptyString = parameter.required
+      ? emptyStringPattern.test(parameter.default)
       : false
 
     // Skip validation for optional args with empty values.
-    if (!arg.required && valueIsEmptyString) return undefined
+    if (!parameter.required && valueIsEmptyString) return undefined
 
     // If no pattern is provided, fall back to a generic
     // required-field check only when the default value is
     // also empty. Fields with a non-empty default will
     // repopulate on blur instead.
-    if (!(arg.pattern instanceof RegExp)) {
+    if (!(parameter.pattern instanceof RegExp)) {
       if (valueIsEmptyString && defaultValueIsEmptyString) {
         return defaultMessage
       }
@@ -128,8 +128,8 @@ export default function StringTargetParameter({
     }
 
     // Validate the value against the pattern.
-    if (!arg.pattern.test(value)) {
-      return arg.title ?? 'The value does not match the required format.'
+    if (!parameter.pattern.test(value)) {
+      return parameter.title ?? 'The value does not match the required format.'
     }
 
     return undefined
@@ -177,15 +177,15 @@ export default function StringTargetParameter({
 /* ---------------------------- TYPES FOR STRING ARG ---------------------------- */
 
 /**
- * The props for the `StringArg` component.
+ * The props for the `StringTargetDetail` component.
  */
-type TStringTargetParameter_P = {
+type TStringTargetDetail_P = {
   /**
-   * The string argument to render.
+   * The string parameter defining the requirements for the argument.
    */
-  arg: TStringArg
+  parameter: TStringTargetParameter
   /**
-   * Determines if the argument needs to be initialized.
+   * Determines if the parameter needs to be initialized.
    */
   initialize: boolean
   /**
