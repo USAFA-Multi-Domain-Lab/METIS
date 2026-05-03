@@ -1,6 +1,6 @@
-import { migrations } from './migrations'
 import { NumberToolbox } from '@metis/toolbox/numbers/NumberToolbox'
 import type { TPoolMetadata } from '@shared/target-environments/types'
+import { migrations } from './migrations'
 
 /**
  * A target available in the METIS target environment that enables a user

@@ -1,3 +1,4 @@
+import type { TTargetArgumentJson } from '@shared/target-environments/arguments/TargetArgument'
 import type { TMissionComponentTargetParameter } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
 import type { TTargetParameter } from '../../target-environments/parameters/TargetParameter'
 import type { TargetDependency } from '../../target-environments/targets/TargetDependency'
@@ -68,6 +69,28 @@ export abstract class Effect<
    */
   public get sourceAction(): TSelectEffectContext<T>[TType]['sourceAction'] {
     return this.context.sourceAction
+  }
+
+  /**
+   * TypeScript does not understand safeties placed
+   * in the system and types too strictly when it comes
+   * to effects. This normalizes the effect to only be of
+   * types that are actually useful in the system, preventing
+   * headaches from lint errors.
+   */
+  public normalize():
+    | T['executionTriggeredEffect']
+    | T['sessionTriggeredEffect'] {
+    switch (this.type) {
+      case 'executionTriggeredEffect':
+        return this as unknown as T['executionTriggeredEffect']
+      case 'sessionTriggeredEffect':
+        return this as unknown as T['sessionTriggeredEffect']
+      default:
+        throw new Error(
+          `Unsupported effect type: "${this.type}". Cannot normalize effect with ID "${this._id}".`,
+        )
+    }
   }
 
   /**
@@ -221,7 +244,7 @@ export abstract class Effect<
    * The arguments to pass to the script in the
    * target that will enact the effect.
    */
-  public arguments: TAnyObject
+  public arguments: T['targetArgument'][]
 
   /**
    * A key for the effect, used to identify it within the action.
@@ -267,7 +290,7 @@ export abstract class Effect<
     order: number,
     description: string,
     context: TSelectEffectContext<T>[TType],
-    args: TAnyObject,
+    args: TTargetArgumentJson[],
     localKey: string,
   ) {
     super(_id, name, false)
@@ -282,7 +305,7 @@ export abstract class Effect<
     this.context = context
     this.order = order
     this.description = description
-    this.arguments = args
+    this.arguments = this.parseArguments(args)
     this.localKey = localKey
   }
 
@@ -296,6 +319,15 @@ export abstract class Effect<
     targetId: string,
     environmentId: string,
   ): T['target'] | null
+
+  /**
+   * Parses raw argument JSON into hydrated `TargetArgument` instances.
+   * @param data The raw argument JSON to parse.
+   * @returns The hydrated arguments array.
+   */
+  protected abstract parseArguments(
+    data: TTargetArgumentJson[],
+  ): T['targetArgument'][]
 
   /**
    * Checks the effect's arguments against the target's parameters.
@@ -313,13 +345,12 @@ export abstract class Effect<
       }
     }
 
-    for (let argId in this.arguments) {
-      let parameter = target.getParameterById(argId)
-      let argument = this.arguments[argId]
+    for (let targetArgument of this.arguments) {
+      let { parameter, value, parameterId } = targetArgument
 
       if (!parameter) {
         issues.push(
-          `The effect, "${this.name}", has an argument, "${argId}", that couldn't be found within the target, "${target.name}." ` +
+          `The effect, "${this.name}", has an argument, "${parameterId}", that couldn't be found within the target, "${target.name}." ` +
             `Please delete the effect and create a new one.`,
         )
         continue
@@ -328,17 +359,15 @@ export abstract class Effect<
       let dependenciesMet = this.allDependenciesMet(parameter.dependencies)
 
       pushIfNotNull(
-        this.checkDependencyAlignment(parameter, argument, dependenciesMet),
+        this.checkDependencyAlignment(parameter, value, dependenciesMet),
       )
+      pushIfNotNull(this.checkRequiredArgs(parameter, value, dependenciesMet))
       pushIfNotNull(
-        this.checkRequiredArgs(parameter, argument, dependenciesMet),
+        this.checkValueMatchesType(parameter, value, dependenciesMet),
       )
-      pushIfNotNull(
-        this.checkValueMatchesType(parameter, argument, dependenciesMet),
-      )
-      pushIfNotNull(this.checkValidDropdownOption(parameter, argument))
-      pushIfNotNull(this.checkMissionComponentArg(parameter, argument))
-      pushIfNotNull(this.checkStringArgAgainstPattern(parameter, argument))
+      pushIfNotNull(this.checkValidDropdownOption(parameter, value))
+      pushIfNotNull(this.checkMissionComponentArg(parameter, value))
+      pushIfNotNull(this.checkStringArgAgainstPattern(parameter, value))
     }
 
     return issues
@@ -664,7 +693,7 @@ export abstract class Effect<
       order: this.order,
       name: this.name,
       description: this.description,
-      arguments: structuredClone(this.arguments),
+      arguments: this.arguments.map((arg) => arg.json),
       localKey: this.localKey,
     }
   }
@@ -728,7 +757,7 @@ export abstract class Effect<
    */
   public allDependenciesMet = (
     dependencies: TargetDependency[] = [],
-    targetArguments: TAnyObject = this.arguments,
+    targetArguments: T['targetArgument'][any][] = this.arguments,
   ): boolean => {
     // If the argument has no dependencies, then the argument is always displayed.
     if (!dependencies || dependencies.length === 0) {
@@ -805,7 +834,9 @@ export abstract class Effect<
         // Otherwise, check if the condition is met.
         else {
           dependencyMet = dependency.condition(
-            targetArguments[dependency.dependentId],
+            targetArguments.find(
+              (arg) => arg.parameterId === dependency.dependentId,
+            )?.value,
           )
         }
 
@@ -837,7 +868,10 @@ export abstract class Effect<
   public getForceMetadataInArgs = (
     argId: string,
   ): Required<TForceMetadata> | undefined => {
-    const forceInArgs: TForceMetadata | undefined = this.arguments[argId]
+    // todo: Leave broken for now fix later.
+    const forceInArgs: TForceMetadata | undefined = (this.arguments as any)[
+      argId
+    ]
 
     // If the force argument is not found, then return undefined.
     if (!forceInArgs) return undefined
@@ -867,7 +901,8 @@ export abstract class Effect<
   public getNodeMetadataInArgs = (
     argId: string,
   ): Required<TNodeMetadata> | undefined => {
-    let nodeInArgs: TNodeMetadata | undefined = this.arguments[argId]
+    // todo: Leave broken for now fix later.
+    let nodeInArgs: TNodeMetadata | undefined = (this.arguments as any)[argId]
 
     // If the node argument is not found, then return undefined.
     if (!nodeInArgs) return undefined
@@ -904,7 +939,10 @@ export abstract class Effect<
   public getActionMetadataInArgs = (
     argId: string,
   ): Required<TActionMetadata> | undefined => {
-    let actionInArgs: TActionMetadata | undefined = this.arguments[argId]
+    // todo: Leave broken for now fix later.
+    let actionInArgs: TActionMetadata | undefined = (this.arguments as any)[
+      argId
+    ]
 
     // If the action argument is not found, then return undefined.
     if (!actionInArgs) return undefined
@@ -957,7 +995,10 @@ export abstract class Effect<
   public getResourceMetadataInArgs = (
     argId: string,
   ): Required<TResourceMetadata> | undefined => {
-    const resourceInArgs: TResourceMetadata | undefined = this.arguments[argId]
+    // todo: Leave broken for now fix later.
+    const resourceInArgs: TResourceMetadata | undefined = (
+      this.arguments as any
+    )[argId]
 
     // If the resource argument is not found, then return undefined.
     if (!resourceInArgs) return undefined
@@ -980,7 +1021,8 @@ export abstract class Effect<
   public getPoolMetadataInArgs = (
     argId: string,
   ): Required<TPoolMetadata> | undefined => {
-    const poolInArgs: TPoolMetadata | undefined = this.arguments[argId]
+    // todo: Leave broken for now fix later.
+    const poolInArgs: TPoolMetadata | undefined = (this.arguments as any)[argId]
 
     // If the pool argument is not found, then return undefined.
     if (!poolInArgs) return undefined
@@ -1012,7 +1054,8 @@ export abstract class Effect<
   public getFileMetadataInArgs = (
     argId: string,
   ): Required<TFileMetadata> | undefined => {
-    const fileInArgs: TFileMetadata | undefined = this.arguments[argId]
+    // todo: Leave broken for now fix later.
+    const fileInArgs: TFileMetadata | undefined = (this.arguments as any)[argId]
 
     // If the file argument is not found, then return undefined.
     if (!fileInArgs) return undefined
@@ -1033,8 +1076,10 @@ export abstract class Effect<
    * @returns The force if found, otherwise undefined.
    */
   public getForceFromArgs = (argId: string): T['force'] | undefined => {
-    // Get the force argument.
-    const forceInArgs: TForceMetadata | undefined = this.arguments[argId]
+    // todo: Leave broken for now fix later.
+    const forceInArgs: TForceMetadata | undefined = (this.arguments as any)[
+      argId
+    ]
     // Extract the metadata.
     let forceKey = forceInArgs?.forceKey
     // Handle force keys that are set to 'self'.
@@ -1052,8 +1097,8 @@ export abstract class Effect<
    * @returns The node if found, otherwise undefined.
    */
   public getNodeFromArgs = (argId: string): T['node'] | undefined => {
-    // Get the node argument.
-    const nodeInArgs: TNodeMetadata | undefined = this.arguments[argId]
+    // todo: Leave broken for now fix later.
+    const nodeInArgs: TNodeMetadata | undefined = (this.arguments as any)[argId]
     // Extract the metadata.
     let forceKey = nodeInArgs?.forceKey
     let nodeKey = nodeInArgs?.nodeKey
@@ -1076,8 +1121,10 @@ export abstract class Effect<
    * @returns The action if found, otherwise undefined.
    */
   public getActionFromArgs = (argId: string): T['action'] | undefined => {
-    // Get the action argument.
-    const actionInArgs: TActionMetadata | undefined = this.arguments[argId]
+    // todo: Leave broken for now fix later.
+    const actionInArgs: TActionMetadata | undefined = (this.arguments as any)[
+      argId
+    ]
     // Extract the metadata.
     let forceKey = actionInArgs?.forceKey
     let nodeKey = actionInArgs?.nodeKey
@@ -1113,8 +1160,10 @@ export abstract class Effect<
    * @returns The resource if found, otherwise undefined.
    */
   public getResourceFromArgs = (argId: string): T['resource'] | undefined => {
-    // Get the resource argument.
-    const resourceInArgs: TResourceMetadata | undefined = this.arguments[argId]
+    // todo: Leave broken for now fix later.
+    const resourceInArgs: TResourceMetadata | undefined = (
+      this.arguments as any
+    )[argId]
     // Extract the metadata.
     const resourceId = resourceInArgs?.resourceId
     // Get the resource from the mission.
@@ -1127,7 +1176,8 @@ export abstract class Effect<
    * @returns The pool if found, otherwise undefined.
    */
   public getPoolFromArgs = (argId: string): ResourcePool<T> | undefined => {
-    const poolInArgs: TPoolMetadata | undefined = this.arguments[argId]
+    // todo: Leave broken for now fix later.
+    const poolInArgs: TPoolMetadata | undefined = (this.arguments as any)[argId]
     let forceKey = poolInArgs?.forceKey
     let poolKey = poolInArgs?.poolKey
     // Handle force keys that are set to 'self'.
@@ -1147,8 +1197,8 @@ export abstract class Effect<
    * @returns The file if found, otherwise undefined.
    */
   public getFileFromArgs = (argId: string): T['missionFile'] | undefined => {
-    // Get the file argument.
-    const fileInArgs: TFileMetadata | undefined = this.arguments[argId]
+    // todo: Leave broken for now fix later.
+    const fileInArgs: TFileMetadata | undefined = (this.arguments as any)[argId]
     // Extract the metadata.
     const fileId = fileInArgs?.fileId
     // Get the file from the mission.
@@ -1184,7 +1234,7 @@ export abstract class Effect<
       order: 0,
       name: 'New Effect',
       description: '',
-      arguments: {},
+      arguments: [],
     }
   }
 
@@ -1354,7 +1404,6 @@ const JSON_PROPERTIES_RAW = {
     '_id',
     'name',
     'description',
-    'arguments',
     'targetId',
     'environmentId',
     'targetEnvironmentVersion',
@@ -1362,7 +1411,11 @@ const JSON_PROPERTIES_RAW = {
     'order',
     'localKey',
   ],
-  indirect: [{}],
+  indirect: [
+    {
+      arguments: [] as TTargetArgumentJson[],
+    },
+  ],
 } as const
 
 /**

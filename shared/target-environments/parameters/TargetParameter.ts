@@ -1,9 +1,18 @@
 import { TargetDependency } from '../targets/TargetDependency'
-import type { TBooleanTargetParameter, TBooleanTargetParameterJson } from './BooleanTargetParameter'
+import type {
+  TBooleanTargetParameter,
+  TBooleanTargetParameterJson,
+} from './BooleanTargetParameter'
 import { BooleanTargetParameter } from './BooleanTargetParameter'
-import type { TDropdownTargetParameter, TDropdownTargetParameterJson } from './DropdownTargetParameter'
+import type {
+  TDropdownTargetParameter,
+  TDropdownTargetParameterJson,
+} from './DropdownTargetParameter'
 import { DropdownTargetParameter } from './DropdownTargetParameter'
-import type { TLargeStringTargetParameter, TLargeStringTargetParameterJson } from './LargeStringTargetParameter'
+import type {
+  TLargeStringTargetParameter,
+  TLargeStringTargetParameterJson,
+} from './LargeStringTargetParameter'
 import { LargeStringTargetParameter } from './LargeStringTargetParameter'
 import type {
   TMissionComponentTargetParameter,
@@ -15,9 +24,15 @@ import {
   type TMissionComponentTargetParameter2,
   type TMissionComponentTargetParameterJson2,
 } from './mission-component/MissionComponentTargetParameter2'
-import type { TNumberTargetParameter, TNumberTargetParameterJson } from './NumberTargetParameter'
+import type {
+  TNumberTargetParameter,
+  TNumberTargetParameterJson,
+} from './NumberTargetParameter'
 import { NumberTargetParameter } from './NumberTargetParameter'
-import type { TStringTargetParameter, TStringTargetParameterJson } from './StringTargetParameter'
+import type {
+  TStringTargetParameter,
+  TStringTargetParameterJson,
+} from './StringTargetParameter'
 import { StringTargetParameter } from './StringTargetParameter'
 
 /**
@@ -55,7 +70,9 @@ export class TargetParameter {
    * @param parameters The parameters to convert.
    * @returns The parameters as JSON.
    */
-  public static toJson = (parameters: TTargetParameter[]): TTargetParameterJson[] => {
+  public static toJson = (
+    parameters: TTargetParameter[],
+  ): TTargetParameterJson[] => {
     return parameters.map((arg: TTargetParameter) => {
       switch (arg.type) {
         case 'number':
@@ -86,34 +103,54 @@ export class TargetParameter {
    * @param parameters The parameters as JSON to convert.
    * @returns The parameters.
    */
-  public static fromJson = (parameters: TTargetParameterJson[]): TTargetParameter[] => {
-    return parameters.map((arg: TTargetParameterJson) => {
-      switch (arg.type) {
+  public static fromJson = (
+    parameters: TTargetParameterJson[],
+  ): TTargetParameter[] => {
+    return parameters.map((parameter: TTargetParameterJson) => {
+      switch (parameter.type) {
         case 'number':
-          return NumberTargetParameter.fromJson(arg)
+          return NumberTargetParameter.fromJson(parameter)
         case 'string':
-          return StringTargetParameter.fromJson(arg)
+          return StringTargetParameter.fromJson(parameter)
         case 'large-string':
-          return LargeStringTargetParameter.fromJson(arg)
+          return LargeStringTargetParameter.fromJson(parameter)
         case 'dropdown':
-          return DropdownTargetParameter.fromJson(arg)
+          return DropdownTargetParameter.fromJson(parameter)
         case 'boolean':
-          return BooleanTargetParameter.fromJson(arg)
+          return BooleanTargetParameter.fromJson(parameter)
         case 'force':
         case 'node':
         case 'action':
         case 'file':
         case 'pool':
         case 'resource':
-          return MissionComponentTargetParameter.fromJson(arg)
+          return MissionComponentTargetParameter.fromJson(parameter)
         case 'mission-component':
-          return MissionComponentTargetParameter2.fromJson(arg)
+          return MissionComponentTargetParameter2.fromJson(parameter)
       }
     })
   }
 }
 
 /* -- TYPES -- */
+
+export type TSelectTargetParameter = {
+  'number': TNumberTargetParameter
+  'string': TStringTargetParameter
+  'large-string': TLargeStringTargetParameter
+  'dropdown': TDropdownTargetParameter
+  'boolean': TBooleanTargetParameter
+  'force': TMissionComponentTargetParameter
+  'node': TMissionComponentTargetParameter
+  'action': TMissionComponentTargetParameter
+  'file': TMissionComponentTargetParameter
+  'resource': TMissionComponentTargetParameter
+  'pool': TMissionComponentTargetParameter
+  'mission-component': TMissionComponentTargetParameter2
+  'unknown': TTargetParameter
+}
+
+export type TTargetParameterType = keyof TSelectTargetParameter
 
 /**
  * The parameters used for the target-effect interface and the target-effect API.

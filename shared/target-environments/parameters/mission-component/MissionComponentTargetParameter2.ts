@@ -93,6 +93,9 @@ export type TMissionComponentType =
   | 'force'
   | 'node'
   | 'action'
+  | 'file'
+  | 'resource'
+  | 'resource-pool'
   | 'any'
 
 /**

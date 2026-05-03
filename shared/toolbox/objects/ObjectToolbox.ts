@@ -77,3 +77,9 @@ export type TSingleTypeMapped<
   : {
       [key in TKeys]: TValue
     }
+
+/**
+ * Shows a lint error if T is not assignable to U.
+ * Use this to verify that a type has the expected shape.
+ */
+export type TSatisfies<T extends U, U> = T

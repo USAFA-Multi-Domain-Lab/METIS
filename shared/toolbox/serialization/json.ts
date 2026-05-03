@@ -4,16 +4,30 @@
  * @param object The object to serialize.
  * @param directConversion The list of keys which can be directly
  * copied from the object to the JSON representation.
+ * @param indirectConversion An optional tuple where the first element
+ * is a list of keys which are indirectly copied from the object to the
+ * JSON representation and the second element is a function which takes
+ * in the values of those keys in the same order passed and returns an
+ * array of the corresponding values to be placed in the JSON representation.
  * @returns A JSON representation of the object.
  */
 export function serializeJson<
-  T extends TJsonSerializable<TJson>,
-  TJson extends Record<string, any>,
->(object: T, directConversion: Array<keyof TJson & keyof T>): TJson {
+  T extends TJsonSerializable<any>,
+  TDirect extends Array<keyof T>,
+  TIndirect extends {},
+>(
+  object: T,
+  directConversion: TDirect,
+  indirectConversion?: () => TIndirect,
+): { [k in TDirect[number]]: T[k] } & TIndirect {
   let json: any = {}
 
   for (let key of directConversion) {
     json[key] = (object as any)[key]
+  }
+
+  if (indirectConversion) {
+    Object.assign(json, indirectConversion())
   }
 
   return json

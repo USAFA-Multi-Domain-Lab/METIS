@@ -2,6 +2,10 @@ import type { TMissionOutlineItem } from '@client/components/pages/missions/stru
 import type { TMetisClientComponents } from '@client/index'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
 import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
+import {
+  ClientTargetArgument,
+  type TClientTargetArgument,
+} from '@client/target-environments/arguments/ClientTargetArgument'
 import type {
   TEffectContextExecution,
   TEffectContextSession,
@@ -14,6 +18,7 @@ import type {
   TSelectEffectContext,
 } from '@shared/missions/effects/Effect'
 import { Effect } from '@shared/missions/effects/Effect'
+import type { TTargetArgumentJson } from '@shared/target-environments/arguments/TargetArgument'
 import type { ClientMission } from '../ClientMission'
 import type { ClientMissionAction } from '../actions/ClientMissionAction'
 
@@ -39,6 +44,15 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
   // Implemented
   public get outlineParent(): TMissionOutlineItem | null {
     return this.context.host
+  }
+
+  // Implemented
+  protected parseArguments(
+    data: TTargetArgumentJson[],
+  ): TClientTargetArgument[] {
+    return data.map((argJson) => {
+      return ClientTargetArgument.fromJson(argJson, this)
+    })
   }
 
   // Implemented
@@ -82,6 +96,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
       this.host.generateEffectOrder(this.trigger as never),
       this.description,
       context,
+      // todo: Duplicate method should be added argument class.
       this.arguments,
       localKey,
     )

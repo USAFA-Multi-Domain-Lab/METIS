@@ -14,6 +14,7 @@ import type { MissionNode } from './missions/nodes/MissionNode'
 import type { MissionPrototype } from './missions/nodes/MissionPrototype'
 import type { SessionMember } from './sessions/members/SessionMember'
 import type { MissionSession } from './sessions/MissionSession'
+import type { TTargetArgument } from './target-environments/arguments/TargetArgument'
 import type { TargetEnvironment } from './target-environments/TargetEnvironment'
 import type { Target } from './target-environments/targets/Target'
 import type { User } from './users/User'
@@ -187,6 +188,7 @@ export type TMetisBaseComponents = {
   action: MissionAction
   execution: ActionExecution
   outcome: ExecutionOutcome
+  targetArgument: TTargetArgument
 } & {
   [TType in TEffectType]: Effect<TMetisBaseComponents, TType>
 }

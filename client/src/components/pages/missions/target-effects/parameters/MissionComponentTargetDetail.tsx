@@ -5,6 +5,8 @@ import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
 import { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import { ResourcePool } from '@shared/missions/forces/ResourcePool'
+import { MissionResource } from '@shared/missions/MissionResource'
 import type {
   TMissionComponentTargetParameter2,
   TMissionComponentType,
@@ -198,15 +200,33 @@ function serialize(
       return { type: 'force', lastKnownName, keys: [item.localKey] }
     } else if (item instanceof ClientMissionNode) {
       return {
-        type: 'node',
+        componentType: 'node',
         lastKnownName,
         keys: [item.force.localKey, item.localKey],
       }
     } else if (item instanceof ClientMissionAction) {
       return {
-        type: 'action',
+        componentType: 'action',
         lastKnownName,
         keys: [item.force.localKey, item.node.localKey, item.localKey],
+      }
+    } else if (item instanceof ClientMissionFile) {
+      return {
+        componentType: 'file',
+        lastKnownName,
+        keys: [item.localKey],
+      }
+    } else if (item instanceof MissionResource) {
+      return {
+        componentType: 'resource',
+        lastKnownName,
+        keys: [item.localKey],
+      }
+    } else if (item instanceof ResourcePool) {
+      return {
+        componentType: 'resource-pool',
+        lastKnownName,
+        keys: [item.force.localKey, item.localKey],
       }
     } else {
       throw new Error(`Unsupported outline item type: ${item.constructor.name}`)
@@ -228,7 +248,7 @@ function deserialize(
   mission: ClientMission,
 ): TMissionOutlineItem[] {
   return serialized.flatMap((item): TMissionOutlineItem[] => {
-    const { type, keys } = item
+    const { componentType: type, keys } = item
 
     if (type === 'mission') {
       return [mission]
@@ -241,6 +261,15 @@ function deserialize(
     } else if (type === 'action') {
       const action = mission.getActionByLocalKey(keys[0], keys[1], keys[2])
       return action ? [action] : []
+    } else if (type === 'file') {
+      const file = mission.getFileByLocalKey(keys[0])
+      return file ? [file] : []
+    } else if (type === 'resource') {
+      const resource = mission.getResourceByLocalKey(keys[0])
+      return resource ? [resource] : []
+    } else if (type === 'resource-pool') {
+      const resourcePool = mission.getPoolByLocalKey(keys[0], keys[1])
+      return resourcePool ? [resourcePool] : []
     } else {
       return []
     }
@@ -285,7 +314,7 @@ type TMissionComponentSerializedSelection = {
    * The type of mission component selected (e.g. "force",
    * "node", "action").
    */
-  type: TMissionComponentType
+  componentType: TMissionComponentType
   /**
    * The last known name of the component that was selected.
    * This is useful when, for whatever reason, the selection

@@ -262,7 +262,17 @@ const effectSubschema = {
     default: '',
     set: sanitizeHtml,
   },
-  args: { type: Object, required: true },
+  arguments: {
+    required: true,
+    type: [
+      {
+        _id: { type: String, required: true },
+        parameterId: { type: String, required: true },
+        type: { type: String, required: true },
+        value: { type: Schema.Types.Mixed, required: true },
+      },
+    ],
+  },
   localKey: { type: String, required: true },
 }
 

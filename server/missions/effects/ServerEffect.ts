@@ -1,3 +1,7 @@
+import {
+  ServerTargetArgument,
+  type TServerTargetArgument,
+} from '@server/target-environments/arguments/ServerTargetArgument'
 import type { TTargetEnvExposedEffect } from '@server/target-environments/context/TargetEnvContext'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
@@ -13,9 +17,7 @@ import type {
   TEffectType,
 } from '@shared/missions/effects/Effect'
 import { Effect } from '@shared/missions/effects/Effect'
-import { ForceTargetParameter } from '@shared/target-environments/parameters/mission-component/ForceTargetParameter'
-import { NodeTargetParameter } from '@shared/target-environments/parameters/mission-component/NodeTargetParameter'
-import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
+import type { TTargetArgumentJson } from '@shared/target-environments/arguments/TargetArgument'
 import type { ServerMissionAction } from '../actions/ServerMissionAction'
 import type { ServerMission } from '../ServerMission'
 
@@ -26,6 +28,15 @@ import type { ServerMission } from '../ServerMission'
 export class ServerEffect<
   TType extends TEffectType = TEffectType,
 > extends Effect<TMetisServerComponents, TType> {
+  // Implemented
+  protected parseArguments(
+    data: TTargetArgumentJson[],
+  ): TServerTargetArgument[] {
+    return data.map((argJson) => {
+      return ServerTargetArgument.fromJson(argJson, this)
+    })
+  }
+
   // Implemented
   protected determineTarget(
     targetId: string,
@@ -47,21 +58,10 @@ export class ServerEffect<
    * @param args The arguments to extract the necessary properties from.
    * @returns The modified arguments.
    */
-  public argumentsToTargetEnvContext(args: TAnyObject): TAnyObject {
-    // Copy the arguments.
-    let argsCopy = structuredClone(args)
-
-    Object.entries(argsCopy).forEach(([key, value]) => {
-      if (value[ForceTargetParameter.FORCE_NAME] !== undefined) {
-        delete argsCopy[key][ForceTargetParameter.FORCE_NAME]
-      }
-      if (value[NodeTargetParameter.NODE_NAME] !== undefined) {
-        delete argsCopy[key][NodeTargetParameter.NODE_NAME]
-      }
-    })
-
-    // Return the modified arguments.
-    return argsCopy
+  public argumentsToTargetEnvContext(
+    args: TServerTargetArgument[],
+  ): TServerTargetArgument[] {
+    return args.map((arg) => structuredClone(arg))
   }
 
   /**
@@ -121,7 +121,7 @@ export class ServerEffect<
       trigger: self.trigger,
       description: self.description,
       order: self.order,
-      arguments: structuredClone(self.arguments),
+      arguments: self.argumentsToTargetEnvContext(self.arguments),
       versionCursor: this.targetEnvironmentVersion,
       get mission() {
         return self.mission.toTargetEnvContext()
@@ -147,7 +147,7 @@ export class ServerEffect<
       get result() {
         return {
           version: this.versionCursor,
-          data: structuredClone(this.arguments),
+          data: self.argumentsToTargetEnvContext(self.arguments),
         }
       },
     }
