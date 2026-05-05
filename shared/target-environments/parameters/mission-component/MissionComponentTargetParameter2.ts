@@ -85,6 +85,34 @@ export type TMissionComponentTargetParameter2 = TBaseTargetParameter & {
 }
 
 /**
+ * A serialized selection of a mission component, which can
+ * be saved with effect args to the database.
+ */
+export type TMissionComponentSerializedSelection = {
+  /**
+   * The type of mission component selected (e.g. "force",
+   * "node", "action").
+   */
+  componentType: TMissionComponentType
+  /**
+   * The last known name of the component that was selected.
+   * This is useful when, for whatever reason, the selection
+   * is present in the args, but the actual component cannot
+   * be found in the mission.
+   */
+  lastKnownName: string
+  /**
+   * A string of identifiers used to find the component
+   * quickly in the mission. The identifiers define a
+   * path to the component in the mission outline. For example,
+   * [forceId, nodeId, actionId] would be the path to an action.
+   * @note The IDs of the ancestor components are included
+   * for quicker lookup.
+   */
+  ids: string[]
+}
+
+/**
  * Available options when defining
  * {@link TMissionComponentArg2.validComponentTypes}.
  */

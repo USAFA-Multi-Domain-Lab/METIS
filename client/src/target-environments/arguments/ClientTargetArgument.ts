@@ -1,18 +1,15 @@
 import type { TMetisClientComponents } from '@client/index'
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
-import type { TTargetArgument } from '@shared/target-environments/arguments/TargetArgument'
+import type { TTargetArgumentContext } from '@shared/target-environments/arguments/TargetArgument'
 import {
   TargetArgument,
   type TTargetArgumentJson,
 } from '@shared/target-environments/arguments/TargetArgument'
-import type { TTargetParameterType } from '@shared/target-environments/parameters/TargetParameter'
 
 /**
  * Client implementation of {@link TargetArgument}.
  */
-export class ClientTargetArgument<
-  TType extends TTargetParameterType = TTargetParameterType,
-> extends TargetArgument<TMetisClientComponents, TType> {
+export class ClientTargetArgument extends TargetArgument<TMetisClientComponents> {
   /**
    * Creates a {@link ClientTargetArgument} from JSON.
    * @param json The JSON to create the argument from.
@@ -25,24 +22,27 @@ export class ClientTargetArgument<
   public static fromJson(
     json: TTargetArgumentJson,
     effect: ClientEffect,
-  ): TClientTargetArgument {
-    return new ClientTargetArgument(
-      effect,
-      json._id,
-      json.parameterId,
-      json.type,
-      json.value,
-    ) as TClientTargetArgument
+  ): ClientTargetArgument {
+    let context: TTargetArgumentContext = {
+      type: 'unknown',
+      value: null,
+    }
+
+    if (json.type === 'mission-component') {
+      context = {
+        type: 'mission-component',
+        value: ClientTargetArgument.extractAndDeserializeComponents(
+          effect.mission,
+          json.value,
+        ),
+      }
+    } else {
+      context = {
+        type: json.type,
+        value: json.value,
+      } as TTargetArgumentContext
+    }
+
+    return new ClientTargetArgument(effect, json._id, json.parameterId, context)
   }
 }
-
-/**
- * Client implementation of {@link TTargetArgument}.
- */
-export type TClientTargetArgument = {
-  [K in TTargetParameterType]: Omit<
-    ClientTargetArgument<K>,
-    'value' | 'parameter' | 'type'
-  > &
-    ClientTargetArgument<K>
-}[TTargetParameterType]

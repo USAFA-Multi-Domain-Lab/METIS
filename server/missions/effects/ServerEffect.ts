@@ -1,7 +1,4 @@
-import {
-  ServerTargetArgument,
-  type TServerTargetArgument,
-} from '@server/target-environments/arguments/ServerTargetArgument'
+import { ServerTargetArgument } from '@server/target-environments/arguments/ServerTargetArgument'
 import type { TTargetEnvExposedEffect } from '@server/target-environments/context/TargetEnvContext'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
@@ -31,7 +28,7 @@ export class ServerEffect<
   // Implemented
   protected parseArguments(
     data: TTargetArgumentJson[],
-  ): TServerTargetArgument[] {
+  ): ServerTargetArgument[] {
     return data.map((argJson) => {
       return ServerTargetArgument.fromJson(argJson, this)
     })
@@ -59,8 +56,8 @@ export class ServerEffect<
    * @returns The modified arguments.
    */
   public argumentsToTargetEnvContext(
-    args: TServerTargetArgument[],
-  ): TServerTargetArgument[] {
+    args: ServerTargetArgument[],
+  ): ServerTargetArgument[] {
     return args.map((arg) => structuredClone(arg))
   }
 

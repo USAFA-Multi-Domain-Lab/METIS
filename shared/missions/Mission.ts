@@ -687,8 +687,9 @@ export abstract class Mission<
    */
   public getPoolById(
     poolId: string | null | undefined,
+    options: TPoolByIdOptions = {},
   ): T['resourcePool'] | undefined {
-    return Mission.getPoolById(this, poolId)
+    return Mission.getPoolById(this, poolId, options)
   }
 
   /**
@@ -711,8 +712,9 @@ export abstract class Mission<
    */
   public getNodeById(
     nodeId: MetisComponent['_id'] | null | undefined,
+    options: TNodeByIdOptions = {},
   ): TNode<T> | undefined {
-    return Mission.getNodeById(this, nodeId)
+    return Mission.getNodeById(this, nodeId, options)
   }
 
   /**
@@ -735,8 +737,9 @@ export abstract class Mission<
    */
   public getActionById(
     actionId: MetisComponent['_id'] | null | undefined,
+    options: TActionByIdOptions = {},
   ): TAction<T> | undefined {
-    let action = Mission.getActionById(this, actionId)
+    let action = Mission.getActionById(this, actionId, options)
     return action instanceof MissionAction ? action : undefined
   }
 
@@ -1082,8 +1085,11 @@ export abstract class Mission<
   public static getNodeById<TMission extends TMissionJson | Mission>(
     mission: TMission,
     nodeId: string | null | undefined,
+    options: TNodeByIdOptions = {},
   ): TMission['forces'][0]['nodes'][0] | undefined {
+    const { forceId } = options
     for (let force of mission.forces) {
+      if (forceId && force._id !== forceId) continue
       let node = force.nodes.find((node) => node._id === nodeId)
       if (node) return node
       continue
@@ -1117,8 +1123,11 @@ export abstract class Mission<
   public static getPoolById<TMission extends TMissionJson | Mission>(
     mission: TMission,
     poolId: string | null | undefined,
+    options: TPoolByIdOptions = {},
   ): TMission['forces'][0]['resourcePools'][0] | undefined {
+    const { forceId } = options
     for (let force of mission.forces) {
+      if (forceId && force._id !== forceId) continue
       let pool = force.resourcePools.find((pool) => pool._id === poolId)
       if (pool) return pool
       continue
@@ -1170,11 +1179,16 @@ export abstract class Mission<
   >(
     mission: TMission,
     actionId: string | null | undefined,
+    options: TActionByIdOptions = {},
   ): TAction | TMissionActionJson | undefined {
     if (!actionId) return undefined
 
+    const { forceId, nodeId } = options
+
     for (let force of mission.forces) {
+      if (forceId && force._id !== forceId) continue
       for (let node of force.nodes) {
+        if (nodeId && node._id !== nodeId) continue
         let action = Array.isArray(node.actions)
           ? node.actions.find((action) => action._id === actionId)
           : node.actions.get(actionId)
@@ -1393,3 +1407,39 @@ export type TFileExposure =
  * No root-level effects are exposed.
  */
 export type TRootEffectsExposure = { expose: 'all' } | { expose: 'none' }
+
+/**
+ * Base interface for additional options used in lookup
+ * methods in {@link Mission} that search for a mission
+ * component hosted by a force.
+ */
+export interface TGetForceHostedComponentOptions {
+  /**
+   * A force ID for expedited look up. This narrows down
+   * the search for the component to a specific force, which can
+   * improve performance when the mission is large.
+   */
+  forceId?: string
+}
+
+/**
+ * Additional options for {@link Mission.getNodeById}.
+ */
+export interface TNodeByIdOptions extends TGetForceHostedComponentOptions {}
+
+/**
+ * Additional options for {@link Mission.getPoolById}.
+ */
+export interface TPoolByIdOptions extends TGetForceHostedComponentOptions {}
+
+/**
+ * Additional options for {@link Mission.getActionById}.
+ */
+export interface TActionByIdOptions extends TGetForceHostedComponentOptions {
+  /**
+   * A node ID for expedited look up. This narrows down
+   * the search for the action to a specific node, which can
+   * improve performance when the mission is large.
+   */
+  nodeId?: string
+}

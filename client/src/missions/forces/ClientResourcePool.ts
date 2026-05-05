@@ -1,3 +1,4 @@
+import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { TMetisClientComponents } from '@client/index'
 import type { TResourcePoolJson } from '@shared/missions/forces/ResourcePool'
 import { ResourcePool } from '@shared/missions/forces/ResourcePool'
@@ -9,7 +10,25 @@ import type { ClientMissionForce } from './ClientMissionForce'
 /**
  * Client implementation of {@link ResourcePool}.
  */
-export class ClientResourcePool extends ResourcePool<TMetisClientComponents> {
+export class ClientResourcePool extends ResourcePool<TMetisClientComponents> implements TMissionOutlineItem {
+  // Implemented
+  public get outlineIcon(): TMetisIcon {
+    return this.icon
+  }
+
+  // Implemented
+  public expandedInOutline: boolean = false
+
+  // Implemented
+  public get outlineChildren(): TMissionOutlineItem[] {
+    return []
+  }
+
+  // Implemented
+  public get outlineParent(): TMissionOutlineItem | null {
+    return this.force
+  }
+
   /**
    * Creates a {@link ClientResourcePool} from JSON data.
    * @param force The force that owns this resource pool.

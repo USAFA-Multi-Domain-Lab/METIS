@@ -19,55 +19,131 @@ import type { TMissionImportBuild } from '../ImportMigrationBuilder'
 const inferArgumentType = (value: unknown): string => {
   if (typeof value === 'number') return 'number'
   if (typeof value === 'boolean') return 'boolean'
-  if (Array.isArray(value)) return 'mission-component'
   if (value !== null && typeof value === 'object') return 'mission-component'
   return 'unknown'
 }
 
-// Extracts the component localKey or ID from an old-style metadata object.
-// Detection order is most-specific-first: action has nodeKey too, so check
-// actionKey before nodeKey.
-const extractComponentId = (obj: Record<string, unknown>): string => {
-  if (typeof obj.actionKey === 'string') return obj.actionKey
-  if (typeof obj.nodeKey === 'string') return obj.nodeKey
-  if (typeof obj.poolKey === 'string') return obj.poolKey
-  if (typeof obj.forceKey === 'string') return obj.forceKey
-  if (typeof obj.fileId === 'string') return obj.fileId
-  if (typeof obj.resourceId === 'string') return obj.resourceId
-  return ''
+// Converts an old-style mission component metadata object into the new
+// TMissionComponentSerializedSelection[] format by resolving localKeys
+// against the mission document. Returns an empty array if any lookup fails.
+const buildMissionComponentValue = (
+  missionData: any,
+  object: Record<string, unknown>,
+): object[] => {
+  let force = null
+  let pool = null
+  let node = null
+  let action = null
+
+  if (object.forceKey) {
+    force =
+      missionData.forces.find(
+        (force: any) => force.localKey === object.forceKey,
+      ) ?? null
+  }
+  if (force && object.poolKey) {
+    pool =
+      force.resourcePools.find(
+        (pool: any) => pool.localKey === object.poolKey,
+      ) ?? null
+  }
+  if (force && object.nodeKey) {
+    node =
+      force.nodes.find((node: any) => node.localKey === object.nodeKey) ?? null
+  }
+  if (force && node && object.actionKey) {
+    action =
+      node.actions.find(
+        (action: any) => action.localKey === object.actionKey,
+      ) ?? null
+  }
+
+  if (action) {
+    return [
+      {
+        componentType: 'action',
+        lastKnownName: action.name,
+        ids: [force._id, node._id, action._id],
+      },
+    ]
+  } else if (pool) {
+    return [
+      {
+        componentType: 'resource-pool',
+        lastKnownName: pool.name,
+        ids: [force._id, pool._id],
+      },
+    ]
+  } else if (node) {
+    return [
+      {
+        componentType: 'node',
+        lastKnownName: node.name,
+        ids: [force._id, node._id],
+      },
+    ]
+  } else if (force) {
+    return [
+      { componentType: 'force', lastKnownName: force.name, ids: [force._id] },
+    ]
+  } else if (object.fileId) {
+    return [
+      {
+        componentType: 'file',
+        lastKnownName: object.fileName ?? '',
+        ids: [object.fileId as string],
+      },
+    ]
+  } else if (object.resourceId) {
+    return [
+      {
+        componentType: 'resource',
+        lastKnownName: object.resourceName ?? '',
+        ids: [object.resourceId as string],
+      },
+    ]
+  }
+  return []
 }
 
-const migrateArgumentValue = (type: string, value: unknown): unknown => {
-  if (type === 'mission-component' && !Array.isArray(value) && value !== null && typeof value === 'object') {
-    return extractComponentId(value as Record<string, unknown>)
+const migrateArgumentValue = (
+  missionData: any,
+  type: string,
+  value: unknown,
+): unknown => {
+  if (type === 'mission-component') {
+    return buildMissionComponentValue(
+      missionData,
+      value as Record<string, unknown>,
+    )
   }
   return value
 }
 
-const build: TMissionImportBuild = async (missionData) => {
-  const migrateEffect = (effect: any) => {
-    const record: Record<string, unknown> = effect.args
-    effect.arguments = Object.entries(record).map(([parameterId, value]) => {
-      const type = inferArgumentType(value)
-      return {
-        _id: StringToolbox.generateRandomId(),
-        parameterId,
-        type,
-        value: migrateArgumentValue(type, value),
-      }
-    })
-    delete effect.args
-  }
+const migrateEffect = (missionData: any, effect: any) => {
+  const record: Record<string, unknown> = effect.args
+  effect.arguments = Object.entries(record).map(([parameterId, value]) => {
+    const type = inferArgumentType(value)
+    return {
+      _id: StringToolbox.generateRandomId(),
+      parameterId,
+      type,
+      value: migrateArgumentValue(missionData, type, value),
+    }
+  })
+  delete effect.args
+}
 
+const build: TMissionImportBuild = async (missionData) => {
   for (const effect of missionData.effects ?? []) {
-    migrateEffect(effect)
+    migrateEffect(missionData, effect)
   }
 
   for (const force of missionData.forces) {
     for (const node of force.nodes) {
       for (const action of node.actions) {
         for (const effect of action.effects) {
-          migrateEffect(effect)
+          migrateEffect(missionData, effect)
         }
       }
     }

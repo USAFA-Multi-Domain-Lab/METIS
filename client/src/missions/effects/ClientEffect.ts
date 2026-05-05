@@ -2,10 +2,7 @@ import type { TMissionOutlineItem } from '@client/components/pages/missions/stru
 import type { TMetisClientComponents } from '@client/index'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
 import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
-import {
-  ClientTargetArgument,
-  type TClientTargetArgument,
-} from '@client/target-environments/arguments/ClientTargetArgument'
+import { ClientTargetArgument } from '@client/target-environments/arguments/ClientTargetArgument'
 import type {
   TEffectContextExecution,
   TEffectContextSession,
@@ -49,7 +46,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
   // Implemented
   protected parseArguments(
     data: TTargetArgumentJson[],
-  ): TClientTargetArgument[] {
+  ): ClientTargetArgument[] {
     return data.map((argJson) => {
       return ClientTargetArgument.fromJson(argJson, this)
     })
@@ -97,7 +94,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
       this.description,
       context,
       // todo: Duplicate method should be added argument class.
-      this.arguments,
+      this.arguments.map((arg) => arg.json),
       localKey,
     )
   }

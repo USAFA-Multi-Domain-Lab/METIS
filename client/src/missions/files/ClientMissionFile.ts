@@ -1,3 +1,4 @@
+import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import { ClientFileReference } from '@client/files/ClientFileReference'
 import type { TMetisClientComponents } from '@client/index'
 import { SessionClient } from '@client/sessions/SessionClient'
@@ -14,7 +15,7 @@ import type { ClientMissionForce } from '../forces/ClientMissionForce'
  */
 export class ClientMissionFile
   extends MissionFile<TMetisClientComponents>
-  implements TListenerTargetEmittable<TFileEventMethods>
+  implements TListenerTargetEmittable<TFileEventMethods>, TMissionOutlineItem
 {
   /**
    * The MIME type of the file.
@@ -28,6 +29,24 @@ export class ClientMissionFile
    */
   public get size(): number {
     return this.reference.size
+  }
+
+  // Implemented
+  public get outlineIcon(): TMetisIcon {
+    return 'file'
+  }
+
+  // Implemented
+  public expandedInOutline: boolean = false
+
+  // Implemented
+  public get outlineChildren(): TMissionOutlineItem[] {
+    return []
+  }
+
+  // Implemented
+  public get outlineParent(): TMissionOutlineItem | null {
+    return this.mission
   }
 
   /**

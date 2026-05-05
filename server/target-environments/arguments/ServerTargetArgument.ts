@@ -1,17 +1,14 @@
 import type { ServerEffect } from '@server/missions/effects/ServerEffect'
+import type { TTargetArgumentContext } from '@shared/target-environments/arguments/TargetArgument'
 import {
   TargetArgument,
-  TTargetArgument,
   type TTargetArgumentJson,
 } from '@shared/target-environments/arguments/TargetArgument'
-import type { TTargetParameterType } from '@shared/target-environments/parameters/TargetParameter'
 
 /**
  * Server implementation of {@link TargetArgument}.
  */
-export class ServerTargetArgument<
-  TType extends TTargetParameterType = TTargetParameterType,
-> extends TargetArgument<TMetisServerComponents, TType> {
+export class ServerTargetArgument extends TargetArgument<TMetisServerComponents> {
   /**
    * Creates a {@link ServerTargetArgument} from JSON.
    * @param json The JSON to create the argument from.
@@ -24,24 +21,27 @@ export class ServerTargetArgument<
   public static fromJson(
     json: TTargetArgumentJson,
     effect: ServerEffect,
-  ): TServerTargetArgument {
-    return new ServerTargetArgument(
-      effect,
-      json._id,
-      json.parameterId,
-      json.type,
-      json.value,
-    ) as TServerTargetArgument
+  ): ServerTargetArgument {
+    let context: TTargetArgumentContext = {
+      type: 'unknown',
+      value: null,
+    }
+
+    if (json.type === 'mission-component') {
+      context = {
+        type: 'mission-component',
+        value: ServerTargetArgument.extractAndDeserializeComponents(
+          effect.mission,
+          json.value,
+        ),
+      }
+    } else {
+      context = {
+        type: json.type,
+        value: json.value,
+      } as TTargetArgumentContext
+    }
+
+    return new ServerTargetArgument(effect, json._id, json.parameterId, context)
   }
 }
-
-/**
- * Server implementation of {@link TTargetArgument}.
- */
-export type TServerTargetArgument = {
-  [K in TTargetParameterType]: Omit<
-    ServerTargetArgument<K>,
-    'value' | 'parameter' | 'type'
-  > &
-    ServerTargetArgument<K>
-}[TTargetParameterType]

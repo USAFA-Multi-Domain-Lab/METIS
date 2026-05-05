@@ -264,7 +264,7 @@ export class ClientMission
 
   // Implemented
   public get outlineChildren(): TMissionOutlineItem[] {
-    return [...this.root.outlineChildren, ...this.forces, ...this.effects]
+    return [...this.root.outlineChildren, ...this.forces, ...this.resources, ...this.files, ...this.effects]
   }
 
   // Implemented

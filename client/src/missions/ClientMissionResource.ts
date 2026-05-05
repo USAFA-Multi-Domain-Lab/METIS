@@ -1,3 +1,4 @@
+import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { TMissionResourceJson } from '@shared/missions/MissionResource'
 import { MissionResource } from '@shared/missions/MissionResource'
 import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
@@ -8,7 +9,28 @@ import type { ClientMission } from './ClientMission'
 /**
  * Client implementation of {@link MissionResource}.
  */
-export class ClientMissionResource extends MissionResource<TMetisClientComponents> {
+export class ClientMissionResource
+  extends MissionResource<TMetisClientComponents>
+  implements TMissionOutlineItem
+{
+  // Implemented
+  public get outlineIcon(): TMetisIcon {
+    return this.icon
+  }
+
+  // Implemented
+  public expandedInOutline: boolean = false
+
+  // Implemented
+  public get outlineChildren(): TMissionOutlineItem[] {
+    return []
+  }
+
+  // Implemented
+  public get outlineParent(): TMissionOutlineItem | null {
+    return this.mission
+  }
+
   /**
    * Removes the resource from the mission via {@link ClientMission.removeResource}.
    */

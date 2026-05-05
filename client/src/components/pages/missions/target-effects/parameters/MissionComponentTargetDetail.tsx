@@ -1,12 +1,12 @@
 import DetailMultiSelect from '@client/components/content/form/dropdowns/multiselect/DetailMultiSelect'
 import { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
 import { ClientMission } from '@client/missions/ClientMission'
+import { ClientMissionResource } from '@client/missions/ClientMissionResource'
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
 import { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
+import { ClientResourcePool } from '@client/missions/forces/ClientResourcePool'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
-import { ResourcePool } from '@shared/missions/forces/ResourcePool'
-import { MissionResource } from '@shared/missions/MissionResource'
 import type {
   TMissionComponentTargetParameter2,
   TMissionComponentType,
@@ -39,11 +39,13 @@ export default function MissionComponentTargetDetail2({
   let selectableOutlineItemTypes = useMemo(() => {
     let { validComponentTypes = ['any'] } = parameter
     let typeToClassMap = {
-      mission: ClientMission,
-      force: ClientMissionForce,
-      node: ClientMissionNode,
-      action: ClientMissionAction,
-      file: ClientMissionFile,
+      'mission': ClientMission,
+      'force': ClientMissionForce,
+      'node': ClientMissionNode,
+      'action': ClientMissionAction,
+      'file': ClientMissionFile,
+      'resource': ClientMissionResource,
+      'resource-pool': ClientResourcePool,
     } as const
 
     // If "any" is included, all types are valid,
@@ -68,6 +70,7 @@ export default function MissionComponentTargetDetail2({
       ),
     )
   }, [parameter.validComponentTypes])
+
   // A list of JS classes. If an outline item is an instance
   // of any of these classes, then it will be displayed in the
   // outline. This is different from selectableOutlineItemTypes
@@ -76,43 +79,28 @@ export default function MissionComponentTargetDetail2({
   // actions should still be displayed, even if the node itself
   // isn't selectable).
   let displayableOutlineItemTypes = useMemo(() => {
-    let result: typeof selectableOutlineItemTypes = [
-      ClientMission,
-      ClientMissionForce,
-      ClientMissionNode,
-      ClientMissionAction,
-      ClientMissionFile,
-    ]
-
-    // Cascading filtering. We only want to filter out a class
-    // if it's not selectable and its outline descendants aren't
-    // either. For example, the force should only be filtered out
-    // if the actions and nodes inside are also not selectable.
-    if (!selectableOutlineItemTypes.includes(ClientMissionAction)) {
-      result = result.filter(
-        (ComponentClass) => ComponentClass !== ClientMissionAction,
-      )
-
-      if (!selectableOutlineItemTypes.includes(ClientMissionNode)) {
-        result = result.filter(
-          (ComponentClass) => ComponentClass !== ClientMissionNode,
-        )
-
-        if (!selectableOutlineItemTypes.includes(ClientMissionForce)) {
-          result = result.filter(
-            (ComponentClass) => ComponentClass !== ClientMissionForce,
-          )
-        }
+    let result = new Set<(typeof selectableOutlineItemTypes)[number]>()
+    let addIfIncludes = <T extends (typeof selectableOutlineItemTypes)[number]>(
+      ifComponent: T,
+      addComponents: T[],
+    ) => {
+      if (selectableOutlineItemTypes.includes(ifComponent)) {
+        addComponents.forEach((classReference) => result.add(classReference))
       }
     }
 
-    if (!selectableOutlineItemTypes.includes(ClientMissionFile)) {
-      result = result.filter(
-        (ComponentClass) => ComponentClass !== ClientMissionFile,
-      )
-    }
+    addIfIncludes(ClientMissionAction, [
+      ClientMissionForce,
+      ClientMissionNode,
+      ClientMissionAction,
+    ])
+    addIfIncludes(ClientMissionNode, [ClientMissionForce, ClientMissionNode])
+    addIfIncludes(ClientMissionForce, [ClientMissionForce])
+    addIfIncludes(ClientMissionFile, [ClientMissionFile])
+    addIfIncludes(ClientMissionResource, [ClientMissionResource])
+    addIfIncludes(ClientResourcePool, [ClientMissionForce, ClientResourcePool])
 
-    return result
+    return Array.from(result)
   }, [selectableOutlineItemTypes])
 
   /* -- EFFECTS -- */
@@ -175,107 +163,6 @@ export default function MissionComponentTargetDetail2({
   )
 }
 
-/* -- FUNCTIONS -- */
-
-/**
- * Serializes a selection of mission components into an
- * array of tuples, where the first item is the type of
- * the component (e.g. "force", "node", "action") and the
- * rest of the items are the keys needed to identify that
- * the component within the mission (e.g. force key, node key,
- * action key). This makes it ready to be sent to the server
- * and saved in the database as part of effect args.
- * @param value The deserialized selection.
- * @returns The serialized version of the value.
- */
-function serialize(
-  value: TMissionOutlineItem[],
-): Array<TMissionComponentSerializedSelection> {
-  return value.map((item) => {
-    let { name: lastKnownName } = item
-
-    if (item instanceof ClientMission) {
-      return { type: 'mission', lastKnownName, keys: [] }
-    } else if (item instanceof ClientMissionForce) {
-      return { type: 'force', lastKnownName, keys: [item.localKey] }
-    } else if (item instanceof ClientMissionNode) {
-      return {
-        componentType: 'node',
-        lastKnownName,
-        keys: [item.force.localKey, item.localKey],
-      }
-    } else if (item instanceof ClientMissionAction) {
-      return {
-        componentType: 'action',
-        lastKnownName,
-        keys: [item.force.localKey, item.node.localKey, item.localKey],
-      }
-    } else if (item instanceof ClientMissionFile) {
-      return {
-        componentType: 'file',
-        lastKnownName,
-        keys: [item.localKey],
-      }
-    } else if (item instanceof MissionResource) {
-      return {
-        componentType: 'resource',
-        lastKnownName,
-        keys: [item.localKey],
-      }
-    } else if (item instanceof ResourcePool) {
-      return {
-        componentType: 'resource-pool',
-        lastKnownName,
-        keys: [item.force.localKey, item.localKey],
-      }
-    } else {
-      throw new Error(`Unsupported outline item type: ${item.constructor.name}`)
-    }
-  })
-}
-
-/**
- * Deserializes a selection of serialized mission components back into
- * their live mission component objects. Components that no longer exist
- * in the mission (e.g. deleted since the selection was saved) are
- * silently filtered out.
- * @param serialized The serialized selection.
- * @param mission The mission to look up components in.
- * @returns The deserialized selection.
- */
-function deserialize(
-  serialized: TMissionComponentSerializedSelection[],
-  mission: ClientMission,
-): TMissionOutlineItem[] {
-  return serialized.flatMap((item): TMissionOutlineItem[] => {
-    const { componentType: type, keys } = item
-
-    if (type === 'mission') {
-      return [mission]
-    } else if (type === 'force') {
-      const force = mission.getForceByLocalKey(keys[0])
-      return force ? [force] : []
-    } else if (type === 'node') {
-      const node = mission.getNodeByLocalKey(keys[0], keys[1])
-      return node ? [node] : []
-    } else if (type === 'action') {
-      const action = mission.getActionByLocalKey(keys[0], keys[1], keys[2])
-      return action ? [action] : []
-    } else if (type === 'file') {
-      const file = mission.getFileByLocalKey(keys[0])
-      return file ? [file] : []
-    } else if (type === 'resource') {
-      const resource = mission.getResourceByLocalKey(keys[0])
-      return resource ? [resource] : []
-    } else if (type === 'resource-pool') {
-      const resourcePool = mission.getPoolByLocalKey(keys[0], keys[1])
-      return resourcePool ? [resourcePool] : []
-    } else {
-      return []
-    }
-  })
-}
-
 /* -- TYPES -- */
 
 /**
@@ -323,10 +210,12 @@ type TMissionComponentSerializedSelection = {
    */
   lastKnownName: string
   /**
-   * The keys needed to identify the component within the mission.
-   * For example, if the component is a node, this would be
-   * [forceKey, nodeKey]. If it's an action, this would be
-   * [forceKey, nodeKey, actionKey].
+   * A string of identifiers used to find the component
+   * quickly in the mission. The identifiers define a
+   * path to the component in the mission outline. For example,
+   * [forceId, nodeId, actionId] would be the path to an action.
+   * @note The IDs of the ancestor components are included
+   * for quicker lookup.
    */
-  keys: string[]
+  ids: string[]
 }

@@ -17,6 +17,170 @@
 // Applies to session-triggered root effects and all execution-triggered
 // action effects.
 
+// Determines the argument type based on
+// the format of the value.
+function inferArgumentType(value) {
+  if (typeof value === 'number') return 'number'
+  if (typeof value === 'boolean') return 'boolean'
+  if (value !== null && typeof value === 'object') return 'mission-component'
+  return 'unknown'
+}
+
+// Converts an old-style mission component metadata object into the new
+// TMissionComponentSerializedSelection[] format by resolving localKeys
+// against the mission document. Returns an empty array if any lookup fails.
+function buildMissionComponentValue(
+  mission,
+  object,
+  sourceForce = null,
+  sourceNode = null,
+  sourceAction = null,
+) {
+  let force = null
+  let pool = null
+  let node = null
+  let action = null
+
+  // Determine force.
+  if (object.forceKey === 'self') {
+    force = sourceForce
+  } else if (object.forceKey) {
+    force = mission.forces.find((force) => {
+      return force.localKey === object.forceKey
+    })
+  }
+
+  // Determine pool.
+  if (force && object.poolKey) {
+    pool = force.resourcePools.find((pool) => {
+      return pool.localKey === object.poolKey
+    })
+  }
+
+  // Determine node.
+  if (force && object.nodeKey === 'self') {
+    node = sourceNode
+  } else if (force && object.nodeKey) {
+    node = force.nodes.find((node) => {
+      return node.localKey === object.nodeKey
+    })
+  }
+
+  // Determine action.
+  if (force && node && object.actionKey === 'self') {
+    action = sourceAction
+  } else if (force && node && object.actionKey) {
+    action = node.actions.find((action) => {
+      return action.localKey === object.actionKey
+    })
+  }
+
+  // Format and return results.
+  if (action) {
+    return [
+      {
+        componentType: 'action',
+        lastKnownName: action.name,
+        ids: [force._id, node._id, action._id],
+      },
+    ]
+  }
+  if (pool) {
+    return [
+      {
+        componentType: 'resource-pool',
+        lastKnownName: pool.name,
+        ids: [force._id, pool._id],
+      },
+    ]
+  }
+  if (node) {
+    return [
+      {
+        componentType: 'node',
+        lastKnownName: node.name,
+        ids: [force._id, node._id],
+      },
+    ]
+  }
+  if (force) {
+    return [
+      { componentType: 'force', lastKnownName: force.name, ids: [force._id] },
+    ]
+  }
+  if (object.fileId) {
+    return [
+      {
+        componentType: 'file',
+        lastKnownName: object.fileName ?? '',
+        ids: [object.fileId],
+      },
+    ]
+  }
+  if (object.resourceId) {
+    return [
+      {
+        componentType: 'resource',
+        lastKnownName: object.resourceName ?? '',
+        ids: [object.resourceId],
+      },
+    ]
+  }
+  return []
+}
+
+// Converts argument value to a new format,
+// if a new format is needed.
+function migrateArgumentValue(
+  mission,
+  type,
+  value,
+  sourceForce = null,
+  sourceNode = null,
+  sourceAction = null,
+) {
+  if (type === 'mission-component') {
+    return buildMissionComponentValue(
+      mission,
+      value,
+      sourceForce,
+      sourceNode,
+      sourceAction,
+    )
+  } else {
+    return value
+  }
+}
+
+// Converts effect args to the updated
+// data structure requirements.
+function convertEffectArgs(
+  mission,
+  effect,
+  sourceForce = null,
+  sourceNode = null,
+  sourceAction = null,
+) {
+  let record = effect.args
+  effect['arguments'] = Object.entries(record).map(([parameterId, value]) => {
+    let type = inferArgumentType(value)
+    return {
+      _id: crypto.randomUUID(),
+      parameterId,
+      type,
+      value: migrateArgumentValue(
+        mission,
+        type,
+        value,
+        sourceForce,
+        sourceNode,
+        sourceAction,
+      ),
+    }
+  })
+  delete effect.args
+}
+
 let dbName = 'metis'
 
 if (process.env.MONGO_DB) {
@@ -24,58 +188,6 @@ if (process.env.MONGO_DB) {
 }
 
 use(dbName)
-
-function inferArgumentType(value) {
-  if (typeof value === 'number') return 'number'
-  if (typeof value === 'boolean') return 'boolean'
-  if (Array.isArray(value)) return 'mission-component'
-  if (value !== null && typeof value === 'object') return 'mission-component'
-  return 'unknown'
-}
-
-// Extracts the component localKey or ID from an old-style metadata object.
-// Detection order is most-specific-first: action has nodeKey too, so check
-// actionKey before nodeKey.
-function extractComponentId(object) {
-  if (typeof object.actionKey === 'string') return object.actionKey
-  if (typeof object.nodeKey === 'string') return object.nodeKey
-  if (typeof object.poolKey === 'string') return object.poolKey
-  if (typeof object.forceKey === 'string') return object.forceKey
-  if (typeof object.fileId === 'string') return object.fileId
-  if (typeof object.resourceId === 'string') return object.resourceId
-  return ''
-}
-
-function migrateArgumentValue(type, value) {
-  if (
-    type === 'mission-component' &&
-    !Array.isArray(value) &&
-    value !== null &&
-    typeof value === 'object'
-  ) {
-    return extractComponentId(value)
-  }
-  return value
-}
-
-function convertEffectArgs(effect) {
-  let record = effect.args
-  let entries = Object.entries(record)
-  let converted = []
-  for (let i = 0; i < entries.length; i++) {
-    let parameterId = entries[i][0]
-    let value = entries[i][1]
-    let type = inferArgumentType(value)
-    converted.push({
-      _id: new ObjectId().toString(),
-      parameterId,
-      type,
-      value: migrateArgumentValue(type, value),
-    })
-  }
-  delete effect.args
-  effect['arguments'] = converted
-}
 
 print('Migrating effect arguments to typed array format...')
 
@@ -87,14 +199,14 @@ while (cursorMissions.hasNext()) {
   let effects = mission.effects ?? []
 
   for (let effect of effects) {
-    convertEffectArgs(effect)
+    convertEffectArgs(mission, effect)
   }
 
   for (let force of forces) {
     for (let node of force.nodes) {
       for (let action of node.actions) {
         for (let effect of action.effects) {
-          convertEffectArgs(effect)
+          convertEffectArgs(mission, effect, force, node, action)
         }
       }
     }

@@ -1,17 +1,21 @@
+import { MissionAction } from '@shared/missions/actions/MissionAction'
 import type { Effect, TEffectType } from '@shared/missions/effects/Effect'
+import { MissionFile } from '@shared/missions/files/MissionFile'
+import { MissionForce } from '@shared/missions/forces/MissionForce'
+import { ResourcePool } from '@shared/missions/forces/ResourcePool'
+import { MissionResource } from '@shared/missions/MissionResource'
+import { MissionNode } from '@shared/missions/nodes/MissionNode'
+import type { TMissionComponentSerializedSelection } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter2'
+import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import type { TSatisfies } from '@shared/toolbox/objects/ObjectToolbox'
-import {
-  serializeJson,
-  type TJsonSerializable,
-} from '@shared/toolbox/serialization/json'
+import { type TJsonSerializable } from '@shared/toolbox/serialization/json'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import type { TMission } from '../../missions/Mission'
+import { Mission, type TMission } from '../../missions/Mission'
 import {
   MissionComponent,
   type TMissionComponentIssue,
 } from '../../missions/MissionComponent'
 import type { TDropdownTargetParameterOptionVal } from '../parameters/DropdownTargetParameter'
-import type { TMissionComponentMetadata } from '../parameters/mission-component/MissionComponentTargetParameter'
 import type {
   TTargetParameter,
   TTargetParameterType,
@@ -33,9 +37,8 @@ import type {
  */
 export abstract class TargetArgument<
   T extends TMetisBaseComponents = TMetisBaseComponents,
-  TParameterType extends TTargetParameterType = TTargetParameterType,
 >
-  extends MissionComponent<T, TargetArgument<T, TParameterType>>
+  extends MissionComponent<T, TargetArgument<T>>
   implements TJsonSerializable<TTargetArgumentJson>
 {
   /**
@@ -54,13 +57,17 @@ export abstract class TargetArgument<
     return this.effect._id
   }
 
+  public readonly context: Readonly<TTargetArgumentContext>
+
   /**
    * The type of the parameter this argument satisfies. This is a
    * discriminant field that determines the type of `parameter` and `value`.
    * @note If this conflicts with the parameter's actual type, an issue
    * will be generated on the argument.
    */
-  public readonly type: TParameterType
+  public get type(): TTargetParameterType {
+    return this.context.type
+  }
 
   /**
    * The `_id` of the {@link parameter}.
@@ -100,7 +107,9 @@ export abstract class TargetArgument<
    * concrete parameter type (e.g. `TNumberTargetParameter`) this
    * resolves to its corresponding value type (e.g. `number`).
    */
-  public value: TSelectArgumentValue[TParameterType]
+  public get value(): TTargetArgumentValue<T> {
+    return this.context.value
+  }
 
   // Implemented
   public get json(): TTargetArgumentJson {
@@ -119,13 +128,11 @@ export abstract class TargetArgument<
     effect: T[TEffectType] | Effect<T, any>,
     _id: string,
     parameterId: string,
-    type: TParameterType,
-    value: TSelectArgumentValue[TParameterType],
+    context: TTargetArgumentContext,
   ) {
     super(_id, '', false)
     this.parameterId = parameterId
-    this.type = type
-    this.value = value
+    this.context = context
 
     this.effect = effect.normalize()
     this.parameter = this.effect.target?.getParameterById(parameterId)
@@ -137,13 +144,20 @@ export abstract class TargetArgument<
 
   // Implemented
   public serialize(): TTargetArgumentJson {
-    return serializeJson(this, ['_id', 'parameterId', 'value'], () => {
-      let type: TTargetParameterType = this.type
-      if (type === 'unknown' && this.parameter) {
-        type = this.parameter.type
+    if (this.context.type === 'mission-component') {
+      return {
+        _id: this._id,
+        parameterId: this.parameterId,
+        type: this.context.type,
+        value: TargetArgument.serializeMissionComponents(this.context.value),
       }
-      return { type }
-    })
+    } else {
+      return {
+        _id: this._id,
+        parameterId: this.parameterId,
+        ...this.context,
+      }
+    }
   }
 
   /**
@@ -188,15 +202,122 @@ export abstract class TargetArgument<
       type: 'string',
     }
   }
+
+  /**
+   * Deserializes a selection of serialized mission components back into
+   * their live mission component objects. Components that no longer exist
+   * in the mission (e.g. deleted since the selection was saved) are
+   * silently filtered out.
+   * @param serialized The serialized selection.
+   * @param mission The mission to look up components in.
+   * @param jsonValue The JSON value of the argument, which is a list of
+   * serialized components.
+   * @returns The deserialized selections.
+   */
+  protected static extractAndDeserializeComponents<
+    T extends TMetisBaseComponents,
+  >(
+    mission: T['mission'],
+    jsonValue: TMissionComponentSerializedSelection[],
+  ): MissionComponent<T>[] {
+    return jsonValue.flatMap((item): MissionComponent<T>[] => {
+      const { componentType: type, ids } = item
+
+      if (type === 'mission') {
+        return ArrayToolbox.normalize(mission)
+      } else if (type === 'force') {
+        const force = mission.getForceById(ids[0])
+        return ArrayToolbox.normalize(force)
+      } else if (type === 'node') {
+        const node = mission.getNodeById(ids[1], { forceId: ids[0] })
+        return ArrayToolbox.normalize(node)
+      } else if (type === 'action') {
+        const action = mission.getActionById(ids[2], {
+          forceId: ids[0],
+          nodeId: ids[1],
+        })
+        return ArrayToolbox.normalize(action)
+      } else if (type === 'file') {
+        const file = mission.getFileById(ids[0])
+        return ArrayToolbox.normalize(file)
+      } else if (type === 'resource') {
+        const resource = mission.getResourceById(ids[0])
+        return ArrayToolbox.normalize(resource)
+      } else if (type === 'resource-pool') {
+        return ArrayToolbox.normalize(
+          mission.getPoolById(ids[1], { forceId: ids[0] }),
+        )
+      } else {
+        throw new Error(`Unsupported component type: ${type}`)
+      }
+    })
+  }
+
+  /**
+   * Serializes mission components to be stored as the
+   * value of a mission-component argument.
+   * @param components The mission components to serialize.
+   * @returns The serialized value.
+   */
+  protected static serializeMissionComponents<T extends TMetisBaseComponents>(
+    components: MissionComponent<T>[],
+  ): TMissionComponentSerializedSelection[] {
+    return components.map(
+      (item: MissionComponent<T>): TMissionComponentSerializedSelection => {
+        if (!(item instanceof MissionComponent)) throw new Error('')
+        let { name: lastKnownName } = item
+
+        if (item instanceof Mission) {
+          return { componentType: 'mission', lastKnownName, ids: [] }
+        } else if (item instanceof MissionForce) {
+          return { componentType: 'force', lastKnownName, ids: [item._id] }
+        } else if (item instanceof MissionNode) {
+          return {
+            componentType: 'node',
+            lastKnownName,
+            ids: [item.force._id, item._id],
+          }
+        } else if (item instanceof MissionAction) {
+          return {
+            componentType: 'action',
+            lastKnownName,
+            ids: [item.force._id, item.node._id, item._id],
+          }
+        } else if (item instanceof MissionFile) {
+          return {
+            componentType: 'file',
+            lastKnownName,
+            ids: [item._id],
+          }
+        } else if (item instanceof MissionResource) {
+          return {
+            componentType: 'resource',
+            lastKnownName,
+            ids: [item._id],
+          }
+        } else if (item instanceof ResourcePool) {
+          return {
+            componentType: 'resource-pool',
+            lastKnownName,
+            ids: [item.force._id, item._id],
+          }
+        } else {
+          throw new Error(
+            `Unsupported outline item type: ${item.constructor.name}`,
+          )
+        }
+      },
+    )
+  }
 }
 
 /* -- TYPES -- */
 
 /**
- * Allows the selection of an argument value's type
- * based on a given parameter type.
+ * Allows the selection of an argument's serialized
+ * value type based on a given parameter type.
  */
-export type TSelectArgumentValue = TSatisfies<
+export type TSelectArgumentSerializedValue = TSatisfies<
   {
     'number': number
     'string': string
@@ -209,66 +330,67 @@ export type TSelectArgumentValue = TSatisfies<
     'file': TFileMetadata
     'resource': TResourceMetadata
     'pool': TPoolMetadata
-    'mission-component': string | string[]
-    'unknown': TTargetArgumentValue
+    'mission-component': TMissionComponentSerializedSelection[]
+    'unknown': TTargetArgumentSerializedValue
   },
   Record<TTargetParameterType, unknown>
 >
 
 /**
- * The union of all possible values a {@link TargetArgument} can hold.
- * Equivalent to the union of every branch in {@link TArgumentValueForParameter}.
+ * Allows the selection of an argument value's type
+ * based on a given parameter type.
  */
-export type TTargetArgumentValue =
-  | number
-  | string
-  | boolean
-  | string[]
-  | TMissionComponentMetadata
-  | TDropdownTargetParameterOptionVal
+export type TSelectArgumentValue<
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> = Omit<TSelectArgumentSerializedValue, 'mission-component'> & {
+  'mission-component': MissionComponent<T>[]
+}
 
 /**
- * A discriminated union of all typed {@link TargetArgument} variants.
- * Switch on `argument.parameter.type` to narrow both `parameter` and
- * `value` to their concrete types for that parameter kind.
- *
- * @example
- * ```typescript
- * switch (argument.parameter.type) {
- *   case 'number':  // argument.value: number
- *   case 'string':  // argument.value: string
- *   case 'force':   // argument.value: TMissionComponentMetadata
- * }
- * ```
+ * The union of all possible values a {@link TTargetArgumentJson} can hold.
+ * Equivalent to the union of every branch in {@link TSelectArgumentSerializedValue}.
  */
-export type TTargetArgument<
-  T extends TMetisBaseComponents = TMetisBaseComponents,
-> = {
-  [K in TTargetParameterType]: Omit<
-    TargetArgument<T, K>,
-    'value' | 'parameter' | 'type'
-  > &
-    TargetArgument<T, K>
-}[TTargetParameterType]
+export type TTargetArgumentSerializedValue =
+  TSelectArgumentSerializedValue[Exclude<TTargetParameterType, 'unknown'>]
+
+/**
+ * The union of all possible values a {@link TargetArgument} can hold.
+ * Equivalent to the union of every branch in {@link TSelectArgumentValue}.
+ */
+export type TTargetArgumentValue<T extends TMetisBaseComponents> =
+  TSelectArgumentValue<T>[Exclude<TTargetParameterType, 'unknown'>]
 
 /**
  * The JSON representation of {@link TargetArgument}.
  */
 export type TTargetArgumentJson = {
-  /**
-   * @see {@link TargetArgument._id}
-   */
-  _id: string
-  /**
-   * @see {@link TargetArgument.parameterId}
-   */
-  parameterId: string
-  /**
-   * @see {@link TargetArgument.type}
-   */
-  type: TTargetParameterType
-  /**
-   * @see {@link TargetArgument.value}
-   */
-  value: TTargetArgumentValue
-}
+  [TType in TTargetParameterType]: {
+    /**
+     * @see {@link TargetArgument._id}
+     */
+    _id: string
+    /**
+     * @see {@link TargetArgument.parameterId}
+     */
+    parameterId: string
+    /**
+     * @see {@link TargetArgument.type}
+     */
+    type: TType
+    /**
+     * @see {@link TargetArgument.value}
+     */
+    value: TSelectArgumentSerializedValue[TType]
+  }
+}[TTargetParameterType]
+
+/**
+ * Discriminating union provided by {@link TargetArgument.context}
+ * to allow type-safe access to the argument's value based on its type.
+ */
+export type TTargetArgumentContext = {
+  [K in TTargetParameterType]: {
+    type: K
+    value: TSelectArgumentValue[K]
+  }
+}[TTargetParameterType]

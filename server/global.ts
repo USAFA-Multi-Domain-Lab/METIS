@@ -18,10 +18,7 @@ import type { ServerMission } from './missions/ServerMission'
 import type { ServerMissionResource } from './missions/ServerMissionResource'
 import type { ServerSessionMember } from './sessions/ServerSessionMember'
 import type { SessionServer } from './sessions/SessionServer'
-import type {
-  ServerTargetArgument,
-  TServerTargetArgument,
-} from './target-environments/arguments/ServerTargetArgument'
+import type { ServerTargetArgument } from './target-environments/arguments/ServerTargetArgument'
 import type { ServerTarget } from './target-environments/ServerTarget'
 import type { ServerTargetEnvironment } from './target-environments/ServerTargetEnvironment'
 import type { ServerUser } from './users/ServerUser'
@@ -60,7 +57,7 @@ declare global {
     action: ServerMissionAction
     execution: ServerActionExecution
     outcome: ServerExecutionOutcome
-    targetArgument: TServerTargetArgument
+    targetArgument: ServerTargetArgument
   } & {
     [TType in TEffectType]: ServerEffect<TType>
   }

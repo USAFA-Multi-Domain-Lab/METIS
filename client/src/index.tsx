@@ -16,7 +16,6 @@ import type { ClientSessionMember } from '@client/sessions/ClientSessionMember'
 import type { SessionClient } from '@client/sessions/SessionClient'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
 import type { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
-import type { TClientTargetArgument } from '@client/target-environments/arguments/ClientTargetArgument'
 import type { ClientUser } from '@client/users/ClientUser'
 import type { TEffectType } from '@shared/missions/effects/Effect'
 import ReactDOM from 'react-dom/client'
@@ -24,6 +23,7 @@ import './index.scss'
 import type { ClientMissionResource } from './missions/ClientMissionResource'
 import type { ClientActionCost } from './missions/actions/ClientActionCost'
 import type { ClientResourcePool } from './missions/forces/ClientResourcePool'
+import type { ClientTargetArgument } from './target-environments/arguments/ClientTargetArgument'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -79,7 +79,7 @@ export type TMetisClientComponents = {
   action: ClientMissionAction
   execution: ClientActionExecution
   outcome: ClientExecutionOutcome
-  targetArgument: TClientTargetArgument
+  targetArgument: ClientTargetArgument
 } & {
   [TType in TEffectType]: ClientEffect<TType>
 }
