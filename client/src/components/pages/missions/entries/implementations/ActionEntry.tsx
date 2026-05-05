@@ -230,7 +230,6 @@ export default function ActionEntry({
           <Divider />
         </Fragment>
       ))}
-      <Divider />
       <DetailToggle
         fieldType='required'
         label='Opens Node'
