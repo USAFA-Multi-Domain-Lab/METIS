@@ -1,9 +1,22 @@
 import type { ServerEffect } from '@server/missions/effects/ServerEffect'
-import type { TTargetArgumentContext } from '@shared/target-environments/arguments/TargetArgument'
+import type {
+  TSelectArgumentSerializedValue,
+  TTargetArgumentContext,
+} from '@shared/target-environments/arguments/TargetArgument'
 import {
   TargetArgument,
   type TTargetArgumentJson,
 } from '@shared/target-environments/arguments/TargetArgument'
+import type { TTargetParameterType } from '@shared/target-environments/parameters/TargetParameter'
+import type {
+  TTargetEnvExposedAction,
+  TTargetEnvExposedFile,
+  TTargetEnvExposedForce,
+  TTargetEnvExposedMission,
+  TTargetEnvExposedNode,
+  TTargetEnvExposedPool,
+  TTargetEnvExposedResource,
+} from '../context/TargetEnvContext'
 
 /**
  * Server implementation of {@link TargetArgument}.
@@ -22,7 +35,7 @@ export class ServerTargetArgument extends TargetArgument<TMetisServerComponents>
     json: TTargetArgumentJson,
     effect: ServerEffect,
   ): ServerTargetArgument {
-    let context: TTargetArgumentContext = {
+    let context: TTargetArgumentContext<TMetisServerComponents> = {
       type: 'unknown',
       value: null,
     }
@@ -30,18 +43,92 @@ export class ServerTargetArgument extends TargetArgument<TMetisServerComponents>
     if (json.type === 'mission-component') {
       context = {
         type: 'mission-component',
-        value: ServerTargetArgument.extractAndDeserializeComponents(
-          effect.mission,
-          json.value,
-        ),
+        value:
+          ServerTargetArgument.extractAndDeserializeComponents<TMetisServerComponents>(
+            effect.mission,
+            json.value,
+          ),
       }
     } else {
       context = {
         type: json.type,
         value: json.value,
-      } as TTargetArgumentContext
+      } as TTargetArgumentContext<TMetisServerComponents>
     }
 
     return new ServerTargetArgument(effect, json._id, json.parameterId, context)
   }
+
+  /**
+   * @returns Exposed version of this argument that can be
+   * safely passed to target-environment code.
+   */
+  public toTargetEnvContext(): TTargetEnvExposedArgument {
+    if (this.context.type === 'mission-component') {
+      return {
+        _id: this._id,
+        parameterId: this.parameterId,
+        type: this.context.type,
+        value: this.context.value.map((component) =>
+          component.toTargetEnvContext(),
+        ),
+      }
+    } else {
+      return {
+        _id: this._id,
+        parameterId: this.parameterId,
+        ...this.context,
+      }
+    }
+  }
 }
+
+/* -- TYPES -- */
+
+/**
+ * A union of all possible mission components that can be exposed
+ * to target-environment code.
+ */
+export type TExposedArgCompatibleComponent =
+  | TTargetEnvExposedMission
+  | TTargetEnvExposedResource
+  | TTargetEnvExposedForce
+  | TTargetEnvExposedPool
+  | TTargetEnvExposedNode
+  | TTargetEnvExposedAction
+  | TTargetEnvExposedFile
+
+/**
+ * Allows the selection of a context argument value's type
+ * which can be passed to a target-env script.
+ */
+export type TSelectExposedArgumentValue = Omit<
+  TSelectArgumentSerializedValue,
+  'mission-component'
+> & {
+  'mission-component': TExposedArgCompatibleComponent[]
+}
+
+/**
+ * The JSON representation of {@link TargetArgument}.
+ */
+export type TTargetEnvExposedArgument = {
+  [TType in TTargetParameterType]: {
+    /**
+     * @see {@link TargetArgument._id}
+     */
+    _id: string
+    /**
+     * @see {@link TargetArgument.parameterId}
+     */
+    parameterId: string
+    /**
+     * @see {@link TargetArgument.type}
+     */
+    type: TType
+    /**
+     * @see {@link TargetArgument.value}
+     */
+    value: TSelectExposedArgumentValue[TType]
+  }
+}[TTargetParameterType]

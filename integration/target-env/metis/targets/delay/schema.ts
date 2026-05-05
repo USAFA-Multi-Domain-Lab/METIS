@@ -1,7 +1,3 @@
-// Argument IDs for the delay target.
-const hoursArgId = 'delayTimeHours'
-const minutesArgId = 'delayTimeMinutes'
-const secondsArgId = 'delayTimeSeconds'
 const groupingId = 'delayTime'
 
 /**
@@ -12,25 +8,30 @@ const Delay = new TargetSchema({
   _id: 'delay',
   name: 'Delay',
   description: '',
-  script: async (context) => {
-    let args = context.effect.arguments
-    let delayTimeSeconds = args[secondsArgId]
-    let delayTimeMinutes = args[minutesArgId]
-    let delayTimeHours = args[hoursArgId]
-    let delayTime: number = 0
-
-    // Update the delay time based on the provided values.
-    if (delayTimeHours) delayTime += delayTimeHours * 3600 * 1000 /*ms*/
-    if (delayTimeMinutes) delayTime += delayTimeMinutes * 60 * 1000 /*ms*/
-    if (delayTimeSeconds) delayTime += delayTimeSeconds * 1000 /*ms*/
-
-    // Only resolve after the delay time has passed.
-    await context.sleep(delayTime)
+  script: async (
+    context,
+    delayTimeHours,
+    delayTimeMinutes,
+    delayTimeSeconds,
+  ) => {
+    //     let args = context.effect.arguments
+    //     let delayTimeSeconds = args[secondsArgId]
+    //     let delayTimeMinutes = args[minutesArgId]
+    //     let delayTimeHours = args[hoursArgId]
+    //     let delayTime: number = 0
+    //
+    //     // Update the delay time based on the provided values.
+    //     if (delayTimeHours) delayTime += delayTimeHours * 3600 * 1000 /*ms*/
+    //     if (delayTimeMinutes) delayTime += delayTimeMinutes * 60 * 1000 /*ms*/
+    //     if (delayTimeSeconds) delayTime += delayTimeSeconds * 1000 /*ms*/
+    //
+    //     // Only resolve after the delay time has passed.
+    //     await context.sleep(delayTime)
   },
   parameters: [
     {
       type: 'number',
-      _id: hoursArgId,
+      _id: 'delayTimeHours',
       name: 'Hour(s)',
       required: true,
       min: 0,
@@ -41,7 +42,7 @@ const Delay = new TargetSchema({
     },
     {
       type: 'number',
-      _id: minutesArgId,
+      _id: 'delayTimeMinutes',
       name: 'Minute(s)',
       required: true,
       min: 0,
@@ -52,7 +53,7 @@ const Delay = new TargetSchema({
     },
     {
       type: 'number',
-      _id: secondsArgId,
+      _id: 'delayTimeSeconds',
       name: 'Second(s)',
       required: true,
       min: 0,

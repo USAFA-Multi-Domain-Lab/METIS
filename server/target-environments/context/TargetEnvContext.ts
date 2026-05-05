@@ -1,4 +1,13 @@
 import { targetEnvLogger } from '@server/logging'
+import type { ServerMission } from '@server/missions/ServerMission'
+import type { ServerMissionResource } from '@server/missions/ServerMissionResource'
+import type { ServerActionCost } from '@server/missions/actions/ServerActionCost'
+import type { ServerMissionAction } from '@server/missions/actions/ServerMissionAction'
+import type { ServerEffect } from '@server/missions/effects/ServerEffect'
+import type { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
+import type { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
+import type { ServerResourcePool } from '@server/missions/forces/ServerResourcePool'
+import type { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
 import type { Mission } from '@shared/missions/Mission'
 import type { MissionResource } from '@shared/missions/MissionResource'
 import type { ActionResourceCost } from '@shared/missions/actions/ActionResourceCost'
@@ -20,6 +29,7 @@ import type { TEffectType } from '../../../shared/missions/effects/Effect'
 import type { SessionServer } from '../../sessions/SessionServer'
 import { TargetEnvStore } from '../../sessions/TargetEnvStore'
 import type { ServerTargetEnvironment } from '../ServerTargetEnvironment'
+import type { TTargetEnvExposedArgument } from '../arguments/ServerTargetArgument'
 import { OutdatedContextError } from './OutdatedContextError'
 
 export abstract class TargetEnvContext<
@@ -357,7 +367,7 @@ export interface TTargetEnvExposedSessionConfig extends Readonly<
  */
 export type TTargetEnvExposedMission = Readonly<
   TCreateJsonType<
-    Mission,
+    ServerMission,
     '_id' | 'name',
     {
       /**
@@ -397,7 +407,7 @@ export type TTargetEnvExposedMission = Readonly<
  */
 export type TTargetEnvExposedResource = Readonly<
   TCreateJsonType<
-    MissionResource,
+    ServerMissionResource,
     '_id' | 'name' | 'icon' | 'order',
     {
       /**
@@ -413,7 +423,7 @@ export type TTargetEnvExposedResource = Readonly<
  */
 export type TTargetEnvExposedForce = Readonly<
   TCreateJsonType<
-    MissionForce,
+    ServerMissionForce,
     '_id' | 'localKey' | 'name' | 'color',
     {
       /**
@@ -437,7 +447,7 @@ export type TTargetEnvExposedForce = Readonly<
  */
 export type TTargetEnvExposedPool = Readonly<
   TCreateJsonType<
-    ResourcePool,
+    ServerResourcePool,
     | '_id'
     | 'localKey'
     | 'name'
@@ -470,7 +480,7 @@ export type TTargetEnvExposedPool = Readonly<
  */
 export type TTargetEnvExposedNode = Readonly<
   TCreateJsonType<
-    MissionNode,
+    ServerMissionNode,
     | '_id'
     | 'localKey'
     | 'name'
@@ -524,7 +534,7 @@ export type TTargetEnvExposedNode = Readonly<
  */
 export type TTargetEnvExposedFile = Readonly<
   TCreateJsonType<
-    MissionFile,
+    ServerMissionFile,
     | '_id'
     | 'name'
     | 'originalName'
@@ -547,7 +557,7 @@ export type TTargetEnvExposedFile = Readonly<
  */
 export type TTargetEnvExposedAction = Readonly<
   TCreateJsonType<
-    MissionAction,
+    ServerMissionAction,
     | '_id'
     | 'localKey'
     | 'name'
@@ -590,7 +600,7 @@ export type TTargetEnvExposedAction = Readonly<
  */
 export type TTargetEnvExposedCost = Readonly<
   TCreateJsonType<
-    ActionResourceCost,
+    ServerActionCost,
     '_id' | 'name' | 'baseAmount' | 'hidden' | 'amount' | 'icon',
     {
       /**
@@ -623,15 +633,14 @@ export type TTargetEnvExposedCost = Readonly<
 export type TTargetEnvExposedEffect<TType extends TEffectType = TEffectType> =
   Readonly<
     TCreateJsonType<
-      Effect<TMetisBaseComponents, TType>,
+      ServerEffect<TType>,
       | '_id'
       | 'localKey'
       | 'name'
       | 'type'
       | 'description'
       | 'trigger'
-      | 'order'
-      | 'arguments',
+      | 'order',
       {
         /**
          * @see {@link Effect.mission}
@@ -661,6 +670,10 @@ export type TTargetEnvExposedEffect<TType extends TEffectType = TEffectType> =
          * @see {@link Effect.environment}
          */
         environment: TTargetEnvExposedEnvironment | null
+        /**
+         * @see {@link Effect.arguments}
+         */
+        arguments: TTargetEnvExposedArgument[]
       }
     >
   >

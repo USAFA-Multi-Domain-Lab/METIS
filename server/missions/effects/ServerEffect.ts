@@ -50,18 +50,6 @@ export class ServerEffect<
   }
 
   /**
-   * Extracts the necessary properties from the effect's arguments to be used as a reference
-   * in a target environment.
-   * @param args The arguments to extract the necessary properties from.
-   * @returns The modified arguments.
-   */
-  public argumentsToTargetEnvContext(
-    args: ServerTargetArgument[],
-  ): ServerTargetArgument[] {
-    return args.map((arg) => structuredClone(arg))
-  }
-
-  /**
    * @returns The properties from the effect that are
    * safe to expose in target-environment code.
    */
@@ -97,7 +85,7 @@ export class ServerEffect<
         return self.environment ? self.environment.toTargetEnvContext() : null
       },
       get arguments() {
-        return self.argumentsToTargetEnvContext(self.arguments)
+        return self.arguments.map((arg) => arg.toTargetEnvContext())
       },
     }
   }
@@ -118,7 +106,7 @@ export class ServerEffect<
       trigger: self.trigger,
       description: self.description,
       order: self.order,
-      arguments: self.argumentsToTargetEnvContext(self.arguments),
+      arguments: self.arguments.map((arg) => arg.json),
       versionCursor: this.targetEnvironmentVersion,
       get mission() {
         return self.mission.toTargetEnvContext()
@@ -144,7 +132,7 @@ export class ServerEffect<
       get result() {
         return {
           version: this.versionCursor,
-          data: self.argumentsToTargetEnvContext(self.arguments),
+          data: structuredClone(self.arguments),
         }
       },
     }
