@@ -35,6 +35,7 @@ export const apiOptionsSchema = z.object({
   /**
    * Controls whether TLS client verifies the server's certificate against
    * trusted Certificate Authorities (CAs).
+   * @see {@link [Node.js TLS Documentation](https://nodejs.org/api/tls.html#new-tlstlssocketsocket-options)}
    * @note If true, the server will reject any connection which is not authorized
    * with the trusted Certificate Authorities (CAs).
    * @note If false, the server will accept any certificate, even if it is invalid.
