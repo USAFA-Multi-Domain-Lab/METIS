@@ -23,4 +23,25 @@
       padding: 11px 0;
     }
   }
+
+  .TargetArgumentDetail_missionComponent {
+    .MissionOutline {
+      padding-bottom: 1em;
+    }
+
+    .ComponentItemContent {
+      display: grid;
+      grid-template-columns: 1em 1fr;
+      column-gap: 0.5em;
+      // padding-left: 0.333em;
+
+      .Icon {
+        width: 1em;
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        opacity: 0.4;
+      }
+    }
+  }
 }

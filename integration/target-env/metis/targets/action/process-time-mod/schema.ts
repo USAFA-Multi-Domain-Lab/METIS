@@ -15,7 +15,7 @@ const ProcessTimeMod = TargetSchema.create({
   description: '',
   script: async (
     context,
-    modifierScope,
+    components,
     processTimeHours,
     processTimeMinutes,
     processTimeSeconds,
@@ -29,7 +29,7 @@ const ProcessTimeMod = TargetSchema.create({
 
     // If the process time isn't 0, apply it to each selected component.
     if (Math.abs(processTime) > 0) {
-      for (const component of modifierScope) {
+      for (const component of components) {
         if (component.componentType === 'mission') {
           context.modifyProcessTime(processTime)
         } else if (component.componentType === 'force') {
@@ -54,11 +54,11 @@ const ProcessTimeMod = TargetSchema.create({
   parameters: [
     {
       type: 'mission-component' as const,
-      _id: 'modifierScope',
-      name: 'Modifier Scope',
+      _id: 'components', // todo: Write migration from 'actionMetadata' to 'applyTo'
+      name: 'Apply To',
       required: true,
       multiSelect: true,
-      validComponentTypes: ['mission', 'force', 'node', 'action'] as const,
+      validComponentTypes: ['mission', 'force', 'node', 'action'],
       tooltipDescription:
         'Select a group of components within the mission ' +
         'to which this modifier will be applied.\n' +
@@ -76,7 +76,7 @@ const ProcessTimeMod = TargetSchema.create({
       min: -1,
       max: 1,
       groupingId,
-      dependencies: [TargetDependency.TRUTHY('modifierScope')],
+      dependencies: [TargetDependency.TRUTHY('applyTo')],
       default: 0,
       integersOnly: true,
       tooltipDescription:

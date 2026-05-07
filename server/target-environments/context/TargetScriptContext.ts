@@ -8,6 +8,8 @@ import type { ServerResourcePool } from '@server/missions/forces/ServerResourceP
 import type { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
 import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
 import type { TSessionState } from '@shared/sessions/MissionSession'
+import type { TInstanceOrArray } from '@shared/toolbox/arrays/ArrayToolbox'
+import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import type {
   TEffectExecutionTriggered,
   TEffectSessionTriggered,
@@ -16,7 +18,12 @@ import type {
 import type { TOutputContext } from '../../../shared/missions/forces/MissionOutput'
 import type { ServerSessionMember } from '../../sessions/ServerSessionMember'
 import type { SessionServer, TOutputTo } from '../../sessions/SessionServer'
-import type { TTargetEnvExposedContext } from './TargetEnvContext'
+import type {
+  TTargetEnvExposedContext,
+  TTargetEnvExposedForce,
+  TTargetEnvExposedMission,
+  TTargetEnvExposedNode,
+} from './TargetEnvContext'
 import {
   TargetEnvContext,
   type TTargetEnvExposedEffect,
@@ -76,8 +83,11 @@ export class TargetScriptContext<
       effect: this.data.effect.toTargetEnvContext(),
       ...this.exposeCommon(),
       sendOutput: this.ifContextIsCurrent(this.sendOutput.bind(this)),
-      blockNode: this.ifContextIsCurrent(this.blockNode.bind(this)),
-      unblockNode: this.ifContextIsCurrent(this.unblockNode.bind(this)),
+      blockNodes: this.ifContextIsCurrent(this.blockNodes.bind(this)),
+      unblockNodes: this.ifContextIsCurrent(this.unblockNodes.bind(this)),
+      updateNodeBlockStatus: this.ifContextIsCurrent(
+        this.updateNodeBlockStatus.bind(this),
+      ),
       openNode: this.ifContextIsCurrent(this.openNode.bind(this)),
       closeNode: this.ifContextIsCurrent(this.closeNode.bind(this)),
       addNodeAlert: this.ifContextIsCurrent(this.addNodeAlert.bind(this)),
@@ -310,6 +320,41 @@ export class TargetScriptContext<
   }
 
   /**
+   * Takes one or many nodes exposed to the target environment
+   * and resolves them to a list of corresponding {@link ServerMissionNode}
+   * instances found within the mission.
+   * @param missionComponents The node or nodes exposed to the target environment to resolve.
+   * @returns A list of corresponding {@link ServerMissionNode} instances found within the mission.
+   * @throws If a node cannot be found within the mission.
+   */
+  private resolveServerNodes(
+    missionComponents: TInstanceOrArray<
+      TTargetEnvExposedNode | TTargetEnvExposedForce | TTargetEnvExposedMission
+    >,
+  ): ServerMissionNode[] {
+    missionComponents = ArrayToolbox.toArray(missionComponents)
+    let targetEnvNodes = missionComponents.flatMap((component) => {
+      switch (component.componentType) {
+        case 'mission':
+          return component.allNodes
+        case 'force':
+          return component.nodes
+        case 'node':
+          return component
+      }
+    })
+    return targetEnvNodes.map((targetEnvNode) => {
+      let serverNode = this.mission.getNodeById(targetEnvNode._id)
+      if (!serverNode) {
+        throw new Error(
+          `Could not find node with ID "${targetEnvNode._id}" in the mission with ID "${this.missionId}".`,
+        )
+      }
+      return serverNode
+    })
+  }
+
+  /**
    * @see {@link TTargetScriptExposedContext.sendOutput}
    */
   private sendOutput = (message: string, to?: TOutputTo) => {
@@ -348,23 +393,44 @@ export class TargetScriptContext<
   }
 
   /**
-   * @see {@link TTargetScriptExposedContext.blockNode}
+   * @see {@link TTargetScriptExposedContext}
    */
-  private blockNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
-    let targetNode = this.determineTargetNode(forceKey, nodeKey)
-    this.session.updateNodeBlockStatus(targetNode, true)
+  private blockNodes = (
+    nodes: TInstanceOrArray<
+      TTargetEnvExposedNode | TTargetEnvExposedForce | TTargetEnvExposedMission
+    >,
+  ) => {
+    this.updateNodeBlockStatus(nodes, true)
   }
 
   /**
-   * @see {@link TTargetScriptExposedContext.unblockNode}
+   * @see {@link TTargetScriptExposedContext}
    */
-  private unblockNode = ({ forceKey, nodeKey }: TManipulateNodeOptions) => {
-    let targetNode = this.determineTargetNode(forceKey, nodeKey)
-    this.session.updateNodeBlockStatus(targetNode, false)
+  private unblockNodes = (
+    nodes: TInstanceOrArray<
+      TTargetEnvExposedNode | TTargetEnvExposedForce | TTargetEnvExposedMission
+    >,
+  ) => {
+    this.updateNodeBlockStatus(nodes, false)
   }
 
   /**
-   * @see {@link TTargetScriptExposedContext.openNode}
+   * @see {@link TTargetScriptExposedContext}
+   */
+  private updateNodeBlockStatus = (
+    nodes: TInstanceOrArray<
+      TTargetEnvExposedNode | TTargetEnvExposedForce | TTargetEnvExposedMission
+    >,
+    blocked: boolean,
+  ) => {
+    let serverNodes = this.resolveServerNodes(nodes)
+    serverNodes.forEach((serverNode) => {
+      this.session.updateNodeBlockStatus(serverNode, blocked)
+    })
+  }
+
+  /**
+   * @see {@link TTargetScriptExposedContext}
    */
   private openNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
     let targetNode = this.determineTargetNode(forceKey, nodeKey)
@@ -372,7 +438,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @see {@link TTargetScriptExposedContext.closeNode}
+   * @see {@link TTargetScriptExposedContext}
    */
   private closeNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
     let targetNode = this.determineTargetNode(forceKey, nodeKey)
@@ -380,7 +446,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @see {@link TTargetScriptExposedContext.addNodeAlert}
+   * @see {@link TTargetScriptExposedContext}
    */
   private addNodeAlert = (
     message: string,
@@ -392,7 +458,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @see {@link TTargetScriptExposedContext.modifySuccessChance}
+   * @see {@link TTargetScriptExposedContext}
    */
   private modifySuccessChance = (
     operand: number,
@@ -409,7 +475,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @see {@link TTargetScriptExposedContext.modifyProcessTime}
+   * @see {@link TTargetScriptExposedContext}
    */
   private modifyProcessTime = (
     operand: number,
@@ -426,7 +492,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @see {@link TTargetScriptExposedContext.modifyResourceCost}
+   * @see {@link TTargetScriptExposedContext}
    */
   private modifyResourceCost = (
     resourceId: string,
@@ -445,7 +511,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @see {@link TTargetScriptExposedContext.modifyResourcePool}
+   * @see {@link TTargetScriptExposedContext}
    */
   private modifyResourcePool = (
     operand: number,
@@ -456,7 +522,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @see {@link TTargetScriptExposedContext.grantFileAccess}
+   * @see {@link TTargetScriptExposedContext}
    */
   private grantFileAccess = (fileId: string, forceKey: string) => {
     let targetFile = this.determineTargetFile(fileId)
@@ -465,7 +531,7 @@ export class TargetScriptContext<
   }
 
   /**
-   * @see {@link TTargetScriptExposedContext.revokeFileAccess}
+   * @see {@link TTargetScriptExposedContext}
    */
   private revokeFileAccess = (fileId: string, forceKey: string) => {
     let targetFile = this.determineTargetFile(fileId)
@@ -672,19 +738,23 @@ export interface TTargetScriptExposedContext<
    */
   sendOutput: TargetScriptContext<TType>['sendOutput']
   /**
-   * Blocks the node from further interaction.
-   * @param options Additional options for blocking the node.
-   * @note By default, this will block the node to which the current
-   * effect belongs, unless configured otherwise.
+   * Blocks the provided nodes from further interaction.
+   * @param nodes The node or nodes to block.
    */
-  blockNode: TargetScriptContext<TType>['blockNode']
+  blockNodes: TargetScriptContext<TType>['blockNodes']
   /**
-   * Unblocks the node allowing further interaction.
-   * @param options Additional options for unblocking the node.
-   * @note By default, this will unblock the node to which the current
-   * effect belongs, unless configured otherwise.
+   * Unblocks the provided nodes allowing further interaction.
+   * @param nodes The node or nodes to unblock.
    */
-  unblockNode: TargetScriptContext<TType>['unblockNode']
+  unblockNodes: TargetScriptContext<TType>['unblockNodes']
+  /**
+   * Updates the block status of one or many nodes (block/unblock).
+   * @param nodes The node or nodes to update the block status for.
+   * @param blocked Whether the nodes should be blocked or unblocked.
+   * @note Forces and the mission can also be passed. All nodes within
+   * the provided forces/mission will be updated.
+   */
+  updateNodeBlockStatus: TargetScriptContext<TType>['updateNodeBlockStatus']
   /**
    * Opens the node to reveal the next set of nodes in the structure.
    * @param options Additional options for opening the node.

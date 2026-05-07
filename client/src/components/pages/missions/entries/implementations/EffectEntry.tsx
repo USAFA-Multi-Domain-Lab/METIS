@@ -13,7 +13,7 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailLocked } from '../../../../content/form/DetailLocked'
 import { DetailString } from '../../../../content/form/DetailString'
-import TargetArgumentsEntry from '../../target-effects/parameters/TargetParameterEntry'
+import TargetArgumentsEntry from '../../target-effects/arguments/TargetArgumentsSubentry'
 import Entry from '../Entry'
 
 /**

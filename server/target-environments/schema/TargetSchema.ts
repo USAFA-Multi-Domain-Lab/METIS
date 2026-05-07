@@ -199,6 +199,7 @@ type TParamLike = {
   validComponentTypes?:
     | readonly TMissionComponentType[]
     | TMissionComponentType[]
+  options?: ReadonlyArray<{ value: unknown }> | Array<{ value: unknown }>
 }
 
 /**
@@ -217,10 +218,14 @@ type TSelectExposedMissionComponent = {
 }
 
 /**
- * Extracts the value type for a single parameter, narrowing `mission-component`
- * to `Array<...>` using the literal types in `validComponentTypes` when present,
- * and stripping `null` from required `number` parameters (which always have a
- * default and are guaranteed to be present).
+ * Extracts the value type for a single parameter with the following narrowing:
+ *
+ * - `mission-component` with `validComponentTypes` → `Array<T | U | ...>` using
+ *   only the listed component types instead of the full {@link TExposedArgCompatibleComponent} union.
+ * - `number` with `required: true` → `number` (strips `null`, which is only
+ *   possible for optional numbers that the user left blank).
+ * - `dropdown` with `options` → the exact union of each option's `value` type
+ *   instead of the wide {@link TDropdownTargetParameterOptionVal} fallback.
  */
 type SingleParamToArgValue<P extends TParamLike> = P extends {
   type: 'mission-component'
@@ -231,7 +236,12 @@ type SingleParamToArgValue<P extends TParamLike> = P extends {
   ? Array<TSelectExposedMissionComponent[V]>
   : P extends { type: 'number'; required: true }
     ? NonNullable<TSelectExposedArgumentValue['number']>
-    : TSelectExposedArgumentValue[P['type']]
+    : P extends {
+          type: 'dropdown'
+          options: ReadonlyArray<{ value: infer V }> | Array<{ value: infer V }>
+        }
+      ? V
+      : TSelectExposedArgumentValue[P['type']]
 
 /**
  * Derives a positional tuple of argument value types from a readonly tuple of

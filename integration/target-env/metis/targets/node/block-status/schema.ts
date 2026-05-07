@@ -6,35 +6,23 @@ const BlockStatus = TargetSchema.create({
   _id: 'block-status',
   name: 'Block Status',
   description: '',
-  script: async (context, nodeMetadata, blockStatus) => {
-    // Extract the selected node from the mission-component argument.
-    const [node] = nodeMetadata
-
-    // Update the block status of the node.
-    if (blockStatus === 'block') {
-      context.blockNode({
-        forceKey: node.force.localKey,
-        nodeKey: node.localKey,
-      })
-    } else if (blockStatus === 'unblock') {
-      context.unblockNode({
-        forceKey: node.force.localKey,
-        nodeKey: node.localKey,
-      })
+  script: async (context, components, blockStatus) => {
+    if (blockStatus !== 'no-change') {
+      context.updateNodeBlockStatus(components, blockStatus === 'block')
     }
   },
   parameters: [
     {
-      type: 'mission-component' as const,
+      type: 'mission-component',
       _id: 'nodeMetadata',
       name: 'Node',
       required: true,
       groupingId: 'node',
-      validComponentTypes: ['node'] as const,
+      validComponentTypes: ['force', 'node'],
     },
     {
       _id: 'blockStatus',
-      type: 'dropdown' as const,
+      type: 'dropdown',
       name: 'Block Status',
       required: true,
       groupingId: 'node',

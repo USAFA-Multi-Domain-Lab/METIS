@@ -3,8 +3,8 @@ import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import Divider from '../../../../content/form/Divider'
 import { useMissionPageContext } from '../../context'
+import TargetArgumentDetail from './TargetArgumentDetail'
 import './TargetArgumentGrouping.scss'
-import TargetArgumentDetail from './TargetDetail'
 
 /**
  * Renders a group of parameters and their entry components

@@ -14,7 +14,6 @@ import type { TMissionOutlineItem } from '../../structures/MissionOutline'
 import MissionOutline, {
   computeOutlineIconStyling,
 } from '../../structures/MissionOutline'
-import './MissionComponentTargetDetail.scss'
 
 /**
  * Renders a multi-select for the argument whose type is `"mission-component"`.

@@ -8,7 +8,7 @@ import LargeStringArgumentDetail from './LargeStringArgumentDetail'
 import MissionComponentTargetDetail from './MissionComponentArgumentDetail'
 import NumberArgumentDetail from './NumberArgumentDetail'
 import StringArgumentDetail from './StringArgumentDetail'
-import './TargetDetail.scss'
+import './TargetArgumentDetail.scss'
 
 /**
  * Renders the detail component for a target argument based on the

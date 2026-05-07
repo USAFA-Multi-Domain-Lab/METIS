@@ -3,7 +3,7 @@ import type { ClientTargetArgument } from '@client/target-environments/arguments
 import { compute } from '@client/toolbox'
 import Divider from '../../../../content/form/Divider'
 import TargetArgumentGrouping from './TargetArgumentGrouping'
-import './TargetParameterEntry.scss'
+import './TargetArgumentsSubentry.scss'
 
 /**
  * Entry fields for the effect's arguments.

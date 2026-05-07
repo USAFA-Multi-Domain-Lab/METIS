@@ -319,7 +319,7 @@ export type TTargetEnvExposedContext = {
 /**
  * Data for a session exposed to target-environment code.
  */
-export type TTargetEnvExposedSession = Readonly<
+export interface TTargetEnvExposedSession extends Readonly<
   TCreateJsonType<
     SessionServer,
     '_id' | 'name' | 'launchedAt' | 'state',
@@ -346,7 +346,7 @@ export type TTargetEnvExposedSession = Readonly<
       managers: TTargetEnvExposedMember[]
     }
   >
->
+> {}
 
 /**
  * Data for a session config exposed to target-environment code.
@@ -365,7 +365,7 @@ export interface TTargetEnvExposedSessionConfig extends Readonly<
 /**
  * Data for a mission exposed to target-environment code.
  */
-export type TTargetEnvExposedMission = Readonly<
+export interface TTargetEnvExposedMission extends Readonly<
   TCreateJsonType<
     ServerMission,
     '_id' | 'name',
@@ -406,12 +406,12 @@ export type TTargetEnvExposedMission = Readonly<
       effects: TTargetEnvExposedEffect<'sessionTriggeredEffect'>[]
     }
   >
->
+> {}
 
 /**
  * Data for a resource exposed to target-environment code.
  */
-export type TTargetEnvExposedResource = Readonly<
+export interface TTargetEnvExposedResource extends Readonly<
   TCreateJsonType<
     ServerMissionResource,
     '_id' | 'name' | 'icon' | 'order',
@@ -428,12 +428,12 @@ export type TTargetEnvExposedResource = Readonly<
       mission: TTargetEnvExposedMission
     }
   >
->
+> {}
 
 /**
  * Data for a force exposed to target-environment code.
  */
-export type TTargetEnvExposedForce = Readonly<
+export interface TTargetEnvExposedForce extends Readonly<
   TCreateJsonType<
     ServerMissionForce,
     '_id' | 'localKey' | 'name' | 'color',
@@ -458,12 +458,12 @@ export type TTargetEnvExposedForce = Readonly<
       resourcePools: TTargetEnvExposedPool[]
     }
   >
->
+> {}
 
 /**
  * Data for a resource pool exposed to target-environment code.
  */
-export type TTargetEnvExposedPool = Readonly<
+export interface TTargetEnvExposedPool extends Readonly<
   TCreateJsonType<
     ServerResourcePool,
     | '_id'
@@ -497,12 +497,12 @@ export type TTargetEnvExposedPool = Readonly<
       balance: number // Make balance required.
     }
   >
->
+> {}
 
 /**
  * Data for a node exposed to target-environment code.
  */
-export type TTargetEnvExposedNode = Readonly<
+export interface TTargetEnvExposedNode extends Readonly<
   TCreateJsonType<
     ServerMissionNode,
     | '_id'
@@ -557,12 +557,12 @@ export type TTargetEnvExposedNode = Readonly<
       siblings: TTargetEnvExposedNode[]
     }
   >
->
+> {}
 
 /**
  * Data for a file exposed to target-environment code.
  */
-export type TTargetEnvExposedFile = Readonly<
+export interface TTargetEnvExposedFile extends Readonly<
   TCreateJsonType<
     ServerMissionFile,
     | '_id'
@@ -586,12 +586,12 @@ export type TTargetEnvExposedFile = Readonly<
       mission: TTargetEnvExposedMission
     }
   >
->
+> {}
 
 /**
  * Data for an action exposed to target-environment code.
  */
-export type TTargetEnvExposedAction = Readonly<
+export interface TTargetEnvExposedAction extends Readonly<
   TCreateJsonType<
     ServerMissionAction,
     | '_id'
@@ -635,12 +635,12 @@ export type TTargetEnvExposedAction = Readonly<
       effects: TTargetEnvExposedEffect[]
     }
   >
->
+> {}
 
 /**
  * Data for a resource cost exposed to target-environment code.
  */
-export type TTargetEnvExposedCost = Readonly<
+export interface TTargetEnvExposedCost extends Readonly<
   TCreateJsonType<
     ServerActionCost,
     '_id' | 'name' | 'baseAmount' | 'hidden' | 'amount' | 'icon',
@@ -667,64 +667,59 @@ export type TTargetEnvExposedCost = Readonly<
       action: TTargetEnvExposedAction
     }
   >
->
+> {}
 
 /**
  * Data for an effect exposed to target-environment code.
  */
-export type TTargetEnvExposedEffect<TType extends TEffectType = TEffectType> =
-  Readonly<
-    TCreateJsonType<
-      ServerEffect<TType>,
-      | '_id'
-      | 'localKey'
-      | 'name'
-      | 'type'
-      | 'description'
-      | 'trigger'
-      | 'order',
-      {
-        /**
-         * @see {@link Effect.mission}
-         */
-        mission: TTargetEnvExposedMission
-        /**
-         * @see {@link Effect.host}
-         */
-        host: TTargetEnvExposedMission | TTargetEnvExposedAction
-        /**
-         * @see {@link Effect.sourceForce}
-         */
-        sourceForce: TTargetEnvExposedForce | null
-        /**
-         * @see {@link Effect.node}
-         */
-        sourceNode: TTargetEnvExposedNode | null
-        /**
-         * @see {@link Effect.sourceAction}
-         */
-        sourceAction: TTargetEnvExposedAction | null
-        /**
-         * @see {@link Effect.target}
-         */
-        target: TTargetEnvExposedTarget | null
-        /**
-         * @see {@link Effect.environment}
-         */
-        environment: TTargetEnvExposedEnvironment | null
-        /**
-         * @see {@link Effect.arguments}
-         */
-        arguments: TTargetEnvExposedArgument[]
-      }
-    >
+export interface TTargetEnvExposedEffect<
+  TType extends TEffectType = TEffectType,
+> extends Readonly<
+  TCreateJsonType<
+    ServerEffect<TType>,
+    '_id' | 'localKey' | 'name' | 'type' | 'description' | 'trigger' | 'order',
+    {
+      /**
+       * @see {@link Effect.mission}
+       */
+      mission: TTargetEnvExposedMission
+      /**
+       * @see {@link Effect.host}
+       */
+      host: TTargetEnvExposedMission | TTargetEnvExposedAction
+      /**
+       * @see {@link Effect.sourceForce}
+       */
+      sourceForce: TTargetEnvExposedForce | null
+      /**
+       * @see {@link Effect.node}
+       */
+      sourceNode: TTargetEnvExposedNode | null
+      /**
+       * @see {@link Effect.sourceAction}
+       */
+      sourceAction: TTargetEnvExposedAction | null
+      /**
+       * @see {@link Effect.target}
+       */
+      target: TTargetEnvExposedTarget | null
+      /**
+       * @see {@link Effect.environment}
+       */
+      environment: TTargetEnvExposedEnvironment | null
+      /**
+       * @see {@link Effect.arguments}
+       */
+      arguments: TTargetEnvExposedArgument[]
+    }
   >
+> {}
 
 /**
  * Data for a target environment exposed in
  * a target script.
  */
-export type TTargetEnvExposedTarget = Readonly<
+export interface TTargetEnvExposedTarget extends Readonly<
   TCreateJsonType<
     Target,
     '_id' | 'name' | 'description',
@@ -735,12 +730,12 @@ export type TTargetEnvExposedTarget = Readonly<
       environment: TTargetEnvExposedEnvironment
     }
   >
->
+> {}
 
 /**
  * Data for a target exposed to target-environment code.
  */
-export type TTargetEnvExposedEnvironment = Readonly<
+export interface TTargetEnvExposedEnvironment extends Readonly<
   TCreateJsonType<
     TargetEnvironment,
     '_id' | 'name' | 'description' | 'version',
@@ -751,15 +746,15 @@ export type TTargetEnvExposedEnvironment = Readonly<
       targets: TTargetEnvExposedTarget[]
     }
   >
->
+> {}
 
 /**
  * Data for a member exposed to target-environment code.
  */
-export type TTargetEnvExposedMember = Readonly<
+export interface TTargetEnvExposedMember extends Readonly<
   TCreateJsonType<
     SessionMember,
     '_id' | 'name' | 'username' | 'firstName' | 'lastName',
     {}
   >
->
+> {}
