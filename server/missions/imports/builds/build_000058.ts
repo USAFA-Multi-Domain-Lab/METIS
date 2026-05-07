@@ -69,7 +69,7 @@ const buildMissionComponentValue = (
   } else if (pool) {
     return [
       {
-        componentType: 'resource-pool',
+        componentType: 'resourcePool',
         lastKnownName: pool.name,
         ids: [force._id, pool._id],
       },
@@ -89,7 +89,7 @@ const buildMissionComponentValue = (
   } else if (object.fileId) {
     return [
       {
-        componentType: 'file',
+        componentType: 'missionFile',
         lastKnownName: object.fileName ?? '',
         ids: [object.fileId as string],
       },

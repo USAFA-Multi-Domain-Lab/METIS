@@ -13,7 +13,7 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailLocked } from '../../../../content/form/DetailLocked'
 import { DetailString } from '../../../../content/form/DetailString'
-import TargetParameterEntry from '../../target-effects/parameters/TargetParameterEntry'
+import TargetArgumentsEntry from '../../target-effects/parameters/TargetParameterEntry'
 import Entry from '../Entry'
 
 /**
@@ -107,7 +107,7 @@ export default function EffectEntry<TType extends TEffectType>({
         value={target?.name ?? 'No target selected.'}
         disabled={viewMode === 'preview'}
       />
-      <TargetParameterEntry
+      <TargetArgumentsEntry
         effect={effect}
         targetArguments={targetArguments}
         setTargetArguments={setTargetArguments}

@@ -100,6 +100,19 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
   }
 
   /**
+   * Initializes the effect with default arguments based on the
+   * provided target's parameters.
+   * @param target The target for which to initialize the arguments.
+   * @note This will overwrite any existing arguments, so call with
+   * caution.
+   */
+  public initializeArguments(target: ClientTarget): void {
+    this.arguments = target.parameters.map((parameter) =>
+      ClientTargetArgument.createDefaultParameter(parameter, this),
+    )
+  }
+
+  /**
    * @param target The target for the new effect.
    * @param mission The mission that will host the effect.
    * @returns A new effect with the provided target for
@@ -113,7 +126,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
     mission: ClientMission,
     trigger: TEffectSessionTriggered,
   ): ClientEffect<'sessionTriggeredEffect'> {
-    return new ClientEffect(
+    let effect = new ClientEffect<'sessionTriggeredEffect'>(
       ClientEffect.DEFAULT_SESSION_PROPERTIES._id,
       target.name,
       target._id,
@@ -138,9 +151,11 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
           return this.sourceMission
         },
       },
-      ClientEffect.DEFAULT_SESSION_PROPERTIES.arguments,
+      [],
       mission.generateEffectKey(),
     )
+    effect.initializeArguments(target)
+    return effect
   }
 
   /**
@@ -157,7 +172,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
     action: ClientMissionAction,
     trigger: TEffectExecutionTriggered,
   ): ClientEffect<'executionTriggeredEffect'> {
-    return new ClientEffect(
+    let effect = new ClientEffect<'executionTriggeredEffect'>(
       ClientEffect.DEFAULT_EXEC_PROPERTIES._id,
       target.name,
       target._id,
@@ -185,6 +200,8 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
       ClientEffect.DEFAULT_EXEC_PROPERTIES.arguments,
       action.generateEffectKey(),
     )
+    effect.initializeArguments(target)
+    return effect
   }
 
   /**

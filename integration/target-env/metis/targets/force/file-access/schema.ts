@@ -2,29 +2,27 @@
  * A target available in the METIS target environment that
  * allows a user to manage access to files from forces.
  */
-const FileAccess = new TargetSchema({
+const FileAccess = TargetSchema.create({
   _id: 'file-access',
   name: 'File Access',
   description: '',
-  script: async (context) => {
-    // Extract the effect and its arguments from the context.
-    const { effect } = context
-    const { fileMetadata, forceMetadata, access } = effect.arguments
-    const { forceKey } = forceMetadata as TForceMetadata
-    const { fileId } = fileMetadata as TFileMetadata
+  script: async (context, forceMetadata, fileMetadata, access) => {
+    // Extract the selected force and file from the mission-component arguments.
+    const [force] = forceMetadata
+    const [file] = fileMetadata
 
-    // Throw an error if the file ID or force key is missing.
-    if (!fileId || !forceKey) {
-      throw new Error('File ID or Force Key is missing.')
+    // Throw an error if the file or force is missing.
+    if (!file || !force) {
+      throw new Error('File or Force is missing.')
     }
 
     // Realize effect based on the value of "access".
     switch (access) {
       case 'granted':
-        context.grantFileAccess(fileId, forceKey)
+        context.grantFileAccess(file._id, force.localKey)
         break
       case 'revoked':
-        context.revokeFileAccess(fileId, forceKey)
+        context.revokeFileAccess(file._id, force.localKey)
         break
       case 'no-change':
       default:
@@ -33,25 +31,27 @@ const FileAccess = new TargetSchema({
   },
   parameters: [
     {
-      type: 'force',
+      type: 'mission-component' as const,
       _id: 'forceMetadata',
       name: 'Force',
       required: true,
+      validComponentTypes: ['force'] as const,
     },
     {
-      type: 'file',
+      type: 'mission-component' as const,
       _id: 'fileMetadata',
       name: 'File',
       required: true,
+      validComponentTypes: ['missionFile'] as const,
     },
     {
-      type: 'dropdown',
+      type: 'dropdown' as const,
       _id: 'access',
       name: 'Access',
       required: true,
       dependencies: [
-        TargetDependency.FORCE('forceMetadata'),
-        TargetDependency.FILE('fileMetadata'),
+        TargetDependency.TRUTHY('forceMetadata'),
+        TargetDependency.TRUTHY('fileMetadata'),
       ],
       options: [
         {

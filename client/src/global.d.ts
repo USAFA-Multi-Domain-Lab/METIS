@@ -18,6 +18,15 @@ declare global {
   export type TReactSetter<T> = React.Dispatch<React.SetStateAction<T>>
 
   /**
+   * The parameter passed to a react setter, which can be
+   * either the new value or a function that takes the
+   * previous value and returns the new value.
+   */
+  export type TReactSetterParameter<T> = Parameters<
+    React.Dispatch<React.SetStateAction<T>>
+  >[0]
+
+  /**
    * The argument passed to a react setter.
    */
   export type TReactSetterArg<T> = React.SetStateAction<T>

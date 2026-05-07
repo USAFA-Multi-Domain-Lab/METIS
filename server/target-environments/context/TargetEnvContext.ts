@@ -371,6 +371,12 @@ export type TTargetEnvExposedMission = Readonly<
     '_id' | 'name',
     {
       /**
+       * Can be used to determine the type of the component in the
+       * target-environment code when the type is not explicitly
+       * provided.
+       */
+      componentType: 'mission'
+      /**
        * @see {@link Mission.resources}
        */
       resources: TTargetEnvExposedResource[]
@@ -411,6 +417,12 @@ export type TTargetEnvExposedResource = Readonly<
     '_id' | 'name' | 'icon' | 'order',
     {
       /**
+       * Can be used to determine the type of the component in the
+       * target-environment code when the type is not explicitly
+       * provided.
+       */
+      componentType: 'resource'
+      /**
        * @see {@link MissionResource.mission}
        */
       mission: TTargetEnvExposedMission
@@ -426,6 +438,12 @@ export type TTargetEnvExposedForce = Readonly<
     ServerMissionForce,
     '_id' | 'localKey' | 'name' | 'color',
     {
+      /**
+       * Can be used to determine the type of the component in the
+       * target-environment code when the type is not explicitly
+       * provided.
+       */
+      componentType: 'force'
       /**
        * @see {@link MissionForce.mission}
        */
@@ -455,6 +473,12 @@ export type TTargetEnvExposedPool = Readonly<
     | 'allowNegative'
     | 'excluded',
     {
+      /**
+       * Can be used to determine the type of the component in the
+       * target-environment code when the type is not explicitly
+       * provided.
+       */
+      componentType: 'resourcePool'
       /**
        * @see {@link ResourcePool.mission}
        */
@@ -502,6 +526,12 @@ export type TTargetEnvExposedNode = Readonly<
     | 'hasSiblings',
     {
       /**
+       * Can be used to determine the type of the component in the
+       * target-environment code when the type is not explicitly
+       * provided.
+       */
+      componentType: 'node'
+      /**
        * @see {@link MissionForce.mission}
        */
       mission: TTargetEnvExposedMission
@@ -545,6 +575,12 @@ export type TTargetEnvExposedFile = Readonly<
     | 'size',
     {
       /**
+       * Can be used to determine the type of the component in the
+       * target-environment code when the type is not explicitly
+       * provided.
+       */
+      componentType: 'missionFile'
+      /**
        * @see {@link MissionFile.mission}
        */
       mission: TTargetEnvExposedMission
@@ -571,6 +607,12 @@ export type TTargetEnvExposedAction = Readonly<
     | 'executionCount'
     | 'executionLimitReached',
     {
+      /**
+       * Can be used to determine the type of the component in the
+       * target-environment code when the type is not explicitly
+       * provided.
+       */
+      componentType: 'action'
       /**
        * @see {@link MissionAction.mission}
        */

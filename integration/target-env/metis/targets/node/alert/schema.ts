@@ -1,23 +1,9 @@
 /* -- ARGUMENTS -- */
 
-import type { TTargetArgJson } from '@shared/target-environments/args/Arg'
-
 /**
  * The grouping ID used for all arguments in this target.
  */
 const groupingId = 'node'
-
-/**
- * Argument that specifies the node to which the alert
- * will be added.
- */
-const nodeMetadataArg: TTargetArgJson = {
-  type: 'node',
-  _id: 'nodeMetadata',
-  name: 'Node',
-  required: true,
-  groupingId: groupingId,
-}
 
 /**
  * EXPERIMENTAL
@@ -63,33 +49,6 @@ const dangerOption = {
   value: 'danger',
 }
 
-/**
- * Defines the level of importance/urgency for this alert.
- */
-const severityLevelArg: TTargetArgJson = {
-  _id: 'severityLevel',
-  type: 'dropdown',
-  name: 'Severity Level',
-  required: true,
-  groupingId: groupingId,
-  options: [infoOption, suspiciousOption, warningOption, dangerOption],
-  default: warningOption,
-}
-
-/**
- * Argument that specifies the message to be included
- * in the node alert, giving the user intel on what
- * happened and perhaps how they should respond.
- */
-const messageArg: TTargetArgJson = {
-  type: 'large-string',
-  _id: 'message',
-  name: 'Message',
-  required: true,
-  groupingId: groupingId,
-  default: 'Enter your message here.',
-}
-
 /* -- TARGET -- */
 
 /**
@@ -97,18 +56,44 @@ const messageArg: TTargetArgJson = {
  * add alerts to nodes. When a node alert is added, it will appear on a node
  * in the mission-map interface for members operating that node to see.
  */
-const NodeAlert = new TargetSchema({
+const NodeAlert = TargetSchema.create({
   _id: 'node-alert',
   name: 'Node Alert',
   description: 'Adds an alert to a node.',
-  script: async (context) => {
-    let nodeMetadata: TNodeMetadata = context.effect.arguments.nodeMetadata
-    let message = context.effect.arguments.message
-    let severityLevel = context.effect.arguments.severityLevel
-    let { forceKey, nodeKey } = nodeMetadata
-    context.addNodeAlert(message, severityLevel, { forceKey, nodeKey })
+  script: async (context, nodeMetadata, severityLevel, message) => {
+    const [node] = nodeMetadata
+    context.addNodeAlert(message, severityLevel, {
+      forceKey: node.force.localKey,
+      nodeKey: node.localKey,
+    })
   },
-  parameters: [nodeMetadataArg, severityLevelArg, messageArg],
+  parameters: [
+    {
+      type: 'mission-component' as const,
+      _id: 'nodeMetadata',
+      name: 'Node',
+      required: true,
+      groupingId: groupingId,
+      validComponentTypes: ['node'] as const,
+    },
+    {
+      _id: 'severityLevel',
+      type: 'dropdown' as const,
+      name: 'Severity Level',
+      required: true,
+      groupingId: groupingId,
+      options: [infoOption, suspiciousOption, warningOption, dangerOption],
+      default: warningOption,
+    },
+    {
+      type: 'large-string' as const,
+      _id: 'message',
+      name: 'Message',
+      required: true,
+      groupingId: groupingId,
+      default: 'Enter your message here.',
+    },
+  ],
 })
 
 export default NodeAlert

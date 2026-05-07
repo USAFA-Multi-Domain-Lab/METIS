@@ -1,12 +1,20 @@
 import { TargetMigrationRegistry } from '@metis/schema/TargetMigrationRegistry'
-import type { TForceMetadata, TPoolMetadata } from '@shared/target-environments/types'
+
+type TLegacyForceMetadata = { forceKey?: string; forceName?: string }
+type TLegacyPoolMetadata = {
+  forceKey?: string
+  forceName?: string
+  poolKey?: string
+  poolName?: string
+}
 
 let migrations = new TargetMigrationRegistry()
 
 // Migrates awards to be compatible with new multi-resource
 // system added in v2.4.0 of METIS.
 migrations.register('2.4.0', (effect) => {
-  let { forceKey, forceName } = effect.arguments.forceMetadata as TForceMetadata
+  let { forceKey, forceName } = effect.arguments
+    .forceMetadata as TLegacyForceMetadata
 
   // Find force
   let force: typeof effect.sourceForce | undefined = effect.sourceForce // Default to source force.
@@ -35,7 +43,7 @@ migrations.register('2.4.0', (effect) => {
     forceName,
     poolKey: firstPool.localKey,
     poolName: firstPool.name,
-  } satisfies TPoolMetadata
+  } satisfies TLegacyPoolMetadata
   delete effect.arguments.forceMetadata
 })
 

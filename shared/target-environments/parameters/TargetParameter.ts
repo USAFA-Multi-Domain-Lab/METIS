@@ -14,11 +14,6 @@ import type {
   TLargeStringTargetParameterJson,
 } from './LargeStringTargetParameter'
 import { LargeStringTargetParameter } from './LargeStringTargetParameter'
-import type {
-  TMissionComponentTargetParameter,
-  TMissionComponentTargetParameterJson,
-} from './mission-component/MissionComponentTargetParameter'
-import { MissionComponentTargetParameter } from './mission-component/MissionComponentTargetParameter'
 import {
   MissionComponentTargetParameter2,
   type TMissionComponentTargetParameter2,
@@ -85,13 +80,6 @@ export class TargetParameter {
           return DropdownTargetParameter.toJson(arg)
         case 'boolean':
           return BooleanTargetParameter.toJson(arg)
-        case 'force':
-        case 'node':
-        case 'action':
-        case 'file':
-        case 'pool':
-        case 'resource':
-          return MissionComponentTargetParameter.toJson(arg)
         case 'mission-component':
           return MissionComponentTargetParameter2.toJson(arg)
       }
@@ -118,13 +106,6 @@ export class TargetParameter {
           return DropdownTargetParameter.fromJson(parameter)
         case 'boolean':
           return BooleanTargetParameter.fromJson(parameter)
-        case 'force':
-        case 'node':
-        case 'action':
-        case 'file':
-        case 'pool':
-        case 'resource':
-          return MissionComponentTargetParameter.fromJson(parameter)
         case 'mission-component':
           return MissionComponentTargetParameter2.fromJson(parameter)
       }
@@ -140,12 +121,6 @@ export type TSelectTargetParameter = {
   'large-string': TLargeStringTargetParameter
   'dropdown': TDropdownTargetParameter
   'boolean': TBooleanTargetParameter
-  'force': TMissionComponentTargetParameter
-  'node': TMissionComponentTargetParameter
-  'action': TMissionComponentTargetParameter
-  'file': TMissionComponentTargetParameter
-  'resource': TMissionComponentTargetParameter
-  'pool': TMissionComponentTargetParameter
   'mission-component': TMissionComponentTargetParameter2
   'unknown': TTargetParameter
 }
@@ -161,7 +136,6 @@ export type TTargetParameter =
   | TLargeStringTargetParameter
   | TDropdownTargetParameter
   | TBooleanTargetParameter
-  | TMissionComponentTargetParameter
   | TMissionComponentTargetParameter2
 
 /**
@@ -173,5 +147,4 @@ export type TTargetParameterJson =
   | TLargeStringTargetParameterJson
   | TDropdownTargetParameterJson
   | TBooleanTargetParameterJson
-  | TMissionComponentTargetParameterJson
   | TMissionComponentTargetParameterJson2

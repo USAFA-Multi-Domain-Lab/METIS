@@ -1,0 +1,69 @@
+import type { ClientTargetArgument } from '@client/target-environments/arguments/ClientTargetArgument'
+import { useObjectFormSync } from '@client/toolbox/hooks'
+import { DetailToggle } from '../../../../content/form/DetailToggle'
+import { useMissionPageContext } from '../../context'
+
+/**
+ * Renders a toggle switch for the argument whose type is `"boolean"`.
+ * @note Renders nothing if the argument or parameter type is not `"boolean"`.
+ */
+export default function BooleanArgumentDetail({
+  argument,
+}: TBooleanArgumentDetail_P): TReactElement | null {
+  let { parameter } = argument
+
+  /* -- STATE -- */
+
+  const { onChange } = useMissionPageContext()
+  const formState = useObjectFormSync(argument, ['context'], {
+    onChange: () => onChange(argument),
+  })
+  const [context, setContext] = formState.context
+
+  /* -- VALIDATION -- */
+
+  if (
+    context.type !== 'boolean' ||
+    !parameter ||
+    parameter.type !== 'boolean'
+  ) {
+    return null
+  }
+
+  /* -- STATE (CONTINUED) -- */
+
+  const setValue: TReactSetter<boolean> = (
+    newValue: TReactSetterParameter<boolean>,
+  ): void => {
+    setContext({
+      ...context,
+      value:
+        typeof newValue === 'function' ? newValue(context.value) : newValue,
+    })
+  }
+
+  /* -- RENDER -- */
+
+  return (
+    <DetailToggle
+      fieldType='required'
+      label={parameter.name}
+      value={context.value}
+      setValue={setValue}
+      tooltipDescription={parameter.tooltipDescription}
+      key={`arg-${argument._id}_name-${parameter.name}_type-${parameter.type}_required`}
+    />
+  )
+}
+
+/* -- TYPES -- */
+
+/**
+ * Props for {@link BooleanArgumentDetail}.
+ */
+type TBooleanArgumentDetail_P = {
+  /**
+   * A boolean argument to render for view/edit.
+   */
+  argument: ClientTargetArgument
+}

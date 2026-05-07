@@ -2,37 +2,43 @@
  * A target available in the METIS target environment that enables a user
  * to manipulate the block status of a node.
  */
-const BlockStatus = new TargetSchema({
+const BlockStatus = TargetSchema.create({
   _id: 'block-status',
   name: 'Block Status',
   description: '',
-  script: async (context) => {
-    // Extract the arguments from the effect.
-    const { nodeMetadata, blockStatus } = context.effect.arguments
-    const { forceKey, nodeKey } = nodeMetadata as TNodeMetadata
+  script: async (context, nodeMetadata, blockStatus) => {
+    // Extract the selected node from the mission-component argument.
+    const [node] = nodeMetadata
 
     // Update the block status of the node.
     if (blockStatus === 'block') {
-      context.blockNode({ forceKey, nodeKey })
+      context.blockNode({
+        forceKey: node.force.localKey,
+        nodeKey: node.localKey,
+      })
     } else if (blockStatus === 'unblock') {
-      context.unblockNode({ forceKey, nodeKey })
+      context.unblockNode({
+        forceKey: node.force.localKey,
+        nodeKey: node.localKey,
+      })
     }
   },
   parameters: [
     {
-      type: 'node',
+      type: 'mission-component' as const,
       _id: 'nodeMetadata',
       name: 'Node',
       required: true,
       groupingId: 'node',
+      validComponentTypes: ['node'] as const,
     },
     {
       _id: 'blockStatus',
-      type: 'dropdown',
+      type: 'dropdown' as const,
       name: 'Block Status',
       required: true,
       groupingId: 'node',
-      dependencies: [TargetDependency.NODE('nodeMetadata')],
+      dependencies: [TargetDependency.TRUTHY('nodeMetadata')],
       options: [
         {
           _id: 'no-change',

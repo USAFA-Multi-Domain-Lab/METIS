@@ -3,31 +3,31 @@
  * to manipulate the success chance of a specific action within a node or
  * all actions within a node.
  */
-const SuccessChanceMod = new TargetSchema({
+const SuccessChanceMod = TargetSchema.create({
   _id: 'success-chance-mod',
   name: 'Success Chance Modifier',
   description: '',
-  script: async (context) => {
-    // Gather details.
-    const { actionMetadata, successChance } = context.effect.arguments
-    const { forceKey, nodeKey, actionKey } = actionMetadata as TActionMetadata
+  script: async (context, actionMetadata, successChance) => {
+    // Extract the selected action from the mission-component argument.
+    const [action] = actionMetadata
 
     context.modifySuccessChance(successChance / 100, {
-      forceKey,
-      nodeKey,
-      actionKey,
+      forceKey: action.force.localKey,
+      nodeKey: action.node.localKey,
+      actionKey: action.localKey,
     })
   },
   parameters: [
     {
-      type: 'action',
+      type: 'mission-component' as const,
       _id: 'actionMetadata',
       name: 'Action',
-      required: false,
+      required: true,
       groupingId: 'action',
+      validComponentTypes: ['action'] as const,
     },
     {
-      type: 'number',
+      type: 'number' as const,
       _id: 'successChance',
       name: 'Success Chance',
       required: true,
@@ -35,7 +35,7 @@ const SuccessChanceMod = new TargetSchema({
       max: 100,
       unit: '%',
       groupingId: 'action',
-      dependencies: [TargetDependency.ACTION('actionMetadata')],
+      dependencies: [TargetDependency.TRUTHY('actionMetadata')],
       default: 0,
       tooltipDescription:
         `This allows you to positively or negatively affect the chance of success for all actions within the node. A positive value increases the chance of success, while a negative value decreases the chance of success.\n` +

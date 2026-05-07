@@ -4,7 +4,7 @@ const groupingId = 'delayTime'
  * A target available in the METIS target environment that enables a user
  * to add a delay in a series of effects being processed.
  */
-const Delay = new TargetSchema({
+const Delay = TargetSchema.create({
   _id: 'delay',
   name: 'Delay',
   description: '',
@@ -14,19 +14,13 @@ const Delay = new TargetSchema({
     delayTimeMinutes,
     delayTimeSeconds,
   ) => {
-    //     let args = context.effect.arguments
-    //     let delayTimeSeconds = args[secondsArgId]
-    //     let delayTimeMinutes = args[minutesArgId]
-    //     let delayTimeHours = args[hoursArgId]
-    //     let delayTime: number = 0
-    //
-    //     // Update the delay time based on the provided values.
-    //     if (delayTimeHours) delayTime += delayTimeHours * 3600 * 1000 /*ms*/
-    //     if (delayTimeMinutes) delayTime += delayTimeMinutes * 60 * 1000 /*ms*/
-    //     if (delayTimeSeconds) delayTime += delayTimeSeconds * 1000 /*ms*/
-    //
-    //     // Only resolve after the delay time has passed.
-    //     await context.sleep(delayTime)
+    let delayTime: number = 0
+    // Update the delay time based on the provided values.
+    delayTime += delayTimeHours * 3600 * 1000 /*ms*/
+    delayTime += delayTimeMinutes * 60 * 1000 /*ms*/
+    delayTime += delayTimeSeconds * 1000 /*ms*/
+    // Only resolve after the delay time has passed.
+    await context.sleep(delayTime)
   },
   parameters: [
     {

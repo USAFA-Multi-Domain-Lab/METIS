@@ -5,48 +5,48 @@ import { migrations } from './migrations'
  * to manipulate the resource cost of a specific action within a node or
  * all actions within a node.
  */
-const ResourceCostMod = new TargetSchema({
+const ResourceCostMod = TargetSchema.create({
   _id: 'resource-cost-mod',
   name: 'Resource Cost Modifier',
   description: '',
-  script: async (context) => {
-    // Gather details.
-    const { actionMetadata, resourceMetadata, resourceCost } =
-      context.effect.arguments
-    const { forceKey, nodeKey, actionKey } = actionMetadata as TActionMetadata
-    const { resourceId } = resourceMetadata as Required<TResourceMetadata>
+  script: async (context, actionMetadata, resourceMetadata, resourceCost) => {
+    // Extract selected action and resource from the mission-component arguments.
+    const [action] = actionMetadata
+    const [resource] = resourceMetadata
 
-    context.modifyResourceCost(resourceId, resourceCost, {
-      forceKey,
-      nodeKey,
-      actionKey,
+    context.modifyResourceCost(resource._id, resourceCost, {
+      forceKey: action.force.localKey,
+      nodeKey: action.node.localKey,
+      actionKey: action.localKey,
     })
   },
   parameters: [
     {
-      type: 'action',
+      type: 'mission-component' as const,
       _id: 'actionMetadata',
       name: 'Action',
-      required: false,
+      required: true,
       groupingId: 'action',
+      validComponentTypes: ['action'] as const,
     },
     {
-      type: 'resource',
+      type: 'mission-component' as const,
       _id: 'resourceMetadata',
       name: 'Resource',
       required: true,
       groupingId: 'action',
-      dependencies: [TargetDependency.ACTION('actionMetadata')],
+      validComponentTypes: ['resource'] as const,
+      dependencies: [TargetDependency.TRUTHY('actionMetadata')],
     },
     {
-      type: 'number',
+      type: 'number' as const,
       _id: 'resourceCost',
       name: 'Resource Cost',
       required: true,
       groupingId: 'action',
       dependencies: [
-        TargetDependency.ACTION('actionMetadata'),
-        TargetDependency.RESOURCE('resourceMetadata'),
+        TargetDependency.TRUTHY('actionMetadata'),
+        TargetDependency.TRUTHY('resourceMetadata'),
       ],
       default: 0,
       tooltipDescription:

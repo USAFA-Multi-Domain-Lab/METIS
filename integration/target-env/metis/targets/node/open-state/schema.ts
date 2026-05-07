@@ -58,40 +58,46 @@ const groupingId = 'node'
  * The operation is idempotent - opening an already-open node or closing an already-closed
  * node is a safe no-op that will be silently skipped.
  */
-const NodeOpenState = new TargetSchema({
+const NodeOpenState = TargetSchema.create({
   _id: 'open-state',
   name: 'Node Open State',
   description: 'Opens or closes a node, revealing or hiding its descendants',
-  script: async (context) => {
-    // Extract the effect arguments configured in the mission editor.
-    const { nodeMetadata, openState } = context.effect.arguments
-    const { forceKey, nodeKey } = nodeMetadata as TNodeMetadata
+  script: async (context, nodeMetadata, openState) => {
+    // Extract the selected node from the mission-component argument.
+    const [node] = nodeMetadata
 
     // Execute the appropriate operation based on the configured open state.
     if (openState === openNodeOption.value) {
       // Open the node, revealing its descendants to players.
-      context.openNode({ forceKey, nodeKey })
+      context.openNode({
+        forceKey: node.force.localKey,
+        nodeKey: node.localKey,
+      })
     } else if (openState === closeNodeOption.value) {
       // Close the node, hiding its descendants from players.
-      context.closeNode({ forceKey, nodeKey })
+      context.closeNode({
+        forceKey: node.force.localKey,
+        nodeKey: node.localKey,
+      })
     }
     // If openState is 'no-change', do nothing (skip the operation).
   },
   parameters: [
     {
-      type: 'node',
+      type: 'mission-component' as const,
       _id: nodeMetadataArg._id,
       name: nodeMetadataArg.name,
       required: true,
       groupingId: groupingId,
+      validComponentTypes: ['node'] as const,
     },
     {
       _id: openStateArg._id,
-      type: 'dropdown',
+      type: 'dropdown' as const,
       name: openStateArg.name,
       required: true,
       groupingId: groupingId,
-      dependencies: [TargetDependency.NODE(nodeMetadataArg._id)],
+      dependencies: [TargetDependency.TRUTHY(nodeMetadataArg._id)],
       options: [noChangeOption, openNodeOption, closeNodeOption],
       default: noChangeOption,
     },

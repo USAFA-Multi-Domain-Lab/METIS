@@ -1,20 +1,9 @@
 import type { TTargetArgumentJson } from '@shared/target-environments/arguments/TargetArgument'
-import type { TMissionComponentTargetParameter } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
 import type { TTargetParameter } from '../../target-environments/parameters/TargetParameter'
 import type { TargetDependency } from '../../target-environments/targets/TargetDependency'
-import type {
-  TActionMetadata,
-  TFileMetadata,
-  TForceMetadata,
-  TNodeMetadata,
-  TPoolMetadata,
-  TResourceMetadata,
-} from '../../target-environments/types'
 import type { TAnyObject } from '../../toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '../../toolbox/strings/StringToolbox'
 import { VersionToolbox } from '../../toolbox/strings/VersionToolbox'
-import { MissionAction } from '../actions/MissionAction'
-import type { ResourcePool } from '../forces/ResourcePool'
 import {
   MissionComponent,
   type TMissionComponentIssue,
@@ -366,7 +355,6 @@ export abstract class Effect<
         this.checkValueMatchesType(parameter, value, dependenciesMet),
       )
       pushIfNotNull(this.checkValidDropdownOption(parameter, value))
-      pushIfNotNull(this.checkMissionComponentArg(parameter, value))
       pushIfNotNull(this.checkStringArgAgainstPattern(parameter, value))
     }
 
@@ -500,94 +488,6 @@ export abstract class Effect<
   }
 
   /**
-   * Checks if a mission-component argument is valid. Specifically,
-   * it verifies the existence of referenced mission components.
-   * @param parameter The target parameter to check.
-   * @param argument The value of the argument in the effect.
-   * @returns An issue message if the mission component reference
-   * is invalid.
-   * @note Utility method of {@link checkTargetArguments}.
-   */
-  private checkMissionComponentArg(
-    parameter: TTargetParameter,
-    argument: unknown,
-  ): string | null {
-    let { _id: argId, type } = parameter
-
-    const isMissionComponentRef =
-      type === 'action' ||
-      type === 'pool' ||
-      type === 'node' ||
-      type === 'force' ||
-      type === 'file'
-
-    if (!isMissionComponentRef || argument === undefined) {
-      return null
-    }
-
-    // Check force reference (required for force, pool, node, and action types)
-    if (
-      type === 'force' ||
-      type === 'pool' ||
-      type === 'node' ||
-      type === 'action'
-    ) {
-      const forceInMission = this.getForceFromArgs(argId)
-      if (!forceInMission) {
-        const forceInArgs = this.getForceMetadataInArgs(argId)
-        return this.buildComponentNotFoundMessage(
-          'force',
-          forceInArgs?.forceName,
-        )
-      }
-    }
-
-    // Check pool reference (required for pool type)
-    if (type === 'pool') {
-      let poolInMission = this.getPoolFromArgs(argId)
-      if (!poolInMission) {
-        let poolInArgs = this.getPoolMetadataInArgs(argId)
-        return this.buildComponentNotFoundMessage('pool', poolInArgs?.poolName)
-      }
-    }
-
-    // Check node reference (required for node and action types)
-    if (type === 'node' || type === 'action') {
-      const nodeInMission = this.getNodeFromArgs(argId)
-      if (!nodeInMission) {
-        const nodeInArgs = this.getNodeMetadataInArgs(argId)
-        return this.buildComponentNotFoundMessage('node', nodeInArgs?.nodeName)
-      }
-    }
-
-    // Check action reference (required for action type)
-    if (type === 'action') {
-      // Only validate if a specific actionKey is stored. If absent, the arg
-      // targets all actions in the node ("All Actions"), which is valid.
-      const actionInArgs = this.getActionMetadataInArgs(argId)
-      const actionInMission = this.getActionFromArgs(argId)
-
-      if (actionInArgs && !actionInMission) {
-        return this.buildComponentNotFoundMessage(
-          'action',
-          actionInArgs.actionName,
-        )
-      }
-    }
-
-    // Check file reference (required for file type)
-    if (type === 'file') {
-      const fileInMission = this.getFileFromArgs(argId)
-      if (!fileInMission) {
-        const fileInArgs = this.getFileMetadataInArgs(argId)
-        return this.buildComponentNotFoundMessage('file', fileInArgs?.fileName)
-      }
-    }
-
-    return null
-  }
-
-  /**
    * Checks if a string argument's value matches the required pattern specified
    * in the target argument.
    * @param parameter The target parameter to check.
@@ -617,34 +517,6 @@ export abstract class Effect<
     }
 
     return null
-  }
-
-  /**
-   * Builds a standardized error message for a missing mission component.
-   * @param componentType The type of component that cannot be found.
-   * @param componentName The name of the component, if available.
-   * @returns The error message.
-   */
-  private buildComponentNotFoundMessage(
-    componentType: TMissionComponentTargetParameter['type'],
-    componentName?: string,
-  ): string {
-    let verb = 'targets'
-    if (componentType === 'force') {
-      verb = 'is targeting'
-    }
-
-    let article = 'a'
-    if (componentType === 'action') {
-      article = 'an'
-    }
-
-    const actionGuidance = `Please select a valid ${componentType} or delete the effect and create a new one.`
-
-    if (componentName) {
-      return `The effect, "${this.name}", ${verb} ${article} ${componentType}, "${componentName}", which cannot be found. ${actionGuidance}`
-    }
-    return `The effect, "${this.name}", ${verb} ${article} ${componentType} which cannot be found. ${actionGuidance}`
   }
 
   /**
@@ -757,7 +629,7 @@ export abstract class Effect<
    */
   public allDependenciesMet = (
     dependencies: TargetDependency[] = [],
-    targetArguments: T['targetArgument'][any][] = this.arguments,
+    targetArguments: T['targetArgument'][] = this.arguments,
   ): boolean => {
     // If the argument has no dependencies, then the argument is always displayed.
     if (!dependencies || dependencies.length === 0) {
@@ -785,60 +657,12 @@ export abstract class Effect<
         // is met.
         let dependencyMet: boolean
 
-        // If the dependency is a force dependency then check
-        // if the force exists and if the condition is met.
-        if (dependency.name === 'force') {
-          const force = this.getForceFromArgs(dependency.dependentId)
-          const value = { force }
-          dependencyMet = dependency.condition(value)
-        }
-        // If the dependency is a node dependency then check
-        // if the node exists and if the condition is met.
-        else if (dependency.name === 'pool') {
-          const force = this.getForceFromArgs(dependency.dependentId)
-          const pool = this.getPoolFromArgs(dependency.dependentId)
-          const value = { force, pool }
-          dependencyMet = dependency.condition(value)
-        }
-        // If the dependency is a node dependency then check
-        // if the node exists and if the condition is met.
-        else if (dependency.name === 'node') {
-          const force = this.getForceFromArgs(dependency.dependentId)
-          const node = this.getNodeFromArgs(dependency.dependentId)
-          const value = { force, node }
-          dependencyMet = dependency.condition(value)
-        }
-        // If the dependency is an action dependency then check
-        // if the action exists and if the condition is met.
-        else if (dependency.name === 'action') {
-          const force = this.getForceFromArgs(dependency.dependentId)
-          const node = this.getNodeFromArgs(dependency.dependentId)
-          const action = this.getActionFromArgs(dependency.dependentId)
-          const value = { force, node, action }
-          dependencyMet = dependency.condition(value)
-        }
-        // If the dependency is a file dependency then check
-        // if the file exists and if the condition is met.
-        else if (dependency.name === 'file') {
-          const file = this.getFileFromArgs(dependency.dependentId)
-          const value = { file }
-          dependencyMet = dependency.condition(value)
-        }
-        // If the dependency is a resource dependency then check
-        // if the resource exists and if the condition is met.
-        else if (dependency.name === 'resource') {
-          const resource = this.getResourceFromArgs(dependency.dependentId)
-          const value = { resource }
-          dependencyMet = dependency.condition(value)
-        }
         // Otherwise, check if the condition is met.
-        else {
-          dependencyMet = dependency.condition(
-            targetArguments.find(
-              (arg) => arg.parameterId === dependency.dependentId,
-            )?.value,
-          )
-        }
+        dependencyMet = dependency.condition(
+          targetArguments.find(
+            (arg) => arg.parameterId === dependency.dependentId,
+          )?.value,
+        )
 
         // If the dependency is met then push true to the
         // dependencies met array, otherwise push false.
@@ -861,348 +685,14 @@ export abstract class Effect<
   }
 
   /**
-   * Gets the force metadata that's stored in the effect's arguments.
-   * @param argId The ID of the argument to get the force from.
-   * @returns The force metadata if found, otherwise undefined.
+   * Gets the argument associated with a specific parameter ID.
+   * @param parameterId The ID of the parameter of the associated argument.
+   * @returns The argument if found, otherwise undefined.
    */
-  public getForceMetadataInArgs = (
-    argId: string,
-  ): Required<TForceMetadata> | undefined => {
-    // todo: Leave broken for now fix later.
-    const forceInArgs: TForceMetadata | undefined = (this.arguments as any)[
-      argId
-    ]
-
-    // If the force argument is not found, then return undefined.
-    if (!forceInArgs) return undefined
-    // Otherwise, extract the metadata.
-    let forceKey = forceInArgs.forceKey
-    let forceName = forceInArgs.forceName
-
-    // If any metadata is missing, then return undefined.
-    if (!forceKey || !forceName) return undefined
-
-    // Handle force keys that are set to 'self'.
-    if (forceKey === 'self') {
-      if (!this.sourceForce) return undefined
-      forceKey = this.sourceForce.localKey
-      forceName = this.sourceForce.name
-    }
-
-    // Return the force metadata.
-    return { forceKey, forceName }
-  }
-
-  /**
-   * Gets the node metadata stored in the effect's arguments.
-   * @param argId The ID of the argument to get the node from.
-   * @returns The node metadata if found, otherwise undefined.
-   */
-  public getNodeMetadataInArgs = (
-    argId: string,
-  ): Required<TNodeMetadata> | undefined => {
-    // todo: Leave broken for now fix later.
-    let nodeInArgs: TNodeMetadata | undefined = (this.arguments as any)[argId]
-
-    // If the node argument is not found, then return undefined.
-    if (!nodeInArgs) return undefined
-    // Otherwise, extract the metadata.
-    let forceKey = nodeInArgs.forceKey
-    let forceName = nodeInArgs.forceName
-    let nodeKey = nodeInArgs.nodeKey
-    let nodeName = nodeInArgs.nodeName
-
-    // If the node ID is not found, then return undefined.
-    if (!forceKey || !forceName || !nodeKey || !nodeName) return undefined
-
-    // Handle force and node keys that are set to 'self'.
-    if (forceKey === 'self') {
-      if (!this.sourceForce) return undefined
-      forceKey = this.sourceForce.localKey
-      forceName = this.sourceForce.name
-    }
-    if (nodeKey === 'self') {
-      if (!this.sourceNode) return undefined
-      nodeKey = this.sourceNode.localKey
-      nodeName = this.sourceNode.name
-    }
-
-    // Return the node metadata.
-    return { forceKey, forceName, nodeKey, nodeName }
-  }
-
-  /**
-   * Gets the action metadata stored in the effect's arguments.
-   * @param argId The ID of the argument to get the action from.
-   * @returns The action metadata if found, otherwise undefined.
-   */
-  public getActionMetadataInArgs = (
-    argId: string,
-  ): Required<TActionMetadata> | undefined => {
-    // todo: Leave broken for now fix later.
-    let actionInArgs: TActionMetadata | undefined = (this.arguments as any)[
-      argId
-    ]
-
-    // If the action argument is not found, then return undefined.
-    if (!actionInArgs) return undefined
-    // Otherwise, extract the metadata.
-    let forceKey = actionInArgs.forceKey
-    let forceName = actionInArgs.forceName
-    let nodeKey = actionInArgs.nodeKey
-    let nodeName = actionInArgs.nodeName
-    let actionKey = actionInArgs.actionKey
-    let actionName = actionInArgs.actionName
-
-    // If any metadata is missing, then return undefined.
-    if (
-      !forceKey ||
-      !forceName ||
-      !nodeKey ||
-      !nodeName ||
-      !actionKey ||
-      !actionName
-    ) {
-      return undefined
-    }
-
-    // Handle force, node, and action keys that are set to 'self'.
-    if (forceKey === 'self') {
-      if (!this.sourceForce) return undefined
-      forceKey = this.sourceForce.localKey
-      forceName = this.sourceForce.name
-    }
-    if (nodeKey === 'self') {
-      if (!this.sourceNode) return undefined
-      nodeKey = this.sourceNode.localKey
-      nodeName = this.sourceNode.name
-    }
-    if (actionKey === 'self') {
-      if (!this.sourceAction) return undefined
-      actionKey = this.sourceAction.localKey
-      actionName = this.sourceAction.name
-    }
-
-    // Return the action metadata.
-    return { forceKey, forceName, nodeKey, nodeName, actionKey, actionName }
-  }
-
-  /**
-   * Gets the resource metadata stored in the effect's arguments.
-   * @param argId The ID of the argument from which to get the resource.
-   * @returns The resource metadata if found, otherwise undefined.
-   */
-  public getResourceMetadataInArgs = (
-    argId: string,
-  ): Required<TResourceMetadata> | undefined => {
-    // todo: Leave broken for now fix later.
-    const resourceInArgs: TResourceMetadata | undefined = (
-      this.arguments as any
-    )[argId]
-
-    // If the resource argument is not found, then return undefined.
-    if (!resourceInArgs) return undefined
-    // Otherwise, extract the metadata.
-    let resourceId = resourceInArgs.resourceId
-    let resourceName = resourceInArgs.resourceName
-
-    // If any metadata is missing, then return undefined.
-    if (!resourceId || !resourceName) return undefined
-
-    // Return the resource metadata.
-    return { resourceId, resourceName }
-  }
-
-  /**
-   * Gets the pool metadata stored in the effect's arguments.
-   * @param argId The ID of the argument to get the pool from.
-   * @returns The pool metadata if found, otherwise undefined.
-   */
-  public getPoolMetadataInArgs = (
-    argId: string,
-  ): Required<TPoolMetadata> | undefined => {
-    // todo: Leave broken for now fix later.
-    const poolInArgs: TPoolMetadata | undefined = (this.arguments as any)[argId]
-
-    // If the pool argument is not found, then return undefined.
-    if (!poolInArgs) return undefined
-    // Otherwise, extract the metadata.
-    let forceKey = poolInArgs.forceKey
-    let forceName = poolInArgs.forceName
-    let poolKey = poolInArgs.poolKey
-    let poolName = poolInArgs.poolName
-
-    // If any metadata is missing, then return undefined.
-    if (!forceKey || !forceName || !poolKey || !poolName) return undefined
-
-    // Handle force keys that are set to 'self'.
-    if (forceKey === 'self') {
-      if (!this.sourceForce) return undefined
-      forceKey = this.sourceForce.localKey
-      forceName = this.sourceForce.name
-    }
-
-    // Return the pool metadata.
-    return { forceKey, forceName, poolKey, poolName }
-  }
-
-  /**
-   * Gets the file metadata that's stored in the effect's arguments.
-   * @param argId The ID of the argument from which to get the file.
-   * @returns The file metadata if found, otherwise undefined.
-   */
-  public getFileMetadataInArgs = (
-    argId: string,
-  ): Required<TFileMetadata> | undefined => {
-    // todo: Leave broken for now fix later.
-    const fileInArgs: TFileMetadata | undefined = (this.arguments as any)[argId]
-
-    // If the file argument is not found, then return undefined.
-    if (!fileInArgs) return undefined
-    // Otherwise, extract the metadata.
-    let fileId = fileInArgs.fileId
-    let fileName = fileInArgs.fileName
-
-    // If any metadata is missing, then return undefined.
-    if (!fileId || !fileName) return undefined
-
-    // Return the file metadata.
-    return { fileId, fileName }
-  }
-
-  /**
-   * Gets the force stored in the effect's arguments.
-   * @param argId The ID of the argument to get the force from.
-   * @returns The force if found, otherwise undefined.
-   */
-  public getForceFromArgs = (argId: string): T['force'] | undefined => {
-    // todo: Leave broken for now fix later.
-    const forceInArgs: TForceMetadata | undefined = (this.arguments as any)[
-      argId
-    ]
-    // Extract the metadata.
-    let forceKey = forceInArgs?.forceKey
-    // Handle force keys that are set to 'self'.
-    if (forceKey === 'self') {
-      if (!this.sourceForce) return undefined
-      return this.sourceForce
-    }
-    // Get the force from the mission.
-    return this.mission.getForceByLocalKey(forceKey)
-  }
-
-  /**
-   * Gets the node stored in the effect's arguments.
-   * @param argId The ID of the argument to get the node from.
-   * @returns The node if found, otherwise undefined.
-   */
-  public getNodeFromArgs = (argId: string): T['node'] | undefined => {
-    // todo: Leave broken for now fix later.
-    const nodeInArgs: TNodeMetadata | undefined = (this.arguments as any)[argId]
-    // Extract the metadata.
-    let forceKey = nodeInArgs?.forceKey
-    let nodeKey = nodeInArgs?.nodeKey
-    // Handle force and node keys that are set to 'self'.
-    if (nodeKey === 'self') {
-      if (!this.sourceNode) return undefined
-      return this.sourceNode
-    }
-    if (forceKey === 'self') {
-      if (!this.sourceForce) return undefined
-      forceKey = this.sourceForce.localKey
-    }
-    // Get the node from the mission.
-    return this.mission.getNodeByLocalKey(forceKey, nodeKey)
-  }
-
-  /**
-   * Gets the action stored in the effect's arguments.
-   * @param argId The ID of the argument to get the action from.
-   * @returns The action if found, otherwise undefined.
-   */
-  public getActionFromArgs = (argId: string): T['action'] | undefined => {
-    // todo: Leave broken for now fix later.
-    const actionInArgs: TActionMetadata | undefined = (this.arguments as any)[
-      argId
-    ]
-    // Extract the metadata.
-    let forceKey = actionInArgs?.forceKey
-    let nodeKey = actionInArgs?.nodeKey
-    let actionKey = actionInArgs?.actionKey
-    // Handle force, node, and action keys that are set to 'self'.
-    if (actionKey === 'self') {
-      if (!this.sourceAction) return undefined
-      return this.sourceAction
-    }
-    if (nodeKey === 'self') {
-      if (!this.sourceNode) return undefined
-      nodeKey = this.sourceNode.localKey
-    }
-    if (forceKey === 'self') {
-      if (!this.sourceForce) return undefined
-      forceKey = this.sourceForce.localKey
-    }
-    // Get the action from the mission.
-    const action = this.mission.getActionByLocalKey(
-      forceKey,
-      nodeKey,
-      actionKey,
-    )
-    // If the action anything other than a MissionAction, then return undefined.
-    if (!(action instanceof MissionAction)) return undefined
-    // Otherwise, return the action.
-    return action
-  }
-
-  /**
-   * Gets the resource stored in the effect's arguments.
-   * @param argId The ID of the argument from which to get the resource.
-   * @returns The resource if found, otherwise undefined.
-   */
-  public getResourceFromArgs = (argId: string): T['resource'] | undefined => {
-    // todo: Leave broken for now fix later.
-    const resourceInArgs: TResourceMetadata | undefined = (
-      this.arguments as any
-    )[argId]
-    // Extract the metadata.
-    const resourceId = resourceInArgs?.resourceId
-    // Get the resource from the mission.
-    return this.mission.getResourceById(resourceId)
-  }
-
-  /**
-   * Gets the pool stored in the effect's arguments.
-   * @param argId The ID of the argument from which to get the pool.
-   * @returns The pool if found, otherwise undefined.
-   */
-  public getPoolFromArgs = (argId: string): ResourcePool<T> | undefined => {
-    // todo: Leave broken for now fix later.
-    const poolInArgs: TPoolMetadata | undefined = (this.arguments as any)[argId]
-    let forceKey = poolInArgs?.forceKey
-    let poolKey = poolInArgs?.poolKey
-    // Handle force keys that are set to 'self'.
-    if (forceKey === 'self') {
-      if (!this.sourceForce) return undefined
-      forceKey = this.sourceForce.localKey
-    }
-    return this.mission.getPoolByLocalKey(forceKey, poolKey) as
-      | ResourcePool<T>
-      | undefined
-  }
-
-  /**
-   * Gets the file stored in the effect's arguments.
-   * @param argId The ID of the argument from which to
-   * get the file.
-   * @returns The file if found, otherwise undefined.
-   */
-  public getFileFromArgs = (argId: string): T['missionFile'] | undefined => {
-    // todo: Leave broken for now fix later.
-    const fileInArgs: TFileMetadata | undefined = (this.arguments as any)[argId]
-    // Extract the metadata.
-    const fileId = fileInArgs?.fileId
-    // Get the file from the mission.
-    return this.mission.getFileById(fileId)
+  public getArgumentByParameterId = (
+    parameterId: string,
+  ): T['targetArgument'] | undefined => {
+    return this.arguments.find((arg) => arg.parameterId === parameterId)
   }
 
   /**

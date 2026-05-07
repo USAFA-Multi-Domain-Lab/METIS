@@ -1,20 +1,17 @@
 import { NumberToolbox } from '@metis/toolbox/numbers/NumberToolbox'
-import type { TPoolMetadata } from '@shared/target-environments/types'
 import { migrations } from './migrations'
 
 /**
  * A target available in the METIS target environment that enables a user
  * to modify a force's resource pool through various operations.
  */
-const ResourcePool = new TargetSchema({
+const ResourcePool = TargetSchema.create({
   _id: 'resource-pool',
   name: 'Resource Pool',
   description: "Modify a force's resource pool",
-  script: async (context) => {
-    // Extract the effect and its arguments from the context.
-    const { effect } = context
-    const { operation, amount, poolMetadata } = effect.arguments
-    const { forceKey, poolKey } = poolMetadata as TPoolMetadata
+  script: async (context, poolMetadata, operation, amount) => {
+    // Extract the selected resource pool from the mission-component argument.
+    const [pool] = poolMetadata
 
     // Set the error message.
     const errorMessage =
@@ -31,7 +28,10 @@ const ResourcePool = new TargetSchema({
     // Execute the operation on the resource pool.
     switch (operation) {
       case 'award':
-        context.modifyResourcePool(amount, { forceKey, poolKey })
+        context.modifyResourcePool(amount, {
+          forceKey: pool.force.localKey,
+          poolKey: pool.localKey,
+        })
         break
       default:
         throw new Error(
@@ -41,13 +41,14 @@ const ResourcePool = new TargetSchema({
   },
   parameters: [
     {
-      type: 'pool',
+      type: 'mission-component' as const,
       _id: 'poolMetadata',
       name: 'Resource Pool',
       required: true,
+      validComponentTypes: ['resourcePool'] as const,
     },
     {
-      type: 'dropdown',
+      type: 'dropdown' as const,
       _id: 'operation',
       name: 'Operation',
       required: true,
@@ -59,10 +60,10 @@ const ResourcePool = new TargetSchema({
           value: 'award',
         },
       ],
-      dependencies: [TargetDependency.POOL('poolMetadata')],
+      dependencies: [TargetDependency.TRUTHY('poolMetadata')],
     },
     {
-      type: 'number',
+      type: 'number' as const,
       _id: 'amount',
       name: 'Amount',
       required: true,

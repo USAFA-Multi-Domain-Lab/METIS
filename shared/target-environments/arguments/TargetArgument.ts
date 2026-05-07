@@ -20,14 +20,6 @@ import type {
   TTargetParameter,
   TTargetParameterType,
 } from '../parameters/TargetParameter'
-import type {
-  TActionMetadata,
-  TFileMetadata,
-  TForceMetadata,
-  TNodeMetadata,
-  TPoolMetadata,
-  TResourceMetadata,
-} from '../types'
 
 /**
  * Represents a single argument supplied to an effect — a binding between
@@ -79,7 +71,9 @@ export abstract class TargetArgument<
    * @note If `null`, the parameter could not be found for
    * the {@link parameterId} on the target.
    */
-  public readonly parameter: TTargetParameter | undefined
+  public get parameter(): TTargetParameter | undefined {
+    return this.effect.target?.getParameterById(this.parameterId)
+  }
 
   // Implemented
   public get mission(): TMission<T> {
@@ -135,11 +129,10 @@ export abstract class TargetArgument<
     this.context = context
 
     this.effect = effect.normalize()
-    this.parameter = this.effect.target?.getParameterById(parameterId)
 
     this._additionalIssues = []
 
-    this.scanForIssues()
+    // this.scanForIssues()
   }
 
   // Implemented
@@ -160,35 +153,37 @@ export abstract class TargetArgument<
     }
   }
 
-  /**
-   * Scans the argument for issues and adds them to
-   * {@link additionalIssues}.
-   */
-  private scanForIssues() {
-    this._additionalIssues = []
-
-    // Do not push issues if the target is missing.
-    // This should be handled at the effect level.
-    if (!this.effect.target) return
-
-    // Push an issue if the parameter cannot be found on the target.
-    if (!this.parameter) {
-      this._additionalIssues.push({
-        component: this,
-        type: 'general',
-        message: `Effect "${this.effect.name}" with parameter ID "${this.parameterId}" not found on target "${this.effect.target.name}".`,
-      })
-    }
-    // Push an issue if the parameter type does not match the expected type.
-    // 'unknown' is a migration placeholder — skip the check until it is promoted.
-    else if (this.type !== 'unknown' && this.parameter.type !== this.type) {
-      this._additionalIssues.push({
-        component: this,
-        type: 'general',
-        message: `Effect "${this.effect.name}" has a type mismatch for parameter "${this.parameter.name}": expected "${this.parameter.type}", got "${this.type}".`,
-      })
-    }
-  }
+  // todo: Move logic to effect.
+  //
+  //   /**
+  //    * Scans the argument for issues and adds them to
+  //    * {@link additionalIssues}.
+  //    */
+  //   private scanForIssues() {
+  //     this._additionalIssues = []
+  //
+  //     // Do not push issues if the target is missing.
+  //     // This should be handled at the effect level.
+  //     if (!this.effect.target) return
+  //
+  //     // Push an issue if the parameter cannot be found on the target.
+  //     if (!this.parameter) {
+  //       this._additionalIssues.push({
+  //         component: this,
+  //         type: 'general',
+  //         message: `Effect "${this.effect.name}" with parameter ID "${this.parameterId}" not found on target "${this.effect.target.name}".`,
+  //       })
+  //     }
+  //     // Push an issue if the parameter type does not match the expected type.
+  //     // 'unknown' is a migration placeholder — skip the check until it is promoted.
+  //     else if (this.type !== 'unknown' && this.parameter.type !== this.type) {
+  //       this._additionalIssues.push({
+  //         component: this,
+  //         type: 'general',
+  //         message: `Effect "${this.effect.name}" has a type mismatch for parameter "${this.parameter.name}": expected "${this.parameter.type}", got "${this.type}".`,
+  //       })
+  //     }
+  //   }
 
   /**
    * The default properties for a {@link TargetArgument} object.
@@ -238,13 +233,13 @@ export abstract class TargetArgument<
             nodeId: ids[1],
           })
           return ArrayToolbox.normalize(action)
-        } else if (type === 'file') {
+        } else if (type === 'missionFile') {
           const file = mission.getFileById(ids[0])
           return ArrayToolbox.normalize(file)
         } else if (type === 'resource') {
           const resource = mission.getResourceById(ids[0])
           return ArrayToolbox.normalize(resource)
-        } else if (type === 'resource-pool') {
+        } else if (type === 'resourcePool') {
           return ArrayToolbox.normalize(
             mission.getPoolById(ids[1], { forceId: ids[0] }),
           )
@@ -287,7 +282,7 @@ export abstract class TargetArgument<
           }
         } else if (item instanceof MissionFile) {
           return {
-            componentType: 'file',
+            componentType: 'missionFile',
             lastKnownName,
             ids: [item._id],
           }
@@ -299,7 +294,7 @@ export abstract class TargetArgument<
           }
         } else if (item instanceof ResourcePool) {
           return {
-            componentType: 'resource-pool',
+            componentType: 'resourcePool',
             lastKnownName,
             ids: [item.force._id, item._id],
           }
@@ -321,17 +316,11 @@ export abstract class TargetArgument<
  */
 export type TSelectArgumentSerializedValue = TSatisfies<
   {
-    'number': number
+    'number': number | null
     'string': string
     'large-string': string
     'boolean': boolean
     'dropdown': TDropdownTargetParameterOptionVal
-    'force': TForceMetadata
-    'node': TNodeMetadata
-    'action': TActionMetadata
-    'file': TFileMetadata
-    'resource': TResourceMetadata
-    'pool': TPoolMetadata
     'mission-component': TMissionComponentSerializedSelection[]
     'unknown': TTargetArgumentSerializedValue
   },

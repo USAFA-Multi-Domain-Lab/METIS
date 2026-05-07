@@ -3,6 +3,7 @@ import { TargetEnvSchema as TargetEnvSchema_source } from '@metis/schema/TargetE
 import { TargetSchema as TargetSchema_source } from '@metis/schema/TargetSchema'
 import type * as TargetEnvTypes from '@metis/schema/types'
 import { MetisServer } from '@server/MetisServer'
+import type * as ServerContextTypes from '@server/target-environments/context/TargetEnvContext'
 import type * as MetisComponentTypes from '../../shared/MetisComponent'
 
 // Assignment of global values:
@@ -48,15 +49,17 @@ declare global {
   export type TBaseTargetParameter = TargetEnvTypes.TBaseTargetParameter
   export type TBaseTargetParameterJson = TargetEnvTypes.TBaseTargetParameterJson
   export type TTargetParameterJson = TargetEnvTypes.TTargetParameterJson
-  export type TForceMetadata = TargetEnvTypes.TForceMetadata
-  export type TPoolMetadata = TargetEnvTypes.TPoolMetadata
-  export type TNodeMetadata = TargetEnvTypes.TNodeMetadata
-  export type TActionMetadata = TargetEnvTypes.TActionMetadata
-  export type TFileMetadata = TargetEnvTypes.TFileMetadata
-  export type TResourceMetadata = TargetEnvTypes.TResourceMetadata
   export type TTargetScriptContext = TargetEnvTypes.TTargetScriptExposedContext
   export type TTargetSchemaOptions = TargetEnvTypes.TTargetSchemaOptions
   export type TTargetScript = TargetEnvTypes.TTargetScript
+  export type TTargetEnvExposedForce = ServerContextTypes.TTargetEnvExposedForce
+  export type TTargetEnvExposedNode = ServerContextTypes.TTargetEnvExposedNode
+  export type TTargetEnvExposedAction =
+    ServerContextTypes.TTargetEnvExposedAction
+  export type TTargetEnvExposedFile = ServerContextTypes.TTargetEnvExposedFile
+  export type TTargetEnvExposedPool = ServerContextTypes.TTargetEnvExposedPool
+  export type TTargetEnvExposedResource =
+    ServerContextTypes.TTargetEnvExposedResource
 
   // These types aren't globally accessible, but they are
   // needed contextually in order to resolve other types

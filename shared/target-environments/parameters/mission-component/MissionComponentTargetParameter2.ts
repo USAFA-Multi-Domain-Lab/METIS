@@ -117,13 +117,16 @@ export type TMissionComponentSerializedSelection = {
  * {@link TMissionComponentArg2.validComponentTypes}.
  */
 export type TMissionComponentType =
-  | 'mission'
-  | 'force'
-  | 'node'
-  | 'action'
-  | 'file'
-  | 'resource'
-  | 'resource-pool'
+  | keyof Pick<
+      TMetisBaseComponents,
+      | 'mission'
+      | 'force'
+      | 'node'
+      | 'action'
+      | 'missionFile'
+      | 'resource'
+      | 'resourcePool'
+    >
   | 'any'
 
 /**
