@@ -62,6 +62,7 @@ export class ServerMissionForce extends MissionForce<TMetisServerComponents> {
   public toTargetEnvContext(): TTargetEnvExposedForce {
     const self = this
     return {
+      componentType: 'force',
       _id: self._id,
       localKey: self.localKey,
       name: self.name,

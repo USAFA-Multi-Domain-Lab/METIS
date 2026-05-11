@@ -168,7 +168,7 @@ export abstract class Mission<
    * Forces in the mission, representing different implementation of nodes
    * from their corresponding prototypes.
    */
-  public forces: TForce<T>[]
+  public forces: T['force'][]
 
   /**
    * @see {@link resources}
@@ -1192,7 +1192,7 @@ export abstract class Mission<
         let action = Array.isArray(node.actions)
           ? node.actions.find((action) => action._id === actionId)
           : node.actions.get(actionId)
-        if (action) return action
+        if (action) return action as TAction | TMissionActionJson
         continue
       }
     }
@@ -1235,7 +1235,7 @@ export abstract class Mission<
       action = actionsArray.find((a) => a.localKey === actionKey)
     }
 
-    return action
+    return action as TAction | TMissionActionJson
   }
 }
 

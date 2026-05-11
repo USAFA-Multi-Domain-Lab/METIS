@@ -627,10 +627,10 @@ export abstract class Effect<
    * @param targetArguments The arguments to check the dependencies against.
    * @returns If all the dependencies are met.
    */
-  public allDependenciesMet = (
+  public allDependenciesMet(
     dependencies: TargetDependency[] = [],
     targetArguments: T['targetArgument'][] = this.arguments,
-  ): boolean => {
+  ): boolean {
     // If the argument has no dependencies, then the argument is always displayed.
     if (!dependencies || dependencies.length === 0) {
       return true

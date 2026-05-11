@@ -4,46 +4,24 @@
 const openStateArg = {
   _id: 'openState',
   name: 'Open State',
-}
+} as const
+
 /**
- * The ID of the `nodeMetadata` argument.
+ * The ID of the `applyTo` argument.
  */
-const nodeMetadataArg = {
-  _id: 'nodeMetadata',
-  name: 'Node',
-}
-/**
- * The option that represents no change.
- */
-const noChangeOption = {
-  _id: 'no-change',
-  name: 'No Change',
-  value: 'no-change',
-}
-/**
- * The option that represents opening the node.
- */
-const openNodeOption = {
-  _id: 'open',
-  name: 'Open',
-  value: 'open',
-}
-/**
- * The option that represents closing the node.
- */
-const closeNodeOption = {
-  _id: 'close',
-  name: 'Close',
-  value: 'close',
-}
+const applyToArg = {
+  _id: 'applyTo', // todo: Write migration from 'nodeMetadata' to 'applyTo'
+  name: 'Apply To',
+} as const
+
 /**
  * The grouping ID used for all arguments in this target.
  */
-const groupingId = 'node'
+const groupingId = 'nodeOpenState'
 
 /**
  * A target available in the METIS target environment that enables effects to
- * manipulate whether a node is open (descendants visible) or closed (descendants hidden).
+ * manipulate whether a node(s) is open (descendants visible) or closed (descendants hidden).
  *
  * When a node is opened:
  * - Its descendant nodes become visible to players in the mission map
@@ -61,45 +39,59 @@ const groupingId = 'node'
 const NodeOpenState = TargetSchema.create({
   _id: 'open-state',
   name: 'Node Open State',
-  description: 'Opens or closes a node, revealing or hiding its descendants',
-  script: async (context, nodeMetadata, openState) => {
-    // Extract the selected node from the mission-component argument.
-    const [node] = nodeMetadata
-
-    // Execute the appropriate operation based on the configured open state.
-    if (openState === openNodeOption.value) {
-      // Open the node, revealing its descendants to players.
-      context.openNode({
-        forceKey: node.force.localKey,
-        nodeKey: node.localKey,
-      })
-    } else if (openState === closeNodeOption.value) {
-      // Close the node, hiding its descendants from players.
-      context.closeNode({
-        forceKey: node.force.localKey,
-        nodeKey: node.localKey,
-      })
+  description: 'Opens or closes a node(s), revealing or hiding its descendants',
+  script: async (context, applyTo, openState) => {
+    if (openState !== 'no-change') {
+      context.updateNodeOpenState(applyTo, openState === 'open')
     }
-    // If openState is 'no-change', do nothing (skip the operation).
   },
   parameters: [
     {
-      type: 'mission-component' as const,
-      _id: nodeMetadataArg._id,
-      name: nodeMetadataArg.name,
+      type: 'mission-component',
+      _id: applyToArg._id,
+      name: applyToArg.name,
       required: true,
       groupingId: groupingId,
-      validComponentTypes: ['node'] as const,
+      multiSelect: true,
+      validComponentTypes: ['mission', 'force', 'node'],
+      tooltipDescription:
+        'Select a group of components within the mission ' +
+        'to which this open state will be applied.\n' +
+        '\t\n' +
+        '*Selecting a node will apply the open state to that node. ' +
+        'Selecting a mission or force will apply the open state ' +
+        'to all nodes within the selected item. ' +
+        'Select multiple components to update a broad range of nodes.*',
     },
     {
+      type: 'dropdown',
       _id: openStateArg._id,
-      type: 'dropdown' as const,
       name: openStateArg.name,
       required: true,
       groupingId: groupingId,
-      dependencies: [TargetDependency.TRUTHY(nodeMetadataArg._id)],
-      options: [noChangeOption, openNodeOption, closeNodeOption],
-      default: noChangeOption,
+      dependencies: [TargetDependency.NOT_EMPTY(applyToArg._id)],
+      options: [
+        {
+          _id: 'no-change',
+          name: 'No Change',
+          value: 'no-change',
+        },
+        {
+          _id: 'open',
+          name: 'Open',
+          value: 'open',
+        },
+        {
+          _id: 'close',
+          name: 'Close',
+          value: 'close',
+        },
+      ],
+      default: {
+        _id: 'no-change',
+        name: 'No Change',
+        value: 'no-change',
+      },
     },
   ],
 })

@@ -1,10 +1,7 @@
 import { generateValidationError } from '@server/database/validation'
 import type { TTargetEnvExposedNode } from '@server/target-environments/context/TargetEnvContext'
 import type { TActionExecutionJson } from '@shared/missions/actions/ActionExecution'
-import type {
-  TActionModifier,
-  TMissionActionJson,
-} from '@shared/missions/actions/MissionAction'
+import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
 import { MissionNode } from '@shared/missions/nodes/MissionNode'
 import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
@@ -73,28 +70,13 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
   }
 
   /**
-   * Applies a modifier to the node's actions.
-   * @param modifier The modifier to apply.
-   * @param actionId The ID of the action to apply the modifier to. If
-   * not provided, the modifier is applied to all actions.
-   */
-  public applyModifier(modifier: TActionModifier, actionId?: string): void {
-    if (!actionId) {
-      this.actions.forEach((action) => action.applyModifier(modifier))
-    } else {
-      const action = this.actions.get(actionId)
-      if (!action) throw new Error(`Action "${actionId}" not found.`)
-      action.applyModifier(modifier)
-    }
-  }
-
-  /**
    * @returns The properties from the node that are
    * safe to expose in target-environment code.
    */
   public toTargetEnvContext(): TTargetEnvExposedNode {
     const self = this
     return {
+      componentType: 'node',
       _id: self._id,
       localKey: self.localKey,
       name: self.name,

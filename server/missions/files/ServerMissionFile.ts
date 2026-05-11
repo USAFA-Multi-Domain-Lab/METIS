@@ -15,6 +15,7 @@ export class ServerMissionFile extends MissionFile<TMetisServerComponents> {
   public toTargetEnvContext(): TTargetEnvExposedFile {
     const self = this
     return {
+      componentType: 'missionFile',
       _id: self._id,
       name: self.name,
       originalName: self.originalName,

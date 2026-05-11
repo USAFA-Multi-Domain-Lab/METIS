@@ -7,35 +7,29 @@ const SuccessChanceMod = TargetSchema.create({
   _id: 'success-chance-mod',
   name: 'Success Chance Modifier',
   description: '',
-  script: async (context, actionMetadata, successChance) => {
-    // Extract the selected action from the mission-component argument.
-    const [action] = actionMetadata
-
-    context.modifySuccessChance(successChance / 100, {
-      forceKey: action.force.localKey,
-      nodeKey: action.node.localKey,
-      actionKey: action.localKey,
-    })
+  script: async (context, applyTo, amount) => {
+    context.modifySuccessChance(applyTo, amount / 100)
   },
   parameters: [
     {
-      type: 'mission-component' as const,
-      _id: 'actionMetadata',
-      name: 'Action',
+      type: 'mission-component',
+      _id: 'applyTo', // todo: Write migration from 'actionMetadata' to 'applyTo'
+      name: 'Apply To',
       required: true,
-      groupingId: 'action',
-      validComponentTypes: ['action'] as const,
+      groupingId: 'main',
+      multiSelect: true,
+      validComponentTypes: ['mission', 'force', 'node', 'action'],
     },
     {
-      type: 'number' as const,
-      _id: 'successChance',
-      name: 'Success Chance',
+      type: 'number',
+      _id: 'amount', // todo: Write migration from 'successChance' to 'amount'
+      name: 'Modifier Amount',
       required: true,
       min: -100,
       max: 100,
       unit: '%',
-      groupingId: 'action',
-      dependencies: [TargetDependency.TRUTHY('actionMetadata')],
+      groupingId: 'main',
+      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
       default: 0,
       tooltipDescription:
         `This allows you to positively or negatively affect the chance of success for all actions within the node. A positive value increases the chance of success, while a negative value decreases the chance of success.\n` +

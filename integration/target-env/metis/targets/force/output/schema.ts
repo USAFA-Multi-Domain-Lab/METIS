@@ -6,30 +6,27 @@ const Output = TargetSchema.create({
   _id: 'output',
   name: 'Output Panel',
   description: '',
-  script: async (context, forceMetadata, message) => {
-    // Extract the selected force (if any) from the mission-component argument.
-    const [force] = forceMetadata
-    const to = force ? { forceKey: force.localKey } : undefined
-
-    // Output the message to the force.
-    context.sendOutput(message ?? '', to)
+  script: async (context, to, message = '') => {
+    context.sendOutput(message, to)
   },
   parameters: [
     {
-      type: 'mission-component' as const,
-      _id: 'forceMetadata',
+      // todo: Write migration from 'forceMetadata' to 'to'
+      type: 'mission-component',
+      _id: 'to',
       name: 'Force',
       required: true,
       groupingId: 'output',
-      validComponentTypes: ['force'] as const,
+      validComponentTypes: ['mission', 'force'],
+      multiSelect: true,
     },
     {
-      type: 'large-string' as const,
+      type: 'large-string',
       _id: 'message',
       name: 'Message',
       required: false,
       groupingId: 'output',
-      dependencies: [TargetDependency.TRUTHY('forceMetadata')],
+      dependencies: [TargetDependency.NOT_EMPTY('to')],
       tooltipDescription:
         `This is the message that will be displayed in the output panel for the force selected above.\n` +
         `\t\n` +

@@ -1,6 +1,6 @@
 import type { ServerActionExecution } from '@server/missions/actions/ServerActionExecution'
 import type { ServerExecutionOutcome } from '@server/missions/actions/ServerExecutionOutcome'
-import { ServerMissionAction } from '@server/missions/actions/ServerMissionAction'
+import type { ServerMissionAction } from '@server/missions/actions/ServerMissionAction'
 import type { ServerEffect } from '@server/missions/effects/ServerEffect'
 import type { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
 import type { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
@@ -17,12 +17,16 @@ import type {
 } from '../../../shared/missions/effects/Effect'
 import type { TOutputContext } from '../../../shared/missions/forces/MissionOutput'
 import type { ServerSessionMember } from '../../sessions/ServerSessionMember'
-import type { SessionServer, TOutputTo } from '../../sessions/SessionServer'
+import type { SessionServer } from '../../sessions/SessionServer'
 import type {
+  TTargetEnvExposedAction,
   TTargetEnvExposedContext,
+  TTargetEnvExposedFile,
   TTargetEnvExposedForce,
   TTargetEnvExposedMission,
   TTargetEnvExposedNode,
+  TTargetEnvExposedPool,
+  TTargetEnvExposedResource,
 } from './TargetEnvContext'
 import {
   TargetEnvContext,
@@ -90,6 +94,9 @@ export class TargetScriptContext<
       ),
       openNode: this.ifContextIsCurrent(this.openNode.bind(this)),
       closeNode: this.ifContextIsCurrent(this.closeNode.bind(this)),
+      updateNodeOpenState: this.ifContextIsCurrent(
+        this.updateNodeOpenState.bind(this),
+      ),
       addNodeAlert: this.ifContextIsCurrent(this.addNodeAlert.bind(this)),
       modifySuccessChance: this.ifContextIsCurrent(
         this.modifySuccessChance,
@@ -106,6 +113,9 @@ export class TargetScriptContext<
       grantFileAccess: this.ifContextIsCurrent(this.grantFileAccess.bind(this)),
       revokeFileAccess: this.ifContextIsCurrent(
         this.revokeFileAccess.bind(this),
+      ),
+      updateFileAccess: this.ifContextIsCurrent(
+        this.updateFileAccess.bind(this),
       ),
     }
 
@@ -124,205 +134,104 @@ export class TargetScriptContext<
   }
 
   /**
-   * Determines the target force.
-   * @param forceKey The local key of the force to manipulate.
-   * @returns The target force.
-   * @throws If a force was specified in the options, but it could
-   * not be found.
-   */
-  private determineTargetForce(
-    forceKey: string | 'self' = 'self',
-  ): ServerMissionForce {
-    let { mission, missionId } = this
-
-    // If the force is set to 'self', return the current force.
-    if (forceKey === 'self') {
-      if (!this.data.sourceForce) {
-        throw new Error(
-          `No default force available for this context (type="${this.data.type}"). Please specify a forceKey.`,
-        )
-      }
-      return this.data.sourceForce
-    }
-
-    // Find the specified force.
-    let result = mission.getForceByLocalKey(forceKey)
-
-    if (!result) {
-      throw new Error(
-        `Could not find force with local key "${forceKey}" in the mission with ID "${missionId}".`,
-      )
-    }
-
-    return result
-  }
-
-  /**
-   * Determines the target node.
-   * @param forceKey The local key of the force to which the node belongs.
-   * @param nodeKey The local key of the node to manipulate.
-   * @returns The target node.
-   * @throws If a node was specified in the options, but it could
-   * not be found.
-   */
-  private determineTargetNode(
-    forceKey: string | 'self' = 'self',
-    nodeKey: string | 'self' = 'self',
-  ): ServerMissionNode {
-    let { mission, missionId } = this
-
-    // Handle any keys that are set to 'self'.
-    if (nodeKey === 'self') {
-      if (!this.data.sourceNode) {
-        throw new Error(
-          `No default node available for this context (type="${this.data.type}"). Please specify nodeKey.`,
-        )
-      }
-      return this.data.sourceNode
-    }
-    if (forceKey === 'self') {
-      if (!this.data.sourceForceKey) {
-        throw new Error(
-          `No default forceKey available for this context (type="${this.data.type}"). Please specify forceKey.`,
-        )
-      }
-      forceKey = this.data.sourceForceKey
-    }
-
-    // Find the specified node.
-    let result = mission.getNodeByLocalKey(forceKey, nodeKey)
-
-    if (!result) {
-      throw new Error(
-        `Could not find node with these local keys { forceKey: "${forceKey}", nodeKey: "${nodeKey}" } in the mission with ID "${missionId}".`,
-      )
-    }
-
-    return result
-  }
-
-  /**
-   * Determines the target action.
-   * @param forceKey The local key of the force to which the action belongs.
-   * @param nodeKey The local key of the node to which the action belongs.
-   * @param actionKey The local key of the action to manipulate.
-   * @returns The target action.
-   * @throws If an action was specified in the options, but it could
-   * not be found or the action is not an instance of `ServerMissionAction`.
-   */
-  private determineTargetAction(
-    forceKey: string | 'self' = 'self',
-    nodeKey: string | 'self' = 'self',
-    actionKey: string | 'self' | 'all' = 'all',
-  ): ServerMissionAction | undefined {
-    let { mission, missionId } = this
-
-    // If the action is set to 'all', return undefined.
-    if (actionKey === 'all') return undefined
-
-    // Handle any keys that are set to 'self'.
-    if (actionKey === 'self') {
-      if (!this.data.sourceAction) {
-        throw new Error(
-          `No default action available for this context (type="${this.data.type}"). Please specify actionKey.`,
-        )
-      }
-      return this.data.sourceAction
-    }
-    if (nodeKey === 'self') {
-      if (!this.data.sourceNodeKey) {
-        throw new Error(
-          `No default nodeKey available for this context (type="${this.data.type}"). Please specify nodeKey.`,
-        )
-      }
-      nodeKey = this.data.sourceNodeKey
-    }
-    if (forceKey === 'self') {
-      if (!this.data.sourceForceKey) {
-        throw new Error(
-          `No default forceKey available for this context (type="${this.data.type}"). Please specify forceKey.`,
-        )
-      }
-      forceKey = this.data.sourceForceKey
-    }
-
-    // Find the specified action.
-    const result = mission.getActionByLocalKey(forceKey, nodeKey, actionKey)
-
-    if (!result) {
-      throw new Error(
-        `Could not find action with these local keys { forceKey: "${forceKey}", nodeKey: "${nodeKey}", actionKey: "${actionKey}" } in the mission with ID "${missionId}".`,
-      )
-    }
-
-    if (!(result instanceof ServerMissionAction)) {
-      throw new Error(
-        `The action with these local keys { forceKey: "${forceKey}", nodeKey: "${nodeKey}", actionKey: "${actionKey}" } was found in the mission with ID "${missionId}", but it is not an instance of ServerMissionAction.`,
-      )
-    }
-
-    return result
-  }
-
-  /**
-   * Determines the target file.
-   * @param fileId The ID of the file to manipulate.
-   * @returns The target file.
-   * @throws If a file was specified in the options, but it could
-   * not be found.
-   */
-  private determineTargetFile(fileId: string): ServerMissionFile {
-    let { mission, missionId } = this
-    // Find the specified file.
-    let result = mission.getFileById(fileId)
-    if (!result) {
-      throw new Error(
-        `Could not find file with ID "${fileId}" in the mission with ID "${missionId}".`,
-      )
-    }
-    return result
-  }
-
-  /**
-   * Determines the target pool.
-   * @param forceKey The local key of the force to which the pool belongs.
-   * @param poolKey The local key of the pool to manipulate.
-   * @returns The target pool.
-   * @throws If a pool was specified in the options, but it could
-   * not be found.
-   */
-  private determineTargetPool(
-    forceKey: string | 'self' = 'self',
-    poolKey: string | undefined,
-  ): ServerResourcePool {
-    let { mission, missionId } = this
-
-    // Handle forceKey set to 'self'.
-    if (forceKey === 'self') {
-      if (!this.data.sourceForceKey) {
-        throw new Error(
-          `No default forceKey available for this context (type="${this.data.type}"). Please specify forceKey.`,
-        )
-      }
-      forceKey = this.data.sourceForceKey
-    }
-
-    // Find the specified pool.
-    let result = mission.getPoolByLocalKey(forceKey, poolKey)
-
-    if (!result) {
-      throw new Error(
-        `Could not find pool with these local keys { forceKey: "${forceKey}", poolKey: "${poolKey}" } in the mission with ID "${missionId}".`,
-      )
-    }
-
-    return result
-  }
-
-  /**
-   * Takes one or many nodes exposed to the target environment
-   * and resolves them to a list of corresponding {@link ServerMissionNode}
+   * Takes one or many files exposed to the target environment and
+   * resolves them to a list of corresponding {@link ServerMissionFile}
    * instances found within the mission.
+   * @param files The file or files exposed to the target environment to resolve.
+   * @returns A list of corresponding {@link ServerMissionFile} instances found within the mission.
+   * @throws If a file cannot be found within the mission.
+   */
+  private resolveServerFiles(
+    files: TInstanceOrArray<TTargetEnvExposedFile>,
+  ): ServerMissionFile[] {
+    return ArrayToolbox.toArray(files).map((file) => {
+      let serverFile = this.mission.getFileById(file._id)
+      if (!serverFile) {
+        throw new Error(
+          `Could not find file with ID "${file._id}" in the mission with ID "${this.missionId}".`,
+        )
+      }
+      return serverFile
+    })
+  }
+
+  /**
+   * Takes one or many components exposed to the target environment
+   * that either are or contain forces and resolves them to a list of
+   * corresponding {@link ServerMissionForce} instances found within
+   * the mission.
+   * {@link ServerMissionForce} instances found within the mission.
+   * @param missionComponents The force or forces exposed to the target environment to resolve.
+   * @returns A list of corresponding {@link ServerMissionForce} instances found within the mission.
+   * @throws If a force cannot be found within the mission.
+   */
+  private resolveServerForces(
+    missionComponents: TInstanceOrArray<
+      TTargetEnvExposedForce | TTargetEnvExposedMission
+    >,
+  ): ServerMissionForce[] {
+    missionComponents = ArrayToolbox.toArray(missionComponents)
+    let targetEnvForces = missionComponents.flatMap((component) => {
+      switch (component.componentType) {
+        case 'mission':
+          return component.forces
+        case 'force':
+          return component
+      }
+    })
+    return targetEnvForces.map((force) => {
+      let serverForce = this.mission.getForceById(force._id)
+      if (!serverForce) {
+        throw new Error(
+          `Could not find force with ID "${force._id}" in the mission with ID "${this.missionId}".`,
+        )
+      }
+      return serverForce
+    })
+  }
+
+  /**
+   * Takes one or many components exposed to the target environment
+   * that either are or contain resource pools and resolves them to a
+   * flat list of corresponding {@link ServerResourcePool} instances
+   * found within the mission.
+   * @param missionComponents The component or components to resolve.
+   * @returns A flat array of {@link ServerResourcePool} instances.
+   * @throws If any pool cannot be found within the mission.
+   */
+  private resolveServerPools(
+    missionComponents: TInstanceOrArray<
+      TTargetEnvExposedPool | TTargetEnvExposedForce | TTargetEnvExposedMission
+    >,
+  ): ServerResourcePool[] {
+    missionComponents = ArrayToolbox.toArray(missionComponents)
+    let targetEnvPools = missionComponents.flatMap((component) => {
+      switch (component.componentType) {
+        case 'mission':
+          return component.forces.flatMap((force) => force.resourcePools)
+        case 'force':
+          return component.resourcePools
+        case 'resourcePool':
+          return component
+      }
+    })
+    return targetEnvPools.map((pool) => {
+      let serverPool = this.mission.getPoolById(pool._id)
+      if (!serverPool) {
+        throw new Error(
+          `Could not find resource pool with ID "${pool._id}" in the mission with ID "${this.missionId}".`,
+        )
+      }
+      return serverPool
+    })
+  }
+
+  /**
+   * Takes one or many components exposed to the target environment
+   * that either are or contain nodes and resolves them to a list of
+   * corresponding {@link ServerMissionNode} instances found within
+   * the mission.
+   * {@link ServerMissionNode} instances found within the mission.
    * @param missionComponents The node or nodes exposed to the target environment to resolve.
    * @returns A list of corresponding {@link ServerMissionNode} instances found within the mission.
    * @throws If a node cannot be found within the mission.
@@ -353,27 +262,59 @@ export class TargetScriptContext<
       return serverNode
     })
   }
+  /**
+   * Takes one or many components exposed to the target environment
+   * that either are or contain actions and resolves them to a flat
+   * list of corresponding {@link ServerMissionAction} instances
+   * found within the mission.
+   * @param missionComponents The component or components to resolve.
+   * @returns A flat array of {@link ServerMissionAction} instances.
+   * @throws If any action cannot be found within the mission.
+   */
+  private resolveServerActionTargets(
+    missionComponents: TInstanceOrArray<
+      | TTargetEnvExposedNode
+      | TTargetEnvExposedForce
+      | TTargetEnvExposedMission
+      | TTargetEnvExposedAction
+    >,
+  ): ServerMissionAction[] {
+    missionComponents = ArrayToolbox.toArray(missionComponents)
+    let targetEnvActions = missionComponents.flatMap((component) => {
+      switch (component.componentType) {
+        case 'mission':
+          return component.allActions
+        case 'force':
+          return component.nodes.flatMap((node) => node.actions)
+        case 'node':
+          return component.actions
+        case 'action':
+          return component
+      }
+    })
+    return targetEnvActions.map((targetEnvAction) => {
+      let serverAction = this.mission.getActionById(targetEnvAction._id)
+      if (!serverAction) {
+        throw new Error(
+          `Could not find action with ID "${targetEnvAction._id}" in the mission with ID "${this.missionId}".`,
+        )
+      }
+      return serverAction
+    })
+  }
 
   /**
    * @see {@link TTargetScriptExposedContext.sendOutput}
    */
-  private sendOutput = (message: string, to?: TOutputTo) => {
+  private sendOutput = (
+    message: string,
+    to: TInstanceOrArray<TTargetEnvExposedForce | TTargetEnvExposedMission>,
+  ) => {
     let { data } = this
-    let prefix = ''
     let outputContext: TOutputContext
-
-    // Determine the prefix based on whether
-    // a recipient force was specified.
-    if (!to) {
-      prefix = 'Global:'
-    } else {
-      let targetForce = this.determineTargetForce(to.forceKey)
-      prefix = targetForce.outputPrefix
-      // Ensure the forceKey is correct.
-      if (to.forceKey !== targetForce.localKey) {
-        to.forceKey = targetForce.localKey
-      }
-    }
+    let isGlobal = ArrayToolbox.toArray(to).some(
+      (component) => component.componentType === 'mission',
+    )
 
     // Determine the output context based on the effect type.
     switch (data.type) {
@@ -388,8 +329,18 @@ export class TargetScriptContext<
         break
     }
 
-    // Send the output in the session.
-    this.session.sendOutput(prefix, message, outputContext, to)
+    if (isGlobal) {
+      this.session.sendOutput('Global:', message, outputContext)
+    } else {
+      let forces = this.resolveServerForces(to)
+
+      // Send the output to each resolved force.
+      for (let force of forces) {
+        this.session.sendOutput(force.outputPrefix, message, outputContext, {
+          force,
+        })
+      }
+    }
   }
 
   /**
@@ -423,8 +374,7 @@ export class TargetScriptContext<
     >,
     blocked: boolean,
   ) => {
-    let serverNodes = this.resolveServerNodes(nodes)
-    serverNodes.forEach((serverNode) => {
+    this.resolveServerNodes(nodes).forEach((serverNode) => {
       this.session.updateNodeBlockStatus(serverNode, blocked)
     })
   }
@@ -432,45 +382,68 @@ export class TargetScriptContext<
   /**
    * @see {@link TTargetScriptExposedContext}
    */
-  private openNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
-    let targetNode = this.determineTargetNode(forceKey, nodeKey)
-    this.session.updateNodeOpenState(targetNode, true)
+  private openNode = (
+    nodes: TInstanceOrArray<
+      TTargetEnvExposedNode | TTargetEnvExposedForce | TTargetEnvExposedMission
+    >,
+  ) => {
+    this.updateNodeOpenState(nodes, true)
   }
 
   /**
    * @see {@link TTargetScriptExposedContext}
    */
-  private closeNode = ({ forceKey, nodeKey }: TManipulateNodeOptions = {}) => {
-    let targetNode = this.determineTargetNode(forceKey, nodeKey)
-    this.session.updateNodeOpenState(targetNode, false)
+  private closeNode = (
+    nodes: TInstanceOrArray<
+      TTargetEnvExposedNode | TTargetEnvExposedForce | TTargetEnvExposedMission
+    >,
+  ) => {
+    this.updateNodeOpenState(nodes, false)
+  }
+
+  /**
+   * @see {@link TTargetScriptExposedContext}
+   */
+  private updateNodeOpenState = (
+    nodes: TInstanceOrArray<
+      TTargetEnvExposedNode | TTargetEnvExposedForce | TTargetEnvExposedMission
+    >,
+    opened: boolean,
+  ) => {
+    this.resolveServerNodes(nodes).forEach((serverNode) => {
+      this.session.updateNodeOpenState(serverNode, opened)
+    })
   }
 
   /**
    * @see {@link TTargetScriptExposedContext}
    */
   private addNodeAlert = (
+    applyTo: TInstanceOrArray<
+      TTargetEnvExposedNode | TTargetEnvExposedForce | TTargetEnvExposedMission
+    >,
     message: string,
     severityLevel: TNodeAlertSeverityLevel,
-    { forceKey, nodeKey }: TManipulateNodeOptions = {},
   ) => {
-    let targetNode = this.determineTargetNode(forceKey, nodeKey)
-    this.session.addNodeAlert(targetNode, message, severityLevel)
+    this.resolveServerNodes(applyTo).forEach((serverNode) => {
+      this.session.addNodeAlert(serverNode, message, severityLevel)
+    })
   }
 
   /**
    * @see {@link TTargetScriptExposedContext}
    */
   private modifySuccessChance = (
+    applyTo: TInstanceOrArray<
+      | TTargetEnvExposedAction
+      | TTargetEnvExposedNode
+      | TTargetEnvExposedForce
+      | TTargetEnvExposedMission
+    >,
     operand: number,
-    { forceKey, nodeKey, actionKey }: TManipulateActionOptions = {},
   ) => {
-    let targetAction = this.determineTargetAction(forceKey, nodeKey, actionKey)
-    let targetNode = this.determineTargetNode(forceKey, nodeKey)
-
-    this.session.modifySuccessChance({
-      operand,
-      node: targetNode,
-      action: targetAction,
+    this.resolveServerActionTargets(applyTo).forEach((action) => {
+      this.session.modifySuccessChance({ operand, action })
     })
   }
 
@@ -478,16 +451,16 @@ export class TargetScriptContext<
    * @see {@link TTargetScriptExposedContext}
    */
   private modifyProcessTime = (
+    applyTo: TInstanceOrArray<
+      | TTargetEnvExposedAction
+      | TTargetEnvExposedNode
+      | TTargetEnvExposedForce
+      | TTargetEnvExposedMission
+    >,
     operand: number,
-    { forceKey, nodeKey, actionKey }: TManipulateActionOptions = {},
   ) => {
-    let targetAction = this.determineTargetAction(forceKey, nodeKey, actionKey)
-    let targetNode = this.determineTargetNode(forceKey, nodeKey)
-
-    this.session.modifyProcessTime({
-      operand,
-      node: targetNode,
-      action: targetAction,
+    this.resolveServerActionTargets(applyTo).forEach((action) => {
+      this.session.modifyProcessTime({ operand, action })
     })
   }
 
@@ -495,18 +468,23 @@ export class TargetScriptContext<
    * @see {@link TTargetScriptExposedContext}
    */
   private modifyResourceCost = (
-    resourceId: string,
+    applyTo: TInstanceOrArray<
+      | TTargetEnvExposedAction
+      | TTargetEnvExposedNode
+      | TTargetEnvExposedForce
+      | TTargetEnvExposedMission
+    >,
+    resources: TInstanceOrArray<TTargetEnvExposedResource>,
     operand: number,
-    { forceKey, nodeKey, actionKey }: TManipulateActionOptions = {},
   ) => {
-    let targetAction = this.determineTargetAction(forceKey, nodeKey, actionKey)
-    let targetNode = this.determineTargetNode(forceKey, nodeKey)
-
-    this.session.modifyResourceCost({
-      resourceId,
-      operand,
-      node: targetNode,
-      action: targetAction,
+    this.resolveServerActionTargets(applyTo).forEach((action) => {
+      ArrayToolbox.toArray(resources).forEach((resource) => {
+        this.session.modifyResourceCost({
+          resourceId: resource._id,
+          action,
+          operand,
+        })
+      })
     })
   }
 
@@ -514,29 +492,57 @@ export class TargetScriptContext<
    * @see {@link TTargetScriptExposedContext}
    */
   private modifyResourcePool = (
+    applyTo: TInstanceOrArray<
+      TTargetEnvExposedPool | TTargetEnvExposedForce | TTargetEnvExposedMission
+    >,
     operand: number,
-    { forceKey, poolKey }: TManipulatePoolOptions = {},
   ) => {
-    let targetPool = this.determineTargetPool(forceKey, poolKey)
-    this.session.modifyResourcePool(targetPool, operand)
+    this.resolveServerPools(applyTo).forEach((serverPool) => {
+      this.session.modifyResourcePool(serverPool, operand)
+    })
   }
 
   /**
    * @see {@link TTargetScriptExposedContext}
    */
-  private grantFileAccess = (fileId: string, forceKey: string) => {
-    let targetFile = this.determineTargetFile(fileId)
-    let targetForce = this.determineTargetForce(forceKey)
-    this.session.updateFileAccess(targetFile, targetForce, true)
+  private grantFileAccess = (
+    applyTo: TInstanceOrArray<
+      TTargetEnvExposedForce | TTargetEnvExposedMission
+    >,
+    files: TInstanceOrArray<TTargetEnvExposedFile>,
+  ) => {
+    this.updateFileAccess(applyTo, files, true)
   }
 
   /**
    * @see {@link TTargetScriptExposedContext}
    */
-  private revokeFileAccess = (fileId: string, forceKey: string) => {
-    let targetFile = this.determineTargetFile(fileId)
-    let targetForce = this.determineTargetForce(forceKey)
-    this.session.updateFileAccess(targetFile, targetForce, false)
+  private revokeFileAccess = (
+    applyTo: TInstanceOrArray<
+      TTargetEnvExposedForce | TTargetEnvExposedMission
+    >,
+    files: TInstanceOrArray<TTargetEnvExposedFile>,
+  ) => {
+    this.updateFileAccess(applyTo, files, false)
+  }
+
+  /**
+   * @see {@link TTargetScriptExposedContext}
+   */
+  private updateFileAccess = (
+    applyTo: TInstanceOrArray<
+      TTargetEnvExposedForce | TTargetEnvExposedMission
+    >,
+    files: TInstanceOrArray<TTargetEnvExposedFile>,
+    granted: boolean,
+  ) => {
+    let serverForces = this.resolveServerForces(applyTo)
+    let serverFiles = this.resolveServerFiles(files)
+    for (let serverFile of serverFiles) {
+      for (let serverForce of serverForces) {
+        this.session.updateFileAccess(serverFile, serverForce, granted)
+      }
+    }
   }
 
   /**
@@ -756,62 +762,67 @@ export interface TTargetScriptExposedContext<
    */
   updateNodeBlockStatus: TargetScriptContext<TType>['updateNodeBlockStatus']
   /**
-   * Opens the node to reveal the next set of nodes in the structure.
-   * @param options Additional options for opening the node.
-   * @note By default, this will open the node to which the current
-   * effect belongs, unless configured otherwise.
+   * Opens one or many nodes to reveal the next set of nodes in the structure.
+   * @param nodes The node or nodes to open.
+   * @note Forces and the mission can also be passed. All nodes within
+   * the provided forces/mission will be opened.
    */
   openNode: TargetScriptContext<TType>['openNode']
   /**
-   * Closes the node to hide the next set of nodes in the structure.
-   * @param options Additional options for closing the node.
-   * @note By default, this will close the node to which the current
-   * effect belongs, unless configured otherwise.
+   * Closes one or many nodes to hide the next set of nodes in the structure.
+   * @param nodes The node or nodes to close.
+   * @note Forces and the mission can also be passed. All nodes within
+   * the provided forces/mission will be closed.
    */
   closeNode: TargetScriptContext<TType>['closeNode']
   /**
-   * Adds an alert to the given node with the specified severity level.
+   * Updates the open state of one or many nodes (open/close).
+   * @param nodes The node or nodes to update the open state for.
+   * @param opened Whether the nodes should be opened or closed.
+   * @note Forces and the mission can also be passed. All nodes within
+   * the provided forces/mission will be updated.
+   */
+  updateNodeOpenState: TargetScriptContext<TType>['updateNodeOpenState']
+  /**
+   * Adds an alert to the given node(s) with the specified severity level.
+   * @param applyTo The node, force, or mission to add the alert to.
    * @param message The message to display when the alert is opened.
    * @param severityLevel The severity level of the alert, indicating
    * the importance/urgency of the alert.
-   * @param options Additional options for adding the alert.
-   * @note By default, this will add the alert to the node to which the current
-   * effect belongs, unless configured otherwise.
+   * @note Passing a force or mission will add the alert to all nodes within
+   * the provided force or mission.
    */
   addNodeAlert: TargetScriptContext<TType>['addNodeAlert']
   /**
-   * Modifies an action's chance of success.
+   * Modifies the chance of success for the provided components.
+   * @param applyTo The component or components whose actions will be modified.
    * @param operand The number used to modify the chance of success.
-   * @param options Additional options for modifying the chance of success.
    * @note **If the result is less than 0%, the chance of success will be set to 0%.**
    * @note **If the result is greater than 100%, the chance of success will be set to 100%.**
-   * @note This will modify the chance of success for all actions within the node.
    * @note The operand can be positive or negative. It will either increase or decrease the chance of success.
-   * @note By default, this will modify the chance of success for the node to which the current effect belongs,
-   * unless configured otherwise.
+   * @note Passing a node, force, or mission will modify all actions within the selected item.
+   * @note Passing an action will modify only that specific action.
    */
   modifySuccessChance: TargetScriptContext<TType>['modifySuccessChance']
   /**
-   * Modifies an action's process time.
+   * Modifies the process time for the provided components.
+   * @param applyTo The component or components whose actions will be modified.
    * @param operand The number used to modify the process time.
-   * @param options Additional options for modifying the process time.
    * @note **If the result is less than 0, the process time will be set to 0.**
    * @note **If the result is greater than 1 hour (3,600,000 milliseconds), the process time will be set to 1 hour.**
-   * @note This will modify the process time for all actions within the node.
    * @note The operand can be positive or negative. It will either increase or decrease the process time.
-   * @note By default, this will modify the process time for the node to which the current effect belongs,
-   * unless configured otherwise.
+   * @note Passing a node, force, or mission will modify all actions within the selected item.
+   * @note Passing an action will modify only that specific action.
    */
   modifyProcessTime: TargetScriptContext<TType>['modifyProcessTime']
   /**
-   * Modifies an action's resource cost for a specific resource.
-   * @param resourceId The ID of the resource whose cost to modify.
+   * Modifies the resource cost for the provided components.
+   * @param applyTo The component or components whose actions will be modified.
+   * @param resources The resource or resources whose cost to modify.
    * @param operand The number used to modify the resource cost.
-   * @param options Additional options for modifying the resource cost.
-   * @note This will modify the resource cost for all actions within the node.
    * @note The operand can be positive or negative. It will either increase or decrease the resource cost.
-   * @note By default, this will modify the resource cost for the node to which the current effect belongs,
-   * unless configured otherwise.
+   * @note Passing a node, force, or mission will modify all actions within the selected item.
+   * @note Passing an action will modify only that specific action.
    */
   modifyResourceCost: TargetScriptContext<TType>['modifyResourceCost']
   /**
@@ -827,17 +838,30 @@ export interface TTargetScriptExposedContext<
    */
   modifyResourcePool: TargetScriptContext<TType>['modifyResourcePool']
   /**
-   * Grants access to the file for the specified force.
-   * @param fileId The ID of the file to grant access to.
-   * @param forceKey The local key of the force to which to grant access.
+   * Grants access to the specified files for the specified forces.
+   * @param applyTo The component or components whose forces will be modified.
+   * @param files The files to grant access to.
+   * @note Passing the mission will modify access for all forces within the mission.
+   * @note Passing a force will modify access for that specific force.
    */
   grantFileAccess: TargetScriptContext<TType>['grantFileAccess']
   /**
-   * Revokes access to the file for the specified force.
-   * @param fileId The ID of the file to revoke access from.
-   * @param forceKey The local key of the force from which to revoke access.
+   * Revokes access to the specified files for the specified forces.
+   * @param applyTo The component or components whose forces will be modified.
+   * @param files The files to revoke access from.
+   * @note Passing the mission will modify access for all forces within the mission.
+   * @note Passing a force will modify access for that specific force.
    */
   revokeFileAccess: TargetScriptContext<TType>['revokeFileAccess']
+  /**
+   * Grants or revokes access to the specified files for the specified forces.
+   * @param applyTo The component or components whose forces will be modified.
+   * @param files The files to grant access to or revoke access from.
+   * @param granted Whether to grant or revoke access.
+   * @note Passing the mission will modify access for all forces within the mission.
+   * @note Passing a force will modify access for that specific force.
+   */
+  updateFileAccess: TargetScriptContext<TType>['updateFileAccess']
 }
 
 /**

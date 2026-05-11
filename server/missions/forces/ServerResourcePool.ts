@@ -15,6 +15,7 @@ export class ServerResourcePool extends ResourcePool<TMetisServerComponents> {
   public toTargetEnvContext(): TTargetEnvExposedPool {
     const self = this
     return {
+      componentType: 'resourcePool',
       _id: self._id,
       localKey: self.localKey,
       name: self.name,

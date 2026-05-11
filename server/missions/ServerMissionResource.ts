@@ -15,6 +15,7 @@ export class ServerMissionResource extends MissionResource<TMetisServerComponent
   public toTargetEnvContext(): TTargetEnvExposedResource {
     const self = this
     return {
+      componentType: 'resource',
       _id: self._id,
       name: self.name,
       icon: self.icon,

@@ -6,19 +6,28 @@ const BlockStatus = TargetSchema.create({
   _id: 'block-status',
   name: 'Block Status',
   description: '',
-  script: async (context, components, blockStatus) => {
+  script: async (context, applyTo, blockStatus) => {
     if (blockStatus !== 'no-change') {
-      context.updateNodeBlockStatus(components, blockStatus === 'block')
+      context.updateNodeBlockStatus(applyTo, blockStatus === 'block')
     }
   },
   parameters: [
     {
       type: 'mission-component',
-      _id: 'nodeMetadata',
-      name: 'Node',
+      _id: 'applyTo', // todo: Write migration from 'nodeMetadata' to 'applyTo'
+      name: 'Apply To',
       required: true,
       groupingId: 'node',
-      validComponentTypes: ['force', 'node'],
+      multiSelect: true,
+      validComponentTypes: ['mission', 'force', 'node'],
+      tooltipDescription:
+        'Select a group of components within the mission ' +
+        'to which this block status will be applied.\n' +
+        '\t\n' +
+        '*Selecting a node will apply the block status to that node. ' +
+        'Selecting a mission or force will apply the block status ' +
+        'to all nodes within the selected item. ' +
+        'Select multiple components to update a broad range of nodes.*',
     },
     {
       _id: 'blockStatus',
@@ -26,7 +35,7 @@ const BlockStatus = TargetSchema.create({
       name: 'Block Status',
       required: true,
       groupingId: 'node',
-      dependencies: [TargetDependency.TRUTHY('nodeMetadata')],
+      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
       options: [
         {
           _id: 'no-change',

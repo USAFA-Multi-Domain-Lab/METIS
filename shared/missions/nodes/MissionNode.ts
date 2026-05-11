@@ -116,7 +116,7 @@ export abstract class MissionNode<
    * The actions that can be performed on the node.
    * @note Mapped by action ID.
    */
-  public actions: Map<string, TAction<T>>
+  public actions: Map<string, T['action']>
 
   /**
    * Determines if this node should be excluded from the node structure.

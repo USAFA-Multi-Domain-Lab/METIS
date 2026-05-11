@@ -122,6 +122,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   public toTargetEnvContext(): TTargetEnvExposedMission {
     const self = this
     return {
+      componentType: 'mission',
       _id: self._id,
       name: self.name,
       get resources() {

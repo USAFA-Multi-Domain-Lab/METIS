@@ -15,7 +15,7 @@ const ProcessTimeMod = TargetSchema.create({
   description: '',
   script: async (
     context,
-    components,
+    applyTo,
     processTimeHours,
     processTimeMinutes,
     processTimeSeconds,
@@ -29,32 +29,13 @@ const ProcessTimeMod = TargetSchema.create({
 
     // If the process time isn't 0, apply it to each selected component.
     if (Math.abs(processTime) > 0) {
-      for (const component of components) {
-        if (component.componentType === 'mission') {
-          context.modifyProcessTime(processTime)
-        } else if (component.componentType === 'force') {
-          context.modifyProcessTime(processTime, {
-            forceKey: component.localKey,
-          })
-        } else if (component.componentType === 'node') {
-          context.modifyProcessTime(processTime, {
-            forceKey: component.force.localKey,
-            nodeKey: component.localKey,
-          })
-        } else if (component.componentType === 'action') {
-          context.modifyProcessTime(processTime, {
-            forceKey: component.force.localKey,
-            nodeKey: component.node.localKey,
-            actionKey: component.localKey,
-          })
-        }
-      }
+      context.modifyProcessTime(applyTo, processTime)
     }
   },
   parameters: [
     {
-      type: 'mission-component' as const,
-      _id: 'components', // todo: Write migration from 'actionMetadata' to 'applyTo'
+      type: 'mission-component',
+      _id: 'applyTo', // todo: Write migration from 'actionMetadata' to 'applyTo'
       name: 'Apply To',
       required: true,
       multiSelect: true,
@@ -69,14 +50,14 @@ const ProcessTimeMod = TargetSchema.create({
         'Select multiple components to modify a broad range of actions.*',
     },
     {
-      type: 'number' as const,
+      type: 'number',
       _id: hoursArgId,
       name: 'Hour(s)',
       required: true,
       min: -1,
       max: 1,
       groupingId,
-      dependencies: [TargetDependency.TRUTHY('applyTo')],
+      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
       default: 0,
       integersOnly: true,
       tooltipDescription:
@@ -87,14 +68,14 @@ const ProcessTimeMod = TargetSchema.create({
         `*Note: If the result is less than 0h, then the process time will be 0h. If the result is greater than 1h, then the process time will be 1h.*`,
     },
     {
-      type: 'number' as const,
+      type: 'number',
       _id: minutesArgId,
       name: 'Minute(s)',
       required: true,
       min: -59,
       max: 59,
       groupingId,
-      dependencies: [TargetDependency.TRUTHY('modifierScope')],
+      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
       default: 0,
       integersOnly: true,
       tooltipDescription:
@@ -105,14 +86,14 @@ const ProcessTimeMod = TargetSchema.create({
         `*Note: If the result is less than 0m, then the process time will be 0m. If the result is greater than 59m, then the process time will be 59m.*`,
     },
     {
-      type: 'number' as const,
+      type: 'number',
       _id: secondsArgId,
       name: 'Second(s)',
       required: true,
       min: -59,
       max: 59,
       groupingId,
-      dependencies: [TargetDependency.TRUTHY('modifierScope')],
+      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
       default: 0,
       integersOnly: true,
       tooltipDescription:

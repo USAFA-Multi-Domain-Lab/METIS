@@ -9,45 +9,35 @@ const ResourceCostMod = TargetSchema.create({
   _id: 'resource-cost-mod',
   name: 'Resource Cost Modifier',
   description: '',
-  script: async (context, actionMetadata, resourceMetadata, resourceCost) => {
-    // Extract selected action and resource from the mission-component arguments.
-    const [action] = actionMetadata
-    const [resource] = resourceMetadata
-
-    context.modifyResourceCost(resource._id, resourceCost, {
-      forceKey: action.force.localKey,
-      nodeKey: action.node.localKey,
-      actionKey: action.localKey,
-    })
+  script: async (context, applyTo, resources, amount) => {
+    context.modifyResourceCost(applyTo, resources, amount)
   },
   parameters: [
     {
-      type: 'mission-component' as const,
-      _id: 'actionMetadata',
-      name: 'Action',
+      type: 'mission-component',
+      _id: 'applyTo', // todo: Write migration from 'actionMetadata' to 'applyTo'
+      name: 'Apply To',
       required: true,
-      groupingId: 'action',
-      validComponentTypes: ['action'] as const,
+      groupingId: 'main',
+      multiSelect: true,
+      validComponentTypes: ['mission', 'force', 'node', 'action'],
     },
     {
-      type: 'mission-component' as const,
-      _id: 'resourceMetadata',
-      name: 'Resource',
+      type: 'mission-component',
+      _id: 'resources', // todo: Write migration from 'resourceMetadata' to 'resources'
+      name: 'Resources to Modify',
       required: true,
-      groupingId: 'action',
-      validComponentTypes: ['resource'] as const,
-      dependencies: [TargetDependency.TRUTHY('actionMetadata')],
+      groupingId: 'main',
+      multiSelect: true,
+      validComponentTypes: ['resource'],
+      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
     },
     {
-      type: 'number' as const,
-      _id: 'resourceCost',
-      name: 'Resource Cost',
+      type: 'number',
+      _id: 'amount', // todo: Write migration from 'resourceCost' to 'amount'
+      name: 'Modifier Amount',
       required: true,
-      groupingId: 'action',
-      dependencies: [
-        TargetDependency.TRUTHY('actionMetadata'),
-        TargetDependency.TRUTHY('resourceMetadata'),
-      ],
+      groupingId: 'main',
       default: 0,
       tooltipDescription:
         `This allows you to positively or negatively affect the resource cost for the selected action(s). A positive value increases the resource cost, while a negative value decreases the resource cost.\n` +
@@ -55,6 +45,10 @@ const ResourceCostMod = TargetSchema.create({
         `For example, if the resource cost is 100 and you set the resource cost to +10, then the resource cost will be 110.\n` +
         `\t\n` +
         `*Note: If the result is less than 0, then the resource cost will be 0.*`,
+      dependencies: [
+        TargetDependency.NOT_EMPTY('applyTo'),
+        TargetDependency.NOT_EMPTY('resources'),
+      ],
     },
   ],
   migrations,

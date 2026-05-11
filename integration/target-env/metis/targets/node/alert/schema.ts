@@ -16,7 +16,7 @@ const infoOption = {
   _id: 'info',
   name: 'Info',
   value: 'info',
-}
+} as const
 
 /**
  * A severity-level option that represents an alert
@@ -27,7 +27,7 @@ const suspiciousOption = {
   _id: 'suspicious',
   name: 'Suspicious',
   value: 'suspicious',
-}
+} as const
 /**
  * A severity-level option that represents an alert
  * that indicates a moderate level of concern. This
@@ -37,7 +37,7 @@ const warningOption = {
   _id: 'warning',
   name: 'Warning',
   value: 'warning',
-}
+} as const
 /**
  * A severity-level option that represents an alert
  * that indicates a high level of concern and requires
@@ -47,7 +47,7 @@ const dangerOption = {
   _id: 'danger',
   name: 'Danger',
   value: 'danger',
-}
+} as const
 
 /* -- TARGET -- */
 
@@ -60,38 +60,43 @@ const NodeAlert = TargetSchema.create({
   _id: 'node-alert',
   name: 'Node Alert',
   description: 'Adds an alert to a node.',
-  script: async (context, nodeMetadata, severityLevel, message) => {
-    const [node] = nodeMetadata
-    context.addNodeAlert(message, severityLevel, {
-      forceKey: node.force.localKey,
-      nodeKey: node.localKey,
-    })
+  script: async (context, applyTo, severityLevel, message) => {
+    context.addNodeAlert(applyTo, message, severityLevel)
   },
   parameters: [
     {
-      type: 'mission-component' as const,
-      _id: 'nodeMetadata',
+      // todo: Write migration from 'nodeMetadata' to 'applyTo'
+      type: 'mission-component',
+      _id: 'applyTo',
       name: 'Node',
       required: true,
       groupingId: groupingId,
-      validComponentTypes: ['node'] as const,
+      validComponentTypes: ['mission', 'force', 'node'],
+      multiSelect: true,
     },
     {
       _id: 'severityLevel',
-      type: 'dropdown' as const,
+      type: 'dropdown',
       name: 'Severity Level',
       required: true,
       groupingId: groupingId,
-      options: [infoOption, suspiciousOption, warningOption, dangerOption],
+      options: [
+        infoOption,
+        suspiciousOption,
+        warningOption,
+        dangerOption,
+      ] as const,
       default: warningOption,
+      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
     },
     {
-      type: 'large-string' as const,
+      type: 'large-string',
       _id: 'message',
       name: 'Message',
       required: true,
       groupingId: groupingId,
       default: 'Enter your message here.',
+      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
     },
   ],
 })

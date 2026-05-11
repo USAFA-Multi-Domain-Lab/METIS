@@ -1,10 +1,3 @@
-import { ResourcePool } from '@shared/missions/forces/ResourcePool'
-import { MissionAction } from '../../missions/actions/MissionAction'
-import { MissionFile } from '../../missions/files/MissionFile'
-import { MissionForce } from '../../missions/forces/MissionForce'
-import { MissionResource } from '../../missions/MissionResource'
-import { MissionNode } from '../../missions/nodes/MissionNode'
-
 export const AVAILABLE_DEPENDENCIES_RAW = [
   {
     name: 'truthy',
@@ -44,40 +37,9 @@ export const AVAILABLE_DEPENDENCIES_RAW = [
       unexpected.some((x) => x !== value),
   } as const,
   {
-    name: 'force',
-    condition: (value: any) => value && value.force instanceof MissionForce,
-  } as const,
-  {
-    name: 'pool',
-    condition: (value: any) =>
-      value &&
-      value.force instanceof MissionForce &&
-      value.pool instanceof ResourcePool,
-  } as const,
-  {
-    name: 'node',
-    condition: (value: any) =>
-      value &&
-      value.force instanceof MissionForce &&
-      value.node instanceof MissionNode,
-  } as const,
-  {
-    name: 'action',
-    condition: (value: any) =>
-      value &&
-      value.force instanceof MissionForce &&
-      value.node instanceof MissionNode &&
-      (value.action instanceof MissionAction || value.action === undefined),
-  } as const,
-  {
-    name: 'file',
-    condition: (value: any) => value && value.file instanceof MissionFile,
-  } as const,
-  {
-    name: 'resource',
-    condition: (value: any) =>
-      value && value.resource instanceof MissionResource,
-  } as const,
+    name: 'not-empty',
+    condition: (value: any) => Array.isArray(value) && value.length > 0,
+  },
 ] as const
 
 /**
@@ -211,60 +173,13 @@ export class TargetDependency implements TDependency {
   ) => TargetDependency.SELECT('not-equals-some', dependentId, unexpected)
 
   /**
-   * Checks if the argument's (*referenced by the argument's ID*) value is a force object.
+   * Checks if the value of the argument (*referenced by the argument's ID*) is an array with at least one element.
    * @param dependentId The ID of the dependent argument.
-   * @returns A new dependency that checks if the argument's value is a force object.
-   * @example TargetDependency.FORCE('dependentId')
+   * @returns A new dependency that checks if the value is an array with at least one element.
+   * @example TargetDependency.NOT_EMPTY('dependentId')
    */
-  public static FORCE = (dependentId: string) =>
-    TargetDependency.SELECT('force', dependentId)
-
-  /**
-   * Checks if the argument's (*referenced by the argument's ID*) value contains a
-   * resource pool object.
-   * @param dependentId The ID of the dependent argument.
-   * @returns A new dependency that checks if the argument's value contains
-   * a resource pool object.
-   * @example TargetDependency.POOL('dependentId')
-   */
-  public static POOL = (dependentId: string) =>
-    TargetDependency.SELECT('pool', dependentId)
-
-  /**
-   * Checks if the argument's (*referenced by the argument's ID*) value contains a force object and a node object.
-   * @param dependentId The ID of the dependent argument.
-   * @returns A new dependency that checks if the argument's value contains a force object and a node object.
-   * @example TargetDependency.NODE('dependentId')
-   */
-  public static NODE = (dependentId: string) =>
-    TargetDependency.SELECT('node', dependentId)
-
-  /**
-   * Checks if the argument's (*referenced by the argument's ID*) value contains a force object, a node object, and an action object.
-   * @param dependentId The ID of the dependent argument.
-   * @returns A new dependency that checks if the argument's value contains a force object, a node object, and an action object.
-   * @example TargetDependency.ACTION('dependentId')
-   */
-  public static ACTION = (dependentId: string) =>
-    TargetDependency.SELECT('action', dependentId)
-
-  /**
-   * Checks if the argument's (*referenced by the argument's ID*) value is a file object.
-   * @param dependentId The ID of the dependent argument.
-   * @returns A new dependency that checks if the argument's value is a file object.
-   * @example TargetDependency.FILE('dependentId')
-   */
-  public static FILE = (dependentId: string) =>
-    TargetDependency.SELECT('file', dependentId)
-
-  /**
-   * Checks if the argument's (*referenced by the argument's ID*) value is a resource object.
-   * @param dependentId The ID of the dependent argument.
-   * @returns A new dependency that checks if the argument's value is a resource object.
-   * @example TargetDependency.RESOURCE('dependentId')
-   */
-  public static RESOURCE = (dependentId: string) =>
-    TargetDependency.SELECT('resource', dependentId)
+  public static NOT_EMPTY = (dependentId: string) =>
+    TargetDependency.SELECT('not-empty', dependentId)
 
   /**
    * Encodes the dependency.

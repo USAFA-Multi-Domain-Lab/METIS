@@ -6,52 +6,34 @@ const FileAccess = TargetSchema.create({
   _id: 'file-access',
   name: 'File Access',
   description: '',
-  script: async (context, forceMetadata, fileMetadata, access) => {
-    // Extract the selected force and file from the mission-component arguments.
-    const [force] = forceMetadata
-    const [file] = fileMetadata
-
-    // Throw an error if the file or force is missing.
-    if (!file || !force) {
-      throw new Error('File or Force is missing.')
-    }
-
-    // Realize effect based on the value of "access".
-    switch (access) {
-      case 'granted':
-        context.grantFileAccess(file._id, force.localKey)
-        break
-      case 'revoked':
-        context.revokeFileAccess(file._id, force.localKey)
-        break
-      case 'no-change':
-      default:
-        break
-    }
+  script: async (context, applyTo, files, access) => {
+    if (access === 'no-change') return
+    context.updateFileAccess(applyTo, files, access === 'granted')
   },
   parameters: [
     {
-      type: 'mission-component' as const,
-      _id: 'forceMetadata',
-      name: 'Force',
+      type: 'mission-component',
+      _id: 'applyTo', // todo: Write migration from 'forceMetadata' to 'applyTo'
+      name: 'Apply To',
       required: true,
-      validComponentTypes: ['force'] as const,
+      multiSelect: true,
+      validComponentTypes: ['mission', 'force'],
     },
     {
-      type: 'mission-component' as const,
-      _id: 'fileMetadata',
+      type: 'mission-component',
+      _id: 'files', // todo: Write migration from 'fileMetadata' to 'files'
       name: 'File',
       required: true,
-      validComponentTypes: ['missionFile'] as const,
+      validComponentTypes: ['missionFile'],
     },
     {
-      type: 'dropdown' as const,
+      type: 'dropdown',
       _id: 'access',
       name: 'Access',
       required: true,
       dependencies: [
-        TargetDependency.TRUTHY('forceMetadata'),
-        TargetDependency.TRUTHY('fileMetadata'),
+        TargetDependency.NOT_EMPTY('applyTo'),
+        TargetDependency.NOT_EMPTY('files'),
       ],
       options: [
         {

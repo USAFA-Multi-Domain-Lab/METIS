@@ -123,6 +123,7 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
   public toTargetEnvContext(): TTargetEnvExposedAction {
     const self = this
     return {
+      componentType: 'action',
       _id: self._id,
       localKey: self.localKey,
       name: self.name,

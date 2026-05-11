@@ -1867,7 +1867,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       member.outputPrefix,
       message,
       { type: 'execution-initiation', sourceExecutionId: execution._id },
-      { forceKey: action.force.localKey, memberId: member._id },
+      { force: action.force, member },
     )
     // Apply the effects for the action that are triggered
     // immediately.
@@ -2038,8 +2038,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
             node.preExecutionText,
             { type: 'pre-execution', sourceNodeId: node._id },
             {
-              forceKey: node.force.localKey,
-              memberId: member._id,
+              force: node.force,
+              member,
             },
           )
 
@@ -2443,117 +2443,97 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
-   * Applies the modifier to the node, and emits the modifier-enacted event.
-   * @param node The node to apply the modifier to.
+   * Applies the modifier to the action, and emits the modifier-enacted event.
+   * @param action The action to apply the modifier to.
    * @param modifier The modifier to apply.
    * @param emitData The data to emit with the modifier-enacted event.
-   * @param action The action to confirm and target, if provided.
    */
   private modifyAction = (
-    node: ServerMissionNode,
+    action: ServerMissionAction,
     modifier: TActionModifier,
     emitData: TServerEvents['modifier-enacted']['data'],
-    action?: ServerMissionAction,
   ): void => {
-    this.confirmComponentInMission(node)
+    this.confirmComponentInMission(action)
     if (action) this.confirmComponentInMission(action)
-    node.applyModifier(modifier, action?._id)
-    this.emitModifierEnacted(node.force, emitData)
+    action.applyModifier(modifier)
+    this.emitModifierEnacted(action.force, emitData)
   }
 
   /**
-   * Modifies the success chance of a specific action within a node or
-   * all actions within a node.
+   * Modifies the success chance of a specific action.
    * @param data The data for the modification.
    * @param data.operand The operand to modify the success chance by.
-   * @param data.node The node containing the action to modify.
    * @param data.action The action to modify.
-   * @note If the action is not provided, the success chance of all actions
-   * within the node will be modified.
    */
   public modifySuccessChance = (data: {
     operand: number
-    node: ServerMissionNode
-    action?: ServerMissionAction
+    action: ServerMissionAction
   }) => {
-    const { operand, node, action } = data
+    const { operand, action } = data
     const appliedAt = Date.now()
     this.modifyAction(
-      node,
+      action,
       { type: 'success-chance', amount: operand, appliedAt, resourceId: null },
       {
         key: 'node-action-success-chance',
         successChanceOperand: operand,
         appliedAt,
-        nodeId: node._id,
-        actionId: action?._id,
+        nodeId: action.node._id,
+        actionId: action._id,
       },
-      action,
     )
   }
 
   /**
-   * Modifies the processing time of a specific action within a node or
-   * all actions within a node.
+   * Modifies the processing time of a specific action.
    * @param data The data for the modification.
    * @param data.operand The operand to modify the processing time by.
-   * @param data.node The node containing the action to modify.
    * @param data.action The action to modify.
-   * @note If the action is not provided, the processing time of all actions
-   * within the node will be modified.
    */
   public modifyProcessTime = (data: {
     operand: number
-    node: ServerMissionNode
-    action?: ServerMissionAction
+    action: ServerMissionAction
   }) => {
-    const { operand, node, action } = data
+    const { operand, action } = data
     const appliedAt = Date.now()
     this.modifyAction(
-      node,
+      action,
       { type: 'process-time', amount: operand, appliedAt, resourceId: null },
       {
         key: 'node-action-process-time',
         processTimeOperand: operand,
         appliedAt,
-        nodeId: node._id,
+        nodeId: action.node._id,
         actionId: action?._id,
       },
-      action,
     )
   }
 
   /**
-   * Modifies the resource cost of a specific action within a node or
-   * all actions within a node.
+   * Modifies the resource cost of a specific action.
    * @param data The data for the modification.
    * @param data.resourceId The ID of the resource whose cost to modify.
    * @param data.operand The operand to modify the resource cost by.
-   * @param data.node The node containing the action to modify.
    * @param data.action The action to modify.
-   * @note If the action is not provided, the resource cost of all actions
-   * within the node will be modified.
    */
   public modifyResourceCost = (data: {
     resourceId: string
     operand: number
-    node: ServerMissionNode
-    action?: ServerMissionAction
+    action: ServerMissionAction
   }) => {
-    const { resourceId, operand, node, action } = data
+    const { resourceId, operand, action } = data
     const appliedAt = Date.now()
     this.modifyAction(
-      node,
+      action,
       { type: 'resource-cost', amount: operand, appliedAt, resourceId },
       {
         key: 'node-action-resource-cost',
         resourceId,
         resourceCostOperand: operand,
         appliedAt,
-        nodeId: node._id,
-        actionId: action?._id,
+        nodeId: action.node._id,
+        actionId: action._id,
       },
-      action,
     )
   }
 
@@ -2632,37 +2612,17 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Extract data.
     const { type } = context
     let forceRecipients: ServerMissionForce[] = []
-    let member: ServerSessionMember | undefined = undefined
-
-    // Find the member with the member ID,
-    // if provided.
-    if (to?.memberId) {
-      member = this.getMember(to.memberId)
-      // If the member is not found, then throw an error.
-      if (!member) {
-        throw new Error(
-          `Could not send output with key "${type}" to the member with ID "${to.memberId}" because the member was not found in the session.`,
-        )
-      }
-    }
+    let member: ServerSessionMember | undefined = to?.member
 
     // Mark all forces as recipients if
     // no recipient is specified.
     if (!to) {
       forceRecipients = this.mission.forces
     }
-    // Mark only specified force as recipient,
+    // Mark only the specified force as recipient,
     // otherwise.
     else {
-      // Send to a specific force.
-      let force = this.mission.getForceByLocalKey(to.forceKey)
-      // If the force is undefined, throw an error.
-      if (!force) {
-        throw new Error(
-          `Could not send output of type "${type}" to the force with ID "${to.forceKey}" because the force was not found.`,
-        )
-      }
-      forceRecipients = [force]
+      forceRecipients = [to.force]
     }
 
     // Loop through any forceRecipients and send the
@@ -2674,7 +2634,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         prefix,
         message,
         context,
-        to?.memberId,
+        to?.member?._id,
       )
 
       // Store the output in the force.
@@ -2812,11 +2772,11 @@ export type TSessionServerBasicJsonOptions = {
  */
 export type TOutputTo = {
   /**
-   * The key of the force to which the output is sent.
+   * The force to which the output is sent.
    */
-  forceKey: string
+  force: ServerMissionForce
   /**
-   * The session member ID of the member to whom the output is sent.
+   * The session member to whom the output is sent.
    */
-  memberId?: string
+  member?: ServerSessionMember
 }

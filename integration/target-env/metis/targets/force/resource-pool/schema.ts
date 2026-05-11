@@ -1,4 +1,3 @@
-import { NumberToolbox } from '@metis/toolbox/numbers/NumberToolbox'
 import { migrations } from './migrations'
 
 /**
@@ -9,46 +8,32 @@ const ResourcePool = TargetSchema.create({
   _id: 'resource-pool',
   name: 'Resource Pool',
   description: "Modify a force's resource pool",
-  script: async (context, poolMetadata, operation, amount) => {
-    // Extract the selected resource pool from the mission-component argument.
-    const [pool] = poolMetadata
-
-    // Set the error message.
-    const errorMessage =
-      `Bad request. The arguments sent with the effect are invalid. Please check the arguments within the effect.\n` +
-      `Effect ID: "${context.effect._id}"\n` +
-      `Effect Name: "${context.effect.name}"`
-
-    if (!NumberToolbox.isNonNegative(amount)) {
-      throw new Error(
-        `${errorMessage}\n` + `Amount must be a non-negative number.`,
-      )
-    }
-
-    // Execute the operation on the resource pool.
+  script: async (context, applyTo, operation, amount) => {
     switch (operation) {
       case 'award':
-        context.modifyResourcePool(amount, {
-          forceKey: pool.force.localKey,
-          poolKey: pool.localKey,
-        })
+        context.modifyResourcePool(applyTo, amount)
         break
       default:
         throw new Error(
-          `${errorMessage}\n` + `Unknown operation: "${operation}"`,
+          `Bad request. The arguments sent with the effect are invalid. Please check the arguments within the effect.\n` +
+            `Effect ID: "${context.effect._id}"\n` +
+            `Effect Name: "${context.effect.name}"\n` +
+            `Unknown operation: "${operation}"`,
         )
     }
   },
   parameters: [
     {
-      type: 'mission-component' as const,
-      _id: 'poolMetadata',
+      // todo: Write migration from 'poolMetadata' to 'applyTo'
+      type: 'mission-component',
+      _id: 'applyTo',
       name: 'Resource Pool',
       required: true,
-      validComponentTypes: ['resourcePool'] as const,
+      validComponentTypes: ['mission', 'force', 'resourcePool'],
+      multiSelect: true,
     },
     {
-      type: 'dropdown' as const,
+      type: 'dropdown',
       _id: 'operation',
       name: 'Operation',
       required: true,
@@ -60,10 +45,10 @@ const ResourcePool = TargetSchema.create({
           value: 'award',
         },
       ],
-      dependencies: [TargetDependency.TRUTHY('poolMetadata')],
+      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
     },
     {
-      type: 'number' as const,
+      type: 'number',
       _id: 'amount',
       name: 'Amount',
       required: true,
