@@ -15,6 +15,7 @@ const FileAccess = TargetSchema.create({
       type: 'mission-component',
       _id: 'applyTo', // todo: Write migration from 'forceMetadata' to 'applyTo'
       name: 'Apply To',
+      groupingId: 'main',
       required: true,
       multiSelect: true,
       validComponentTypes: ['mission', 'force'],
@@ -23,13 +24,16 @@ const FileAccess = TargetSchema.create({
       type: 'mission-component',
       _id: 'files', // todo: Write migration from 'fileMetadata' to 'files'
       name: 'File',
+      groupingId: 'main',
       required: true,
       validComponentTypes: ['missionFile'],
+      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
     },
     {
       type: 'dropdown',
       _id: 'access',
       name: 'Access',
+      groupingId: 'main',
       required: true,
       dependencies: [
         TargetDependency.NOT_EMPTY('applyTo'),

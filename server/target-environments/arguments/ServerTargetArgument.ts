@@ -8,6 +8,7 @@ import {
   type TTargetArgumentJson,
 } from '@shared/target-environments/arguments/TargetArgument'
 import type { TTargetParameterType } from '@shared/target-environments/parameters/TargetParameter'
+import { ObjectToolbox } from '@shared/toolbox/objects/ObjectToolbox'
 import type {
   TTargetEnvExposedAction,
   TTargetEnvExposedFile,
@@ -41,14 +42,18 @@ export class ServerTargetArgument extends TargetArgument<TMetisServerComponents>
     }
 
     if (json.type === 'mission-component') {
-      context = {
-        type: 'mission-component',
-        value:
-          ServerTargetArgument.extractAndDeserializeComponents<TMetisServerComponents>(
-            effect.mission,
-            json.value,
-          ),
-      }
+      context = ObjectToolbox.lazy(
+        {
+          value: () =>
+            ServerTargetArgument.extractAndDeserializeComponents<TMetisServerComponents>(
+              effect.mission,
+              json.value,
+            ),
+        },
+        {
+          type: 'mission-component',
+        },
+      )
     } else {
       context = {
         type: json.type,

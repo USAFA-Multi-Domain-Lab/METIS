@@ -6,6 +6,7 @@ import {
   type TTargetArgumentJson,
 } from '@shared/target-environments/arguments/TargetArgument'
 import type { TTargetParameter } from '@shared/target-environments/parameters/TargetParameter'
+import { ObjectToolbox } from '@shared/toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 
 /**
@@ -31,13 +32,18 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
     }
 
     if (json.type === 'mission-component') {
-      context = {
-        type: 'mission-component',
-        value: ClientTargetArgument.extractAndDeserializeComponents(
-          effect.mission,
-          json.value,
-        ),
-      }
+      context = ObjectToolbox.lazy(
+        {
+          value: () =>
+            ClientTargetArgument.extractAndDeserializeComponents<TMetisClientComponents>(
+              effect.mission,
+              json.value,
+            ),
+        },
+        {
+          type: 'mission-component',
+        },
+      )
     } else {
       context = {
         type: json.type,

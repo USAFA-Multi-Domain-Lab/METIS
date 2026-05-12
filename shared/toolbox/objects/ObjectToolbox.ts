@@ -38,6 +38,51 @@ export class ObjectToolbox {
 
     return max + 1
   }
+
+  /**
+   * Creates an object where each key from `initializers` is lazy-initialized:
+   * the callback is called at most once, on the first read of that key.
+   * If a key is written before it is read, the initializer is never called.
+   * Keys from `statics` are merged in as plain values.
+   * @param initializers A map of keys to initializer callbacks.
+   * @param statics An optional map of keys to static values.
+   * @returns A combined object with lazy and static properties.
+   */
+  public static lazy<
+    TInits extends Record<string, () => any>,
+    TStatics extends Record<string, any> = Record<never, never>,
+  >(
+    initializers: TInits,
+    statics?: TStatics,
+  ): { [K in keyof TInits]: ReturnType<TInits[K]> } & TStatics {
+    const result: any = {}
+
+    for (const key in initializers) {
+      let _value: any
+      let _set = false
+      const init = initializers[key]
+
+      Object.defineProperty(result, key, {
+        get() {
+          if (!_set) {
+            _value = init()
+            _set = true
+          }
+          return _value
+        },
+        set(v: any) {
+          _value = v
+          _set = true
+        },
+        enumerable: true,
+        configurable: true,
+      })
+    }
+
+    if (statics) Object.assign(result, statics)
+
+    return result
+  }
 }
 
 /* -- TYPES -- */

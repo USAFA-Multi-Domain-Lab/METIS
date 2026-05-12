@@ -49,6 +49,11 @@ export abstract class TargetArgument<
     return this.effect._id
   }
 
+  /**
+   * The context of this argument, which includes the type of the parameter
+   * it satisfies and the value assigned to that parameter. The type of
+   * `value` is determined by the `type` field.
+   */
   public readonly context: Readonly<TTargetArgumentContext<T>>
 
   /**
@@ -222,22 +227,22 @@ export abstract class TargetArgument<
         if (type === 'mission') {
           return ArrayToolbox.normalize(mission)
         } else if (type === 'force') {
-          const force = mission.getForceById(ids[0])
+          let force = mission.getForceById(ids[0])
           return ArrayToolbox.normalize(force)
         } else if (type === 'node') {
-          const node = mission.getNodeById(ids[1], { forceId: ids[0] })
+          let node = mission.getNodeById(ids[1], { forceId: ids[0] })
           return ArrayToolbox.normalize(node)
         } else if (type === 'action') {
-          const action = mission.getActionById(ids[2], {
+          let action = mission.getActionById(ids[2], {
             forceId: ids[0],
             nodeId: ids[1],
           })
           return ArrayToolbox.normalize(action)
         } else if (type === 'missionFile') {
-          const file = mission.getFileById(ids[0])
+          let file = mission.getFileById(ids[0])
           return ArrayToolbox.normalize(file)
         } else if (type === 'resource') {
-          const resource = mission.getResourceById(ids[0])
+          let resource = mission.getResourceById(ids[0])
           return ArrayToolbox.normalize(resource)
         } else if (type === 'resourcePool') {
           return ArrayToolbox.normalize(
