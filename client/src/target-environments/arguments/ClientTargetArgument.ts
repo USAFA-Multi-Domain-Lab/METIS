@@ -6,7 +6,6 @@ import {
   type TTargetArgumentJson,
 } from '@shared/target-environments/arguments/TargetArgument'
 import type { TTargetParameter } from '@shared/target-environments/parameters/TargetParameter'
-import { ObjectToolbox } from '@shared/toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 
 /**
@@ -17,8 +16,6 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
    * Creates a {@link ClientTargetArgument} from JSON.
    * @param json The JSON to create the argument from.
    * @param effect The effect to which the argument belongs.
-   * @param target The target whose parameter list is used to resolve
-   * the parameter reference in the JSON.
    * @returns The new {@link ClientTargetArgument}.
    * @throws If the parameter with the given ID cannot be found in the target.
    */
@@ -26,31 +23,18 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
     json: TTargetArgumentJson,
     effect: ClientEffect,
   ): ClientTargetArgument {
-    let context: TTargetArgumentContext<TMetisClientComponents> = {
-      type: 'unknown',
-      value: null,
+    let parameter = effect.target?.getParameterById(json.parameterId)
+
+    // Default to parameter type if type is unknown in
+    // the argument.
+    if (json.type === 'unknown' && parameter) {
+      json = { ...json, type: parameter.type as any }
     }
 
-    if (json.type === 'mission-component') {
-      context = ObjectToolbox.lazy(
-        {
-          value: () =>
-            ClientTargetArgument.extractAndDeserializeComponents<TMetisClientComponents>(
-              effect.mission,
-              json.value,
-            ),
-        },
-        {
-          type: 'mission-component',
-        },
-      )
-    } else {
-      context = {
-        type: json.type,
-        value: json.value,
-      } as TTargetArgumentContext<TMetisClientComponents>
-    }
-
+    let context = ClientTargetArgument.buildContext<TMetisClientComponents>(
+      json,
+      effect.mission,
+    )
     return new ClientTargetArgument(effect, json._id, json.parameterId, context)
   }
 
@@ -73,31 +57,49 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
         context = {
           type: 'number',
           value: parameter.required ? parameter.default : null,
+          lastSavedValue: null,
+          valueIsMalformed: false,
         }
         break
       case 'string':
         context = {
           type: 'string',
           value: parameter.required ? parameter.default : '',
+          lastSavedValue: null,
+          valueIsMalformed: false,
         }
         break
       case 'large-string':
         context = {
           type: 'large-string',
           value: parameter.required ? parameter.default : '',
+          lastSavedValue: null,
+          valueIsMalformed: false,
         }
         break
       case 'boolean':
-        context = { type: 'boolean', value: parameter.default ?? false }
+        context = {
+          type: 'boolean',
+          value: parameter.default ?? false,
+          lastSavedValue: null,
+          valueIsMalformed: false,
+        }
         break
       case 'dropdown':
         context = {
           type: 'dropdown',
           value: parameter.required ? parameter.default : null,
+          lastSavedValue: null,
+          valueIsMalformed: false,
         }
         break
       case 'mission-component':
-        context = { type: 'mission-component', value: [] }
+        context = {
+          type: 'mission-component',
+          value: [],
+          lastSavedValue: null,
+          valueIsMalformed: false,
+        }
         break
     }
 

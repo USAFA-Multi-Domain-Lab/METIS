@@ -7,9 +7,13 @@ import { MissionResource } from '@shared/missions/MissionResource'
 import { MissionNode } from '@shared/missions/nodes/MissionNode'
 import type { TMissionComponentSerializedSelection } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter2'
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
-import type { TSatisfies } from '@shared/toolbox/objects/ObjectToolbox'
+import {
+  ObjectToolbox,
+  type TSatisfies,
+} from '@shared/toolbox/objects/ObjectToolbox'
 import { type TJsonSerializable } from '@shared/toolbox/serialization/json'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import zod from 'zod'
 import { Mission, type TMission } from '../../missions/Mission'
 import {
   MissionComponent,
@@ -110,6 +114,22 @@ export abstract class TargetArgument<
     return this.context.value
   }
 
+  /**
+   * The last value for this argument that was saved
+   * to the database.
+   */
+  public get lastSavedValue(): any {
+    return this.context.lastSavedValue
+  }
+
+  /**
+   * Whether the argument's current value is malformed — i.e. does not match
+   * the shape expected for its declared type.
+   */
+  public get valueIsMalformed(): boolean {
+    return this.context.valueIsMalformed
+  }
+
   // Implemented
   public get json(): TTargetArgumentJson {
     return this.serialize()
@@ -189,6 +209,92 @@ export abstract class TargetArgument<
   //       })
   //     }
   //   }
+
+  /**
+   * Returns true if the JSON value does not match the shape required by its
+   * declared type. A malformed argument can arise when an `'unknown'` value
+   * is promoted to a concrete type on load but the stored value does not
+   * satisfy that type's constraints (e.g. a raw string stored under a
+   * `'mission-component'` argument after migration).
+   *
+   * `'unknown'` and `'dropdown'` arguments are never considered malformed —
+   * `'unknown'` is a migration placeholder, and `'dropdown'` accepts any
+   * primitive or object so there is no shape to validate.
+   */
+  public static hasMalformedValue(json: TTargetArgumentJson): boolean {
+    switch (json.type) {
+      case 'number':
+        return json.value !== null && typeof json.value !== 'number'
+      case 'string':
+      case 'large-string':
+        return typeof json.value !== 'string'
+      case 'boolean':
+        return typeof json.value !== 'boolean'
+      case 'mission-component': {
+        const schema = zod.array(
+          zod
+            .object({
+              componentType: zod.string(),
+              lastKnownName: zod.string(),
+              ids: zod.array(zod.string()),
+            })
+            .strict(),
+        )
+        return !schema.safeParse(json.value).success
+      }
+      case 'dropdown':
+      case 'unknown':
+        return false
+      default:
+        return true
+    }
+  }
+
+  /**
+   * Builds the {@link TTargetArgumentContext} for a given JSON argument and
+   * mission. Extracted so that subclass factory methods can share the same
+   * context-construction logic without duplicating the malformed-value check
+   * or the lazy mission-component branch.
+   * @param json The serialized argument data from which to build the context.
+   * @param mission The mission used to resolve mission-component references.
+   * @returns The constructed context.
+   */
+  protected static buildContext<T extends TMetisBaseComponents>(
+    json: TTargetArgumentJson,
+    mission: T['mission'],
+  ): TTargetArgumentContext<T> {
+    let valueIsMalformed = TargetArgument.hasMalformedValue(json)
+    let lastSavedValue = json.value
+
+    if (json.type === 'mission-component') {
+      return ObjectToolbox.lazy(
+        {
+          value: () => {
+            if (valueIsMalformed) {
+              return []
+            } else {
+              return TargetArgument.extractAndDeserializeComponents<T>(
+                mission,
+                json.value,
+              )
+            }
+          },
+        },
+        {
+          type: 'mission-component',
+          lastSavedValue,
+          valueIsMalformed,
+        },
+      )
+    } else {
+      return {
+        type: json.type,
+        value: json.value,
+        lastSavedValue,
+        valueIsMalformed,
+      } as TTargetArgumentContext<T>
+    }
+  }
 
   /**
    * The default properties for a {@link TargetArgument} object.
@@ -403,5 +509,7 @@ export type TTargetArgumentContext<T extends TMetisBaseComponents> = {
   [K in TTargetParameterType]: {
     type: K
     value: TSelectArgumentValue<T>[K]
+    lastSavedValue: any
+    valueIsMalformed: boolean
   }
 }[TTargetParameterType]

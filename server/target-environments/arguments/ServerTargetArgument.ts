@@ -1,14 +1,10 @@
 import type { ServerEffect } from '@server/missions/effects/ServerEffect'
-import type {
-  TSelectArgumentSerializedValue,
-  TTargetArgumentContext,
-} from '@shared/target-environments/arguments/TargetArgument'
+import type { TSelectArgumentSerializedValue } from '@shared/target-environments/arguments/TargetArgument'
 import {
   TargetArgument,
   type TTargetArgumentJson,
 } from '@shared/target-environments/arguments/TargetArgument'
 import type { TTargetParameterType } from '@shared/target-environments/parameters/TargetParameter'
-import { ObjectToolbox } from '@shared/toolbox/objects/ObjectToolbox'
 import type {
   TTargetEnvExposedAction,
   TTargetEnvExposedFile,
@@ -27,8 +23,6 @@ export class ServerTargetArgument extends TargetArgument<TMetisServerComponents>
    * Creates a {@link ServerTargetArgument} from JSON.
    * @param json The JSON to create the argument from.
    * @param effect The effect to which the argument belongs.
-   * @param target The target whose parameter list is used to resolve
-   * the parameter reference in the JSON.
    * @returns The new {@link ServerTargetArgument}.
    * @throws If the parameter with the given ID cannot be found in the target.
    */
@@ -36,31 +30,16 @@ export class ServerTargetArgument extends TargetArgument<TMetisServerComponents>
     json: TTargetArgumentJson,
     effect: ServerEffect,
   ): ServerTargetArgument {
-    let context: TTargetArgumentContext<TMetisServerComponents> = {
-      type: 'unknown',
-      value: null,
+    let parameter = effect.target?.getParameterById(json.parameterId)
+
+    if (json.type === 'unknown' && parameter) {
+      json = { ...json, type: parameter.type as any }
     }
 
-    if (json.type === 'mission-component') {
-      context = ObjectToolbox.lazy(
-        {
-          value: () =>
-            ServerTargetArgument.extractAndDeserializeComponents<TMetisServerComponents>(
-              effect.mission,
-              json.value,
-            ),
-        },
-        {
-          type: 'mission-component',
-        },
-      )
-    } else {
-      context = {
-        type: json.type,
-        value: json.value,
-      } as TTargetArgumentContext<TMetisServerComponents>
-    }
-
+    let context = ServerTargetArgument.buildContext<TMetisServerComponents>(
+      json,
+      effect.mission,
+    )
     return new ServerTargetArgument(effect, json._id, json.parameterId, context)
   }
 
