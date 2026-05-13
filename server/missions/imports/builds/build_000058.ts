@@ -6,20 +6,51 @@ import type { TMissionImportBuild } from '../ImportMigrationBuilder'
 // from a plain record { [parameterId]: value } to a typed array
 // [{ _id, parameterId, type, value }].
 //
-// Type is inferred from the stored value's JS type:
-//   number              → 'number'
-//   boolean             → 'boolean'
-//   Array or object     → 'mission-component' (consolidates the old force/node/action/
-//                         file/resource/pool metadata types; value shape is preserved
-//                         as-is and will surface as a mission issue for manual correction)
-//   string or other     → 'unknown' (string, large-string, and string-option dropdown
-//                         are indistinguishable; the editor will promote to the real
-//                         type on the next save once the target environment is available)
+// Type detection:
+//   mission-component   → value is a non-null, non-array object whose keys are all
+//                         drawn from one of the 6 known metadata key sets (TForceMetadata,
+//                         TNodeMetadata, TActionMetadata, TPoolMetadata, TResourceMetadata,
+//                         TFileMetadata) and whose every value is a string
+//   everything else     → 'unknown' (numbers, booleans, strings, and plain objects are all
+//                         valid dropdown option values and are indistinguishable; the editor
+//                         will promote to the real type on the next save once the target
+//                         environment is available)
 
+// The known key sets for the 6 old mission-component metadata types.
+const METADATA_KEY_SETS: Set<string>[] = [
+  new Set(['forceKey', 'forceName']),
+  new Set(['forceKey', 'forceName', 'nodeKey', 'nodeName']),
+  new Set([
+    'forceKey',
+    'forceName',
+    'nodeKey',
+    'nodeName',
+    'actionKey',
+    'actionName',
+  ]),
+  new Set(['forceKey', 'forceName', 'poolKey', 'poolName']),
+  new Set(['resourceId', 'resourceName']),
+  new Set(['fileId', 'fileName']),
+]
+
+// Returns true if value matches one of the 6 old mission-component
+// metadata shapes: non-null non-array object, at least one key, every
+// value a string, and every key present in a single known key set.
+const isMissionComponentMetadata = (value: unknown): boolean => {
+  if (value === null || typeof value !== 'object' || Array.isArray(value))
+    return false
+  const keys = Object.keys(value as object)
+  if (keys.length === 0) return false
+  const record = value as Record<string, unknown>
+  if (!keys.every((key) => typeof record[key] === 'string')) return false
+  return METADATA_KEY_SETS.some((keySet) =>
+    keys.every((key) => keySet.has(key)),
+  )
+}
+
+// Determines the argument type based on the format of the value.
 const inferArgumentType = (value: unknown): string => {
-  if (typeof value === 'number') return 'number'
-  if (typeof value === 'boolean') return 'boolean'
-  if (value !== null && typeof value === 'object') return 'mission-component'
+  if (isMissionComponentMetadata(value)) return 'mission-component'
   return 'unknown'
 }
 
@@ -29,13 +60,18 @@ const inferArgumentType = (value: unknown): string => {
 const buildMissionComponentValue = (
   missionData: any,
   object: Record<string, unknown>,
+  sourceForce: any = null,
+  sourceNode: any = null,
+  sourceAction: any = null,
 ): object[] => {
   let force = null
   let pool = null
   let node = null
   let action = null
 
-  if (object.forceKey) {
+  if (object.forceKey === 'self') {
+    force = sourceForce
+  } else if (object.forceKey) {
     force =
       missionData.forces.find(
         (force: any) => force.localKey === object.forceKey,
@@ -47,11 +83,15 @@ const buildMissionComponentValue = (
         (pool: any) => pool.localKey === object.poolKey,
       ) ?? null
   }
-  if (force && object.nodeKey) {
+  if (force && object.nodeKey === 'self') {
+    node = sourceNode
+  } else if (force && object.nodeKey) {
     node =
       force.nodes.find((node: any) => node.localKey === object.nodeKey) ?? null
   }
-  if (force && node && object.actionKey) {
+  if (force && node && object.actionKey === 'self') {
+    action = sourceAction
+  } else if (force && node && object.actionKey) {
     action =
       node.actions.find(
         (action: any) => action.localKey === object.actionKey,
@@ -110,17 +150,29 @@ const migrateArgumentValue = (
   missionData: any,
   type: string,
   value: unknown,
+  sourceForce: any = null,
+  sourceNode: any = null,
+  sourceAction: any = null,
 ): unknown => {
   if (type === 'mission-component') {
     return buildMissionComponentValue(
       missionData,
       value as Record<string, unknown>,
+      sourceForce,
+      sourceNode,
+      sourceAction,
     )
   }
   return value
 }
 
-const migrateEffect = (missionData: any, effect: any) => {
+const migrateEffect = (
+  missionData: any,
+  effect: any,
+  sourceForce: any = null,
+  sourceNode: any = null,
+  sourceAction: any = null,
+) => {
   const record: Record<string, unknown> = effect.args
   effect.arguments = Object.entries(record).map(([parameterId, value]) => {
     const type = inferArgumentType(value)
@@ -128,7 +180,14 @@ const migrateEffect = (missionData: any, effect: any) => {
       _id: StringToolbox.generateRandomId(),
       parameterId,
       type,
-      value: migrateArgumentValue(missionData, type, value),
+      value: migrateArgumentValue(
+        missionData,
+        type,
+        value,
+        sourceForce,
+        sourceNode,
+        sourceAction,
+      ),
     }
   })
   delete effect.args
@@ -143,7 +202,7 @@ const build: TMissionImportBuild = async (missionData) => {
     for (const node of force.nodes) {
       for (const action of node.actions) {
         for (const effect of action.effects) {
-          migrateEffect(missionData, effect)
+          migrateEffect(missionData, effect, force, node, action)
         }
       }
     }

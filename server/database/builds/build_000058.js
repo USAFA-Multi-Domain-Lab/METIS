@@ -4,26 +4,54 @@
 // converts the value from a plain record { [parameterId]: value } to a
 // typed array [{ _id, parameterId, type, value }].
 //
-// Type is inferred from the stored value's JS type:
-//   number              → 'number'
-//   boolean             → 'boolean'
-//   Array or object     → 'mission-component' (consolidates the old force/node/action/
-//                         file/resource/pool metadata types; value shape is preserved
-//                         as-is and will surface as a mission issue for manual correction)
-//   string or other     → 'unknown' (string, large-string, and string-option dropdown
-//                         are indistinguishable; the editor will promote to the real
-//                         type on the next save once the target environment is available)
+// Type detection:
+//   mission-component   → value is a non-null, non-array object whose keys are all
+//                         drawn from one of the 6 known metadata key sets (TForceMetadata,
+//                         TNodeMetadata, TActionMetadata, TPoolMetadata, TResourceMetadata,
+//                         TFileMetadata) and whose every value is a string
+//   everything else     → 'unknown' (numbers, booleans, strings, and plain objects are all
+//                         valid dropdown option values and are indistinguishable; the editor
+//                         will promote to the real type on the next save once the target
+//                         environment is available)
 //
 // Applies to session-triggered root effects and all execution-triggered
 // action effects.
 
-// Determines the argument type based on
-// the format of the value.
+// The known key sets for the 6 old mission-component metadata types.
+const METADATA_KEY_SETS = [
+  new Set(['forceKey', 'forceName']),
+  new Set(['forceKey', 'forceName', 'nodeKey', 'nodeName']),
+  new Set([
+    'forceKey',
+    'forceName',
+    'nodeKey',
+    'nodeName',
+    'actionKey',
+    'actionName',
+  ]),
+  new Set(['forceKey', 'forceName', 'poolKey', 'poolName']),
+  new Set(['resourceId', 'resourceName']),
+  new Set(['fileId', 'fileName']),
+]
+
+// Returns true if value matches one of the 6 old mission-component
+// metadata shapes: non-null non-array object, at least one key, every
+// value a string, and every key present in a single known key set.
+function isMissionComponentMetadata(value) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value))
+    return false
+  const keys = Object.keys(value)
+  if (keys.length === 0) return false
+  if (!keys.every((key) => typeof value[key] === 'string')) return false
+  return METADATA_KEY_SETS.some((keySet) =>
+    keys.every((key) => keySet.has(key)),
+  )
+}
+
+// Determines the argument type based on the format of the value.
 function inferArgumentType(value) {
-  if (typeof value === 'number') return 'number'
-  if (typeof value === 'boolean') return 'boolean'
-  if (value !== null && typeof value === 'object') return 'mission-component'
-  return 'unknown'
+  if (isMissionComponentMetadata(value)) return 'mission-component'
+  else return 'unknown'
 }
 
 // Converts an old-style mission component metadata object into the new
