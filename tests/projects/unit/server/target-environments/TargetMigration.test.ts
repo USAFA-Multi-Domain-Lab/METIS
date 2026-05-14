@@ -22,15 +22,17 @@ describe('TargetMigration', () => {
   })
 
   test('Stores the script passed to the constructor and is callable', () => {
-    let args = { hostname: 'old' }
-    let effect = buildMigratableEffect('0.1.0', args)
+    let effect = buildMigratableEffect('0.1.0', [
+      { _id: '1', parameterId: 'hostname', type: 'string', value: 'old' },
+    ])
     let script = (effect: TMigratableEffect) => {
-      effect.args.hostname = 'new'
+      const arg = effect.arguments.find((a) => a.parameterId === 'hostname')
+      if (arg && arg.type === 'string') arg.value = 'new'
     }
 
     let migration = new TargetMigration('1.0.0', script)
     migration.script(effect)
 
-    expect(args.hostname).toBe('new')
+    expect(effect.arguments[0].value).toBe('new')
   })
 })

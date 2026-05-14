@@ -13,6 +13,7 @@ import {
 } from '@shared/toolbox/objects/ObjectToolbox'
 import { type TJsonSerializable } from '@shared/toolbox/serialization/json'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import type { TZodify } from '@shared/toolbox/zod'
 import zod from 'zod'
 import { Mission, type TMission } from '../../missions/Mission'
 import {
@@ -419,6 +420,28 @@ export abstract class TargetArgument<
   }
 }
 
+/**
+ * Zod schema that validates the serialized form of a single {@link TargetArgument}.
+ * Use this to verify that migration output conforms to the expected array-of-objects
+ * format before the data is written back to the database.
+ */
+export const targetArgumentJsonSchema: TZodify<
+  Omit<TAnyTargetArgumentJson, 'value'>
+> = zod.object({
+  _id: zod.string(),
+  parameterId: zod.string(),
+  type: zod.enum([
+    'number',
+    'string',
+    'large-string',
+    'boolean',
+    'dropdown',
+    'mission-component',
+    'unknown',
+  ]),
+  value: zod.any(),
+})
+
 /* -- TYPES -- */
 
 /**
@@ -500,6 +523,16 @@ export type TTargetArgumentJson = {
     value: TSelectArgumentSerializedValue[TType]
   }
 }[TTargetParameterType]
+
+/**
+ * A version of {@link TTargetArgumentJson} that allows the `value` field to
+ * hold any JSON-serializable value.
+ * @note This is particularly useful when the value may or may not
+ * conform to the expected shape for its declared type.
+ */
+export type TAnyTargetArgumentJson = Omit<TTargetArgumentJson, 'value'> & {
+  value: TSelectArgumentSerializedValue[TTargetParameterType]
+}
 
 /**
  * Discriminating union provided by {@link TargetArgument.context}

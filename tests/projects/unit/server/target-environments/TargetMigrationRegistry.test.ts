@@ -25,55 +25,65 @@ describe('TargetMigrationRegistry', () => {
       let registry = new TargetMigrationRegistry().register(
         '1.0.0',
         (effect) => {
-          effect.args.renamed = effect.args.original
-          delete effect.args.original
+          const arg = effect.arguments.find((a) => a.parameterId === 'original')
+          if (arg) arg.parameterId = 'renamed'
         },
       )
-      let args = { original: 42 }
-      let effect = buildMigratableEffect('0.9.0', args)
+      let effect = buildMigratableEffect('0.9.0', [
+        { _id: '1', parameterId: 'original', type: 'number', value: 42 },
+      ])
 
       registry.migrate(effect)
 
-      expect(effect.result.data).toEqual({ renamed: 42 })
+      expect(effect.result.data[0].parameterId).toBe('renamed')
     })
 
     test('Does not throw and leaves args unchanged for an unregistered version', () => {
       let registry = new TargetMigrationRegistry()
-      let effect = buildMigratableEffect('9.9.9', { value: 'unchanged' })
+      let effect = buildMigratableEffect('9.9.9', [
+        { _id: '1', parameterId: 'value', type: 'string', value: 'unchanged' },
+      ])
 
       registry.migrate(effect)
 
-      expect(effect.result.data).toEqual({ value: 'unchanged' })
+      expect(effect.result.data[0].value).toBe('unchanged')
     })
 
     test('Does not throw and leaves args unchanged for a later version.', () => {
       let registry = new TargetMigrationRegistry().register(
         '2.0.0',
         (effect) => {
-          effect.args.updated = true
+          const arg = effect.arguments.find((a) => a.parameterId === 'updated')
+          if (arg && arg.type === 'boolean') arg.value = true
         },
       )
-      let effect = buildMigratableEffect('3.0.0', { updated: false })
+      let effect = buildMigratableEffect('3.0.0', [
+        { _id: '1', parameterId: 'updated', type: 'boolean', value: false },
+      ])
 
       registry.migrate(effect)
 
-      expect(effect.result.data).toEqual({ updated: false })
+      expect(effect.result.data[0].value).toBe(false)
     })
 
     test('Applies migrations in sequence when called for multiple versions', () => {
       let registry = new TargetMigrationRegistry()
       registry
         .register('1.0.0', (effect) => {
-          effect.args.step = 'first'
+          const arg = effect.arguments.find((a) => a.parameterId === 'step')
+          if (arg && arg.type === 'string') arg.value = 'first'
         })
         .register('2.0.0', (effect) => {
-          effect.args.step = effect.args.step + '-second'
+          const arg = effect.arguments.find((a) => a.parameterId === 'step')
+          if (arg && arg.type === 'string') arg.value = arg.value + '-second'
         })
-      let effect = buildMigratableEffect('0.9.0', {})
+      let effect = buildMigratableEffect('0.9.0', [
+        { _id: '1', parameterId: 'step', type: 'string', value: '' },
+      ])
 
       registry.migrate(effect)
 
-      expect(effect.result.data.step).toBe('first-second')
+      expect(effect.result.data[0].value).toBe('first-second')
     })
   })
 })

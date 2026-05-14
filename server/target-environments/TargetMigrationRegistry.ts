@@ -1,4 +1,6 @@
 import { VersionToolbox } from '@shared/toolbox/strings/VersionToolbox'
+import { targetArgumentJsonSchema } from '@shared/target-environments/arguments/TargetArgument'
+import zod from 'zod'
 import type {
   TMigratableEffect,
   TTargetMigrationScript,
@@ -76,6 +78,8 @@ export class TargetMigrationRegistry {
       migration.script(effect)
       effect.versionCursor = migration.version
     }
+
+    zod.array(targetArgumentJsonSchema).parse(effect.arguments)
   }
 
   /**

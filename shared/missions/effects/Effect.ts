@@ -1,7 +1,7 @@
 import type { TTargetArgumentJson } from '@shared/target-environments/arguments/TargetArgument'
+import type { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import type { TTargetParameter } from '../../target-environments/parameters/TargetParameter'
 import type { TargetDependency } from '../../target-environments/targets/TargetDependency'
-import type { TAnyObject } from '../../toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '../../toolbox/strings/StringToolbox'
 import { VersionToolbox } from '../../toolbox/strings/VersionToolbox'
 import {
@@ -235,7 +235,7 @@ export abstract class Effect<
    * The arguments to pass to the script in the
    * target that will enact the effect.
    */
-  public arguments: T['targetArgument'][]
+  public arguments: JsonSerializableArray<T['targetArgument']>
 
   /**
    * A key for the effect, used to identify it within the action.
@@ -318,7 +318,7 @@ export abstract class Effect<
    */
   protected abstract parseArguments(
     data: TTargetArgumentJson[],
-  ): T['targetArgument'][]
+  ): JsonSerializableArray<T['targetArgument']>
 
   /**
    * Checks the effect's arguments against the target's parameters.
@@ -1035,5 +1035,5 @@ export interface TEffectMigrationResult {
   /**
    * The resulting data produced from the migration.
    */
-  data: TAnyObject
+  data: TTargetArgumentJson[]
 }

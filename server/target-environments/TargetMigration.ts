@@ -1,5 +1,6 @@
 import type { TEffectMigrationResult } from '@shared/missions/effects/Effect'
 import { Effect } from '@shared/missions/effects/Effect'
+import type { TTargetArgumentJson } from '@shared/target-environments/arguments/TargetArgument'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { VersionToolbox } from '@shared/toolbox/strings/VersionToolbox'
 import type { TTargetEnvExposedEffect } from './context/TargetEnvContext'
@@ -49,11 +50,11 @@ export type TTargetMigrationScript = (effect: TMigratableEffect) => void
  * and target are also included here to dynamically
  * modify the data based on the current mission state.
  */
-export interface TMigratableEffect extends TTargetEnvExposedEffect {
+export interface TMigratableEffect extends Omit<TTargetEnvExposedEffect, 'arguments'> {
   /**
    * Data that can be migrated by a {@link TargetMigration}.
    */
-  arguments: TAnyObject
+  arguments: TTargetArgumentJson[]
   /**
    * Tracks the current version for the effect data. This will allow
    * the migration system to perform multiple migrations in a row and

@@ -16,6 +16,7 @@ import type {
 } from '@shared/missions/effects/Effect'
 import { Effect } from '@shared/missions/effects/Effect'
 import type { TTargetArgumentJson } from '@shared/target-environments/arguments/TargetArgument'
+import { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import type { ClientMission } from '../ClientMission'
 import type { ClientMissionAction } from '../actions/ClientMissionAction'
 
@@ -46,10 +47,10 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
   // Implemented
   protected parseArguments(
     data: TTargetArgumentJson[],
-  ): ClientTargetArgument[] {
-    return data.map((argJson) => {
-      return ClientTargetArgument.fromJson(argJson, this)
-    })
+  ): JsonSerializableArray<ClientTargetArgument> {
+    return JsonSerializableArray.fromJson(data, (datum: TTargetArgumentJson) =>
+      ClientTargetArgument.fromJson(datum, this),
+    )
   }
 
   // Implemented
@@ -93,7 +94,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
       this.host.generateEffectOrder(this.trigger as never),
       this.description,
       context,
-      // todo: Duplicate method should be added argument class.
+      // todo: Duplicate method should be added to argument class.
       this.arguments.map((arg) => arg.json),
       localKey,
     )
@@ -107,9 +108,26 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
    * caution.
    */
   public initializeArguments(target: ClientTarget): void {
-    this.arguments = target.parameters.map((parameter) =>
-      ClientTargetArgument.createDefaultParameter(parameter, this),
+    this.arguments = new JsonSerializableArray(
+      ...target.parameters.map((parameter) =>
+        ClientTargetArgument.createDefaultParameter(parameter, this),
+      ),
     )
+  }
+
+  /**
+   * Migrates the effect's arguments to be compatible with the current
+   * version of the target environment. This will call the migration
+   * API endpoint and update the effect's arguments with the migrated
+   * data returned from the server.
+   * @resolves After the migration is complete and the effect's arguments have been updated.
+   * @rejects If there was an error during the migration process.
+   */
+  public async $migrateArguments(): Promise<void> {
+    let results = await ClientTargetEnvironment.$migrateTargetArguments(this)
+    // Store the migrated data in the component.
+    this.targetEnvironmentVersion = results.version
+    this.arguments = this.parseArguments(results.data)
   }
 
   /**

@@ -4,7 +4,6 @@ import ButtonSvgPanel from '@client/components/content/user-controls/buttons/pan
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useGlobalContext } from '@client/context/global'
 import { ClientEffect } from '@client/missions/effects/ClientEffect'
-import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
 import { useRequireLogin } from '@client/toolbox/hooks'
 import type { TMissionComponentIssue } from '@shared/missions/MissionComponent'
 import { ClassList } from '@shared/toolbox/html/ClassList'
@@ -68,14 +67,13 @@ export default function IssueItem({
         // Abort, if the user cancels.
         if (choice === 'Cancel') return
 
-        // Call the API to migrate the effect arguments.
+        // Pending fix is never set back to false because
+        // the issue should disappear after the migration.
+        // Also, if we set it back to false, there could be a
+        // graphical glitch.
         setPendingFix(true)
-        let results =
-          await ClientTargetEnvironment.$migrateTargetArguments(component)
-
-        // Store the migrated data in the component.
-        component.targetEnvironmentVersion = results.version
-        component.arguments = results.data
+        // Call the API to migrate the effect arguments.
+        await component.$migrateArguments()
 
         onChange(component)
         setCheckForIssues(true)

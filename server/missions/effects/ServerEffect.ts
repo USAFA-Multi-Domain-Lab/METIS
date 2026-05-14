@@ -15,6 +15,7 @@ import type {
 } from '@shared/missions/effects/Effect'
 import { Effect } from '@shared/missions/effects/Effect'
 import type { TTargetArgumentJson } from '@shared/target-environments/arguments/TargetArgument'
+import { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import type { ServerMissionAction } from '../actions/ServerMissionAction'
 import type { ServerMission } from '../ServerMission'
 
@@ -28,10 +29,10 @@ export class ServerEffect<
   // Implemented
   protected parseArguments(
     data: TTargetArgumentJson[],
-  ): ServerTargetArgument[] {
-    return data.map((argJson) => {
-      return ServerTargetArgument.fromJson(argJson, this)
-    })
+  ): JsonSerializableArray<ServerTargetArgument> {
+    return JsonSerializableArray.fromJson(data, (datum: TTargetArgumentJson) =>
+      ServerTargetArgument.fromJson(datum, this),
+    )
   }
 
   // Implemented
@@ -132,7 +133,7 @@ export class ServerEffect<
       get result() {
         return {
           version: this.versionCursor,
-          data: structuredClone(self.arguments),
+          data: structuredClone(self.arguments.json),
         }
       },
     }

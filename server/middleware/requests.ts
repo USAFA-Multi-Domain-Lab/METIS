@@ -1,6 +1,7 @@
 import { BooleanToolbox } from '@shared/toolbox/booleans/BooleanToolbox'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { VersionToolbox } from '@shared/toolbox/strings/VersionToolbox'
+import type { TZodify } from '@shared/toolbox/zod'
 import type {
   TExistingUserPreferencesJson,
   TUserPreferencesJson,
@@ -11,7 +12,6 @@ import { UserAccess } from '@shared/users/UserAccess'
 import type { NextFunction, Request, Response } from 'express-serve-static-core'
 import { isObjectIdOrHexString } from 'mongoose'
 import { z as zod } from 'zod'
-import type { TZodify } from '../connect/middleware/validate'
 
 // ------- ENUMERATIONS ------- //
 
