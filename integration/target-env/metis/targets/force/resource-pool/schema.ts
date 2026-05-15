@@ -24,7 +24,6 @@ const ResourcePool = TargetSchema.create({
   },
   parameters: [
     {
-      // todo: Write migration from 'poolMetadata' to 'applyTo'
       type: 'mission-component',
       _id: 'applyTo',
       name: 'Resource Pool',

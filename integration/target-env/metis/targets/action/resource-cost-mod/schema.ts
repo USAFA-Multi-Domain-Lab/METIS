@@ -15,7 +15,7 @@ const ResourceCostMod = TargetSchema.create({
   parameters: [
     {
       type: 'mission-component',
-      _id: 'applyTo', // todo: Write migration from 'actionMetadata' to 'applyTo'
+      _id: 'applyTo',
       name: 'Apply To',
       required: true,
       groupingId: 'main',
@@ -24,7 +24,7 @@ const ResourceCostMod = TargetSchema.create({
     },
     {
       type: 'mission-component',
-      _id: 'resources', // todo: Write migration from 'resourceMetadata' to 'resources'
+      _id: 'resources',
       name: 'Resources to Modify',
       required: true,
       groupingId: 'main',
@@ -34,7 +34,7 @@ const ResourceCostMod = TargetSchema.create({
     },
     {
       type: 'number',
-      _id: 'amount', // todo: Write migration from 'resourceCost' to 'amount'
+      _id: 'amount',
       name: 'Modifier Amount',
       required: true,
       groupingId: 'main',

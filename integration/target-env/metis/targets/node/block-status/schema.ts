@@ -1,3 +1,5 @@
+import { migrations } from './migrations'
+
 /**
  * A target available in the METIS target environment that enables a user
  * to manipulate the block status of a node.
@@ -14,7 +16,7 @@ const BlockStatus = TargetSchema.create({
   parameters: [
     {
       type: 'mission-component',
-      _id: 'applyTo', // todo: Write migration from 'nodeMetadata' to 'applyTo'
+      _id: 'applyTo',
       name: 'Apply To',
       required: true,
       groupingId: 'node',
@@ -56,6 +58,7 @@ const BlockStatus = TargetSchema.create({
       default: { _id: 'no-change', name: 'No Change', value: 'no-change' },
     },
   ],
+  migrations,
 })
 
 export default BlockStatus

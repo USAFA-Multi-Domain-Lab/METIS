@@ -1,3 +1,5 @@
+import { migrations } from './migrations'
+
 /* -- ARGUMENTS -- */
 
 /**
@@ -65,7 +67,6 @@ const NodeAlert = TargetSchema.create({
   },
   parameters: [
     {
-      // todo: Write migration from 'nodeMetadata' to 'applyTo'
       type: 'mission-component',
       _id: 'applyTo',
       name: 'Node',
@@ -99,6 +100,7 @@ const NodeAlert = TargetSchema.create({
       dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
     },
   ],
+  migrations,
 })
 
 export default NodeAlert

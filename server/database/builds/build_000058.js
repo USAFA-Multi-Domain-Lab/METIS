@@ -114,10 +114,14 @@ function buildMissionComponentValue(
     ]
   }
   if (pool) {
+    let resourceName =
+      mission.resources.find((resource) => {
+        return resource._id === pool.resourceId
+      })?.name ?? 'Unknown Resource'
     return [
       {
         componentType: 'resourcePool',
-        lastKnownName: pool.name,
+        lastKnownName: resourceName,
         ids: [force._id, pool._id],
       },
     ]

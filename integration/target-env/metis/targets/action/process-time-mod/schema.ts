@@ -1,3 +1,5 @@
+import { migrations } from './migrations'
+
 // Argument IDs for the process time modifier target.
 const hoursArgId = 'processTimeHours'
 const minutesArgId = 'processTimeMinutes'
@@ -35,7 +37,7 @@ const ProcessTimeMod = TargetSchema.create({
   parameters: [
     {
       type: 'mission-component',
-      _id: 'applyTo', // todo: Write migration from 'actionMetadata' to 'applyTo'
+      _id: 'applyTo',
       name: 'Apply To',
       required: true,
       multiSelect: true,
@@ -61,7 +63,7 @@ const ProcessTimeMod = TargetSchema.create({
       default: 0,
       integersOnly: true,
       tooltipDescription:
-        `This allows you to positively or negatively affect the process time for all actions within the node. A positive value increases the process time, while a negative value decreases the process time.\n` +
+        `This allows you to positively or negatively affect the process time for all selected actions. A positive value increases the process time, while a negative value decreases the process time.\n` +
         `\t\n` +
         `For example, if the process time is 1h and you set the process time to +1h, then the process time will be 2h.\n` +
         `\t\n` +
@@ -79,7 +81,7 @@ const ProcessTimeMod = TargetSchema.create({
       default: 0,
       integersOnly: true,
       tooltipDescription:
-        `This allows you to positively or negatively affect the process time for all actions within the node. A positive value increases the process time, while a negative value decreases the process time.\n` +
+        `This allows you to positively or negatively affect the process time for all selected actions. A positive value increases the process time, while a negative value decreases the process time.\n` +
         `\t\n` +
         `For example, if the process time is 1m and you set the process time to +10m, then the process time will be 11m.\n` +
         `\t\n` +
@@ -97,13 +99,14 @@ const ProcessTimeMod = TargetSchema.create({
       default: 0,
       integersOnly: true,
       tooltipDescription:
-        `This allows you to positively or negatively affect the process time for all actions within the node. A positive value increases the process time, while a negative value decreases the process time.\n` +
+        `This allows you to positively or negatively affect the process time for all selected actions. A positive value increases the process time, while a negative value decreases the process time.\n` +
         `\t\n` +
         `For example, if the process time is 60s and you set the process time to +10s, then the process time will be 70s.\n` +
         `\t\n` +
         `*Note: If the result is less than 0s, then the process time will be 0s. If the result is greater than 59s, then the process time will be 59s.*`,
     },
   ],
+  migrations,
 })
 
 export default ProcessTimeMod

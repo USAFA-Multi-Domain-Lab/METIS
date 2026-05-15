@@ -1,50 +1,71 @@
 import { TargetMigrationRegistry } from '@metis/schema/TargetMigrationRegistry'
-
-type TLegacyForceMetadata = { forceKey?: string; forceName?: string }
-type TLegacyPoolMetadata = {
-  forceKey?: string
-  forceName?: string
-  poolKey?: string
-  poolName?: string
-}
+import { MigrationToolbox } from '@metis/toolbox/migrations/MigrationToolbox'
+import { StringToolbox } from '@metis/toolbox/strings/StringToolbox'
 
 let migrations = new TargetMigrationRegistry()
 
 // Migrates awards to be compatible with new multi-resource
 // system added in v2.4.0 of METIS.
 migrations.register('2.4.0', (effect) => {
-  let { forceKey, forceName } = effect.arguments
-    .forceMetadata as TLegacyForceMetadata
-
   // Find force
-  let force: typeof effect.sourceForce | undefined = effect.sourceForce // Default to source force.
-  if (forceKey !== 'self') {
-    force = effect.mission.forces.find(({ localKey }) => localKey === forceKey) // Perform search if not targeting source force.
-  }
-  if (!force) {
+  let forceIndex = effect.arguments.findIndex(
+    (argument) => argument.parameterId === 'forceMetadata',
+  )
+  let forceArgument = effect.arguments[forceIndex]
+  if (
+    !forceArgument ||
+    forceArgument.type !== 'mission-component' ||
+    !forceArgument.value.length ||
+    forceArgument.value[0].componentType !== 'force' ||
+    !forceArgument.value[0].ids.length
+  ) {
     throw new Error(
-      `Migration failed. Force with key "${forceKey}" not found. A force with the key must be added to the mission before this migration can be applied.`,
+      `Migration failed. No force found in effect arguments. ` +
+        `A force must be selected in the effect arguments before this migration can be applied.`,
     )
   }
+
+  let forceSelection = forceArgument.value[0]
+  let forceId = forceSelection.ids[0]
+  let forceName = forceSelection.lastKnownName
+
+  let force = effect.mission.forces.find((f) => f._id === forceId)
+  if (!force) {
+    throw new Error(
+      `Migration failed. Force "${forceName}" not found. ` +
+        `A force with this ID must exist in the mission before this migration can be applied.`,
+    )
+  }
+
   // Find pool
-  let firstPool = force?.resourcePools.sort(
+  let firstPool = force.resourcePools.sort(
     (poolA, poolB) => poolA.resource.order - poolB.resource.order,
   )[0]
   if (!firstPool) {
     throw new Error(
-      `Migration failed. No resource pools found for force "${forceName}". A resource pool must be added to the force before this migration can be applied.`,
+      `Migration failed. No resource pools found for force "${force.name}". ` +
+        `A resource pool must be added to the force before this migration can be applied.`,
     )
   }
 
-  // Update args to include pool metadata instead
-  // of simple force metadata.
-  effect.arguments.poolMetadata = {
-    forceKey,
-    forceName,
-    poolKey: firstPool.localKey,
-    poolName: firstPool.name,
-  } satisfies TLegacyPoolMetadata
-  delete effect.arguments.forceMetadata
+  // Replace force argument with pool argument.
+  effect.arguments[forceIndex] = {
+    _id: StringToolbox.generateRandomId(),
+    parameterId: 'poolMetadata',
+    type: 'mission-component',
+    value: [
+      {
+        componentType: 'resourcePool',
+        lastKnownName: firstPool.name,
+        ids: [force._id, firstPool._id],
+      },
+    ],
+  }
+})
+
+// Migrates effects to be compatible with renamed parameter IDs in v2.5.0 of METIS.
+migrations.register('2.5.0', (effect) => {
+  MigrationToolbox.updateParameterId(effect, 'poolMetadata', 'applyTo')
 })
 
 export { migrations }

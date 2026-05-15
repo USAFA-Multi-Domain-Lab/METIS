@@ -1,9 +1,10 @@
 import { TargetMigrationRegistry } from '@metis/schema/TargetMigrationRegistry'
-import type { TResourceMetadata } from '@shared/target-environments/types'
+import { MigrationToolbox } from '@metis/toolbox/migrations/MigrationToolbox'
+import { StringToolbox } from '@metis/toolbox/strings/StringToolbox'
 
 let migrations = new TargetMigrationRegistry()
 
-// Migrates effects to be compatible with the new 'resource' arg
+// Migrates effects to be compatible with the new 'resources' arg
 // added in v2.4.0 of METIS.
 migrations.register('2.4.0', (effect) => {
   let firstResource = effect.mission.resources.sort(
@@ -16,10 +17,25 @@ migrations.register('2.4.0', (effect) => {
     )
   }
 
-  effect.arguments.resourceMetadata = {
-    resourceId: firstResource._id,
-    resourceName: firstResource.name,
-  } satisfies TResourceMetadata
+  effect.arguments.push({
+    _id: StringToolbox.generateRandomId(),
+    parameterId: 'resourceMetadata',
+    type: 'mission-component',
+    value: [
+      {
+        componentType: 'resource',
+        lastKnownName: firstResource.name,
+        ids: [firstResource._id],
+      },
+    ],
+  })
+})
+
+// Migrates effects to be compatible with renamed parameter IDs in v2.5.0 of METIS.
+migrations.register('2.5.0', (effect) => {
+  MigrationToolbox.updateParameterId(effect, 'actionMetadata', 'applyTo')
+  MigrationToolbox.updateParameterId(effect, 'resourceMetadata', 'resources')
+  MigrationToolbox.updateParameterId(effect, 'resourceCost', 'amount')
 })
 
 export { migrations }

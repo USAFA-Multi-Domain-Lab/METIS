@@ -1,3 +1,5 @@
+import { migrations } from './migrations'
+
 /**
  * A target available in the METIS target environment that enables a user
  * to manipulate the success chance of a specific action within a node or
@@ -13,7 +15,7 @@ const SuccessChanceMod = TargetSchema.create({
   parameters: [
     {
       type: 'mission-component',
-      _id: 'applyTo', // todo: Write migration from 'actionMetadata' to 'applyTo'
+      _id: 'applyTo',
       name: 'Apply To',
       required: true,
       groupingId: 'main',
@@ -22,7 +24,7 @@ const SuccessChanceMod = TargetSchema.create({
     },
     {
       type: 'number',
-      _id: 'amount', // todo: Write migration from 'successChance' to 'amount'
+      _id: 'amount',
       name: 'Modifier Amount',
       required: true,
       min: -100,
@@ -39,6 +41,7 @@ const SuccessChanceMod = TargetSchema.create({
         `*Note: If the result is less than 0%, then the chance of success will be 0%. If the result is greater than 100%, then the chance of success will be 100%.*`,
     },
   ],
+  migrations,
 })
 
 export default SuccessChanceMod

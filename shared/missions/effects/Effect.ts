@@ -153,60 +153,58 @@ export abstract class Effect<
   protected get additionalIssues(): TMissionComponentIssue[] {
     const { environment, target } = this
 
-    return []
+    // Construct issue objects for the given messages.
+    const constructIssues = (...messages: string[]): TMissionComponentIssue[] =>
+      messages.map((message) => ({ type: 'general', component: this, message }))
 
-    //     // Construct issue objects for the given messages.
-    //     const constructIssues = (...messages: string[]): TMissionComponentIssue[] =>
-    //       messages.map((message) => ({ type: 'general', component: this, message }))
-    //
-    //     // If the effect's target or target environment cannot be found, then the effect has issues.
-    //     // *** Note: An effect grabs the target environment from the target after the
-    //     // *** target is populated. So, if the target cannot be found, the target will
-    //     // *** be set null which means the target environment will be null also.
-    //     // *** Also, if a target-environment cannot be found, then obviously the target
-    //     // *** within that environment cannot be found either.
-    //     if (!environment || !target) {
-    //       return constructIssues(
-    //         `The effect, "${this.name}", has a target or a target environment that couldn't be found. ` +
-    //           `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`,
-    //       )
-    //     }
-    //
-    //     // If the effect's target environment version doesn't match
-    //     // the current version, then the effect has issues.
-    //     if (this.outdated) {
-    //       return [
-    //         {
-    //           type: 'outdated',
-    //           component: this,
-    //           message:
-    //             `The effect, "${this.name}", is incompatible with the current version of the target environment, "${environment.name}". ` +
-    //             `This effect must be updated to be made compatible. ` +
-    //             `Please click to resolve this.`,
-    //         },
-    //       ]
-    //     }
-    //
-    //     // Check the effect's arguments against the target's parameters.
-    //     let argIssues = this.checkTargetArguments(target)
-    //     if (argIssues.length) return constructIssues(...argIssues)
-    //
-    //     // Check to see if there are any missing arguments.
-    //     let missingArg = this.getFirstUnfulfilledParameter()
-    //     if (missingArg) {
-    //       return constructIssues(
-    //         `The required argument "${missingArg.name}" within the effect "${this.name}" is missing.`,
-    //       )
-    //     }
-    //
-    //     if (this.environmentId === Effect.LEGACY_INFER_ENV_ID) {
-    //       return constructIssues(
-    //         `The effect, "${this.name}" has a reference to a target, but not to a target environment.`,
-    //       )
-    //     }
-    //
-    //     // If all checks pass, then the effect does not have issues.
-    //     return []
+    // If the effect's target or target environment cannot be found, then the effect has issues.
+    // *** Note: An effect grabs the target environment from the target after the
+    // *** target is populated. So, if the target cannot be found, the target will
+    // *** be set null which means the target environment will be null also.
+    // *** Also, if a target-environment cannot be found, then obviously the target
+    // *** within that environment cannot be found either.
+    if (!environment || !target) {
+      return constructIssues(
+        `The effect, "${this.name}", has a target or a target environment that couldn't be found. ` +
+          `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`,
+      )
+    }
+
+    // If the effect's target environment version doesn't match
+    // the current version, then the effect has issues.
+    if (this.outdated) {
+      return [
+        {
+          type: 'outdated',
+          component: this,
+          message:
+            `The effect, "${this.name}", is incompatible with the current version of the target environment, "${environment.name}". ` +
+            `This effect must be updated to be made compatible. ` +
+            `Please click to resolve this.`,
+        },
+      ]
+    }
+
+    // Check the effect's arguments against the target's parameters.
+    let argIssues = this.checkTargetArguments(target)
+    if (argIssues.length) return constructIssues(...argIssues)
+
+    // Check to see if there are any missing arguments.
+    let missingArg = this.getFirstUnfulfilledParameter()
+    if (missingArg) {
+      return constructIssues(
+        `The required argument "${missingArg.name}" within the effect "${this.name}" is missing.`,
+      )
+    }
+
+    if (this.environmentId === Effect.LEGACY_INFER_ENV_ID) {
+      return constructIssues(
+        `The effect, "${this.name}" has a reference to a target, but not to a target environment.`,
+      )
+    }
+
+    // If all checks pass, then the effect does not have issues.
+    return []
   }
 
   /**
@@ -348,6 +346,11 @@ export abstract class Effect<
       }
 
       let dependenciesMet = this.allDependenciesMet(parameter.dependencies)
+
+      console.log(parameter._id)
+      if (parameter._id === 'operation') {
+        console.log('stop here')
+      }
 
       pushIfNotNull(
         this.checkDependencyAlignment(parameter, value, dependenciesMet),
@@ -542,7 +545,10 @@ export abstract class Effect<
       )
 
       // If all the dependencies are met and the argument is not in the effect's arguments...
-      if (allDependenciesMet && !(parameter._id in this.arguments)) {
+      if (
+        allDependenciesMet &&
+        this.arguments.every(({ parameterId }) => parameterId !== parameter._id)
+      ) {
         // ...and the parameter's type is a boolean or the parameter is required, then return
         // the parameter.
         // *** Note: A boolean parameter is always required because its value

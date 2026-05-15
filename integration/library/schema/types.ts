@@ -8,3 +8,4 @@ export type {
 } from '../../../server/target-environments/schema/TargetSchema'
 
 export type { TTargetParameterJson } from '../../../shared/target-environments/parameters/TargetParameter'
+export type { TMissionComponentSerializedSelection } from '../../../shared/target-environments/parameters/mission-component/MissionComponentTargetParameter2'

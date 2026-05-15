@@ -133,7 +133,7 @@ export class ServerEffect<
       get result() {
         return {
           version: this.versionCursor,
-          data: structuredClone(self.arguments.json),
+          data: structuredClone(this.arguments),
         }
       },
     }

@@ -163,7 +163,14 @@ export abstract class TargetArgument<
 
   // Implemented
   public serialize(): TTargetArgumentJson {
-    if (this.context.type === 'mission-component') {
+    if (this.valueIsMalformed) {
+      return {
+        _id: this._id,
+        parameterId: this.parameterId,
+        type: this.context.type,
+        value: this.context.lastSavedValue,
+      }
+    } else if (this.context.type === 'mission-component') {
       return {
         _id: this._id,
         parameterId: this.parameterId,

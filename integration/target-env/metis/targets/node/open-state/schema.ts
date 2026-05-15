@@ -1,3 +1,5 @@
+import { migrations } from './migrations'
+
 /**
  * The ID of the `openState` argument.
  */
@@ -10,7 +12,7 @@ const openStateArg = {
  * The ID of the `applyTo` argument.
  */
 const applyToArg = {
-  _id: 'applyTo', // todo: Write migration from 'nodeMetadata' to 'applyTo'
+  _id: 'applyTo',
   name: 'Apply To',
 } as const
 
@@ -94,6 +96,7 @@ const NodeOpenState = TargetSchema.create({
       },
     },
   ],
+  migrations,
 })
 
 export default NodeOpenState

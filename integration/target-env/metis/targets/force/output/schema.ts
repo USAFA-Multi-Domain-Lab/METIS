@@ -1,3 +1,5 @@
+import { migrations } from './migrations'
+
 /**
  * A target available in the METIS target environment that enables a user
  * to send a message to the output panel of a force.
@@ -11,7 +13,6 @@ const Output = TargetSchema.create({
   },
   parameters: [
     {
-      // todo: Write migration from 'forceMetadata' to 'to'
       type: 'mission-component',
       _id: 'to',
       name: 'Force',
@@ -33,6 +34,7 @@ const Output = TargetSchema.create({
         `**Note: If this field is left blank, then nothing will be displayed in the output panel.**`,
     },
   ],
+  migrations,
 })
 
 export default Output
