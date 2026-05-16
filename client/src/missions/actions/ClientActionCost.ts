@@ -15,7 +15,9 @@ export class ClientActionCost extends ActionResourceCost<TMetisClientComponents>
    * member in a UI element.
    */
   public get amountFormatted(): string {
-    return ClientActionCost.formatAmount(this.amount, this.hidden)
+    return ClientActionCost.formatAmount(this.amount, {
+      amountHidden: this.hidden,
+    })
   }
 
   /**
@@ -95,14 +97,33 @@ export class ClientActionCost extends ActionResourceCost<TMetisClientComponents>
    */
   public static formatAmount(
     amount: number,
-    amountHidden: boolean = false,
+    options: TFormatAmountOptions = {},
   ): string {
+    const { amountHidden = false, includeMinusSign = true } = options
     if (amountHidden) {
       return '?'
-    } else {
+    } else if (includeMinusSign) {
       return (amount * -1).toLocaleString('en-US')
+    } else {
+      return amount.toLocaleString('en-US')
     }
   }
 }
 
 /* -- TYPES -- */
+
+/**
+ * Options for {@link formatAmount} method.
+ */
+type TFormatAmountOptions = {
+  /**
+   * Whether the amount is actively hidden from view.
+   * @default false
+   */
+  amountHidden?: boolean
+  /**
+   * Whether to include a minus sign for costs (negative amounts).
+   * @default true
+   */
+  includeMinusSign?: boolean
+}
