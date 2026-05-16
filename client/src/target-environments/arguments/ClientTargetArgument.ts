@@ -33,7 +33,7 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
 
     let context = ClientTargetArgument.buildContext<TMetisClientComponents>(
       json,
-      effect.mission,
+      effect.normalize(),
     )
     return new ClientTargetArgument(effect, json._id, json.parameterId, context)
   }
@@ -57,48 +57,36 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
         context = {
           type: 'number',
           value: parameter.required ? parameter.default : null,
-          lastSavedValue: null,
-          valueIsMalformed: false,
         }
         break
       case 'string':
         context = {
           type: 'string',
           value: parameter.required ? parameter.default : '',
-          lastSavedValue: null,
-          valueIsMalformed: false,
         }
         break
       case 'large-string':
         context = {
           type: 'large-string',
           value: parameter.required ? parameter.default : '',
-          lastSavedValue: null,
-          valueIsMalformed: false,
         }
         break
       case 'boolean':
         context = {
           type: 'boolean',
           value: parameter.default ?? false,
-          lastSavedValue: null,
-          valueIsMalformed: false,
         }
         break
       case 'dropdown':
         context = {
           type: 'dropdown',
           value: parameter.required ? parameter.default : null,
-          lastSavedValue: null,
-          valueIsMalformed: false,
         }
         break
       case 'mission-component':
         context = {
           type: 'mission-component',
           value: [],
-          lastSavedValue: null,
-          valueIsMalformed: false,
         }
         break
     }

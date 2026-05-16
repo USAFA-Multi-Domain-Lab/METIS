@@ -38,7 +38,7 @@ export class ServerTargetArgument extends TargetArgument<TMetisServerComponents>
 
     let context = ServerTargetArgument.buildContext<TMetisServerComponents>(
       json,
-      effect.mission,
+      effect.normalize(),
     )
     return new ServerTargetArgument(effect, json._id, json.parameterId, context)
   }

@@ -1,5 +1,6 @@
 import { generateValidationError } from '@server/database/validation'
 import type { TTargetEnvExposedMission } from '@server/target-environments/context/TargetEnvContext'
+import { targetArgumentJsonSchema } from '@shared/target-environments/arguments/TargetArgument'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import { ServerUser } from '@server/users/ServerUser'
 import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
@@ -620,6 +621,16 @@ export class ServerMission extends Mission<TMetisServerComponents> {
           )
         }
         effectKeys.push(effect.localKey)
+
+        // Validate each argument's structure against the schema.
+        for (const arg of effect.arguments) {
+          const result = targetArgumentJsonSchema.safeParse(arg)
+          if (!result.success) {
+            throw generateValidationError(
+              `The effect "{ _id: ${effect._id}, name: ${effect.name} }" has an invalid argument with parameter ID "${arg.parameterId}": ${result.error.message}`,
+            )
+          }
+        }
       }
     }
   }

@@ -13,7 +13,6 @@ import {
 } from '@shared/toolbox/objects/ObjectToolbox'
 import { type TJsonSerializable } from '@shared/toolbox/serialization/json'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import type { TZodify } from '@shared/toolbox/zod'
 import zod from 'zod'
 import { Mission, type TMission } from '../../missions/Mission'
 import {
@@ -99,10 +98,9 @@ export abstract class TargetArgument<
    * Cache for {@link additionalIssues} to avoid recomputing on every access.
    */
   protected _additionalIssues: TMissionComponentIssue[]
-
   // Implemented
   protected get additionalIssues(): TMissionComponentIssue[] {
-    return []
+    return this._additionalIssues
   }
 
   /**
@@ -113,22 +111,6 @@ export abstract class TargetArgument<
    */
   public get value(): TTargetArgumentValue<T> {
     return this.context.value
-  }
-
-  /**
-   * The last value for this argument that was saved
-   * to the database.
-   */
-  public get lastSavedValue(): any {
-    return this.context.lastSavedValue
-  }
-
-  /**
-   * Whether the argument's current value is malformed — i.e. does not match
-   * the shape expected for its declared type.
-   */
-  public get valueIsMalformed(): boolean {
-    return this.context.valueIsMalformed
   }
 
   // Implemented
@@ -153,24 +135,14 @@ export abstract class TargetArgument<
     super(_id, '', false)
     this.parameterId = parameterId
     this.context = context
-
     this.effect = effect.normalize()
-
     this._additionalIssues = []
-
-    // this.scanForIssues()
+    this.scanForIssues()
   }
 
   // Implemented
   public serialize(): TTargetArgumentJson {
-    if (this.valueIsMalformed) {
-      return {
-        _id: this._id,
-        parameterId: this.parameterId,
-        type: this.context.type,
-        value: this.context.lastSavedValue,
-      }
-    } else if (this.context.type === 'mission-component') {
+    if (this.context.type === 'mission-component') {
       return {
         _id: this._id,
         parameterId: this.parameterId,
@@ -186,120 +158,92 @@ export abstract class TargetArgument<
     }
   }
 
-  // todo: Move logic to effect.
-  //
-  //   /**
-  //    * Scans the argument for issues and adds them to
-  //    * {@link additionalIssues}.
-  //    */
-  //   private scanForIssues() {
-  //     this._additionalIssues = []
-  //
-  //     // Do not push issues if the target is missing.
-  //     // This should be handled at the effect level.
-  //     if (!this.effect.target) return
-  //
-  //     // Push an issue if the parameter cannot be found on the target.
-  //     if (!this.parameter) {
-  //       this._additionalIssues.push({
-  //         component: this,
-  //         type: 'general',
-  //         message: `Effect "${this.effect.name}" with parameter ID "${this.parameterId}" not found on target "${this.effect.target.name}".`,
-  //       })
-  //     }
-  //     // Push an issue if the parameter type does not match the expected type.
-  //     // 'unknown' is a migration placeholder — skip the check until it is promoted.
-  //     else if (this.type !== 'unknown' && this.parameter.type !== this.type) {
-  //       this._additionalIssues.push({
-  //         component: this,
-  //         type: 'general',
-  //         message: `Effect "${this.effect.name}" has a type mismatch for parameter "${this.parameter.name}": expected "${this.parameter.type}", got "${this.type}".`,
-  //       })
-  //     }
-  //   }
-
   /**
-   * Returns true if the JSON value does not match the shape required by its
-   * declared type. A malformed argument can arise when an `'unknown'` value
-   * is promoted to a concrete type on load but the stored value does not
-   * satisfy that type's constraints (e.g. a raw string stored under a
-   * `'mission-component'` argument after migration).
-   *
-   * `'unknown'` and `'dropdown'` arguments are never considered malformed —
-   * `'unknown'` is a migration placeholder, and `'dropdown'` accepts any
-   * primitive or object so there is no shape to validate.
+   * Scans the argument for issues and caches them in
+   * {@link _additionalIssues}.
    */
-  public static hasMalformedValue(json: TTargetArgumentJson): boolean {
-    switch (json.type) {
-      case 'number':
-        return json.value !== null && typeof json.value !== 'number'
-      case 'string':
-      case 'large-string':
-        return typeof json.value !== 'string'
-      case 'boolean':
-        return typeof json.value !== 'boolean'
-      case 'mission-component': {
-        const schema = zod.array(
-          zod
-            .object({
-              componentType: zod.string(),
-              lastKnownName: zod.string(),
-              ids: zod.array(zod.string()),
-            })
-            .strict(),
-        )
-        return !schema.safeParse(json.value).success
-      }
-      case 'dropdown':
-      case 'unknown':
-        return false
-      default:
-        return true
+  private scanForIssues() {
+    this._additionalIssues = []
+
+    // Do not push issues if the target is missing or the effect is outdated.
+    // These issues should be handled at the effect level.
+    if (!this.effect.target || this.effect.outdated) return
+
+    let { parameter } = this
+
+    // Push an issue if the parameter cannot be found on the target.
+    if (!parameter) {
+      this._additionalIssues.push({
+        component: this,
+        type: 'general',
+        message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that could not be found on the target "${this.effect.target.name}".`,
+      })
+    }
+    // Push an issue if the parameter type does not match the expected type.
+    else if (parameter.type !== this.type) {
+      this._additionalIssues.push({
+        component: this,
+        type: 'general',
+        message: `Effect "${this.effect.name}" has a type mismatch for parameter "${parameter.name}": expected "${parameter.type}", got "${this.type}".`,
+      })
+    }
+    // Push an issue if the parameter is a dropdown and the value does not
+    // match any of the options in the dropdown.
+    else if (
+      parameter.type === 'dropdown' &&
+      parameter.options.every((option) => option.value !== this.value)
+    ) {
+      this._additionalIssues.push({
+        component: this,
+        type: 'general',
+        message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that has a value "${this.context.value}" that does not match any of the dropdown options.`,
+      })
+    }
+    // Push an issue if the parameter is a string with a pattern and
+    // the value does not match the specified pattern.
+    else if (
+      parameter.type === 'string' &&
+      this.context.type === 'string' &&
+      parameter.pattern &&
+      !parameter.pattern.test(this.context.value)
+    ) {
+      this._additionalIssues.push({
+        component: this,
+        type: 'general',
+        message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that does not match the required pattern.`,
+      })
     }
   }
 
   /**
    * Builds the {@link TTargetArgumentContext} for a given JSON argument and
    * mission. Extracted so that subclass factory methods can share the same
-   * context-construction logic without duplicating the malformed-value check
-   * or the lazy mission-component branch.
+   * context-construction logic without duplicating the lazy mission-component branch.
    * @param json The serialized argument data from which to build the context.
    * @param mission The mission used to resolve mission-component references.
    * @returns The constructed context.
    */
   protected static buildContext<T extends TMetisBaseComponents>(
     json: TTargetArgumentJson,
-    mission: T['mission'],
+    effect: T['sessionTriggeredEffect'] | T['executionTriggeredEffect'],
   ): TTargetArgumentContext<T> {
-    let valueIsMalformed = TargetArgument.hasMalformedValue(json)
-    let lastSavedValue = json.value
-
     if (json.type === 'mission-component') {
       return ObjectToolbox.lazy(
         {
-          value: () => {
-            if (valueIsMalformed) {
-              return []
-            } else {
-              return TargetArgument.extractAndDeserializeComponents<T>(
-                mission,
-                json.value,
-              )
-            }
-          },
+          value: () =>
+            TargetArgument.extractAndDeserializeComponents<T>(
+              effect.mission,
+              json.value,
+            ),
         },
         {
           type: 'mission-component',
-          lastSavedValue,
-          valueIsMalformed,
         },
       )
     } else {
       return {
         type: json.type,
         value: json.value,
-        lastSavedValue,
-        valueIsMalformed,
       } as TTargetArgumentContext<T>
     }
   }
@@ -432,22 +376,56 @@ export abstract class TargetArgument<
  * Use this to verify that migration output conforms to the expected array-of-objects
  * format before the data is written back to the database.
  */
-export const targetArgumentJsonSchema: TZodify<
-  Omit<TAnyTargetArgumentJson, 'value'>
-> = zod.object({
-  _id: zod.string(),
-  parameterId: zod.string(),
-  type: zod.enum([
-    'number',
-    'string',
-    'large-string',
-    'boolean',
-    'dropdown',
-    'mission-component',
-    'unknown',
-  ]),
-  value: zod.any(),
-})
+export const targetArgumentJsonSchema = zod.discriminatedUnion('type', [
+  zod.object({
+    _id: zod.string(),
+    parameterId: zod.string(),
+    type: zod.literal('number'),
+    value: zod.union([zod.number(), zod.null()]),
+  }),
+  zod.object({
+    _id: zod.string(),
+    parameterId: zod.string(),
+    type: zod.literal('string'),
+    value: zod.string(),
+  }),
+  zod.object({
+    _id: zod.string(),
+    parameterId: zod.string(),
+    type: zod.literal('large-string'),
+    value: zod.string(),
+  }),
+  zod.object({
+    _id: zod.string(),
+    parameterId: zod.string(),
+    type: zod.literal('boolean'),
+    value: zod.boolean(),
+  }),
+  zod.object({
+    _id: zod.string(),
+    parameterId: zod.string(),
+    type: zod.literal('dropdown'),
+    value: zod.any(),
+  }),
+  zod.object({
+    _id: zod.string(),
+    parameterId: zod.string(),
+    type: zod.literal('mission-component'),
+    value: zod.array(
+      zod.object({
+        componentType: zod.string(),
+        lastKnownName: zod.string(),
+        ids: zod.array(zod.string()),
+      }),
+    ),
+  }),
+  zod.object({
+    _id: zod.string(),
+    parameterId: zod.string(),
+    type: zod.literal('unknown'),
+    value: zod.any(),
+  }),
+])
 
 /* -- TYPES -- */
 
@@ -549,7 +527,5 @@ export type TTargetArgumentContext<T extends TMetisBaseComponents> = {
   [K in TTargetParameterType]: {
     type: K
     value: TSelectArgumentValue<T>[K]
-    lastSavedValue: any
-    valueIsMalformed: boolean
   }
 }[TTargetParameterType]

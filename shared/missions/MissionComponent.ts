@@ -61,15 +61,37 @@ export abstract class MissionComponent<
   }
 
   /**
-   * Consolidates the issues from all components passed
-   * into a single array.
-   * @param components The components with potential issues.
-   * @returns The issues.
+   * @param message The message describing the issue.
+   * @returns A new general issue object with the given message and the component as context.
+   */
+  public createIssue(
+    message: string,
+    options: TCreateIssueOptions = {},
+  ): TMissionComponentIssue {
+    let { type = 'general' } = options
+    return {
+      component: this,
+      type,
+      message,
+    }
+  }
+
+  /**
+   * Consolidates the issues from all components and issues
+   * passed into one array of issues.
+   * @param elements The components or issues to consolidate.
+   * @returns The resulting issue array.
    */
   public static consolidateIssues(
-    ...components: MissionComponent<any, any>[]
+    ...elements: Array<MissionComponent<any, any> | TMissionComponentIssue>
   ): TMissionComponentIssue[] {
-    return components.flatMap((component) => component.issues)
+    return elements.flatMap((element) => {
+      if (element instanceof MissionComponent) {
+        return element.issues
+      } else {
+        return [element]
+      }
+    })
   }
 }
 
@@ -103,4 +125,15 @@ export interface TMissionComponentIssue {
    * The message describing the issue.
    */
   message: string
+}
+
+/**
+ * Options for `createIssue` method.
+ */
+export interface TCreateIssueOptions {
+  /**
+   * The type of issue to create.
+   * @default 'general'
+   */
+  type?: TMissionComponentIssue['type']
 }

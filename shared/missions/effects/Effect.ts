@@ -149,62 +149,56 @@ export abstract class Effect<
     }
   }
 
+  /**
+   * Cache for {@link additionalIssues} to avoid unnecessary recalculations.
+   */
+  private _additionalIssues: TMissionComponentIssue[]
   // Implemented
   protected get additionalIssues(): TMissionComponentIssue[] {
-    const { environment, target } = this
+    return MissionComponent.consolidateIssues(
+      ...this._additionalIssues,
+      ...this.arguments,
+    )
+  }
 
-    // Construct issue objects for the given messages.
-    const constructIssues = (...messages: string[]): TMissionComponentIssue[] =>
-      messages.map((message) => ({ type: 'general', component: this, message }))
+  /**
+   * Scans the argument for issues and caches them in
+   * {@link _additionalIssues}.
+   */
+  private scanForIssues() {
+    this._additionalIssues = []
 
-    // If the effect's target or target environment cannot be found, then the effect has issues.
-    // *** Note: An effect grabs the target environment from the target after the
-    // *** target is populated. So, if the target cannot be found, the target will
-    // *** be set null which means the target environment will be null also.
-    // *** Also, if a target-environment cannot be found, then obviously the target
-    // *** within that environment cannot be found either.
+    let { environment, target } = this
+
+    // If the effect could not find the corresponding target
+    // or target environment, then this effect cannot work
+    // properly.
     if (!environment || !target) {
-      return constructIssues(
-        `The effect, "${this.name}", has a target or a target environment that couldn't be found. ` +
-          `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`,
+      this._additionalIssues.push(
+        this.createIssue(
+          `The effect, "${this.name}", has a target or a target environment that couldn't be found. ` +
+            `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`,
+        ),
       )
     }
-
     // If the effect's target environment version doesn't match
-    // the current version, then the effect has issues.
-    if (this.outdated) {
-      return [
-        {
-          type: 'outdated',
-          component: this,
-          message:
-            `The effect, "${this.name}", is incompatible with the current version of the target environment, "${environment.name}". ` +
+    // the current version, then the effect must be updated.
+    else if (this.outdated) {
+      this._additionalIssues.push(
+        this.createIssue(
+          `The effect, "${this.name}", is incompatible with the current version of the target environment, "${environment.name}". ` +
             `This effect must be updated to be made compatible. ` +
             `Please click to resolve this.`,
-        },
-      ]
-    }
-
-    // Check the effect's arguments against the target's parameters.
-    let argIssues = this.checkTargetArguments(target)
-    if (argIssues.length) return constructIssues(...argIssues)
-
-    // Check to see if there are any missing arguments.
-    let missingArg = this.getFirstUnfulfilledParameter()
-    if (missingArg) {
-      return constructIssues(
-        `The required argument "${missingArg.name}" within the effect "${this.name}" is missing.`,
+          { type: 'outdated' },
+        ),
+      )
+    } else if (this.environmentId === Effect.LEGACY_INFER_ENV_ID) {
+      this._additionalIssues.push(
+        this.createIssue(
+          `The effect, "${this.name}" has a reference to a target, but not to a target environment.`,
+        ),
       )
     }
-
-    if (this.environmentId === Effect.LEGACY_INFER_ENV_ID) {
-      return constructIssues(
-        `The effect, "${this.name}" has a reference to a target, but not to a target environment.`,
-      )
-    }
-
-    // If all checks pass, then the effect does not have issues.
-    return []
   }
 
   /**
@@ -296,6 +290,9 @@ export abstract class Effect<
     this.description = description
     this.arguments = this.parseArguments(args)
     this.localKey = localKey
+
+    this._additionalIssues = []
+    this.scanForIssues()
   }
 
   /**
@@ -317,248 +314,6 @@ export abstract class Effect<
   protected abstract parseArguments(
     data: TTargetArgumentJson[],
   ): JsonSerializableArray<T['targetArgument']>
-
-  /**
-   * Checks the effect's arguments against the target's parameters.
-   * @param target The target to check the effect's arguments against.
-   * @returns Any issues found with the effect's arguments.
-   */
-  private checkTargetArguments(target: T['target']): string[] {
-    let issues: string[] = []
-
-    // Utility function to quickly process different
-    // issue checkers efficiently.
-    const pushIfNotNull = (issue: string | null) => {
-      if (issue) {
-        issues.push(issue)
-      }
-    }
-
-    for (let targetArgument of this.arguments) {
-      let { parameter, value, parameterId } = targetArgument
-
-      if (!parameter) {
-        issues.push(
-          `The effect, "${this.name}", has an argument, "${parameterId}", that couldn't be found within the target, "${target.name}." ` +
-            `Please delete the effect and create a new one.`,
-        )
-        continue
-      }
-
-      let dependenciesMet = this.allDependenciesMet(parameter.dependencies)
-
-      console.log(parameter._id)
-      if (parameter._id === 'operation') {
-        console.log('stop here')
-      }
-
-      pushIfNotNull(
-        this.checkDependencyAlignment(parameter, value, dependenciesMet),
-      )
-      pushIfNotNull(this.checkRequiredArgs(parameter, value, dependenciesMet))
-      pushIfNotNull(
-        this.checkValueMatchesType(parameter, value, dependenciesMet),
-      )
-      pushIfNotNull(this.checkValidDropdownOption(parameter, value))
-      pushIfNotNull(this.checkStringArgAgainstPattern(parameter, value))
-    }
-
-    return issues
-  }
-
-  /**
-   * Checks if an argument is required and, if so, is missing a value.
-   * @param parameter The target parameter to check.
-   * @param argument The value of the argument in the effect.
-   * @returns An issue message if the argument is required and
-   * missing a value.
-   * @note Utility method of {@link checkTargetArguments}.
-   */
-  private checkRequiredArgs(
-    parameter: TTargetParameter,
-    argument: unknown,
-    dependenciesMet: boolean,
-  ): string | null {
-    // * Note: Boolean arguments are always required because
-    // * they always have a value (true or false). Therefore,
-    // * they don't contain the required property.
-    let isBoolean = parameter.type === 'boolean'
-    let required = parameter.type === 'boolean' || parameter.required
-    let valueMissing = argument === undefined
-    let renterValueText: string = 'Please enter a value'
-
-    if (isBoolean) {
-      renterValueText = 'Please update the value by clicking the toggle switch'
-    }
-
-    if (required && valueMissing && dependenciesMet) {
-      return (
-        `The argument, "${parameter.name}", within the effect, "${this.name}", is required, yet has no value. ` +
-        `${renterValueText}, or delete the effect and create a new one.`
-      )
-    }
-
-    return null
-  }
-
-  /**
-   * Checks if an argument's value matches the type specified
-   * in the target parameter.
-   * @param parameter The target parameter to check.
-   * @param effectArgValue The value of the argument in the effect.
-   * @returns An issue message if the argument's value does not
-   * match the type specified in the target parameter.
-   */
-  private checkValueMatchesType(
-    parameter: TTargetParameter,
-    effectArgValue: unknown,
-    dependenciesMet: boolean,
-  ): string | null {
-    if (!dependenciesMet || effectArgValue === undefined) {
-      return null
-    }
-
-    let typesToCheck = ['boolean', 'number', 'string']
-    let expectedType = parameter.type
-    let actualType = typeof effectArgValue
-
-    // Consolidate similar types for checking.
-    if (expectedType === 'large-string') {
-      expectedType = 'string'
-    }
-
-    let shouldCheckType = typesToCheck.includes(expectedType)
-
-    // If we should check the type, but it isn't a match,
-    // return an issue.
-    if (shouldCheckType && actualType !== expectedType) {
-      return (
-        `The argument, "${parameter.name}", within the effect, "${this.name}", is expected to be of type, "${expectedType}", ` +
-        `but received a value of type, "${actualType}". Please update the value, or delete the effect and create a new one (ERR 30382).`
-      )
-    } else {
-      return null
-    }
-  }
-
-  /**
-   * Checks if an arguments dependencies align with the current
-   * value in the effect. Specifically, if the dependencies are not met,
-   * the argument should not have a current value.
-   * @param parameter The target parameter to check.
-   * @param effectArgValue The value of the argument in the effect.
-   * @returns An issue message if the argument's dependencies do not align
-   * with the effect's argument value.
-   * @note Utility method of {@link checkTargetArguments}.
-   */
-  private checkDependencyAlignment(
-    parameter: TTargetParameter,
-    effectArgValue: unknown,
-    dependenciesMet: boolean,
-  ): string | null {
-    if (!dependenciesMet && effectArgValue !== undefined) {
-      return (
-        `The effect, "${this.name}", has an argument, "${parameter.name}", that doesn't belong. ` +
-        `Please delete the effect and create a new one.`
-      )
-    }
-
-    return null
-  }
-
-  /**
-   * Checks if a dropdown argument is valid. Specifically,
-   * that the provided value is one of the available options
-   * in the dropdown.
-   * @param parameter The target parameter to check.
-   * @param argument The value of the argument in the effect.
-   * @returns An issue message if the dropdown option is invalid.
-   * @note Utility method of {@link checkTargetArguments}.
-   */
-  private checkValidDropdownOption(
-    parameter: TTargetParameter,
-    argument: unknown,
-  ): string | null {
-    if (
-      parameter.type === 'dropdown' &&
-      !parameter.options.find((option) => option.value === argument)
-    ) {
-      return (
-        `The effect, "${this.name}", has an invalid option selected. ` +
-        `Please select a valid option, or delete the effect and create a new one.`
-      )
-    }
-
-    return null
-  }
-
-  /**
-   * Checks if a string argument's value matches the required pattern specified
-   * in the target argument.
-   * @param parameter The target parameter to check.
-   * @param argument The value of the argument in the effect.
-   * @returns An issue message if the string argument's value does not match
-   * the required pattern.
-   * @note Utility method of {@link checkTargetArguments}.
-   */
-  private checkStringArgAgainstPattern(
-    parameter: TTargetParameter,
-    argument: unknown,
-  ): string | null {
-    if (parameter.type !== 'string' || typeof argument !== 'string') {
-      return null
-    }
-
-    if (!parameter.required && argument === undefined) {
-      return null
-    }
-
-    const pattern = parameter.pattern
-    if (pattern instanceof RegExp && !pattern.test(argument)) {
-      return (
-        `The argument, "${parameter.name}", within the effect, "${this.name}", does not match the required format. ` +
-        `Please update the value, or delete the effect and create a new one.`
-      )
-    }
-
-    return null
-  }
-
-  /**
-   * @returns The first required parameter that is not fulfilled
-   * by the effect's current arguments, or `undefined` if all required
-   * parameters are fulfilled.
-   */
-  private getFirstUnfulfilledParameter(): TTargetParameter | undefined {
-    // If the target is not set, throw an error.
-    if (!this.target) {
-      throw new Error(
-        `The effect ({ _id: "${this._id}", name: "${this.name}" }) does not have a target. ` +
-          `This is likely because the target doesn't exist within any of the target environments stored in the registry.`,
-      )
-    }
-
-    for (let parameter of this.target.parameters) {
-      // Check if all the dependencies for the parameter are met.
-      let allDependenciesMet: boolean = this.allDependenciesMet(
-        parameter.dependencies,
-      )
-
-      // If all the dependencies are met and the argument is not in the effect's arguments...
-      if (
-        allDependenciesMet &&
-        this.arguments.every(({ parameterId }) => parameterId !== parameter._id)
-      ) {
-        // ...and the parameter's type is a boolean or the parameter is required, then return
-        // the parameter.
-        // *** Note: A boolean parameter is always required because its value
-        // *** is always defined.
-        if (parameter.type === 'boolean' || parameter.required) {
-          return parameter
-        }
-      }
-    }
-  }
 
   /**
    * @returns A JSON representation of the Effect.
