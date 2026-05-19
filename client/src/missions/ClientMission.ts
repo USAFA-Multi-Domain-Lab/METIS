@@ -565,7 +565,10 @@ export class ClientMission
       }
 
       // Create a new force.
-      force = new ClientMissionForce(this, defaultForce)
+      force = new ClientMissionForce(this, {
+        ...defaultForce,
+        localKey: this.generateForceKey(),
+      })
       // Break the loop.
       break
     }

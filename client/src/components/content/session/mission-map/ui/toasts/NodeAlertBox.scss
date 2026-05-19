@@ -64,15 +64,18 @@
   }
 
   .AlertMessage {
+    display: flex;
+    justify-content: center;
     box-sizing: border-box;
     overflow-y: auto;
     min-height: 0;
     max-height: 10em;
-    font-style: italic;
-    text-align: center;
-    font-size: 0.85em;
+    width: 100%;
+    padding: 0 1em;
 
-    .Markdown {
+    .AlertMessageContent {
+      font-size: 0.85em;
+
       :first-child {
         margin-top: 0;
       }

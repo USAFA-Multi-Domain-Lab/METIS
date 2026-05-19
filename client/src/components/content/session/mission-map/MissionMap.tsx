@@ -354,7 +354,7 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
   /**
    * Handles a mouse wheel event on the map.
    */
-  const onWheel = (event: React.WheelEvent<HTMLDivElement>): void => {
+  function onWheel(event: WheelEvent): void {
     // If zooming is disabled, abort.
     if (disableZoom) return
 
@@ -411,6 +411,8 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
     // in mouse position.
     cameraPosition.translateBy(difference)
   }
+  const onWheelRef = useRef(onWheel)
+  onWheelRef.current = onWheel
 
   /**
    * Callback for when the zoom-in button
@@ -681,14 +683,12 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
     // sure nothing is selected in the mission.
     if (!selectedForceInMap) {
       mission.deselect()
-      return
     }
-
-    // If there is no force selected in the
+    // Else if there is no force selected in the
     // mission currently or it is different
     // from the force in the map, select the
     // force in the map.
-    if (
+    else if (
       !selectedForceInMission ||
       selectedForceInMission !== selectedForceInMap
     ) {
@@ -703,6 +703,17 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
     if (nodeCenteringTarget) nodeCenteringTarget.requestCenterOnMap()
     setNodeCenteringTarget(null)
   }, [selectedForce])
+
+  // Attach the wheel listener with { passive: false } so that
+  // preventDefault() works. React's onWheel prop uses a passive
+  // listener in React 17+, which silently ignores preventDefault.
+  useEffect(() => {
+    const root = elements.root.current
+    if (!root) return
+    const listener = (event: WheelEvent) => onWheelRef.current(event)
+    root.addEventListener('wheel', listener, { passive: false })
+    return () => root.removeEventListener('wheel', listener)
+  }, [elements.root.current])
 
   /* -- COMPUTED -- */
 
@@ -859,7 +870,7 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
       state={state}
       elements={elements}
     >
-      <div className={rootClasses.value} ref={elements.root} onWheel={onWheel}>
+      <div className={rootClasses.value} ref={elements.root}>
         <PanController
           cameraPosition={cameraPosition}
           cameraZoom={cameraZoom}

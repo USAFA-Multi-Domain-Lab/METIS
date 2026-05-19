@@ -2,6 +2,7 @@ import type {
   ServerConnection,
   TServerHandler,
 } from '@client/connect/ServerConnection'
+import { ClientActionCost } from '@client/missions/actions/ClientActionCost'
 import { ClientActionExecution } from '@client/missions/actions/ClientActionExecution'
 import { ClientExecutionOutcome } from '@client/missions/actions/ClientExecutionOutcome'
 import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
@@ -1005,6 +1006,61 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     this.mission.importStartData(structure, forces, prototypes, files)
     // Remap actions.
     this.mapActions()
+  }
+
+  /**
+   * Added context for {@link readyToExecute}, this returns the
+   * reasons why an action is not ready to be executed in the session, given the cheats.
+   * @param action The action in question.
+   * @param cheats The cheats which may change the action's readiness.
+   * @returns The reasons why the action is not ready to execute.
+   */
+  public unreadyToExecuteReasons(
+    action: ClientMissionAction,
+    cheats: Partial<TExecutionCheats> = {},
+  ): string[] {
+    let reasons: string[] = []
+    let nodeReady = action.node.readyToExecute
+    let unmetCosts = this.getUnmetCosts(action, cheats)
+    let unmetCostNames = unmetCosts.map((cost) => cost.name.toLowerCase())
+    let unmetCostAmounts = unmetCosts.map((cost) =>
+      ClientActionCost.formatAmount(cost.amount, {
+        amountHidden: cost.hidden,
+        includeMinusSign: false,
+      }),
+    )
+    let executionLimitReached = action.executionLimitReached
+
+    // Handle case when there are not enough resources.
+    // Build a message which specifies which resources
+    // are missing to execute the action.
+    if (unmetCosts.length === 1) {
+      reasons.push(
+        `Not enough ${unmetCostNames[0]} (costs ${unmetCostAmounts[0]}) to execute.`,
+      )
+    } else if (unmetCosts.length === 2) {
+      reasons.push(
+        `Not enough ${unmetCostNames[0]} (costs ${unmetCostAmounts[0]}) or ${unmetCostNames[1]} (costs ${unmetCostAmounts[1]}) to execute.`,
+      )
+    } else if (unmetCosts.length > 2) {
+      let lastResourceName = unmetCostNames[unmetCostNames.length - 1]
+      let lastResourceAmount = unmetCostAmounts[unmetCostAmounts.length - 1]
+      let otherResourcesMessages = unmetCostNames
+        .slice(0, unmetCostNames.length - 1)
+        .map((name, index) => `${name} (costs ${unmetCostAmounts[index]})`)
+        .join(', ')
+      reasons.push(
+        `Not enough ${otherResourcesMessages}, or ${lastResourceName} (costs ${lastResourceAmount}) to execute.`,
+      )
+    }
+    if (!nodeReady) {
+      reasons.push('Node is not ready to execute.')
+    }
+    if (executionLimitReached) {
+      reasons.push('Execution limit for this action has been reached.')
+    }
+
+    return reasons
   }
 
   /**

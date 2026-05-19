@@ -11,8 +11,8 @@ import {
   MissionComponent,
   type TMissionComponentIssue,
 } from '../MissionComponent'
-import type { MissionResource } from '../MissionResource'
 import type { TNode, TNodeJsonOptions } from '../nodes/MissionNode'
+import type { ActionResourceCost } from './ActionResourceCost'
 import { type TActionResourceCostJson } from './ActionResourceCost'
 
 /* -- CONSTANTS -- */
@@ -275,19 +275,18 @@ export abstract class MissionAction<
   }
 
   /**
-   * The resources which this action lacks a sufficient
-   * amount in order to execute.
+   * An array of all costs included in this action whose
+   * associated pool does not have enough resources to
+   * cover the cost amount.
    */
-  public get missingResources(): MissionResource[] {
-    return this.includedCosts
-      .filter((cost) => {
-        let pool = this.force.getPoolByResourceId(cost.resourceId)
-        return (
-          !pool ||
-          (cost.amount > Math.max(pool.balance, 0) && !pool.allowNegative)
-        )
-      })
-      .map(({ resource }) => resource)
+  public get unmetCosts(): ActionResourceCost[] {
+    return this.includedCosts.filter((cost) => {
+      let pool = this.force.getPoolByResourceId(cost.resourceId)
+      return (
+        !pool ||
+        (cost.amount > Math.max(pool.balance, 0) && !pool.allowNegative)
+      )
+    })
   }
 
   /**

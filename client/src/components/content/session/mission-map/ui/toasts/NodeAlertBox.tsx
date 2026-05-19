@@ -1,11 +1,8 @@
-import Markdown, {
-  MarkdownTheme,
-} from '@client/components/content/general-layout/Markdown'
 import { ButtonText } from '@client/components/content/user-controls/buttons/ButtonText'
-import If from '@client/components/content/util/If'
 import { compute } from '@client/toolbox'
 import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { ClassList } from '@shared/toolbox/html/ClassList'
+import { useEffect, useRef } from 'react'
 import { useMapContext } from '../../MissionMap'
 import './NodeAlertBox.scss'
 
@@ -23,6 +20,8 @@ export default function NodeAlertBox({
   /* -- STATE -- */
 
   useMapContext() // Ensure that this component is used within a MissionMap context.
+
+  const rootRef = useRef<HTMLDivElement>(null)
 
   /* -- COMPUTED -- */
 
@@ -50,24 +49,34 @@ export default function NodeAlertBox({
     return results
   })
 
+  /* -- EFFECTS -- */
+
+  // When the component mounts, add an event listener to the root element
+  // to stop wheel events from propagating to the map and causing it to zoom.
+  useEffect(() => {
+    const element = rootRef.current
+    if (!element) return
+    const handler = (event: WheelEvent) => event.stopPropagation()
+    element.addEventListener('wheel', handler)
+    return () => element.removeEventListener('wheel', handler)
+  }, [])
+
   /* -- RENDER -- */
 
   return (
-    <div
-      className={rootClasses.value}
-      onWheel={(event) => {
-        event.stopPropagation()
-      }}
-    >
+    <div ref={rootRef} className={rootClasses.value}>
       <div className='AlertHeader'>
         <div className='AlertIcon Icon'></div>
         <div className='AlertTitle'>{severityLevel}</div>
       </div>
       <div className='AlertMessage'>
-        <Markdown markdown={message} theme={MarkdownTheme.ThemeSecondary} />
+        <div
+          className='AlertMessageContent'
+          dangerouslySetInnerHTML={{ __html: message }}
+        ></div>
       </div>
       <div className='AlertButtons'>
-        <If condition={areMorePendingAlerts}>
+        {areMorePendingAlerts && (
           <ButtonText
             text={'Next alert'}
             onClick={() => {
@@ -75,7 +84,7 @@ export default function NodeAlertBox({
               next()
             }}
           />
-        </If>
+        )}
         <ButtonText
           text={'Close'}
           onClick={() => {

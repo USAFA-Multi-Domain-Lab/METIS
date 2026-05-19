@@ -30,21 +30,6 @@ export default function ResourcePoolSubentry({
   return (
     <div className='ResourcePoolSubentry Subentry'>
       <DetailLocked label={'Resource'} value={pool.resource.name} />
-      <DetailNumber
-        fieldType='required'
-        label={'Initial Amount'}
-        value={initialBalance}
-        setValue={setInitialBalance}
-        integersOnly={true}
-        disabled={viewMode === 'preview'}
-      />
-      <DetailToggle
-        label={'Allow Negative'}
-        value={allowNegative}
-        setValue={setAllowNegative}
-        tooltipDescription={`If enabled, the ${pool.name} resource pool can go below zero.`}
-        disabled={viewMode === 'preview'}
-      />
       <DetailToggle
         label={'Exclude from Force'}
         value={excluded}
@@ -52,6 +37,25 @@ export default function ResourcePoolSubentry({
         tooltipDescription={`If enabled, the ${pool.name} resource pool will be hidden during sessions and its associated costs will not be applied or displayed.`}
         disabled={viewMode === 'preview'}
       />
+      {!excluded && (
+        <>
+          <DetailNumber
+            fieldType='required'
+            label={'Initial Amount'}
+            value={initialBalance}
+            setValue={setInitialBalance}
+            integersOnly={true}
+            disabled={viewMode === 'preview'}
+          />
+          <DetailToggle
+            label={'Allow Negative'}
+            value={allowNegative}
+            setValue={setAllowNegative}
+            tooltipDescription={`If enabled, the ${pool.name} resource pool can go below zero.`}
+            disabled={viewMode === 'preview'}
+          />
+        </>
+      )}
     </div>
   )
 }

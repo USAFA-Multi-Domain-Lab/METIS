@@ -1598,13 +1598,27 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       } = node
 
       // Construct open event payload.
+      //
+      // Note: Currently, a shared payload works because
+      // all members get the same node data as long as
+      // they have visibility for that force. If this ever
+      // changes, and node visibility varies member to member
+      // of a force, this logic will need to be updated to
+      // emit different payloads to different members.
       let payload: TServerEvents['node-opened'] = {
         method: 'node-opened',
         data: {
           nodeId,
           opened: true,
           structure: structure,
-          revealedDescendants: descendants.map((n) => n.toJson()),
+          revealedDescendants: descendants.map((n) =>
+            n.toJson({
+              sessionDataExposure: {
+                expose: 'member-specific',
+                memberId: member._id,
+              },
+            }),
+          ),
           revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
         },
         request: { event, requesterId: member.userId, fulfilled: true },
@@ -1845,7 +1859,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       },
       request: {
         event: request.event,
-        requesterId: member._id,
+        requesterId: member.userId,
         fulfilled: false,
       },
     }
