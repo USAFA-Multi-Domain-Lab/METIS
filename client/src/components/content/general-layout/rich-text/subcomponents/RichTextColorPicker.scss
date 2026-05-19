@@ -1,0 +1,37 @@
+@use '@client/assets/styles/config.scss' as *;
+
+.ColorPicker {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.25em 0.65em 0.35em;
+
+  .ColorSwatch {
+    position: relative;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background-color: transparent;
+      transition: background-color 0.15s;
+    }
+
+    &:hover::after {
+      background-color: rgba($color-accent, 0.8);
+    }
+
+    &.Selected::after {
+      background-color: $color-accent;
+    }
+  }
+}

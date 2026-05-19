@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editor Shortcuts</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #1b2937;
+      color: #d0e8f0;
+      font-family: monospace, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      padding: 40px 24px 64px;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #3bfce8;
+      font-size: 1.75rem;
+      margin-bottom: 36px;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid rgba(59, 252, 232, 0.25);
+      padding-bottom: 12px;
+    }
+
+    h2 {
+      color: #3bfce8;
+      font-size: 1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin: 36px 0 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8px;
+    }
+
+    thead th {
+      background-color: rgba(59, 252, 232, 0.08);
+      color: #3bfce8;
+      text-align: left;
+      padding: 8px 14px;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(59, 252, 232, 0.2);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(208, 232, 240, 0.07);
+      transition: background-color 0.1s;
+    }
+
+    tbody tr:hover {
+      background-color: rgba(59, 252, 232, 0.04);
+    }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    td {
+      padding: 8px 14px;
+      vertical-align: middle;
+    }
+
+    td:first-child {
+      white-space: nowrap;
+      color: rgba(208, 232, 240, 0.75);
+      width: 22%;
+    }
+
+    code {
+      background-color: rgba(59, 252, 232, 0.1);
+      color: #3bfce8;
+      border: 1px solid rgba(59, 252, 232, 0.2);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: monospace;
+      font-size: 0.85em;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Shortcuts</h1>
+
+    <h2>Toolbar</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Keyboard (Mac / Windows)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Pins / Unpins the toolbar</td>
+          <td><code>Cmd+Shift+M</code> / <code>Ctrl+Shift+M</code></td>
+        </tr>
+        <tr>
+          <td>Closes the toolbar and any submenus (e.g. font color)</td>
+          <td><code>Escape</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Essentials</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Keyboard (Mac / Windows)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Copy</td>
+          <td><code>Cmd+C</code> / <code>Ctrl+C</code></td>
+        </tr>
+        <tr>
+          <td>Cut</td>
+          <td><code>Cmd+X</code> / <code>Ctrl+X</code></td>
+        </tr>
+        <tr>
+          <td>Paste</td>
+          <td><code>Cmd+V</code> / <code>Ctrl+V</code></td>
+        </tr>
+        <tr>
+          <td>Paste without Formatting</td>
+          <td><code>Cmd+Shift+V</code> / <code>Ctrl+Shift+V</code></td>
+        </tr>
+        <tr>
+          <td>Undo</td>
+          <td><code>Cmd+Z</code> / <code>Ctrl+Z</code></td>
+        </tr>
+        <tr>
+          <td>Redo</td>
+          <td><code>Cmd+Shift+Z</code> / <code>Ctrl+Shift+Z</code></td>
+        </tr>
+        <tr>
+          <td>Line Break</td>
+          <td>
+            <code>Shift+Enter</code> or <code>Cmd+Enter</code> /
+            <code>Shift+Enter</code> or <code>Ctrl+Enter</code>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Text Formatting</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Markdown</th>
+          <th>Keyboard (Mac / Windows)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Bold</td>
+          <td><code>**text**</code> or <code>__text__</code></td>
+          <td><code>Cmd+B</code> / <code>Ctrl+B</code></td>
+        </tr>
+        <tr>
+          <td>Italic</td>
+          <td><code>_text_</code> or <code>*text*</code></td>
+          <td><code>Cmd+I</code> / <code>Ctrl+I</code></td>
+        </tr>
+        <tr>
+          <td>Underline</td>
+          <td>—</td>
+          <td><code>Cmd+U</code> / <code>Ctrl+U</code></td>
+        </tr>
+        <tr>
+          <td>Strike-through</td>
+          <td><code>~~text~~</code></td>
+          <td><code>Cmd+Shift+S</code> / <code>Ctrl+Shift+S</code></td>
+        </tr>
+        <tr>
+          <td>Cycle Font Color</td>
+          <td>—</td>
+          <td><code>Cmd+Shift+C</code> / <code>Ctrl+Shift+C</code></td>
+        </tr>
+        <tr>
+          <td>Cycle Heading Level</td>
+          <td>—</td>
+          <td><code>Cmd+Shift+H</code> / <code>Ctrl+Shift+H</code></td>
+        </tr>
+        <tr>
+          <td>Cycle Text Alignment</td>
+          <td>—</td>
+          <td><code>Cmd+Shift+A</code> / <code>Ctrl+Shift+A</code></td>
+        </tr>
+        <tr>
+          <td>Cycle Line Spacing</td>
+          <td>—</td>
+          <td><code>Cmd+Shift+P</code> / <code>Ctrl+Shift+P</code></td>
+        </tr>
+        <tr>
+          <td>Inline Code</td>
+          <td><code>`code`</code></td>
+          <td><code>Cmd+E</code> / <code>Ctrl+E</code></td>
+        </tr>
+        <tr>
+          <td>Clear Format</td>
+          <td>—</td>
+          <td><code>Cmd+Shift+0</code> / <code>Ctrl+Shift+0</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Paragraph Formatting</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Markdown</th>
+          <th>Keyboard (Mac / Windows)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Normal Text</td>
+          <td>—</td>
+          <td><code>Cmd+Opt+0</code> / <code>Ctrl+Alt+0</code></td>
+        </tr>
+        <tr>
+          <td>Heading 1</td>
+          <td><code># Heading 1</code></td>
+          <td><code>Cmd+Opt+1</code> / <code>Ctrl+Alt+1</code></td>
+        </tr>
+        <tr>
+          <td>Heading 2</td>
+          <td><code>## Heading 2</code></td>
+          <td><code>Cmd+Opt+2</code> / <code>Ctrl+Alt+2</code></td>
+        </tr>
+        <tr>
+          <td>Heading 3</td>
+          <td><code>### Heading 3</code></td>
+          <td><code>Cmd+Opt+3</code> / <code>Ctrl+Alt+3</code></td>
+        </tr>
+        <tr>
+          <td>Heading 4</td>
+          <td><code>#### Heading 4</code></td>
+          <td><code>Cmd+Opt+4</code> / <code>Ctrl+Alt+4</code></td>
+        </tr>
+        <tr>
+          <td>Heading 5</td>
+          <td><code>##### Heading 5</code></td>
+          <td><code>Cmd+Opt+5</code> / <code>Ctrl+Alt+5</code></td>
+        </tr>
+        <tr>
+          <td>Heading 6</td>
+          <td><code>###### Heading 6</code></td>
+          <td><code>Cmd+Opt+6</code> / <code>Ctrl+Alt+6</code></td>
+        </tr>
+        <tr>
+          <td>Ordered List</td>
+          <td><code>1. item</code></td>
+          <td><code>Cmd+Shift+7</code> / <code>Ctrl+Shift+7</code></td>
+        </tr>
+        <tr>
+          <td>Bullet List</td>
+          <td><code>- item</code> or <code>* item</code> or <code>+ item</code></td>
+          <td><code>Cmd+Shift+8</code> / <code>Ctrl+Shift+8</code></td>
+        </tr>
+        <tr>
+          <td>Indent List Item</td>
+          <td>—</td>
+          <td><code>Tab</code></td>
+        </tr>
+        <tr>
+          <td>Outdent List Item</td>
+          <td>—</td>
+          <td><code>Shift+Tab</code></td>
+        </tr>
+        <tr>
+          <td>Blockquote</td>
+          <td><code>&gt; quote</code></td>
+          <td><code>Cmd+Shift+B</code> / <code>Ctrl+Shift+B</code></td>
+        </tr>
+        <tr>
+          <td>Code Block</td>
+          <td><code>```language```</code></td>
+          <td><code>Cmd+Opt+C</code> / <code>Ctrl+Alt+C</code></td>
+        </tr>
+        <tr>
+          <td>Divider</td>
+          <td><code>---</code></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Link</td>
+          <td><code>[text](https://example.com)</code></td>
+          <td><code>Cmd+K</code> / <code>Ctrl+K</code></td>
+        </tr>
+        <tr>
+          <td>Align Left</td>
+          <td>—</td>
+          <td><code>Cmd+Shift+L</code> / <code>Ctrl+Shift+L</code></td>
+        </tr>
+        <tr>
+          <td>Align Center</td>
+          <td>—</td>
+          <td><code>Cmd+Shift+E</code> / <code>Ctrl+Shift+E</code></td>
+        </tr>
+        <tr>
+          <td>Align Right</td>
+          <td>—</td>
+          <td><code>Cmd+Shift+R</code> / <code>Ctrl+Shift+R</code></td>
+        </tr>
+        <tr>
+          <td>Justify</td>
+          <td>—</td>
+          <td><code>Cmd+Shift+J</code> / <code>Ctrl+Shift+J</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Text Selection</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Keyboard (Mac / Windows)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Select All</td>
+          <td><code>Cmd+A</code> / <code>Ctrl+A</code></td>
+        </tr>
+        <tr>
+          <td>Extend Selection Left</td>
+          <td><code>Shift + ←</code></td>
+        </tr>
+        <tr>
+          <td>Extend Selection Right</td>
+          <td><code>Shift + →</code></td>
+        </tr>
+        <tr>
+          <td>Extend Selection Up</td>
+          <td><code>Shift + ↑</code></td>
+        </tr>
+        <tr>
+          <td>Extend Selection Down</td>
+          <td><code>Shift + ↓</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+
+</html>

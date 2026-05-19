@@ -1,30 +1,35 @@
-import { Node } from '@tiptap/core'
+import { Mark, mergeAttributes } from '@tiptap/core'
 
 /**
  * Span-element extension for the editor.
+ *
+ * Implemented as a Mark (not a Node) so it coexists with the TextStyle mark
+ * on the same text node rather than producing nested `<span>` elements.
+ * Matches only `<span class="...">` so it never interferes with the plain
+ * `<span style="...">` wrappers that TextStyle / Color create.
  */
-const MetisSpan = Node.create({
-  name: 'span',
-  group: 'inline',
-  content: 'inline*',
-  inline: true,
-  parseHTML() {
-    return [
-      {
-        tag: 'span',
-      },
-    ]
-  },
-  renderHTML({ HTMLAttributes }) {
-    return ['span', HTMLAttributes, 0]
-  },
+const MetisSpan = Mark.create({
+  name: 'metisSpan',
+
   addAttributes() {
     return {
       class: {
         default: null,
+        parseHTML: (element) => element.getAttribute('class'),
+        renderHTML: (attributes) => {
+          if (!attributes.class) return {}
+          return { class: attributes.class }
+        },
       },
-      // Add other attributes as needed
     }
+  },
+
+  parseHTML() {
+    return [{ tag: 'span[class]' }]
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['span', mergeAttributes(HTMLAttributes), 0]
   },
 })
 

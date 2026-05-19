@@ -170,7 +170,7 @@ export function DetailLargeString({
         tooltipDescription={tooltipDescription}
         fieldType={fieldType}
       >
-        <a href='/files/shortcuts.pdf' target='_blank' className='Shortcuts'>
+        <a href='/files/shortcuts.html' target='_blank' className='Shortcuts'>
           <ButtonSvgPanel engine={buttonEngine} />
         </a>
       </DetailTitleRow>

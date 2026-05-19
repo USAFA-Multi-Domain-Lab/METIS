@@ -1,5 +1,4 @@
 @use '@client/assets/styles/config.scss' as *;
-@use '../../form/index.scss' as *;
 
 @mixin code-styling() {
   background-color: $color-accent-dark;
@@ -32,14 +31,22 @@
       }
     }
 
-    a {
-      text-decoration: none;
+    * {
+      color: inherit;
     }
 
-    a,
-    a * {
+    a {
+      text-decoration: none;
       color: $color-accent;
       cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    a * {
+      color: inherit;
 
       &:hover {
         text-decoration: underline;
@@ -143,17 +150,27 @@
     }
   }
 
-  .BubbleToolbar,
-  .FloatingToolbar {
+  .BubbleToolbar {
     background-color: $color-primary;
     border-radius: 0.4em;
     padding-bottom: 0.5em;
 
     .Toolbar {
-      display: flex;
-      align-items: center;
-      flex-flow: row wrap;
       padding: 0.5em 0.5em 0.25em !important;
+
+      .ButtonSvgPanel {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        flex-flow: row wrap;
+
+        .SvgPanelElement {
+          &.Selected {
+            filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
+              brightness(200%) contrast(98%);
+          }
+        }
+      }
     }
   }
 }

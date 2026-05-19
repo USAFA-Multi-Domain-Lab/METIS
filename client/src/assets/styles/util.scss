@@ -1,5 +1,6 @@
 @use './config.scss' as *;
 @forward './config.scss';
+@use 'sass:string';
 
 /* -- MIXINS -- */
 
@@ -8,7 +9,7 @@
  * @param {color} $color - The color to use for the alert pulse animation. Defaults to $color-neutral.
  */
 @mixin alert-pulse-animation($color: $color-neutral) {
-  $animation-name: alert-pulse-#{unique-id()};
+  $animation-name: alert-pulse-#{string.unique-id()};
 
   @keyframes #{$animation-name} {
     0% {
