@@ -66,9 +66,7 @@ describe('NodeAlertBox', () => {
 
     renderNodeAlertBox(alert)
 
-    expect(screen.getByTestId('markdown')).toHaveTextContent(
-      '**Escalate immediately**',
-    )
+    expect(screen.getByText('**Escalate immediately**')).toBeInTheDocument()
   })
 
   test('shows the Next alert button when areMorePendingAlerts is true', () => {

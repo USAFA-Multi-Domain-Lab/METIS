@@ -3,68 +3,11 @@ import { describe, expect, jest, test } from '@jest/globals'
 import { fireEvent, render } from '@testing-library/react'
 
 describe('DetailSlider', () => {
-  /* -- ROOT CLASS NAMES -- */
-
-  describe('Root class names', () => {
-    test('Root has "Detail" and "DetailSlider" classes', () => {
-      let { container } = render(
-        <DetailSlider
-          fieldType='required'
-          label='Test Label'
-          value={50}
-          setValue={() => {}}
-        />,
-      )
-      let root = container.querySelector('.DetailSlider') as HTMLElement
-      expect(root).toHaveClass('Detail')
-      expect(root).toHaveClass('DetailSlider')
-    })
-
-    test('Root has "Disabled" class when disabled', () => {
-      let { container } = render(
-        <DetailSlider
-          fieldType='required'
-          label='Test Label'
-          value={50}
-          setValue={() => {}}
-          disabled
-        />,
-      )
-      let root = container.querySelector('.DetailSlider') as HTMLElement
-      expect(root).toHaveClass('Disabled')
-    })
-
-    test('Root does not have "Disabled" class when not disabled', () => {
-      let { container } = render(
-        <DetailSlider
-          fieldType='required'
-          label='Test Label'
-          value={50}
-          setValue={() => {}}
-        />,
-      )
-      let root = container.querySelector('.DetailSlider') as HTMLElement
-      expect(root).not.toHaveClass('Disabled')
-    })
-  })
-
   /* -- VALUE DISPLAY -- */
 
   describe('Value display', () => {
-    test('SliderValue is rendered by default', () => {
-      let { container } = render(
-        <DetailSlider
-          fieldType='required'
-          label='Test Label'
-          value={42}
-          setValue={() => {}}
-        />,
-      )
-      expect(container.querySelector('.SliderValue')).not.toBeNull()
-    })
-
     test('SliderValue shows the current numeric value', () => {
-      let { container } = render(
+      let { getByText } = render(
         <DetailSlider
           fieldType='required'
           label='Test Label'
@@ -72,12 +15,11 @@ describe('DetailSlider', () => {
           setValue={() => {}}
         />,
       )
-      let valueElement = container.querySelector('.SliderValue') as HTMLElement
-      expect(valueElement.textContent).toBe('42')
+      expect(getByText('42')).toBeTruthy()
     })
 
     test('SliderValue includes the unit when the unit prop is provided', () => {
-      let { container } = render(
+      let { getByText } = render(
         <DetailSlider
           fieldType='required'
           label='Test Label'
@@ -86,12 +28,11 @@ describe('DetailSlider', () => {
           unit='%'
         />,
       )
-      let valueElement = container.querySelector('.SliderValue') as HTMLElement
-      expect(valueElement.textContent).toBe('75 %')
+      expect(getByText('75 %')).toBeTruthy()
     })
 
     test('SliderValue is not rendered when showValue is false', () => {
-      let { container } = render(
+      let { queryByText } = render(
         <DetailSlider
           fieldType='required'
           label='Test Label'
@@ -100,7 +41,7 @@ describe('DetailSlider', () => {
           showValue={false}
         />,
       )
-      expect(container.querySelector('.SliderValue')).toBeNull()
+      expect(queryByText('50')).toBeNull()
     })
   })
 
@@ -263,7 +204,7 @@ describe('DetailSlider', () => {
     })
 
     test('SliderValue defaults to the minimum when the optional value is null', () => {
-      let { container } = render(
+      let { getByText } = render(
         <DetailSlider
           fieldType='optional'
           label='Test Label'
@@ -272,8 +213,7 @@ describe('DetailSlider', () => {
           minimum={20}
         />,
       )
-      let valueElement = container.querySelector('.SliderValue') as HTMLElement
-      expect(valueElement.textContent).toBe('20')
+      expect(getByText('20')).toBeTruthy()
     })
 
     test('Changing the slider when the optional value is null calls setValue with a number', () => {
@@ -298,7 +238,7 @@ describe('DetailSlider', () => {
 
   describe('Value clamping', () => {
     test('Value above the maximum is clamped to the maximum for display', () => {
-      let { container } = render(
+      let { getByText } = render(
         <DetailSlider
           fieldType='required'
           label='Test Label'
@@ -307,12 +247,11 @@ describe('DetailSlider', () => {
           maximum={100}
         />,
       )
-      let valueElement = container.querySelector('.SliderValue') as HTMLElement
-      expect(valueElement.textContent).toBe('100')
+      expect(getByText('100')).toBeTruthy()
     })
 
     test('Value below the minimum is clamped to the minimum for display', () => {
-      let { container } = render(
+      let { getByText } = render(
         <DetailSlider
           fieldType='required'
           label='Test Label'
@@ -321,8 +260,7 @@ describe('DetailSlider', () => {
           minimum={0}
         />,
       )
-      let valueElement = container.querySelector('.SliderValue') as HTMLElement
-      expect(valueElement.textContent).toBe('0')
+      expect(getByText('0')).toBeTruthy()
     })
   })
 

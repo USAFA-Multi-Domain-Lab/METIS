@@ -29,7 +29,11 @@ describe('PropertyBadges', () => {
           description='Success Chance'
         />
         <PropertyBadge icon='timer' value='10s' description='Process Time' />
-        <PropertyBadge icon='coins' value='-100' description='Resource Cost' />
+        <PropertyBadge
+          icon='resources/coins'
+          value='-100'
+          description='Resource Cost'
+        />
       </PropertyBadges>,
     )
     let badges = container.querySelectorAll('.PropertyBadge')

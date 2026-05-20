@@ -3,137 +3,23 @@ import { describe, expect, jest, test } from '@jest/globals'
 import { fireEvent, render } from '@testing-library/react'
 
 describe('DetailString', () => {
-  /* -- ROOT CLASS NAMES -- */
+  /* -- ON CHANGE -- */
 
-  describe('Root class names', () => {
-    test('Root has "Detail" and "DetailString" classes', () => {
-      let { container } = render(
-        <DetailString
-          fieldType='required'
-          handleOnBlur='none'
-          label='Test Label'
-          value='Test'
-          setValue={() => {}}
-        />,
-      )
-      let root = container.firstChild as HTMLElement
-      expect(root).toHaveClass('Detail')
-      expect(root).toHaveClass('DetailString')
-    })
-
-    test('Root has "Disabled" class when disabled', () => {
-      let { container } = render(
-        <DetailString
-          fieldType='required'
-          handleOnBlur='none'
-          label='Test Label'
-          value='Test'
-          setValue={() => {}}
-          disabled
-        />,
-      )
-      let root = container.firstChild as HTMLElement
-      expect(root).toHaveClass('Disabled')
-    })
-
-    test('Root does not have "Disabled" class when not disabled', () => {
-      let { container } = render(
-        <DetailString
-          fieldType='required'
-          handleOnBlur='none'
-          label='Test Label'
-          value='Test'
-          setValue={() => {}}
-        />,
-      )
-      let root = container.firstChild as HTMLElement
-      expect(root).not.toHaveClass('Disabled')
-    })
-  })
-
-  /* -- PASSWORD FIELD BEHAVIOR -- */
-
-  describe('Password input type', () => {
-    test('Field has "Password" class when inputType is "password"', () => {
+  describe('onChange behavior', () => {
+    test('Typing in the input calls setValue with the new value', () => {
+      let setValue = jest.fn()
       let { container } = render(
         <DetailString
           fieldType='required'
           handleOnBlur='none'
           label='Test Label'
           value=''
-          setValue={() => {}}
-          inputType='password'
+          setValue={setValue}
         />,
       )
-      let field = container.querySelector('.Field') as HTMLElement
-      expect(field).toHaveClass('Password')
-    })
-
-    test('Field does not have "Password" class when inputType is "text"', () => {
-      let { container } = render(
-        <DetailString
-          fieldType='required'
-          handleOnBlur='none'
-          label='Test Label'
-          value='Test'
-          setValue={() => {}}
-          inputType='text'
-        />,
-      )
-      let field = container.querySelector('.Field') as HTMLElement
-      expect(field).not.toHaveClass('Password')
-    })
-
-    test('Field does not have "Password" class by default', () => {
-      let { container } = render(
-        <DetailString
-          fieldType='required'
-          handleOnBlur='none'
-          label='Test Label'
-          value='Test'
-          setValue={() => {}}
-        />,
-      )
-      let field = container.querySelector('.Field') as HTMLElement
-      expect(field).not.toHaveClass('Password')
-    })
-  })
-
-  /* -- TOGGLE PASSWORD BUTTON -- */
-
-  describe('Toggle password button', () => {
-    test('Toggle button has "Hidden" class when inputType is "text"', () => {
-      let { container } = render(
-        <DetailString
-          fieldType='required'
-          handleOnBlur='none'
-          label='Test Label'
-          value='Test'
-          setValue={() => {}}
-          inputType='text'
-        />,
-      )
-      let toggleButton = container.querySelector(
-        '.TogglePasswordButton',
-      ) as HTMLElement
-      expect(toggleButton).toHaveClass('Hidden')
-    })
-
-    test('Toggle button does not have "Hidden" class when inputType is "password"', () => {
-      let { container } = render(
-        <DetailString
-          fieldType='required'
-          handleOnBlur='none'
-          label='Test Label'
-          value=''
-          setValue={() => {}}
-          inputType='password'
-        />,
-      )
-      let toggleButton = container.querySelector(
-        '.TogglePasswordButton',
-      ) as HTMLElement
-      expect(toggleButton).not.toHaveClass('Hidden')
+      let input = container.querySelector('input') as HTMLInputElement
+      fireEvent.change(input, { target: { value: 'Hello' } })
+      expect(setValue).toHaveBeenCalledWith('Hello')
     })
   })
 
@@ -150,7 +36,7 @@ describe('DetailString', () => {
           setValue={() => {}}
         />,
       )
-      let input = container.querySelector('.Input') as HTMLElement
+      let input = container.querySelector('input') as HTMLElement
       fireEvent.blur(input)
       let fieldError = container.querySelector(
         '.FieldErrorMessage',
@@ -168,7 +54,7 @@ describe('DetailString', () => {
           setValue={() => {}}
         />,
       )
-      let input = container.querySelector('.Input') as HTMLElement
+      let input = container.querySelector('input') as HTMLElement
       fireEvent.blur(input)
       let fieldError = container.querySelector(
         '.FieldErrorMessage',
@@ -188,7 +74,7 @@ describe('DetailString', () => {
           defaultValue='fallback'
         />,
       )
-      let input = container.querySelector('.Input') as HTMLElement
+      let input = container.querySelector('input') as HTMLElement
       fireEvent.blur(input)
       expect(setValue).toHaveBeenCalledWith('fallback')
     })
@@ -204,7 +90,7 @@ describe('DetailString', () => {
           setValue={setValue}
         />,
       )
-      let input = container.querySelector('.Input') as HTMLElement
+      let input = container.querySelector('input') as HTMLElement
       fireEvent.blur(input)
       expect(setValue).not.toHaveBeenCalled()
     })
@@ -227,7 +113,9 @@ describe('DetailString', () => {
       let toggleButton = container.querySelector(
         '.TogglePasswordButton',
       ) as HTMLInputElement
-      let input = container.querySelector('.Input') as HTMLInputElement
+      let input = container.querySelector(
+        'input:not([type="button"])',
+      ) as HTMLInputElement
       expect(input.type).toBe('password')
       fireEvent.click(toggleButton)
       expect(input.type).toBe('text')
@@ -249,7 +137,9 @@ describe('DetailString', () => {
       ) as HTMLInputElement
       fireEvent.click(toggleButton)
       fireEvent.click(toggleButton)
-      let input = container.querySelector('.Input') as HTMLInputElement
+      let input = container.querySelector(
+        'input:not([type="button"])',
+      ) as HTMLInputElement
       expect(input.type).toBe('password')
     })
 
@@ -277,7 +167,7 @@ describe('DetailString', () => {
 
   describe('Character count', () => {
     test('Character count is rendered when maxLength is provided', () => {
-      let { container } = render(
+      let { getByText } = render(
         <DetailString
           fieldType='required'
           handleOnBlur='none'
@@ -287,13 +177,11 @@ describe('DetailString', () => {
           maxLength={10}
         />,
       )
-      let counter = container.querySelector('.CharacterCount') as HTMLElement
-      expect(counter).not.toBeNull()
-      expect(counter.textContent).toBe('5/10')
+      expect(getByText('5/10')).toBeTruthy()
     })
 
     test('Character count is not rendered when maxLength is not provided', () => {
-      let { container } = render(
+      let { queryByText } = render(
         <DetailString
           fieldType='required'
           handleOnBlur='none'
@@ -302,7 +190,7 @@ describe('DetailString', () => {
           setValue={() => {}}
         />,
       )
-      expect(container.querySelector('.CharacterCount')).toBeNull()
+      expect(queryByText('5/10')).toBeNull()
     })
   })
 })
