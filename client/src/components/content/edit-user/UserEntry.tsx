@@ -2,7 +2,7 @@ import { useUserPageContext } from '@client/components/pages/UserPage'
 import { useGlobalContext } from '@client/context/global'
 import { compute } from '@client/toolbox'
 import { usePostInitEffect, useRequireLogin } from '@client/toolbox/hooks'
-import type { ClientUser } from '@client/users/ClientUser'
+import { ClientUser } from '@client/users/ClientUser'
 import { UserAccess } from '@shared/users/UserAccess'
 import { useEffect, useState } from 'react'
 import { DetailString } from '../form/DetailString'
@@ -14,7 +14,7 @@ import './UserEntry.scss'
 /**
  * This will render the entry form for a user.
  */
-export default function ({
+export default function UserEntry({
   user,
   handleChange,
 }: TUserEntry_P): TReactElement | null {
@@ -50,7 +50,8 @@ export default function ({
   const [existsInDatabase] = state.existsInDatabase
   const [userEmptyStringArray, setUserEmptyStringArray] =
     state.userEmptyStringArray
-  const [usernameAlreadyExists] = state.usernameAlreadyExists
+  const [usernameAlreadyExists, setUsernameAlreadyExists] =
+    state.usernameAlreadyExists
   const [updatePassword, setUpdatePassword] = state.updatePassword
 
   /* -- COMPUTED -- */
@@ -100,6 +101,9 @@ export default function ({
   // Sync the component state with the username property.
   usePostInitEffect(() => {
     user.username = username
+
+    // Clear any existing duplicate-username error as the user types.
+    setUsernameAlreadyExists(false)
 
     if (username !== '' && user.hasValidUsername) {
       removeUserEmptyString('username')
@@ -299,6 +303,12 @@ export default function ({
         setValue={setUsername}
         errorMessage={usernameErrorMessage}
         placeholder='Enter a username here...'
+        onBeforeBlur={async () => {
+          if (!existsInDatabase && user.hasValidUsername) {
+            let exists = await ClientUser.$checkUsername(username)
+            if (exists) setUsernameAlreadyExists(true)
+          }
+        }}
       />
       <DetailDropdown<UserAccess>
         fieldType='required'

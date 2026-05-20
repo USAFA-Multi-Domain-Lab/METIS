@@ -32,6 +32,8 @@ export function DetailString({
   tooltipDescription = '',
   maxLength = undefined,
   highlightAllOnFocus = false,
+  onBeforeBlur = undefined,
+  onAfterBlur = undefined,
 }: TDetailString_P): TReactElement {
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
@@ -94,8 +96,10 @@ export function DetailString({
    * Class names for the toggle password display container.
    * @note Appears as a button with the text "show" or "hide".
    */
-  const togglePasswordButtonClasses = new ClassList('TogglePasswordButton')
-    .set('Hidden', inputType !== 'password')
+  const togglePasswordButtonClasses = new ClassList('TogglePasswordButton').set(
+    'Hidden',
+    inputType !== 'password',
+  )
   /**
    * The placeholder text being displayed.
    */
@@ -155,6 +159,8 @@ export function DetailString({
             let target: HTMLInputElement = event.target as HTMLInputElement
             let value: string | undefined = target.value
 
+            onBeforeBlur?.()
+
             // Indicate that the user has left the field.
             // @note - This allows errors to be displayed.
             setLeftField(true)
@@ -176,6 +182,8 @@ export function DetailString({
                 setState(placeholderDisplayed)
               }
             }
+
+            onAfterBlur?.()
           }}
         />
         <input
@@ -221,4 +229,12 @@ type TDetailString_P = TDetailWithInput_P<string> & {
    * @default false
    */
   highlightAllOnFocus?: boolean
+  /**
+   * Called at the very start of the blur handler, before any built-in logic runs.
+   */
+  onBeforeBlur?: () => void
+  /**
+   * Called at the very end of the blur handler, after all built-in logic has run.
+   */
+  onAfterBlur?: () => void
 }

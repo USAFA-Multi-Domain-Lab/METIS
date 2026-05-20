@@ -424,6 +424,28 @@ export class ClientUser
   }
 
   /**
+   * Calls the API to check whether a username already exists in the database.
+   * @param username The username to check.
+   * @resolves `true` if the username is already taken, `false` if it is available.
+   * @rejects The error that occurred while checking the username.
+   */
+  public static $checkUsername(username: string): Promise<boolean> {
+    return new Promise<boolean>(async (resolve, reject) => {
+      try {
+        let { data } = await axios.get<{ exists: boolean }>(
+          `${ClientUser.API_ENDPOINT}/check-username/`,
+          { params: { username } },
+        )
+        resolve(data.exists)
+      } catch (error) {
+        console.error('Failed to check username.')
+        console.error(error)
+        reject(error)
+      }
+    })
+  }
+
+  /**
    * Calls the API to create a new user.
    * @param clientUser The user to create.
    * @resolves The user that was created.

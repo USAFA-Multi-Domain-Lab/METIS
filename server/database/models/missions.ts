@@ -232,10 +232,6 @@ const sanitizeHtml = (html: string): string => {
         'span',
       ],
       ALLOWED_ATTR: ['href', 'rel', 'target', 'class', 'style'],
-      // ! wrong: style is an attribute, not a tag
-      // FORBID_TAGS: ['script', 'style', 'iframe'],
-      // ? right
-      // FORBID_ATTR: ['style'],
       FORBID_TAGS: ['script', 'iframe'],
     })
 
