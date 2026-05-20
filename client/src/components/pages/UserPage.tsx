@@ -128,16 +128,17 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
 
   // Add an event listener to listen for cmd+s/ctrl+s
   // key presses to save the user.
-  useEventListener(
-    document,
-    'keydown',
-    (event: KeyboardEvent) => {
-      if (event.key === 's' && (event.ctrlKey || event.metaKey)) {
-        event.preventDefault()
-        save()
-      }
-    },
-  )
+  useEventListener(document, 'keydown', (event: KeyboardEvent) => {
+    let modKey = event.ctrlKey || event.metaKey
+    let correctKeystroke = modKey && !event.shiftKey && event.key === 's'
+
+    if (correctKeystroke && areUnsavedChanges) {
+      event.preventDefault()
+      save()
+    } else if (correctKeystroke && !areUnsavedChanges) {
+      event.preventDefault()
+    }
+  })
 
   /* -- COMPUTED -- */
 
@@ -184,6 +185,12 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
         if (error instanceof AxiosError && error.response?.status === 409) {
           notify('This user already exists. Try using a different username.')
           setUsernameAlreadyExists(true)
+        } else if (
+          error instanceof AxiosError &&
+          error.response?.status === 410
+        ) {
+          notify('This username has been archived and is no longer available.')
+          setUsernameAlreadyExists(true)
         } else {
           notify('User failed to save.')
         }
@@ -205,6 +212,12 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
       } catch (error: any) {
         if (error instanceof AxiosError && error.response?.status === 409) {
           notify('This user already exists. Try using a different username.')
+          setUsernameAlreadyExists(true)
+        } else if (
+          error instanceof AxiosError &&
+          error.response?.status === 410
+        ) {
+          notify('This username has been archived and is no longer available.')
           setUsernameAlreadyExists(true)
         } else {
           notify('User failed to save.')

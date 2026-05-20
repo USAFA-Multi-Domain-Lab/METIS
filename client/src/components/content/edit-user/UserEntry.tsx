@@ -287,6 +287,25 @@ export default function UserEntry({
     })
   }
 
+  /**
+   * This is called when the username field loses focus.
+   * It checks if the username already exists in the database.
+   */
+  const handleUsernameOnBlur = async () => {
+    if (!existsInDatabase && user.hasValidUsername) {
+      let result = await ClientUser.$checkUsername(username)
+
+      if (result === 'active') {
+        setUsernameAlreadyExists(true)
+      } else if (result === 'archived') {
+        setUsernameErrorMessage(
+          'This username has been archived and is no longer available.',
+        )
+        setHandleUsernameError('deliverError')
+      }
+    }
+  }
+
   /* -- RENDER -- */
 
   return (
@@ -303,12 +322,7 @@ export default function UserEntry({
         setValue={setUsername}
         errorMessage={usernameErrorMessage}
         placeholder='Enter a username here...'
-        onBeforeBlur={async () => {
-          if (!existsInDatabase && user.hasValidUsername) {
-            let exists = await ClientUser.$checkUsername(username)
-            if (exists) setUsernameAlreadyExists(true)
-          }
-        }}
+        onBeforeBlur={handleUsernameOnBlur}
       />
       <DetailDropdown<UserAccess>
         fieldType='required'

@@ -1,6 +1,7 @@
 import { UserModel } from '@server/database/models/users'
 import { databaseLogger } from '@server/logging'
 import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 
 /**
  * Checks whether a username already exists in the database.
@@ -13,16 +14,26 @@ export const checkUsername: TExpressHandler = async (request, response) => {
   let { username } = request.query as { username: string }
 
   try {
-    // Check if a user with this username already exists.
-    let existingUser = await UserModel.findOne(
-      { username },
+    // Check if an active user already has this username.
+    let activeUser = await UserModel.findOne({ username }).exec()
+    if (activeUser) {
+      throw new StatusError(`Username "${username}" is already in use.`, 409)
+    }
+
+    // Check if an archived (deleted) user previously had this username.
+    let archivedUser = await UserModel.findOne(
+      { username, deleted: true },
       {},
       { includeDeleted: true },
     ).exec()
+    if (archivedUser) {
+      throw new StatusError(`Username "${username}" has been archived.`, 410)
+    }
+
     // Log the result.
     databaseLogger.info(`Username "${username}" existence checked.`)
-    // Return the result.
-    return ApiResponse.sendJson(response, { exists: existingUser !== null })
+    // Username is available.
+    return ApiResponse.sendJson(response, { exists: false })
   } catch (error: any) {
     // Log the error.
     databaseLogger.error(
