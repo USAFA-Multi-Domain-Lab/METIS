@@ -300,7 +300,7 @@ export function DetailDropdown<TOption>(
             onClick={() => (!disabled ? setExpanded(!expanded) : null)}
           >
             <div className={stateValueClasses.value}>{valueDisplayed}</div>
-            <div className='Indicator'>v</div>
+            <div className='Indicator'>▼</div>
           </DropdownOption>
           <div className={availableOptionsClasses.value}>{optionsJsx}</div>
         </div>

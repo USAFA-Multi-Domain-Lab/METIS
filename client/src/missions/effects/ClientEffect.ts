@@ -48,9 +48,22 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
   protected parseArguments(
     data: TTargetArgumentJson[],
   ): JsonSerializableArray<ClientTargetArgument> {
-    return JsonSerializableArray.fromJson(data, (datum: TTargetArgumentJson) =>
+    let targetArguments = JsonSerializableArray.fromJson(data, (datum: TTargetArgumentJson) =>
       ClientTargetArgument.fromJson(datum, this),
     )
+
+    // Extra step on the client, which ensures any
+    // missing arguments are auto-generated and included
+    // in the effect.
+    if (this.target) {
+      for (let parameter of this.target.parameters) {
+        if (!targetArguments.find((arg) => arg.parameterId === parameter._id)) {
+          targetArguments.push(ClientTargetArgument.createDefault(parameter, this))
+        }
+      }
+    }
+    
+    return targetArguments
   }
 
   // Implemented
@@ -97,21 +110,6 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
       // todo: Duplicate method should be added to argument class.
       this.arguments.map((arg) => arg.json),
       localKey,
-    )
-  }
-
-  /**
-   * Initializes the effect with default arguments based on the
-   * provided target's parameters.
-   * @param target The target for which to initialize the arguments.
-   * @note This will overwrite any existing arguments, so call with
-   * caution.
-   */
-  public initializeArguments(target: ClientTarget): void {
-    this.arguments = new JsonSerializableArray(
-      ...target.parameters.map((parameter) =>
-        ClientTargetArgument.createDefaultParameter(parameter, this),
-      ),
     )
   }
 
@@ -172,7 +170,6 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
       [],
       mission.generateEffectKey(),
     )
-    effect.initializeArguments(target)
     return effect
   }
 
@@ -218,7 +215,6 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
       ClientEffect.DEFAULT_EXEC_PROPERTIES.arguments,
       action.generateEffectKey(),
     )
-    effect.initializeArguments(target)
     return effect
   }
 

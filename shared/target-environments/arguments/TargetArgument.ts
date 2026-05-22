@@ -19,7 +19,13 @@ import {
   MissionComponent,
   type TMissionComponentIssue,
 } from '../../missions/MissionComponent'
-import type { TDropdownTargetParameterOptionVal } from '../parameters/DropdownTargetParameter'
+import type {
+  TDropdownTargetParameter,
+  TDropdownTargetParameterOptionVal,
+} from '../parameters/DropdownTargetParameter'
+import type { TLargeStringTargetParameter } from '../parameters/LargeStringTargetParameter'
+import type { TNumberTargetParameter } from '../parameters/NumberTargetParameter'
+import type { TStringTargetParameter } from '../parameters/StringTargetParameter'
 import type {
   TTargetParameter,
   TTargetParameterType,
@@ -212,6 +218,76 @@ export abstract class TargetArgument<
         type: 'general',
         message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that does not match the required pattern.`,
       })
+    }
+  }
+
+  /**
+   * If the argument is required and its value is unset for its type, this replaces
+   * the value with the parameter's default. Called during `fromJson` before
+   * context construction so that the in-memory representation (and any
+   * subsequent save) reflects the intended default.
+   *
+   * Applicable types and their "unset" sentinels:
+   * - `number`       → `null`
+   * - `string`       → `""`
+   * - `large-string` → `""`
+   * - `dropdown`     → `null` (applies `parameter.default.value`, the primitive)
+   *
+   * `boolean` and `mission-component` are excluded: boolean has no `required`
+   * field and its natural unset state is `false`; mission-component has no
+   * `default` field.
+   *
+   * If `parameter` is `undefined`, or `json.type` does not match
+   * `parameter.type` (a type-mismatch that `scanForIssues` will surface), the
+   * JSON is returned unchanged.
+   *
+   * @param json The raw argument JSON as loaded from the database, which is mutated
+   * by this method.
+   * @param parameter The resolved target parameter for this argument, if found.
+   */
+  protected static applyDefault(
+    json: TTargetArgumentJson,
+    parameter: TTargetParameter | undefined,
+  ): void {
+    if (!parameter || json.type !== parameter.type) return
+
+    switch (json.type) {
+      case 'number': {
+        parameter = parameter as TNumberTargetParameter // Cast is safe due to type check at the top of the method.
+        if (parameter.required && json.value === null) {
+          json.value = parameter.default
+        }
+        break
+      }
+      case 'string': {
+        parameter = parameter as TStringTargetParameter // Cast is safe due to type check at the top of the method.
+        if (parameter.required && json.value === '') {
+          json.value = parameter.default
+        }
+        break
+      }
+      case 'large-string': {
+        parameter = parameter as TLargeStringTargetParameter // Cast is safe due to type check at the top of the method.
+        if (parameter.required && json.value === '') {
+          json.value = parameter.default
+        }
+        break
+      }
+      case 'dropdown': {
+        parameter = parameter as TDropdownTargetParameter // Cast is safe due to type check at the top of the method.
+        if (
+          parameter.required &&
+          (json.value === null || json.value === undefined)
+        ) {
+          json.value = parameter.default.value
+        }
+        break
+      }
+      default: {
+        console.warn(
+          `applyDefault was called for parameter type "${json.type}", which is not supported.`,
+        )
+      }
     }
   }
 

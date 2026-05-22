@@ -61,7 +61,7 @@ export function DetailColorSelector({
             {stateValue}
           </div>
           <div className='Indicator' style={{ color: stateValue }}>
-            v
+            ▼
           </div>
         </div>
 

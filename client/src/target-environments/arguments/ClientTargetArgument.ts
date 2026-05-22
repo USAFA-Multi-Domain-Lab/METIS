@@ -31,6 +31,8 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
       json = { ...json, type: parameter.type as any }
     }
 
+    ClientTargetArgument.applyDefault(json, parameter)
+
     let context = ClientTargetArgument.buildContext<TMetisClientComponents>(
       json,
       effect.normalize(),
@@ -44,7 +46,7 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
    * @param effect The effect to which the argument belongs.
    * @returns The new {@link ClientTargetArgument}.
    */
-  public static createDefaultParameter(
+  public static createDefault(
     parameter: TTargetParameter,
     effect: ClientEffect,
   ): ClientTargetArgument {

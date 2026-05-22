@@ -14,7 +14,7 @@
     &.Expanded {
       .DropdownOption.Selected {
         .Indicator {
-          transform: scale(1.25, -1);
+          transform: scale(1, -0.75);
         }
       }
     }
@@ -22,7 +22,7 @@
     &.Collapsed {
       .DropdownOption.Selected {
         .Indicator {
-          transform: scale(1.25, 1);
+          transform: scale(1, 0.75);
         }
       }
     }
@@ -37,8 +37,12 @@
         padding: $detail-field-padding;
 
         .Indicator {
+          display: block;
           width: 1em;
           text-align: center;
+          font-size: 1.1rem;
+          color: $detail-field-text-color;
+          transition: transform 0.2s ease;
         }
 
         .Text {

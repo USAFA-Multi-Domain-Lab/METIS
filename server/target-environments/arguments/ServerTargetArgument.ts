@@ -36,6 +36,8 @@ export class ServerTargetArgument extends TargetArgument<TMetisServerComponents>
       json = { ...json, type: parameter.type as any }
     }
 
+    ServerTargetArgument.applyDefault(json, parameter)
+
     let context = ServerTargetArgument.buildContext<TMetisServerComponents>(
       json,
       effect.normalize(),

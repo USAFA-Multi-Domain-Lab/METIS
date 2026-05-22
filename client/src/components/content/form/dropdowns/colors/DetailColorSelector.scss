@@ -6,7 +6,7 @@
     &.IsExpanded {
       .Dropdown {
         .Indicator {
-          transform: scale(1, -0.8);
+          transform: scale(1, -0.75);
         }
       }
     }
@@ -25,9 +25,11 @@
       }
 
       .Indicator {
-        transform: scale(1, 0.8);
-        font-size: 1.25rem;
+        display: block;
+        transform: scale(1, 0.75);
+        font-size: 1.1rem;
         text-align: end;
+        transition: transform 0.2s ease;
       }
     }
 
