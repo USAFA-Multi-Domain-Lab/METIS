@@ -95,4 +95,17 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
 
     return new ClientTargetArgument(effect, _id, parameter._id, context)
   }
+
+  /**
+   * Duplicates this argument, creating a new instance bound to the
+   * provided effect with a fresh `_id` but the same parameter values.
+   * @param effect The effect to which the duplicated argument belongs.
+   * @returns A new {@link ClientTargetArgument} with a fresh `_id`.
+   */
+  public duplicate(effect: ClientEffect): ClientTargetArgument {
+    return ClientTargetArgument.fromJson(
+      { ...this.json, _id: StringToolbox.generateRandomId() },
+      effect,
+    )
+  }
 }

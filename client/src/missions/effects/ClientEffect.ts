@@ -48,8 +48,10 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
   protected parseArguments(
     data: TTargetArgumentJson[],
   ): JsonSerializableArray<ClientTargetArgument> {
-    let targetArguments = JsonSerializableArray.fromJson(data, (datum: TTargetArgumentJson) =>
-      ClientTargetArgument.fromJson(datum, this),
+    let targetArguments = JsonSerializableArray.fromJson(
+      data,
+      (datum: TTargetArgumentJson) =>
+        ClientTargetArgument.fromJson(datum, this),
     )
 
     // Extra step on the client, which ensures any
@@ -58,11 +60,13 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
     if (this.target) {
       for (let parameter of this.target.parameters) {
         if (!targetArguments.find((arg) => arg.parameterId === parameter._id)) {
-          targetArguments.push(ClientTargetArgument.createDefault(parameter, this))
+          targetArguments.push(
+            ClientTargetArgument.createDefault(parameter, this),
+          )
         }
       }
     }
-    
+
     return targetArguments
   }
 
@@ -98,7 +102,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
       localKey = this.localKey,
     } = options
 
-    return new ClientEffect<TType>(
+    let duplicatedEffect = new ClientEffect<TType>(
       ClientEffect.DEFAULT_EXEC_PROPERTIES._id,
       name,
       this.targetId,
@@ -107,10 +111,16 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
       this.host.generateEffectOrder(this.trigger as never),
       this.description,
       context,
-      // todo: Duplicate method should be added to argument class.
-      this.arguments.map((arg) => arg.json),
+      [],
       localKey,
     )
+
+    // Duplicate the arguments.
+    duplicatedEffect.arguments = new JsonSerializableArray(
+      ...this.arguments.map((arg) => arg.duplicate(duplicatedEffect)),
+    )
+
+    return duplicatedEffect
   }
 
   /**
