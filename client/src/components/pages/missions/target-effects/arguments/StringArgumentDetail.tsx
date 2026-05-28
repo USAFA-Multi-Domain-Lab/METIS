@@ -38,6 +38,7 @@ export default function StringArgumentDetail({
   const setValue: TReactSetter<string> = (
     newValue: TReactSetterParameter<string>,
   ): void => {
+    console.log('setting value')
     setContext({
       ...context,
       value: typeof newValue === 'function' ? newValue(value) : newValue,
@@ -91,7 +92,6 @@ export default function StringArgumentDetail({
       }
     },
   )
-  let highlightAllOnFocus = parameter.required && value === parameter.default
 
   /* -- RENDER -- */
   return (
@@ -102,7 +102,6 @@ export default function StringArgumentDetail({
       value={value}
       setValue={setValue}
       defaultValue={parameter.required ? parameter.default : undefined}
-      highlightAllOnFocus={highlightAllOnFocus}
       errorMessage={patternErrorMessage}
       errorType='warning'
       errorDisplay={'immediate'}

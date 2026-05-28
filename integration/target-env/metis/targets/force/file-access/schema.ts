@@ -18,8 +18,6 @@ const FileAccess = TargetSchema.create({
       _id: 'applyTo',
       name: 'Apply To',
       groupingId: 'main',
-      required: true,
-      multiSelect: true,
       validComponentTypes: ['mission', 'force'],
     },
     {
@@ -27,7 +25,6 @@ const FileAccess = TargetSchema.create({
       _id: 'files',
       name: 'File',
       groupingId: 'main',
-      required: true,
       validComponentTypes: ['missionFile'],
       dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
     },

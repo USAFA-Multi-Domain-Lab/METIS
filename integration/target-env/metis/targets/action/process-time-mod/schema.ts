@@ -39,8 +39,6 @@ const ProcessTimeMod = TargetSchema.create({
       type: 'mission-component',
       _id: 'applyTo',
       name: 'Apply To',
-      required: true,
-      multiSelect: true,
       validComponentTypes: ['mission', 'force', 'node', 'action'],
       tooltipDescription:
         'Select a group of components within the mission ' +

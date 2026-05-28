@@ -17,9 +17,7 @@ const SuccessChanceMod = TargetSchema.create({
       type: 'mission-component',
       _id: 'applyTo',
       name: 'Apply To',
-      required: true,
       groupingId: 'main',
-      multiSelect: true,
       validComponentTypes: ['mission', 'force', 'node', 'action'],
     },
     {

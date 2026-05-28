@@ -31,7 +31,6 @@ export function DetailString({
   placeholder = 'Enter text here...',
   tooltipDescription = '',
   maxLength = undefined,
-  highlightAllOnFocus = false,
 }: TDetailString_P): TReactElement {
   /* -- STATE -- */
   const [leftField, setLeftField] = useState<boolean>(false)
@@ -94,8 +93,10 @@ export function DetailString({
    * Class names for the toggle password display container.
    * @note Appears as a button with the text "show" or "hide".
    */
-  const togglePasswordButtonClasses = new ClassList('TogglePasswordButton')
-    .set('Hidden', inputType !== 'password')
+  const togglePasswordButtonClasses = new ClassList('TogglePasswordButton').set(
+    'Hidden',
+    inputType !== 'password',
+  )
   /**
    * The placeholder text being displayed.
    */
@@ -142,9 +143,7 @@ export function DetailString({
           maxLength={maxLength}
           disabled={disabled}
           onFocus={(event: React.FocusEvent<HTMLInputElement>) => {
-            if (highlightAllOnFocus) {
-              event.target.select()
-            }
+            event.target.select()
           }}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             let target: HTMLInputElement = event.target as HTMLInputElement
@@ -175,6 +174,12 @@ export function DetailString({
               } else {
                 setState(placeholderDisplayed)
               }
+            }
+          }}
+          onMouseDown={(event: React.MouseEvent<HTMLInputElement>) => {
+            if (document.activeElement !== event.currentTarget) {
+              event.preventDefault()
+              event.currentTarget.focus()
             }
           }}
         />
@@ -216,9 +221,4 @@ type TDetailString_P = TDetailWithInput_P<string> & {
    * The maximum number of characters that can be entered.
    */
   maxLength?: number
-  /**
-   * Determines if the field highlights all of the text when the user focuses on the field.
-   * @default false
-   */
-  highlightAllOnFocus?: boolean
 }

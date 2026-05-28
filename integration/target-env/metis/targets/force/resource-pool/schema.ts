@@ -27,9 +27,7 @@ const ResourcePool = TargetSchema.create({
       type: 'mission-component',
       _id: 'applyTo',
       name: 'Resource Pool',
-      required: true,
       validComponentTypes: ['mission', 'force', 'resourcePool'],
-      multiSelect: true,
     },
     {
       type: 'dropdown',

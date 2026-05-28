@@ -131,6 +131,9 @@ export function DetailNumber({
             setState(value)
           }
         }}
+        onFocus={(event: React.FocusEvent<HTMLInputElement>) => {
+          event.target.select()
+        }}
         onBlur={(event: React.FocusEvent<HTMLInputElement>) => {
           let target: HTMLInputElement = event.target as HTMLInputElement
 
@@ -203,6 +206,12 @@ export function DetailNumber({
             setState(finalValue)
           } else if (fieldType === 'optional') {
             setState(null)
+          }
+        }}
+        onMouseDown={(event: React.MouseEvent<HTMLInputElement>) => {
+          if (document.activeElement !== event.currentTarget) {
+            event.preventDefault()
+            event.currentTarget.focus()
           }
         }}
       />

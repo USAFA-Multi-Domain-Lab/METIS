@@ -52,9 +52,7 @@ const NodeOpenState = TargetSchema.create({
       type: 'mission-component',
       _id: applyToArg._id,
       name: applyToArg.name,
-      required: true,
       groupingId: groupingId,
-      multiSelect: true,
       validComponentTypes: ['mission', 'force', 'node'],
       tooltipDescription:
         'Select a group of components within the mission ' +

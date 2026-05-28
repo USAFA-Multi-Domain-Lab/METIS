@@ -92,4 +92,19 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
       session,
     )
   }
+
+  /**
+   * Emits the same event to each member in a given group.
+   * @param group The members to emit the event to.
+   * @param method Identifies the type of event being emitted.
+   * @param payload The corresponding data for the provided event method.
+   */
+  public static emitToGroup<
+    TMethod extends TServerMethod,
+    TPayload extends Omit<TServerEvents[TMethod], 'method'>,
+  >(group: ServerSessionMember[], method: TMethod, payload: TPayload): void {
+    for (let member of group) {
+      member.emit(method, payload)
+    }
+  }
 }

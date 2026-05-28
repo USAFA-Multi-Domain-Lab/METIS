@@ -40,6 +40,7 @@ import type {
 } from '@shared/missions/Mission'
 import type { MissionComponent } from '@shared/missions/MissionComponent'
 import { type TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
+import type { TSessionAuthParam } from '@shared/sessions/members/MemberPermission'
 import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
 import { MemberRole } from '@shared/sessions/members/MemberRole'
 import type { TSessionMemberJson } from '@shared/sessions/members/SessionMember'
@@ -52,10 +53,13 @@ import type {
 import { MissionSession } from '@shared/sessions/MissionSession'
 import type { TEnvScriptResultJson } from '@shared/target-environments/EnvScriptResults'
 import { EnvScriptResults } from '@shared/target-environments/EnvScriptResults'
+import type { TInstanceOrArray } from '@shared/toolbox/arrays/ArrayToolbox'
+import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import { type TSingleTypeObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { User } from '@shared/users/User'
 import { targetEnvLogger } from '../logging'
+import { ComponentModifierBatchMap } from './ComponentModifierBatchMap'
 import { ServerSessionMember } from './ServerSessionMember'
 import { TargetEnvStore } from './TargetEnvStore'
 
@@ -186,18 +190,38 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   /**
    * Gets the users that have access to the force with the given ID.
    * @param forceId The ID of the force.
+   * @param options Additional options to tailor the members returned based on
+   * the callers needs.
    * @returns The users.
    */
-  public getMembersForForce(forceId: string): ServerSessionMember[] {
+  public getMembersForForce(
+    forceId: string,
+    options: TMembersForForceOptions = {},
+  ): ServerSessionMember[] {
+    const { limitedVisibilityOnly = false } = options
+
     // Get all members that either have complete visibility
     // or are assigned to the force with the given ID.
-    return [
-      ...this.members.filter(
-        (member) =>
-          member.isAuthorized('completeVisibility') ||
-          member.forceId === forceId,
-      ),
-    ]
+    return this.members.filter((member) => {
+      let hasCompleteVisibility = member.isAuthorized('completeVisibility')
+      let isAssignedToForce = member.forceId === forceId
+
+      if (limitedVisibilityOnly) {
+        return !hasCompleteVisibility && isAssignedToForce
+      } else {
+        return hasCompleteVisibility || isAssignedToForce
+      }
+    })
+  }
+
+  /**
+   * @param permissions The permission(s) to check for.
+   * @returns The members with the specified permission(s).
+   */
+  public getMembersWithPermissions(
+    permissions: TSessionAuthParam,
+  ): ServerSessionMember[] {
+    return this.members.filter((member) => member.isAuthorized(permissions))
   }
 
   /**
@@ -2304,7 +2328,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * Confirms the mission component is a part of the mission
    * the session is using.
    * @param component The component to check.
-   * @throws If the force does not belong to the mission.
+   * @throws If the component does not belong to the mission.
    */
   private confirmComponentInMission(
     component: MissionComponent<any, any>,
@@ -2313,6 +2337,22 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       throw new Error(
         `Could not perform the operation on the component with ID "${component._id}" because it does not belong to the mission with ID "${this.mission._id}".`,
       )
+    }
+  }
+
+  /**
+   * Confirms the mission components are a part of the mission
+   * the session is using.
+   * @param components The components to check. This can be multiple instances or arrays
+   * of components. Allowing for multiple instances and arrays provides flexibility for
+   * passing components from various sources without needing to consolidate them beforehand.
+   * @throws If any component does not belong to the mission.
+   */
+  private confirmComponentsInMission(
+    ...components: Array<TInstanceOrArray<MissionComponent<any, any>>>
+  ): void {
+    for (let component of ArrayToolbox.toArray(components.flat())) {
+      this.confirmComponentInMission(component)
     }
   }
 
@@ -2332,23 +2372,25 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
-   * Handles the blocking and unblocking of a node during a session.
-   * @param nodeId The node to block or unblock.
-   * @param blocked Whether to block or unblock the node.
+   * Handles the blocking and unblocking of nodes during a session.
+   * @param nodes The nodes to block or unblock.
+   * @param blocked Whether to block or unblock the nodes.
    */
   public updateNodeBlockStatus = (
-    node: ServerMissionNode,
+    nodes: ServerMissionNode[],
     blocked: boolean,
   ) => {
-    // Confirm the node exists, update the block status,
-    // then emit an event to the members.
-    this.confirmComponentInMission(node)
-    node.blocked = blocked
-    this.emitModifierEnacted(node.force, {
-      key: 'node-update-block-status',
-      nodeId: node._id,
-      blocked,
-    })
+    this.confirmComponentsInMission(nodes)
+    nodes.forEach((node) => (node.blocked = blocked))
+
+    let batchMap = new ComponentModifierBatchMap(this, nodes)
+
+    batchMap.emit('node-block-status-updated', (nodeIds) => ({
+      data: {
+        blocked,
+        nodeIds,
+      },
+    }))
   }
 
   /**
@@ -2504,7 +2546,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         processTimeOperand: operand,
         appliedAt,
         nodeId: action.node._id,
-        actionId: action?._id,
+        actionId: action._id,
       },
     )
   }
@@ -2558,44 +2600,24 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
-   * Updates the access to the given file in the mission to the
-   * given force.
-   * @param file The file to which access is granted/revoked.
-   * @param force The force which will have access to the file.
+   * Updates access to the given files in the mission for the given forces.
+   * @param forces The forces which will have their access modified.
+   * @param files The files to which access is granted/revoked.
+   * @param granted Whether access is granted or revoked.
    */
   public updateFileAccess = (
-    file: ServerMissionFile,
-    force: ServerMissionForce,
+    forces: ServerMissionForce[],
+    files: ServerMissionFile[],
     granted: boolean,
   ): void => {
-    this.confirmComponentInMission(file)
+    this.confirmComponentsInMission(files, forces)
+    forces.forEach((force) => force.updateFileAccess(files, granted))
 
-    // Grant/revoke access based on the parameter
-    // passed.
-    if (granted) file.grantAccess(force)
-    else file.revokeAccess(force)
+    let batchMap = new ComponentModifierBatchMap(this, forces)
 
-    // Emit an event to members of the force,
-    // including file-data if the access
-    // to the file is now granted.
-    let eventPartialPayload = {
-      key: 'file-update-access',
-      fileId: file._id,
-      forceId: force._id,
-    } as const
-
-    if (granted) {
-      this.emitModifierEnacted(force, {
-        ...eventPartialPayload,
-        granted: true,
-        fileData: file.toJson(),
-      })
-    } else {
-      this.emitModifierEnacted(force, {
-        ...eventPartialPayload,
-        granted: false,
-      })
-    }
+    batchMap.emit('file-access-updated', (forceIds) => ({
+      data: { granted, forceIds, files: files.map((file) => file.toJson()) },
+    }))
   }
 
   /**
@@ -2652,13 +2674,15 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
       // Otherwise, send the output to all members
       // of the force.
-      for (let member of this.getMembersForForce(force._id)) {
-        member.emit('send-output', {
+      ServerSessionMember.emitToGroup(
+        this.getMembersForForce(force._id),
+        'send-output',
+        {
           data: {
             outputData: output.toJson(),
           },
-        })
-      }
+        },
+      )
     }
   }
 
@@ -2779,4 +2803,16 @@ export type TOutputTo = {
    * The session member to whom the output is sent.
    */
   member?: ServerSessionMember
+}
+
+/**
+ * Additional options for {@link SessionServer.getMembersForForce} method.
+ */
+export type TMembersForForceOptions = {
+  /**
+   * If true, then only members without complete visibility
+   * permissions will be returned.
+   * @default false
+   */
+  limitedVisibilityOnly?: boolean
 }

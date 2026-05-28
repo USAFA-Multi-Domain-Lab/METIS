@@ -26,8 +26,6 @@ export class MissionComponentTargetParameter2 {
         : undefined,
       tooltipDescription: arg.tooltipDescription,
       type: arg.type,
-      required: arg.required,
-      multiSelect: arg.multiSelect,
       validComponentTypes: arg.validComponentTypes,
     }
   }
@@ -49,8 +47,6 @@ export class MissionComponentTargetParameter2 {
         : undefined,
       tooltipDescription: arg.tooltipDescription,
       type: arg.type,
-      required: arg.required,
-      multiSelect: arg.multiSelect,
       validComponentTypes: arg.validComponentTypes,
     }
   }
@@ -66,15 +62,6 @@ export type TMissionComponentTargetParameter2 = TBaseTargetParameter & {
    * The argument's input type.
    */
   type: 'mission-component'
-  /**
-   * Determines whether the argument is required or not.
-   */
-  required: boolean
-  /**
-   * Whether or not multiple mission components can be selected
-   * for this argument, or just one.
-   */
-  multiSelect?: boolean
   /**
    * Mission component types that are valid for this argument.
    * For example, perhaps only "nodes" and "actions" are wanted,
@@ -137,14 +124,6 @@ export type TMissionComponentTargetParameterJson2 = TBaseTargetParameterJson & {
    * @see {@link TMissionComponentTargetParameter2.type}
    */
   type: 'mission-component'
-  /**
-   * @see {@link TMissionComponentTargetParameter2.required}
-   */
-  required: boolean
-  /**
-   * @see {@link TMissionComponentTargetParameter2.multiSelect}
-   */
-  multiSelect?: boolean
   /**
    * @see {@link TMissionComponentTargetParameter2.validComponentTypes}
    */

@@ -12,7 +12,6 @@ import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode
 import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
 import { ClientUser } from '@client/users/ClientUser'
 import type {
-  TFileAccessModifierData,
   TGenericServerEvents,
   TNodeNewAlertData,
   TNodeOpenStateData,
@@ -182,6 +181,8 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       ['action-execution-initiated', this.onActionExecutionInitiated],
       ['action-execution-completed', this.onActionExecutionCompleted],
       ['modifier-enacted', this.onModifierEnacted],
+      ['node-block-status-updated', this.onNodeBlockStatusUpdated],
+      ['file-access-updated', this.onFileAccessUpdated],
       ['send-output', this.onSendOutput],
       ['output-sent', this.onOutputSent],
       ['node-alert-acknowledged', this.onNodeAlertAcknowledged],
@@ -1198,9 +1199,6 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     const { data } = event
     // Handle the data.
     switch (data.key) {
-      case 'node-update-block-status':
-        this.onUpdateNodeBlockStatus(data.nodeId, data.blocked)
-        break
       case 'node-update-open-state':
         this.onChangeNodeOpenState({
           nodeId: data.nodeId,
@@ -1220,9 +1218,6 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         break
       case 'force-resource-pool':
         this.onModifyResourcePool(data.poolId, data.operand)
-        break
-      case 'file-update-access':
-        this.onUpdateFileAccess(data)
         break
       default:
         return console.warn(
@@ -1282,17 +1277,16 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
 
   /**
    * Handles the blocking and unblocking of nodes.
-   * @param nodeId The ID of the node to be blocked or unblocked.
-   * @param blocked Whether or not the node is blocked.
+   * @param event The event emitted by the server.
    */
-  private onUpdateNodeBlockStatus = (
-    nodeId: string,
-    blocked: boolean,
+  private onNodeBlockStatusUpdated = (
+    event: TServerEvents['node-block-status-updated'],
   ): void => {
-    // Find the node, given the ID.
-    let node = this.mission.getNodeById(nodeId)
-    // Handle the blocking and unblocking of the node.
-    if (node) node.blocked = blocked
+    const { nodeIds, blocked } = event.data
+    for (let nodeId of nodeIds) {
+      let node = this.mission.getNodeById(nodeId)
+      if (node) node.blocked = blocked
+    }
   }
 
   /**
@@ -1309,46 +1303,55 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
 
   /**
    * Handles the granting/revoking of access to a file.
-   * @param fileId The ID of the file in question.
-   * @param forceId The ID of the force with newly granted/revoked access.
-   * @param granted Whether or not the access is granted.
+   * @param event The event emitted by the server.
    */
-  private onUpdateFileAccess = (data: TFileAccessModifierData): void => {
-    let force = this.mission.getForceById(data.forceId)
-    let file = this.mission.getFileById(data.fileId)
+  private onFileAccessUpdated = (
+    event: TServerEvents['file-access-updated'],
+  ): void => {
+    let { data } = event
+    let files = data.files
+      .map((fileJson) => {
+        let file = this.mission.getFileById(fileJson._id)
+        // Create a new file instance from the JSON,
+        // only if access is being granted. Otherwise,
+        // there is no need.
+        if (!file && data.granted) {
+          file = ClientMissionFile.fromJson(fileJson, this.mission)
+          this.mission.files.push(file)
+        }
+        return file
+      })
+      .filter((file) => file !== undefined)
 
-    // If the force is not found, abort.
-    if (!force) return
+    // Update access per force.
+    for (let forceId of data.forceIds) {
+      let force = this.mission.getForceById(forceId)
 
-    // Handle file-access change based on whether
-    // access is granted or revoked.
-    if (data.granted) {
-      // If the file is not found in the mission,
-      // add it to the mission.
-      if (!file) {
-        file = ClientMissionFile.fromJson(data.fileData, this.mission)
-        this.mission.files.push(file)
+      if (!force) {
+        console.warn(
+          `Event "file-access-updated" was triggered with granted=true, but the force with the given forceId ("${forceId}") could not be found.`,
+        )
+        continue
       }
-      // Grant access for the force to the file.
-      file.grantAccess(force)
-    } else {
+
       // If the following conditions are met, remove
-      // the file from the mission entirely:
-      // 1. The file currently is found in the mission.
+      // the files from the mission entirely:
+      // 1. Access is being revoked.
       // 2. The member is assigned to the force in question.
       // 3. The member does not have complete visibility, which
       //    would otherwise negate file-access restrictions.
       if (
-        file &&
-        this.member.forceId === data.forceId &&
+        !data.granted &&
+        this.member.forceId === forceId &&
         !this.member.isAuthorized('completeVisibility')
       ) {
+        let revokedIds = new Set(data.files.map((fileJson) => fileJson._id))
         this.mission.files = this.mission.files.filter(
-          (f) => f._id !== file!._id,
+          (file) => !revokedIds.has(file._id),
         )
       }
-      // Revoke access for the force to the file.
-      if (file) file.revokeAccess(force)
+
+      force.updateFileAccess(files, data.granted)
     }
   }
 

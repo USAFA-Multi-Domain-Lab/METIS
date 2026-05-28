@@ -70,10 +70,8 @@ const NodeAlert = TargetSchema.create({
       type: 'mission-component',
       _id: 'applyTo',
       name: 'Node',
-      required: true,
       groupingId: groupingId,
       validComponentTypes: ['mission', 'force', 'node'],
-      multiSelect: true,
     },
     {
       _id: 'severityLevel',

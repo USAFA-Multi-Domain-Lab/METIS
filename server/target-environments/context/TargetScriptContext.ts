@@ -374,9 +374,7 @@ export class TargetScriptContext<
     >,
     blocked: boolean,
   ) => {
-    this.resolveServerNodes(nodes).forEach((serverNode) => {
-      this.session.updateNodeBlockStatus(serverNode, blocked)
-    })
+    this.session.updateNodeBlockStatus(this.resolveServerNodes(nodes), blocked)
   }
 
   /**
@@ -536,13 +534,11 @@ export class TargetScriptContext<
     files: TInstanceOrArray<TTargetEnvExposedFile>,
     granted: boolean,
   ) => {
-    let serverForces = this.resolveServerForces(applyTo)
-    let serverFiles = this.resolveServerFiles(files)
-    for (let serverFile of serverFiles) {
-      for (let serverForce of serverForces) {
-        this.session.updateFileAccess(serverFile, serverForce, granted)
-      }
-    }
+    this.session.updateFileAccess(
+      this.resolveServerForces(applyTo),
+      this.resolveServerFiles(files),
+      granted,
+    )
   }
 
   /**

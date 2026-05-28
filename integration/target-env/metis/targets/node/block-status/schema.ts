@@ -18,9 +18,7 @@ const BlockStatus = TargetSchema.create({
       type: 'mission-component',
       _id: 'applyTo',
       name: 'Apply To',
-      required: true,
       groupingId: 'node',
-      multiSelect: true,
       validComponentTypes: ['mission', 'force', 'node'],
       tooltipDescription:
         'Select a group of components within the mission ' +

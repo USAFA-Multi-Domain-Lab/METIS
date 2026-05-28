@@ -30,6 +30,23 @@ export abstract class MissionForce<
   }
 
   /**
+   * The ID of the mission to which the force belongs.
+   */
+  public get missionId(): string {
+    return this.mission._id
+  }
+
+  /**
+   * Direct reference to {@link _id}.
+   * @note Useful when the mission-component is unknown, but a force
+   * ID is needed, such as a component which could be a node, action,
+   * or force.
+   */
+  public get forceId(): string {
+    return this._id
+  }
+
+  /**
    * The introductory message for the mission, displayed
    * when the mission is first started in a session.
    */
@@ -455,6 +472,21 @@ export abstract class MissionForce<
 
     // Return the low bound.
     return low
+  }
+
+  /**
+   * Grants or revokes access this force has to the given files.
+   * @param files The files for which to update access.
+   * @param granted Whether to grant or revoke access to the files.
+   */
+  public updateFileAccess(files: T['missionFile'][], granted: boolean): void {
+    for (let file of files) {
+      if (granted) {
+        file.grantAccess(this)
+      } else {
+        file.revokeAccess(this)
+      }
+    }
   }
 
   /**

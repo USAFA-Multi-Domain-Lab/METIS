@@ -128,42 +128,24 @@ export type TServerEvent = TServerEvents[TServerMethod]
 
 /**
  * Used to identify the data structure.
- * @option `"node-update-block-status":` The data needed to block or unblock a node.
  * @option `"node-update-open-state":` The data needed to open or close a node determining if its descendants are revealed.
  * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
  * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
  * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
  * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
- * @option `"file-update-access":` The data needed to modify the access of a file for a force.
  */
 type TModifierDataKey =
-  | 'node-update-block-status'
   | 'node-update-open-state'
   | 'node-new-alert'
   | 'node-action-success-chance'
   | 'node-action-process-time'
   | 'node-action-resource-cost'
   | 'force-resource-pool'
-  | 'file-update-access'
 
 /**
  * The data necessary to apply a modifier to an object in METIS.
  */
 type TModifierData = [
-  {
-    /**
-     * @see {@link TModifierDataKey}
-     */
-    key: 'node-update-block-status'
-    /**
-     * The ID of the node to modify.
-     */
-    nodeId: string
-    /**
-     * Whether the node is blocked or not.
-     */
-    blocked: boolean
-  },
   {
     /**
      * @see {@link TModifierDataKey}
@@ -271,56 +253,7 @@ type TModifierData = [
      */
     operand: number
   },
-  {
-    /**
-     * @see {@link TModifierDataKey}
-     */
-    key: 'file-update-access'
-    /**
-     * The ID of the force to modify.
-     */
-    forceId: string
-    /**
-     * The ID of the file to modify.
-     */
-    fileId: string
-    /**
-     * The access to grant or revoke.
-     */
-    granted: true
-    /**
-     * The data for the file now accessible to
-     * the force.
-     */
-    fileData: TMissionFileJson
-  },
-  {
-    /**
-     * @see {@link TModifierDataKey}
-     */
-    key: 'file-update-access'
-    /**
-     * The ID of the force to modify.
-     */
-    forceId: string
-    /**
-     * The ID of the file to modify.
-     */
-    fileId: string
-    /**
-     * The access to grant or revoke.
-     */
-    granted: false
-  },
 ]
-
-/**
- * Modifier data for granting/revoking access to a file.
- */
-export type TFileAccessModifierData = Extract<
-  TModifierData[number],
-  { key: 'file-update-access' }
->
 
 /**
  * Modifier data for a new alert that was added to a node.
@@ -381,6 +314,41 @@ export type TNodeOpenStateData = {
    * The prototypes of the nodes that were revealed as a result of opening the node.
    */
   revealedDescendantPrototypes: TMissionPrototypeJson[]
+}
+
+/**
+ * The data emitted when the block status of one or more nodes is updated.
+ */
+export type TNodeBlockStatusData = {
+  /**
+   * The IDs of the nodes whose block status was updated.
+   */
+  nodeIds: string[]
+  /**
+   * Whether the nodes are now blocked or unblocked.
+   */
+  blocked: boolean
+}
+
+/**
+ * The data emitted when one or more files are granted access to one or more forces.
+ */
+/**
+ * The data emitted when the access to a file is granted or revoked for a force.
+ */
+export type TFileAccessData = {
+  /**
+   * Whether access was granted or revoked.
+   */
+  granted: boolean
+  /**
+   * The IDs of the forces affected.
+   */
+  forceIds: string[]
+  /**
+   * The serialized data for each file affected.
+   */
+  files: TMissionFileJson[]
 }
 
 /**
@@ -451,6 +419,17 @@ export type TGenericServerEvents = {
    * Occurs when modifiers are applied to an object in METIS.
    */
   'modifier-enacted': TConnectEvent<'modifier-enacted', TModifierDatum>
+  /**
+   * Occurs when the block status of one or more nodes is updated.
+   */
+  'node-block-status-updated': TConnectEvent<
+    'node-block-status-updated',
+    TNodeBlockStatusData
+  >
+  /**
+   * Occurs when the access to a file is granted or revoked for a force.
+   */
+  'file-access-updated': TConnectEvent<'file-access-updated', TFileAccessData>
   /**
    * Occurs when the session has been destroyed while the participant was in it.
    */

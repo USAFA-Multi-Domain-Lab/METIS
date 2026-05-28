@@ -16,10 +16,8 @@ const Output = TargetSchema.create({
       type: 'mission-component',
       _id: 'to',
       name: 'Force',
-      required: true,
       groupingId: 'output',
       validComponentTypes: ['mission', 'force'],
-      multiSelect: true,
     },
     {
       type: 'large-string',

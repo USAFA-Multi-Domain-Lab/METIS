@@ -38,7 +38,9 @@ export const AVAILABLE_DEPENDENCIES_RAW = [
   } as const,
   {
     name: 'not-empty',
-    condition: (value: any) => Array.isArray(value) && value.length > 0,
+    condition: (value: any) =>
+      (Array.isArray(value) && value.length > 0) ||
+      (typeof value === 'string' && value.trim().length > 0),
   },
 ] as const
 
@@ -173,7 +175,9 @@ export class TargetDependency implements TDependency {
   ) => TargetDependency.SELECT('not-equals-some', dependentId, unexpected)
 
   /**
-   * Checks if the value of the argument (*referenced by the argument's ID*) is an array with at least one element.
+   * Checks if the value of the argument (*referenced by the argument's ID*) is
+   * an array with at least one element or a string with at least one non-whitespace
+   * character.
    * @param dependentId The ID of the dependent argument.
    * @returns A new dependency that checks if the value is an array with at least one element.
    * @example TargetDependency.NOT_EMPTY('dependentId')
