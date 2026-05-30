@@ -23,6 +23,8 @@ import './index.scss'
 import type { ClientMissionResource } from './missions/ClientMissionResource'
 import type { ClientActionCost } from './missions/actions/ClientActionCost'
 import type { ClientResourcePool } from './missions/forces/ClientResourcePool'
+import type { ClientChatChannel } from './sessions/chat/ClientChatChannel'
+import type { ClientChatMessage } from './sessions/chat/ClientChatMessage'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -78,6 +80,8 @@ export type TMetisClientComponents = {
   action: ClientMissionAction
   execution: ClientActionExecution
   outcome: ClientExecutionOutcome
+  chatChannel: ClientChatChannel
+  chatMessage: ClientChatMessage
 } & {
   [TType in TEffectType]: ClientEffect<TType>
 }

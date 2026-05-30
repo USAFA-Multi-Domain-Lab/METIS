@@ -64,8 +64,10 @@ export default function RichText(props: TRichText_P): TReactElement | null {
     placeholder = 'Enter text here...',
     listClassName,
     className,
+    editorRef,
     onUpdate,
     onBlur,
+    bubbleMenuAnchor,
   } = options ?? {}
 
   /* -- GLOBAL CONTEXT -- */
@@ -629,12 +631,73 @@ export default function RichText(props: TRichText_P): TReactElement | null {
     isBubbleMenuForcedOpen ||
     (!state.selection.empty && !bubbleMenuSuppressedRef.current)
 
+  /**
+   * Tells the bubble menu where to appear by returning a fake element whose
+   * bounding rect matches the current cursor or selection position.
+   *
+   * Using the editor's own coordinate system (`{@link Editor.view.coordsAtPos}`)
+   * as the primary source avoids a browser quirk where an empty editor returns
+   * all-zero coordinates from the native DOM range API, which would place the
+   * menu at the top-left corner of the screen. The DOM range rect is still used
+   * for the width of a real text selection so the menu centers correctly.
+   *
+   * When {@link bubbleMenuAnchor} is provided, the menu's vertical position is
+   * clamped to help deal with positioning issues such as the editor wrapped in
+   * a scrollable container.
+   */
+  const getBubbleMenuVirtualElement = (): {
+    getBoundingClientRect: () => DOMRect
+  } | null => {
+    if (!editor) return null
+
+    // Use the editor's own coordinate system to locate the start of the cursor
+    // or selection. This is the primary position source because the browser's
+    // native DOM range API returns all-zero coordinates on an empty editor,
+    // which would place the menu at the top-left corner of the screen.
+    const { from, to } = editor.state.selection
+    const startCoords = editor.view.coordsAtPos(from)
+    let left = startCoords.left
+    let width = 0
+
+    // When text is selected (not just a cursor), override left and width using
+    // the native DOM range rect. This gives a bounding box that spans the full
+    // highlighted text so Floating UI can center the menu over the selection.
+    if (from !== to) {
+      const sel = window.getSelection()
+      const rect = sel && sel.rangeCount > 0 ? sel.getRangeAt(0).getBoundingClientRect() : null
+      if (rect && rect.width > 0) {
+        left = rect.left
+        width = rect.width
+      }
+    }
+
+    // If a scrollable container is provided, clamp the vertical position to
+    // the container's top edge. Without this, the menu can float above the
+    // container and be hidden by its overflow clipping.
+    const top = startCoords.top
+    const anchor = bubbleMenuAnchor?.current
+
+    if (!anchor) {
+      return { getBoundingClientRect: () => new DOMRect(left, top, width, 0) }
+    }
+
+    const anchorRect = anchor.getBoundingClientRect()
+    const clampedTop = Math.max(top, anchorRect.top)
+
+    return {
+      getBoundingClientRect: () => new DOMRect(left, clampedTop, width, 0),
+    }
+  }
+
   /* -- EFFECTS -- */
 
   const editor = useEditor(
     {
       content,
       editable,
+      onCreate: ({ editor: e }) => {
+        if (editorRef) editorRef.current = e
+      },
       onUpdate: (updateProps) => {
         // When the user presses Enter, force the bubble menu open on the
         // new line so they can immediately set formatting if they want.
@@ -646,12 +709,6 @@ export default function RichText(props: TRichText_P): TReactElement | null {
         onUpdate?.(updateProps)
       },
       onBlur: (editorBlurProps) => {
-        // Ignore blur caused by clicking toolbar buttons or sub-panels (color
-        // picker, alignment, line spacing, etc.) — focus moves within the
-        // component, not away from it.
-        const relatedTarget = editorBlurProps.event.relatedTarget as Node | null
-        if (container.current?.contains(relatedTarget)) return
-
         closeAllSubPanels()
         setIsBubbleMenuForcedOpen(false)
         bubbleMenuSuppressedRef.current = false
@@ -768,8 +825,18 @@ export default function RichText(props: TRichText_P): TReactElement | null {
         <BubbleMenu
           editor={editor}
           className='BubbleToolbar'
+          // Used for the various editor setMeta commands that control
+          // the bubble menu.
           pluginKey='richTextBubbleMenu'
           shouldShow={({ state }) => shouldShowBubbleMenuToolbar(state)}
+          // "appendTo", "placement", and "getReferencedVirtualElement" are used to control
+          // where the bubble menu is rendered in the DOM and how it is positioned relative
+          // to the editor.
+          appendTo={() => document.body}
+          options={{ placement: 'top' }}
+          getReferencedVirtualElement={getBubbleMenuVirtualElement}
+          // Used to prevent the bubble menu from closing when clicking inside it.
+          onMouseDown={(e) => e.preventDefault()}
         >
           {editor.isEditable && (
             <>
@@ -834,6 +901,12 @@ type TRichTextOptions = {
    */
   className?: string
   /**
+   * A ref that receives the Tiptap {@link Editor} instance once the editor
+   * mounts. Use this when the parent needs to imperatively read content or
+   * run commands (e.g. `clearContent`) without re-rendering on every keystroke.
+   */
+  editorRef?: React.RefObject<Editor | null>
+  /**
    * The event handler for the update event.
    * @note Equivalent to the `onChange` event for a text input.
    */
@@ -843,6 +916,13 @@ type TRichTextOptions = {
    * @note Equivalent to the `onBlur` event for a text input.
    */
   onBlur?: (props: EditorEvents['blur']) => void
+  /**
+   * A ref to a scrollable container that wraps this editor. When provided,
+   * the bubble menu's vertical position is clamped to the container's visible
+   * top edge so the menu never goes above the visible top edge for times like
+   * selecting a large amount of text that has overflowed and scrolled out of view.
+   */
+  bubbleMenuAnchor?: React.RefObject<HTMLElement | null>
 }
 
 /**

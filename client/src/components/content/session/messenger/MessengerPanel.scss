@@ -1,0 +1,22 @@
+@use '@client/assets/styles/config.scss' as *;
+
+.MessengerPanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+
+  // Override the nested Panel so it blends into the messenger layout.
+  // The outer PanelView already provides the border and background.
+  .Panel {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    border: none;
+    background: transparent;
+
+    .PanelTabBar {
+      border-top: unset;
+    }
+  }
+}

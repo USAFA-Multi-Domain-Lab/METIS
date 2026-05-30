@@ -3,12 +3,14 @@ import type {
   EnvScriptResults,
   TEnvScriptResultJson,
 } from '@shared/target-environments/EnvScriptResults'
+import type { TSessionPanelAlert } from '../connect'
 import { MetisComponent } from '../MetisComponent'
 import type { TExecutionCheats } from '../missions/actions/ActionExecution'
 import type { TAction } from '../missions/actions/MissionAction'
 import type { TMission, TMissionExistingJson } from '../missions/Mission'
 import type { TUserJson } from '../users/User'
 import { User } from '../users/User'
+import type { TChatChannel, TChatChannelJson } from './chat/ChatChannel'
 import type { TMember, TSessionMemberJson } from './members/SessionMember'
 
 /**
@@ -170,6 +172,11 @@ export abstract class MissionSession<
   protected teardownResults: EnvScriptResults[]
 
   /**
+   * Chat channels active in this session.
+   */
+  protected _chatChannels: TChatChannel<T>[]
+
+  /**
    * Based upon {@link MissionSession.setupResults}, indicates
    * whether the setup process, if initiated, encountered any
    * failures.
@@ -209,6 +216,7 @@ export abstract class MissionSession<
     banList: string[],
     setupResults: EnvScriptResults[],
     teardownResults: EnvScriptResults[],
+    chatChannelData: TChatChannelJson[],
   ) {
     super(_id, name, false)
 
@@ -227,6 +235,7 @@ export abstract class MissionSession<
     this._banList = banList
     this.setupResults = setupResults
     this.teardownResults = teardownResults
+    this._chatChannels = this.parseChatChannelData(chatChannelData)
     this.mapActions()
   }
 
@@ -311,6 +320,15 @@ export abstract class MissionSession<
   protected abstract parseMemberData(data: TSessionMemberJson[]): TMember<T>[]
 
   /**
+   * Parses channel JSON data into `ChatChannel` objects.
+   * @param data The JSON data of the channels.
+   * @returns The parsed channels.
+   */
+  protected abstract parseChatChannelData(
+    data: TChatChannelJson[],
+  ): TChatChannel<T>[]
+
+  /**
    * Loops through all the nodes in the mission, and each action in a node, and maps the actionId to the action in the field "actions".
    */
   protected abstract mapActions(): void
@@ -346,6 +364,17 @@ export abstract class MissionSession<
     userId: User['_id'] | null | undefined,
   ): TMember<T> | undefined {
     return this.members.find((member) => member.userId === userId)
+  }
+
+  /**
+   * Gets a chat channel by its ID.
+   * @param channelId The ID of the chat channel.
+   * @returns The chat channel with the given ID, or undefined if not found.
+   */
+  public getChatChannel(
+    channelId: TChatChannel<T>['_id'] | null | undefined,
+  ): TChatChannel<T> | undefined {
+    return this._chatChannels.find((channel) => channel._id === channelId)
   }
 
   /**
@@ -515,6 +544,21 @@ export type TSessionJson = {
    * @see {@link MissionSession.teardownResults}
    */
   teardownResults: TEnvScriptResultJson[]
+  /**
+   * The chat channels in the session, each with their messages.
+   */
+  chatChannels: TChatChannelJson[]
+  /**
+   * Unread chat messages for each individual chat channel.
+   * @note This is tracked for each session member individually.
+   */
+  unreadChatChannelMessages: Record<string, number>
+  /**
+   * The panels in a session with unacknowledged activity.
+   * @note This is tracked for each session member individually.
+   * @note Activity in these panels may include new messages, outputs, files, etc.
+   */
+  pendingSessionPanelAlerts: TSessionPanelAlert[]
 }
 
 /**

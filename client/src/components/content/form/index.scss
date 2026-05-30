@@ -83,6 +83,11 @@ $detail-field-font-size: 0.92rem;
   }
 }
 
+@mixin focus-styling() {
+  border-bottom: 2px solid $color-accent;
+  border-radius: $detail-field-border-radius;
+}
+
 .Detail {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(225px, 100%));
@@ -156,13 +161,17 @@ $detail-field-font-size: 0.92rem;
     }
   }
 
-  .Field {
+  .Field,
+  input {
     @include detail-field-styling();
     font-size: 0.92rem;
 
-    &::placeholder,
-    input::placeholder {
+    &::placeholder {
       color: $color-faded;
+    }
+
+    &:not(.Error):focus-within {
+      @include focus-styling();
     }
   }
 }

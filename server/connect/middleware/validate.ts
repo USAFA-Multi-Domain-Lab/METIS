@@ -4,6 +4,8 @@ import type {
   TGenericClientMethod,
   TRequestMethod,
 } from '@shared/connect'
+import { SESSION_PANEL_ALERTS_NO_MESSENGER } from '@shared/connect'
+import { ChatMessage } from '@shared/sessions/chat/ChatMessage'
 import { MemberRole } from '@shared/sessions/members/MemberRole'
 import type { TSessionAccessibility } from '@shared/sessions/MissionSession'
 import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
@@ -130,6 +132,24 @@ export const clientEventSchemas: TClientEventSchemas = {
       nodeId: zod.string(),
     }),
   ),
+  'request-send-chat-message': zodRequestEvent(
+    'request-send-chat-message',
+    zod.object({
+      channelId: zod.string(),
+      message: zod
+        .string()
+        .min(1)
+        // Strip HTML tags before counting characters so the limit applies to
+        // the visible text content, not the raw markup sent by the rich-text editor.
+        .refine(
+          (html) =>
+            html.replace(/<[^>]*>/g, '').length <= ChatMessage.MAX_CHARS,
+          {
+            message: `Message cannot exceed ${ChatMessage.MAX_CHARS} characters`,
+          },
+        ),
+    }),
+  ),
   'request-acknowledge-node-alert': zodRequestEvent(
     'request-acknowledge-node-alert',
     zod.object({
@@ -149,6 +169,17 @@ export const clientEventSchemas: TClientEventSchemas = {
   ),
   'request-quit-session': zodRequestEvent(
     'request-quit-session',
+    zod.object({}),
+  ),
+  'acknowledge-session-panel-alert': zodGenericEvent(
+    'acknowledge-session-panel-alert',
+    zod.union([
+      zod.object({ panel: zod.enum(SESSION_PANEL_ALERTS_NO_MESSENGER) }),
+      zod.object({ panel: zod.literal('Messenger'), channelId: zod.string() }),
+    ]),
+  ),
+  'fetch-session-panel-alerts': zodGenericEvent(
+    'fetch-session-panel-alerts',
     zod.object({}),
   ),
 } as const

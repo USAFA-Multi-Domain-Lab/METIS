@@ -1,0 +1,70 @@
+@use '@client/assets/styles/config.scss' as *;
+
+@mixin scrollbarStyle($color: $color-primary-light, $background: transparent) {
+  scrollbar-color: $color $background;
+  ::-webkit-scrollbar {
+    background: $background;
+  }
+}
+
+.MessagesArea {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+
+  .Messages {
+    height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5em 0.5em;
+    box-sizing: border-box;
+    @include scrollbarStyle();
+  }
+
+  .MessageNavigation {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    padding: 0.75em;
+    pointer-events: none;
+
+    .ViewNewMessages {
+      $icon-dimensions: 1.5em;
+
+      pointer-events: auto;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      column-gap: 0.5em;
+      flex-direction: row;
+      background-color: $color-accent-dark;
+      font-size: 0.9rem;
+      box-shadow: 0 0 4em 1em rgba($color-primary-dark, 0.3);
+      border: 3px solid rgba($color-primary-light, 0.35);
+      border-radius: 0.25em;
+      padding: 0.25em 0.6em;
+
+      &.Hidden {
+        display: none;
+      }
+
+      .Text {
+        height: $icon-dimensions;
+        color: $color-primary-light;
+        font-weight: bold;
+        line-height: $icon-dimensions;
+      }
+
+      .Icon {
+        width: $icon-dimensions;
+        height: $icon-dimensions;
+        background-image: url('../../../../assets/images/icons/down.svg');
+        background-size: 70%;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+@use '@client/assets/styles/config.scss' as *;
+
+.MessengerMessage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  padding: 0.375em 0.5em;
+
+  &.Mine {
+    align-items: flex-end;
+
+    .Header {
+      flex-direction: row-reverse;
+    }
+
+    .Body {
+      text-align: right;
+      background-color: $color-primary-medium;
+    }
+  }
+
+  .Header {
+    display: flex;
+    align-items: center;
+    gap: 0.375em;
+    font-size: 0.8rem;
+
+    .ForceDot {
+      display: inline-block;
+      width: 0.5em;
+      height: 0.5em;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .Username {
+      font-weight: 600;
+    }
+
+    .Timestamp {
+      opacity: 0.5;
+      font-size: 0.75rem;
+    }
+  }
+
+  .Body {
+    padding: 0 0.875em;
+    background-color: $color-secondary;
+    border-radius: 0.625em;
+    max-width: 75%;
+    width: fit-content;
+  }
+}

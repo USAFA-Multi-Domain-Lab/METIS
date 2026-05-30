@@ -27,6 +27,9 @@
     font-size: 0.75em;
     font-weight: bold;
     color: $color-faded;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   &.Selected {

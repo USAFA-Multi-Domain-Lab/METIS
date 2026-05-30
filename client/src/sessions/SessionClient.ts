@@ -20,6 +20,7 @@ import type {
   TResponseEvents,
   TServerEvents,
   TServerMethod,
+  TSessionPanelAlert,
 } from '@shared/connect'
 import type {
   TActionExecutionJson,
@@ -27,6 +28,7 @@ import type {
 } from '@shared/missions/actions/ActionExecution'
 import type { TExecutionOutcomeJson } from '@shared/missions/actions/ExecutionOutcome'
 import type { TActionModifier } from '@shared/missions/actions/MissionAction'
+import type { TChatChannelJson } from '@shared/sessions/chat/ChatChannel'
 import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
 import { MemberRole } from '@shared/sessions/members/MemberRole'
 import type { TSessionMemberJson } from '@shared/sessions/members/SessionMember'
@@ -39,6 +41,8 @@ import { MissionSession } from '@shared/sessions/MissionSession'
 import { EnvScriptResults } from '@shared/target-environments/EnvScriptResults'
 import axios from 'axios'
 import type { TMetisClientComponents } from '..'
+import { ClientChatChannel } from './chat/ClientChatChannel'
+import { ClientChatMessage } from './chat/ClientChatMessage'
 import { ClientSessionMember } from './ClientSessionMember'
 import { SessionBasic } from './SessionBasic'
 
@@ -88,6 +92,23 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
+   * Unread chat message count per chat channel.
+   */
+  private _unreadChatMessageCount: Map<string, number>
+
+  /**
+   * Pending session panel alerts at the time the session was joined or fetched.
+   */
+  private _initialPendingSessionPanelAlerts: TSessionPanelAlert[]
+  /**
+   * The session panel alerts that had unacknowledged activity when this
+   * session was joined or fetched.
+   */
+  public get pendingSessionPanelAlerts(): TSessionPanelAlert[] {
+    return this._initialPendingSessionPanelAlerts
+  }
+
+  /**
    * @see {@link activeExecutions}
    */
   private _activeExecutions: ClientActionExecution[]
@@ -97,6 +118,27 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    */
   public get activeExecutions(): ClientActionExecution[] {
     return [...this._activeExecutions]
+  }
+
+  /**
+   * Returns all chat channels that the member can see.
+   */
+  public get memberChatChannels(): ClientChatChannel[] {
+    let { forceId, role } = this.member
+    let hasCompleteVisibility = role.isAuthorized('completeVisibility')
+
+    return this._chatChannels.filter((c) =>
+      c.canSee(forceId, hasCompleteVisibility),
+    )
+  }
+
+  /**
+   * Whether the member has any unread chat messages.
+   */
+  public get memberHasUnreadChatMessages(): boolean {
+    return this.memberChatChannels.some(
+      (c) => this.getUnreadChatMessageCount(c._id) > 0,
+    )
   }
 
   /**
@@ -134,6 +176,9 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       config,
       setupResults: setupResultData,
       teardownResults: teardownResultData,
+      chatChannels,
+      unreadChatChannelMessages,
+      pendingSessionPanelAlerts,
     } = data
 
     // Parse setup and teardown results.
@@ -159,6 +204,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       banList,
       setupResults,
       teardownResults,
+      chatChannels,
     )
 
     // Set the rest of the data.
@@ -166,6 +212,10 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     this.memberId = memberId
     this._state = state
     this._activeExecutions = []
+    this._unreadChatMessageCount = new Map(
+      Object.entries(unreadChatChannelMessages),
+    )
+    this._initialPendingSessionPanelAlerts = pendingSessionPanelAlerts
 
     this.listeners = [
       ['session-starting', this.onStarting],
@@ -191,6 +241,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       ['dismissed', this.onDismissed],
       ['session-destroyed', this.onDestroyed],
       ['session-quit', this.onQuit],
+      ['chat-message-received', this.onChatMessageReceived],
     ]
 
     // Add listeners to detect events that are
@@ -210,6 +261,13 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
           this,
         ),
     )
+  }
+
+  // Implemented
+  protected parseChatChannelData(
+    data: TChatChannelJson[],
+  ): ClientChatChannel[] {
+    return data.map((d) => ClientChatChannel.fromJson(d, this))
   }
 
   // Implemented
@@ -273,6 +331,9 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       setupResults: this.setupResults.map((result) => result.toJson()),
       teardownResults: this.teardownResults.map((result) => result.toJson()),
       config: this.config,
+      chatChannels: this._chatChannels.map((c) => c.toJson()),
+      unreadChatChannelMessages: {},
+      pendingSessionPanelAlerts: [],
     }
   }
 
@@ -999,13 +1060,16 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     event: TResponseEvents['session-started' | 'session-reset'],
   ): void {
     // Gather details.
-    let { structure, forces, prototypes, files } = event.data
+    let { structure, forces, prototypes, files, chatChannels } = event.data
     // Mark the session as started.
     this._state = 'started'
     // Import start data, revealing forces to user.
     this.mission.importStartData(structure, forces, prototypes, files)
     // Remap actions.
     this.mapActions()
+    // Reset chat state.
+    this._chatChannels = this.parseChatChannelData(chatChannels)
+    this._unreadChatMessageCount = new Map()
   }
 
   /**
@@ -1070,6 +1134,91 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   private cleanUp(): void {
     this.removeListeners()
     this.server.clearUnfulfilledRequests()
+  }
+
+  /**
+   * Handles when a chat message is received from the server.
+   * @param event The event emitted by the server.
+   */
+  private onChatMessageReceived = (
+    event: TServerEvents['chat-message-received'],
+  ): void => {
+    let msgData = event.data.message
+
+    let channel = this.getChatChannel(msgData.channelId)
+    if (!channel) return
+
+    let message = ClientChatMessage.fromJson(channel, msgData)
+    channel.messages.push(message)
+
+    if (message.senderId !== this.memberId) {
+      let count = this._unreadChatMessageCount.get(message.channelId) ?? 0
+      this._unreadChatMessageCount.set(message.channelId, count + 1)
+    }
+  }
+
+  /**
+   * Sends a chat message to a channel.
+   * @param channelId The ID of the channel to send the message to.
+   * @param message The HTML message content.
+   */
+  public sendChatMessage(channelId: string, message: string): void {
+    this.server.request(
+      'request-send-chat-message',
+      { channelId, message },
+      'Sending chat message.',
+    )
+  }
+
+  /**
+   * Returns the unread message count for a chat channel.
+   * @param channelId The ID of the chat channel.
+   */
+  public getUnreadChatMessageCount(channelId: string): number {
+    return this._unreadChatMessageCount.get(channelId) ?? 0
+  }
+
+  /**
+   * Marks all messages in a chat channel as read and notifies the server
+   * via {@link acknowledgeSessionPanelAlert}.
+   * @param channelId The ID of the chat channel.
+   */
+  public markAllMessagesInChannelAsRead(channelId: string): void {
+    this._unreadChatMessageCount.set(channelId, 0)
+    this.acknowledgeSessionPanelAlert('Messenger', channelId)
+  }
+
+  /**
+   * Acknowledges a session panel alert, notifying the server that the
+   * member has viewed the indicated panel.
+   * @param panel The panel tab that was viewed.
+   * @param channelId The chat channel that was viewed (Messenger only).
+   * @note For the Messenger panel, the channel ID is required so the
+   * server can also clear that channel's unread count.
+   */
+  public acknowledgeSessionPanelAlert(panel: 'Output' | 'Files'): void
+  public acknowledgeSessionPanelAlert(
+    panel: 'Messenger',
+    channelId: string,
+  ): void
+  public acknowledgeSessionPanelAlert(
+    panel: TSessionPanelAlert,
+    channelId?: string,
+  ): void {
+    if (panel === 'Messenger' && channelId !== undefined) {
+      this.server.emit('acknowledge-session-panel-alert', { panel, channelId })
+    } else {
+      this.server.emit('acknowledge-session-panel-alert', {
+        panel: panel as 'Output' | 'Files',
+      })
+    }
+  }
+
+  /**
+   * Fetches the current session panel alerts for a member.
+   */
+  public fetchSessionPanelAlerts(): void {
+    this.server.emit('fetch-session-panel-alerts', {})
   }
 
   /**

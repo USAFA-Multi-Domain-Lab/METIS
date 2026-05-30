@@ -12,6 +12,8 @@ import type { Mission } from './missions/Mission'
 import type { MissionResource } from './missions/MissionResource'
 import type { MissionNode } from './missions/nodes/MissionNode'
 import type { MissionPrototype } from './missions/nodes/MissionPrototype'
+import type { ChatChannel } from './sessions/chat/ChatChannel'
+import type { ChatMessage } from './sessions/chat/ChatMessage'
 import type { SessionMember } from './sessions/members/SessionMember'
 import type { MissionSession } from './sessions/MissionSession'
 import type { TargetEnvironment } from './target-environments/TargetEnvironment'
@@ -187,6 +189,8 @@ export type TMetisBaseComponents = {
   action: MissionAction
   execution: ActionExecution
   outcome: ExecutionOutcome
+  chatChannel: ChatChannel
+  chatMessage: ChatMessage
 } & {
   [TType in TEffectType]: Effect<TMetisBaseComponents, TType>
 }

@@ -27,9 +27,10 @@ export const usePanelContext = () => {
  * A general container component in METIS, with the potential
  * for resizing and tabbed views.
  */
-export default function ({
+export default function Panel({
   children,
   selectView: externalSelectView,
+  onViewSelected,
 }: TPanel_P): TReactElement | null {
   /* -- STATE -- */
 
@@ -86,6 +87,7 @@ export default function ({
     return {
       state,
       views,
+      onViewSelected,
     }
   })
 
@@ -124,6 +126,12 @@ export interface TPanel_P {
    * @param title The title of the view to select.
    */
   selectView?: React.RefObject<(title: string) => void>
+  /**
+   * Optional callback invoked when the active view changes, either
+   * by user interaction or by the tab bar's initial auto-selection.
+   * @param title The title of the newly selected view.
+   */
+  onViewSelected?: (title: string) => void
 }
 
 /**
@@ -149,4 +157,9 @@ export type TPanelContextData = {
    * All views in the panel.
    */
   views: TPanelView_P[]
+  /**
+   * Optional callback invoked when the active view changes.
+   * @param title The title of the newly selected view.
+   */
+  onViewSelected?: (title: string) => void
 }

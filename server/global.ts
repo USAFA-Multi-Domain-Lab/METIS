@@ -16,6 +16,8 @@ import type { ServerMissionNode } from './missions/nodes/ServerMissionNode'
 import type { ServerMissionPrototype } from './missions/nodes/ServerMissionPrototype'
 import type { ServerMission } from './missions/ServerMission'
 import type { ServerMissionResource } from './missions/ServerMissionResource'
+import type { ServerChatChannel } from './sessions/chat/ServerChatChannel'
+import type { ServerChatMessage } from './sessions/chat/ServerChatMessage'
 import type { ServerSessionMember } from './sessions/ServerSessionMember'
 import type { SessionServer } from './sessions/SessionServer'
 import type { ServerTarget } from './target-environments/ServerTarget'
@@ -56,6 +58,8 @@ declare global {
     action: ServerMissionAction
     execution: ServerActionExecution
     outcome: ServerExecutionOutcome
+    chatChannel: ServerChatChannel
+    chatMessage: ServerChatMessage
   } & {
     [TType in TEffectType]: ServerEffect<TType>
   }
