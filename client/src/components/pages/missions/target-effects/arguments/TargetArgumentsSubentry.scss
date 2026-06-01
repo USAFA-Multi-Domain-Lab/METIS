@@ -9,4 +9,11 @@
     text-transform: uppercase;
     margin: 0 0 1.5em;
   }
+
+  .ArgumentsIssueMessage {
+    margin-top: 1em;
+    color: $color-faded;
+    font-size: 0.85em;
+    font-style: italic;
+  }
 }

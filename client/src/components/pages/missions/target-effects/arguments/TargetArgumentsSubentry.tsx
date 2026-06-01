@@ -13,6 +13,8 @@ export default function TargetArgumentsEntry({
 }: TTargetParameterEntry_P): TReactElement | null {
   /* -- COMPUTED -- */
 
+  let { hasIssues } = effect
+
   /**
    * All of the arguments grouped together based on their grouping ID.
    */
@@ -51,21 +53,27 @@ export default function TargetArgumentsEntry({
 
   /* -- RENDER -- */
 
-  // If there are no groupings then return null.
-  if (groupings.length === 0) return null
+  // If there are no groupings and no issues then return null.
+  if (groupings.length === 0 && !hasIssues) return null
 
   return (
     <div className='TargetArgumentsSubentry'>
       <div className='Title'>Arguments</div>
       <Divider />
-      {groupings.map(([groupingId, grouping]) => {
-        return (
-          <TargetArgumentGrouping
-            key={`grouping-${groupingId}`}
-            grouping={grouping}
-          />
-        )
-      })}
+      {hasIssues ? (
+        <div className='ArgumentsIssueMessage'>
+          Arguments are not available because of the issues
+        </div>
+      ) : (
+        groupings.map(([groupingId, grouping]) => {
+          return (
+            <TargetArgumentGrouping
+              key={`grouping-${groupingId}`}
+              grouping={grouping}
+            />
+          )
+        })
+      )}
     </div>
   )
 }
