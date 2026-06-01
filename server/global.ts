@@ -1,34 +1,36 @@
-import type { TEffectType } from '@shared/missions/effects/Effect'
-import type { RequestHandler } from 'express'
-import type { Request, Response } from 'express-serve-static-core'
-import type { Session as ExpressSession } from 'express-session'
-import type { ServerFileReference } from './files/ServerFileReference'
-import type { ServerActionCost } from './missions/actions/ServerActionCost'
-import type { ServerActionExecution } from './missions/actions/ServerActionExecution'
-import type { ServerExecutionOutcome } from './missions/actions/ServerExecutionOutcome'
-import type { ServerMissionAction } from './missions/actions/ServerMissionAction'
-import type { ServerEffect } from './missions/effects/ServerEffect'
-import type { ServerMissionFile } from './missions/files/ServerMissionFile'
-import type { ServerMissionForce } from './missions/forces/ServerMissionForce'
-import type { ServerOutput } from './missions/forces/ServerOutput'
-import type { ServerResourcePool } from './missions/forces/ServerResourcePool'
-import type { ServerMissionNode } from './missions/nodes/ServerMissionNode'
-import type { ServerMissionPrototype } from './missions/nodes/ServerMissionPrototype'
-import type { ServerMission } from './missions/ServerMission'
-import type { ServerMissionResource } from './missions/ServerMissionResource'
-import type { ServerSessionMember } from './sessions/ServerSessionMember'
-import type { SessionServer } from './sessions/SessionServer'
-import type { ServerTargetArgument } from './target-environments/arguments/ServerTargetArgument'
-import type { ServerTarget } from './target-environments/ServerTarget'
-import type { ServerTargetEnvironment } from './target-environments/ServerTargetEnvironment'
-import type { ServerUser } from './users/ServerUser'
+import type { TEffectType } from "@shared/missions/effects/Effect";
+import type { RequestHandler } from "express";
+import type { Request, Response } from "express-serve-static-core";
+import type { Session as ExpressSession } from "express-session";
+import type { ServerFileReference } from "./files/ServerFileReference";
+import type { ServerActionCost } from "./missions/actions/ServerActionCost";
+import type { ServerActionExecution } from "./missions/actions/ServerActionExecution";
+import type { ServerExecutionOutcome } from "./missions/actions/ServerExecutionOutcome";
+import type { ServerMissionAction } from "./missions/actions/ServerMissionAction";
+import type { ServerEffect } from "./missions/effects/ServerEffect";
+import type { ServerMissionFile } from "./missions/files/ServerMissionFile";
+import type { ServerMissionForce } from "./missions/forces/ServerMissionForce";
+import type { ServerOutput } from "./missions/forces/ServerOutput";
+import type { ServerResourcePool } from "./missions/forces/ServerResourcePool";
+import type { ServerMissionNode } from "./missions/nodes/ServerMissionNode";
+import type { ServerMissionPrototype } from "./missions/nodes/ServerMissionPrototype";
+import type { ServerMission } from "./missions/ServerMission";
+import type { ServerMissionResource } from "./missions/ServerMissionResource";
+import type { ServerChatChannel } from "./sessions/chat/ServerChatChannel";
+import type { ServerChatMessage } from "./sessions/chat/ServerChatMessage";
+import type { ServerSessionMember } from "./sessions/ServerSessionMember";
+import type { SessionServer } from "./sessions/SessionServer";
+import type { ServerTargetArgument } from "./target-environments/arguments/ServerTargetArgument";
+import type { ServerTarget } from "./target-environments/ServerTarget";
+import type { ServerTargetEnvironment } from "./target-environments/ServerTargetEnvironment";
+import type { ServerUser } from "./users/ServerUser";
 
-declare module 'http' {
+declare module "http" {
   export interface SessionData {
-    userId: string
+    userId: string;
   }
   export interface IncomingMessage {
-    session: ExpressSession & Partial<SessionData>
+    session: ExpressSession & Partial<SessionData>;
   }
 }
 
@@ -39,28 +41,30 @@ declare global {
    * component classes.
    */
   export type TMetisServerComponents = {
-    session: SessionServer
-    member: ServerSessionMember
-    user: ServerUser
-    targetEnv: ServerTargetEnvironment
-    target: ServerTarget
-    fileReference: ServerFileReference
-    mission: ServerMission
-    resource: ServerMissionResource
-    prototype: ServerMissionPrototype
-    missionFile: ServerMissionFile
-    force: ServerMissionForce
-    output: ServerOutput
-    resourcePool: ServerResourcePool
-    resourceCost: ServerActionCost
-    node: ServerMissionNode
-    action: ServerMissionAction
-    execution: ServerActionExecution
-    outcome: ServerExecutionOutcome
-    targetArgument: ServerTargetArgument
+    session: SessionServer;
+    member: ServerSessionMember;
+    user: ServerUser;
+    targetEnv: ServerTargetEnvironment;
+    target: ServerTarget;
+    fileReference: ServerFileReference;
+    mission: ServerMission;
+    resource: ServerMissionResource;
+    prototype: ServerMissionPrototype;
+    missionFile: ServerMissionFile;
+    force: ServerMissionForce;
+    output: ServerOutput;
+    resourcePool: ServerResourcePool;
+    resourceCost: ServerActionCost;
+    node: ServerMissionNode;
+    action: ServerMissionAction;
+    execution: ServerActionExecution;
+    outcome: ServerExecutionOutcome;
+    targetArgument: ServerTargetArgument;
+    chatChannel: ServerChatChannel;
+    chatMessage: ServerChatMessage;
   } & {
-    [TType in TEffectType]: ServerEffect<TType>
-  }
+    [TType in TEffectType]: ServerEffect<TType>;
+  };
 
   /**
    * Options for creating the METIS server.
@@ -69,109 +73,109 @@ declare global {
     /**
      * The type of environment in which METIS is running.
      */
-    envType: string
+    envType: string;
     /**
      * The port on which to run the server.
      * @default 8080
      */
-    port: number
+    port: number;
     /**
      * The name of the MongoDB database to use.
      * @default "metis"
      */
-    mongoDB: string
+    mongoDB: string;
     /**
      * The host of the MongoDB database to use.
      * @default "localhost"
      */
-    mongoHost: string
+    mongoHost: string;
     /**
      * The port of the MongoDB database to use.
      * @default 27017
      */
-    mongoPort: number
+    mongoPort: number;
     /**
      * The username of the MongoDB database to use. Defaults to undefined.
      * @default undefined
      */
-    mongoUsername?: string
+    mongoUsername?: string;
     /**
      * The password of the MongoDB database to use.
      * @default undefined
      */
-    mongoPassword?: string
+    mongoPassword?: string;
     /**
      * The maximum number of http requests allowed per second.
      * @default undefined
      */
-    httpRateLimit: number
+    httpRateLimit: number;
     /**
      * The duration of the rate limit for the http server.
      * @default 1 (second)
      */
-    httpRateLimitDuration: number
+    httpRateLimitDuration: number;
     /**
      * The maximum number of websocket messages allowed per second.
      */
-    wsRateLimit: number
+    wsRateLimit: number;
     /**
      * The duration of the rate limit for the web socket server.
      * @default 1 (second)
      */
-    wsRateLimitDuration: number
+    wsRateLimitDuration: number;
     /**
      * The location of the file store.
      * @default "./files/store"
      */
-    fileStoreDir: string
+    fileStoreDir: string;
 
     /**
      * Whether database backups should be created automatically on startup and on a schedule.
      * @default true
      */
-    backupsEnabled: boolean
+    backupsEnabled: boolean;
 
     /**
      * The path to the SSL key file (if any).
      */
-    sslKeyPath?: string
+    sslKeyPath?: string;
 
     /**
      * The path to the SSL cert file (if any).
      */
-    sslCertPath?: string
+    sslCertPath?: string;
 
     /**
      * The maximum number of failed login attempts before lockout.
      * @default 5
      */
-    maxLoginAttempts: number
+    maxLoginAttempts: number;
 
     /**
      * The duration of login lockout in seconds.
      * @default 900
      */
-    loginLockoutDuration: number
+    loginLockoutDuration: number;
 
     /**
      * The time window in seconds to track failed attempts.
      * @default 300
      */
-    loginAttemptWindow: number
+    loginAttemptWindow: number;
   }
 
   /**
    * @see {@link Request}
    */
-  export type TExpressRequest = Request
+  export type TExpressRequest = Request;
 
   /**
    * @see {@link Response}
    */
-  export type TExpressResponse = Response
+  export type TExpressResponse = Response;
 
   /**
    * Handle which can be used in express routes.
    */
-  export type TExpressHandler = RequestHandler
+  export type TExpressHandler = RequestHandler;
 }

@@ -24,6 +24,7 @@ import type {
   TRequestOfResponse,
   TServerEvents,
   TServerMethod,
+  TSessionPanelAlert,
 } from '@shared/connect'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import type { TActionModifier } from '@shared/missions/actions/MissionAction'
@@ -40,6 +41,7 @@ import type {
 } from '@shared/missions/Mission'
 import type { MissionComponent } from '@shared/missions/MissionComponent'
 import { type TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
+import type { TChatChannelJson } from '@shared/sessions/chat/ChatChannel'
 import type { TSessionAuthParam } from '@shared/sessions/members/MemberPermission'
 import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
 import { MemberRole } from '@shared/sessions/members/MemberRole'
@@ -59,6 +61,8 @@ import { type TSingleTypeObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { User } from '@shared/users/User'
 import { targetEnvLogger } from '../logging'
+import { ServerChatChannel } from './chat/ServerChatChannel'
+import { ServerChatMessage } from './chat/ServerChatMessage'
 import { ComponentModifierBatchMap } from './ComponentModifierBatchMap'
 import { ServerSessionMember } from './ServerSessionMember'
 import { TargetEnvStore } from './TargetEnvStore'
@@ -123,6 +127,24 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   private effectHistory: Promise<void>[]
 
   /**
+   * Tracks which session panel tabs have pending (unacknowledged) alerts
+   * per member.
+   */
+  private _pendingSessionPanelAlerts = new Map<
+    string,
+    Set<TSessionPanelAlert>
+  >()
+
+  /**
+   * Unread chat message counts per member per channel.
+   * @example
+   * ```typescript
+   * private _unreadChatChannelMessages = new Map<memberId, Map<channelId, unreadChatMessageCount>>()
+   * ```
+   */
+  private _unreadChatChannelMessages = new Map<string, Map<string, number>>()
+
+  /**
    * This is a registry, not of active listeners, but the
    * methods and corresponding handlers for all listeners
    * that should be added and removed via the {@link addListeners}
@@ -145,6 +167,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       ['request-execute-action', this.onRequestExecuteAction],
       ['request-send-output', this.onRequestSendOutput],
       ['request-acknowledge-node-alert', this.onRequestAcknowledgeNodeAlert],
+      ['request-send-chat-message', this.onRequestSendChatMessage],
+      ['acknowledge-session-panel-alert', this.onAcknowledgeSessionPanelAlert],
+      ['fetch-session-panel-alerts', this.onFetchSessionPanelAlerts],
     ] as const
   }
 
@@ -169,6 +194,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       [],
       [],
       [],
+      [],
     )
     this._instanceId = StringToolbox.generateRandomId()
     this._state = 'unstarted'
@@ -184,6 +210,14 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   protected parseMemberData(data: TSessionMemberJson[]): ServerSessionMember[] {
     // Returns empty array, since the data
     // should never need to be parsed.
+    return []
+  }
+
+  // Implemented
+  protected parseChatChannelData(
+    _data: TChatChannelJson[],
+  ): ServerChatChannel[] {
+    // Returns empty array; the server creates channels dynamically on start/reset.
     return []
   }
 
@@ -222,6 +256,15 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     permissions: TSessionAuthParam,
   ): ServerSessionMember[] {
     return this.members.filter((member) => member.isAuthorized(permissions))
+  }
+
+  /**
+   * Returns the chat channels that the given member is allowed to see.
+   * @param member The session member to filter channels for.
+   * @returns The channels visible to the member.
+   */
+  private getVisibleChannels(member: ServerSessionMember): ServerChatChannel[] {
+    return this._chatChannels.filter((c) => c.canMemberSee(member))
   }
 
   /**
@@ -289,6 +332,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let banList: string[] = []
     let setupResults: TEnvScriptResultJson[] = []
     let teardownResults: TEnvScriptResultJson[] = []
+    let chatChannels: TChatChannelJson[] = []
+    let pendingSessionPanelAlerts: TSessionPanelAlert[] = []
+    let unreadChatChannelMessages: Record<string, number> = {}
 
     // Handler a requester being passed.
     if (requester) {
@@ -334,6 +380,19 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         setupResults = this.setupResults.map((result) => result.toJson())
         teardownResults = this.teardownResults.map((result) => result.toJson())
       }
+
+      // Grab the chat channels visible to the requester.
+      chatChannels = this.getVisibleChannels(requester).map((c) => c.toJson())
+
+      // Grab all pending session panel alerts for the requester.
+      pendingSessionPanelAlerts = [
+        ...(this._pendingSessionPanelAlerts.get(requester._id) ?? []),
+      ]
+
+      // Grab all unread chat channel messages for the requester.
+      unreadChatChannelMessages = Object.fromEntries(
+        this._unreadChatChannelMessages.get(requester._id) ?? new Map(),
+      )
     }
 
     // Construct JSON.
@@ -352,6 +411,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       config: this.config,
       setupResults,
       teardownResults,
+      chatChannels,
+      unreadChatChannelMessages,
+      pendingSessionPanelAlerts,
     }
 
     return json
@@ -702,6 +764,13 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       this.removeListeners(member)
       member.connection = newConnection
       this.addListeners(member)
+
+      // Make sure the client's pending session panel alerts are in sync
+      // with the server's pending session panel alerts upon reconnect.
+      const pending = this._pendingSessionPanelAlerts.get(member._id)
+      if (pending?.size) {
+        member.emit('session-panel-alert', { data: { panels: [...pending] } })
+      }
     }
     // Return whether the member was found.
     return !!member
@@ -836,6 +905,16 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       sessionDataExposure: { expose: 'all' },
     })
 
+    // (Re-)derive chat channels from the mission's forces and reset messages.
+    this._chatChannels = [
+      ServerChatChannel.createAll(this),
+      ...this.mission.forces.map((force) =>
+        ServerChatChannel.fromForce(force, this),
+      ),
+    ]
+    // Serialize all channels for members with complete visibility.
+    let allChatChannelsJson = this._chatChannels.map((c) => c.toJson())
+
     // Loop through members, and emit a start event to
     // all of them, including mission data specific to
     // their permissions.
@@ -873,7 +952,15 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         // Emit the event to the member.
         member.emit(responseMethod, {
           method: responseMethod,
-          data: { structure, forces, prototypes, files },
+          data: {
+            structure,
+            forces,
+            prototypes,
+            files,
+            chatChannels: this.getVisibleChannels(member).map((c) =>
+              c.toJson(),
+            ),
+          },
           request,
         })
       }
@@ -893,6 +980,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
             forces: completeVisibilityCache.forces,
             prototypes: completeVisibilityCache.prototypes,
             files: completeVisibilityCache.files,
+            chatChannels: allChatChannelsJson,
           },
           request,
         })
@@ -907,6 +995,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
             forces: [],
             prototypes: [],
             files: [],
+            chatChannels: [],
           },
           request,
         })
@@ -1622,6 +1711,13 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       } = node
 
       // Construct open event payload.
+      //
+      // Note: Currently, a shared payload works because
+      // all members get the same node data as long as
+      // they have visibility for that force. If this ever
+      // changes, and node visibility varies member to member
+      // of a force, this logic will need to be updated to
+      // emit different payloads to different members.
       let payload: TServerEvents['node-opened'] = {
         method: 'node-opened',
         data: {
@@ -1629,7 +1725,14 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
           forceId: node.forceId,
           opened: true,
           structure: structure,
-          revealedDescendants: descendants.map((n) => n.toJson()),
+          revealedDescendants: descendants.map((n) =>
+            n.toJson({
+              sessionDataExposure: {
+                expose: 'member-specific',
+                memberId: member._id,
+              },
+            }),
+          ),
           revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
         },
         request: { event, requesterId: member.userId, fulfilled: true },
@@ -1870,7 +1973,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       },
       request: {
         event: request.event,
-        requesterId: member._id,
+        requesterId: member.userId,
         fulfilled: false,
       },
     }
@@ -2093,6 +2196,76 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
           )
         }
     }
+  }
+
+  /**
+   * Called when a member requests to send a chat message to a channel.
+   * @param member The member sending the message.
+   * @param event The event emitted by the member.
+   */
+  public onRequestSendChatMessage = (
+    member: ServerSessionMember,
+    event: TClientEvents['request-send-chat-message'],
+  ): void => {
+    let request = member.connection.buildResponseReqData(event)
+    let { channelId, message } = event.data
+
+    // Only allow messaging in a started session.
+    if (this._state !== 'started') {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
+          { request },
+        ),
+      )
+    }
+
+    // Find the channel.
+    let channel = this.getChatChannel(channelId)
+    if (!channel) {
+      return member.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_CHAT_CHANNEL_NOT_FOUND, {
+          request,
+        }),
+      )
+    }
+
+    // Ensure the member is allowed to see (and therefore post to) the channel.
+    if (!channel.canMemberSee(member)) {
+      return member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          { request },
+        ),
+      )
+    }
+
+    // Generate and store the message.
+    let chatMessage = ServerChatMessage.generate(channel, this, member, message)
+    channel.messages.push(chatMessage)
+    let messageJson = chatMessage.toJson()
+
+    // Broadcast to all members who can see the channel.
+    for (let recipient of this._members) {
+      if (channel.canMemberSee(recipient)) {
+        recipient.emit('chat-message-received', {
+          data: { message: messageJson },
+        })
+
+        // Also emit a session panel alert and increment the unread count for recipients
+        // who didn't send the message, but have received it.
+        if (recipient._id !== member._id) {
+          this.emitSessionPanelAlert(recipient, 'Messenger')
+          this.incrementUnreadChatCount(recipient._id, channel._id)
+        }
+      }
+    }
+
+    // Confirm delivery to the sender.
+    member.emit('chat-message-sent', {
+      data: messageJson,
+      request,
+    })
   }
 
   /**
@@ -2360,9 +2533,150 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
-   * Handles the blocking and unblocking of nodes during a session.
-   * @param nodes The nodes to block or unblock.
-   * @param blocked Whether to block or unblock the nodes.
+   *  Alerts a session member(s) that a panel has new activity and assists in tracking
+   * which panels have pending alerts.
+   * @param members The session member(s) to alert.
+   * @param panel The panel tab that has new activity.
+   */
+  private emitSessionPanelAlert(
+    members: TInstanceOrArray<ServerSessionMember>,
+    panel: TSessionPanelAlert,
+  ): void {
+    members = ArrayToolbox.toArray(members)
+
+    for (let member of members) {
+      let panels = this._pendingSessionPanelAlerts.get(member._id)
+
+      if (!panels) {
+        panels = new Set()
+        this._pendingSessionPanelAlerts.set(member._id, panels)
+      }
+
+      panels.add(panel)
+      member.emit('session-panel-alert', { data: { panels: [...panels] } })
+    }
+  }
+
+  /**
+   * Retrieves the set of pending session panel alerts for a member, initializing
+   * it if it does not yet exist.
+   * @param member The session member whose pending session panel alert set is being retrieved.
+   * @returns The set of pending session panel alerts for the member.
+   */
+  private getSessionPanelAlerts(member: ServerSessionMember) {
+    let panels = this._pendingSessionPanelAlerts.get(member._id)
+    if (!panels) {
+      panels = new Set()
+      this._pendingSessionPanelAlerts.set(member._id, panels)
+    }
+    return panels
+  }
+
+  /**
+   * Removes a panel from a member's pending session panel alert set.
+   * @param member The session member the alert is being cleared for.
+   * @param panel The panel tab with an alert to be cleared.
+   */
+  private clearSessionPanelAlert(
+    member: ServerSessionMember,
+    panel: TSessionPanelAlert,
+  ): void {
+    this._pendingSessionPanelAlerts.get(member._id)?.delete(panel)
+  }
+
+  /**
+   * Increments the unread chat message count for a member in a given channel,
+   * initializing the member's count map if it does not yet exist.
+   * @param memberId The ID of the member receiving the message.
+   * @param channelId The ID of the channel the message was sent to.
+   */
+  private incrementUnreadChatCount(memberId: string, channelId: string): void {
+    let allChannelsWithUnreadMessages =
+      this._unreadChatChannelMessages.get(memberId)
+
+    // If there aren't any channels with unread messages for the member,
+    // initialize a new map.
+    if (!allChannelsWithUnreadMessages) {
+      allChannelsWithUnreadMessages = new Map()
+
+      this._unreadChatChannelMessages.set(
+        memberId,
+        allChannelsWithUnreadMessages,
+      )
+    }
+
+    // Otherwise, increment the existing count for the channel.
+    let unreadMessages = allChannelsWithUnreadMessages.get(channelId) ?? 0
+    allChannelsWithUnreadMessages.set(channelId, unreadMessages + 1)
+  }
+
+  /**
+   * Clears the unread chat message count for a member in a given channel.
+   * @param memberId The ID of the member that the unread messages are being cleared for.
+   * @param channelId The ID of the channel that the unread messages are being cleared for.
+   */
+  private clearUnreadChatCount(memberId: string, channelId: string): void {
+    this._unreadChatChannelMessages.get(memberId)?.delete(channelId)
+  }
+
+  /**
+   * Returns whether a member has any channels with unread messages.
+   * @param memberId The ID of the member to check.
+   */
+  private hasPendingUnreadChatMessages(memberId: string): boolean {
+    const allChannelsWithUnreadMessages =
+      this._unreadChatChannelMessages.get(memberId)
+
+    if (!allChannelsWithUnreadMessages) {
+      return false
+    }
+
+    const unreadMessagesForEachChannel = Array.from(
+      allChannelsWithUnreadMessages.values(),
+    )
+    return unreadMessagesForEachChannel.some((count) => count > 0)
+  }
+
+  /**
+   * Acknowledges a session panel alert by viewing the panel.
+   * @param member The session member acknowledging the alert.
+   * @param event The acknowledge event.
+   */
+  private onAcknowledgeSessionPanelAlert = (
+    member: ServerSessionMember,
+    event: TClientEvents['acknowledge-session-panel-alert'],
+  ): void => {
+    if (event.data.panel === 'Messenger') {
+      this.clearUnreadChatCount(member._id, event.data.channelId)
+
+      if (!this.hasPendingUnreadChatMessages(member._id)) {
+        this.clearSessionPanelAlert(member, 'Messenger')
+      }
+    } else {
+      this.clearSessionPanelAlert(member, event.data.panel)
+    }
+  }
+
+  /**
+   * Fetches the current session panel alerts for a member.
+   * @param member The requesting session member.
+   */
+  private onFetchSessionPanelAlerts = (
+    member: ServerSessionMember,
+    _event: TClientEvents['fetch-session-panel-alerts'],
+  ): void => {
+    const panels = Array.from(
+      this._pendingSessionPanelAlerts.get(member._id) ?? [],
+    )
+    if (panels.length) {
+      member.emit('session-panel-alert', { data: { panels } })
+    }
+  }
+
+  /**
+   * Handles the blocking and unblocking of a node during a session.
+   * @param nodeId The node to block or unblock.
+   * @param blocked Whether to block or unblock the node.
    */
   public updateNodeBlockStatus = (
     nodes: ServerMissionNode[],
@@ -2615,8 +2929,22 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         files: files.map((file) => file.toJson()),
       },
     }))
+
+    if (granted) {
+      batchMap.emitMemberSpecific('session-panel-alert', (forces, member) => {
+        let panels = this.getSessionPanelAlerts(member)
+        panels.add('Files')
+        return {
+          data: {
+            panels: [...panels],
+          },
+        }
+      })
+    }
   }
 
+  // todo: Test this method to make sure complete-visibility
+  // todo: members don't receive duplicate outputs.
   /**
    * Sends an output to the force's output panel.
    * @param output The output to send to the force.
@@ -2659,13 +2987,17 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       // Store the output in the force.
       force.storeOutput(output)
 
-      // If a member is specified, only send the output to that member.
+      // If a member is specified, send the output to that member.
+      // Also send to any members with complete visibility (e.g. admins)
+      // who are not the targeted member so they see it in real-time.
       if (member) {
+        const outputJson = output.toJson()
         member.emit('send-output', {
           data: {
-            outputData: output.toJson(),
+            outputData: outputJson,
           },
         })
+        this.emitSessionPanelAlert(member, 'Output')
         continue
       }
 
@@ -2680,6 +3012,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
           },
         },
       )
+      this.emitSessionPanelAlert(this.getMembersForForce(force._id), 'Output')
     }
   }
 

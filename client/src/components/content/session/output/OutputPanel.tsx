@@ -1,3 +1,5 @@
+import { useSessionPageContext } from '@client/components/pages/sessions/context'
+import { RIGHT_PANEL } from '@client/components/pages/sessions/SessionPage'
 import type { ClientMissionForce } from '@client/missions/forces/ClientMissionForce'
 import { compute } from '@client/toolbox'
 import { useEventListener, usePostRenderEffect } from '@client/toolbox/hooks'
@@ -20,6 +22,8 @@ const AUTO_SCROLL_LOCK_DISTANCE = 100
  * A panel for displaying messages in the session.
  */
 export default function OutputPanel({ force }: TOutputPanel_P): TReactElement {
+  const { state } = useSessionPageContext()
+
   /* -- STATE -- */
 
   const [outputs, setOutputs] = useState<ClientMissionForce['outputs']>([])
@@ -30,6 +34,7 @@ export default function OutputPanel({ force }: TOutputPanel_P): TReactElement {
   >(undefined)
   const [autoScrollLock, lockAutoScroll] = useState<boolean>(false)
   const [areUnseenOutputs, setAreUnseenOutputs] = useState<boolean>(false)
+  const [activeRightPanel] = state.activeRightPanel
 
   /* -- EFFECTS -- */
 
@@ -87,6 +92,13 @@ export default function OutputPanel({ force }: TOutputPanel_P): TReactElement {
       }, 100)
     }
   })
+
+  // Automatically view new outputs when the output panel becomes active.
+  useEffect(() => {
+    if (activeRightPanel === RIGHT_PANEL.OUTPUT && areUnseenOutputs) {
+      onViewNewOutputs()
+    }
+  }, [activeRightPanel])
 
   /* -- COMPUTED -- */
 

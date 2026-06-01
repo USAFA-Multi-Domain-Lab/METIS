@@ -11,6 +11,7 @@ import {
 import { deleteUser } from '../controllers/users/[_id].delete'
 import { getUser } from '../controllers/users/[_id].get'
 import { updateUser } from '../controllers/users/[_id].put'
+import { checkUsername } from '../controllers/users/check-username.get'
 import { getUsers } from '../controllers/users/index.get'
 import { createNewUser } from '../controllers/users/index.post'
 import { updateUserPreferences } from '../controllers/users/preferences.put'
@@ -47,6 +48,14 @@ const routerMap: TMetisRouterMap = (
 
   // -- GET | /api/v1/users/ --
   router.get('/', auth({ permissions: ['users_read_students'] }), getUsers)
+
+  // -- GET | /api/v1/users/check-username/ --
+  router.get(
+    '/check-username/',
+    auth({ permissions: ['users_write_students'] }),
+    defineRequests({ query: { username: 'string' } }),
+    checkUsername,
+  )
 
   // -- GET | /api/v1/users/:_id/ --
   router.get(

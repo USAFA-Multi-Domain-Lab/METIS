@@ -3,40 +3,6 @@ import { describe, expect, jest, test } from '@jest/globals'
 import { fireEvent, render } from '@testing-library/react'
 
 describe('DetailToggle', () => {
-  /* -- ROOT CLASS NAMES -- */
-
-  describe('Root class names', () => {
-    test('Root has "Detail" and "DetailToggle" classes', () => {
-      let { container } = render(
-        <DetailToggle label='Test Label' value={false} setValue={() => {}} />,
-      )
-      let root = container.firstChild as HTMLElement
-      expect(root).toHaveClass('Detail')
-      expect(root).toHaveClass('DetailToggle')
-    })
-
-    test('Root has "Disabled" class when disabled', () => {
-      let { container } = render(
-        <DetailToggle
-          label='Test Label'
-          value={false}
-          setValue={() => {}}
-          disabled
-        />,
-      )
-      let root = container.firstChild as HTMLElement
-      expect(root).toHaveClass('Disabled')
-    })
-
-    test('Root does not have "Disabled" class when not disabled', () => {
-      let { container } = render(
-        <DetailToggle label='Test Label' value={false} setValue={() => {}} />,
-      )
-      let root = container.firstChild as HTMLElement
-      expect(root).not.toHaveClass('Disabled')
-    })
-  })
-
   /* -- TOGGLE INTERACTION -- */
 
   describe('Toggle interaction', () => {

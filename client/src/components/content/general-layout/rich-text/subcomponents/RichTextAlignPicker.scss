@@ -1,0 +1,42 @@
+@use '@client/assets/styles/config.scss' as *;
+
+.AlignPicker {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.25em 0.65em 0.35em;
+
+  .AlignButton {
+    position: relative;
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background-color: transparent;
+      transition: background-color 0.15s;
+    }
+
+    &:hover::after {
+      background-color: rgba($color-accent, 0.8);
+    }
+
+    &.Selected::after {
+      background-color: $color-accent;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  }
+}

@@ -1,5 +1,7 @@
-import type { TForceHostedLookUpData, TNodeHostedLookUpData } from '@shared/missions/Mission'
-import type { TActionModifier } from '../missions/actions/MissionAction'
+import type {
+  TForceHostedLookUpData,
+  TNodeHostedLookUpData,
+} from '@shared/missions/Mission'
 import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
 import type { TEnvScriptResultJson } from '@shared/target-environments/EnvScriptResults'
 import type { MetisComponent } from '../MetisComponent'
@@ -8,12 +10,15 @@ import type {
   TExecutionCheats,
 } from '../missions/actions/ActionExecution'
 import type { TExecutionOutcomeJson } from '../missions/actions/ExecutionOutcome'
+import type { TActionModifier } from '../missions/actions/MissionAction'
 import type { TMissionFileJson } from '../missions/files/MissionFile'
 import type { TMissionForceSaveJson } from '../missions/forces/MissionForce'
 import type { TOutputJson } from '../missions/forces/MissionOutput'
 import type { TResourcePoolJson } from '../missions/forces/ResourcePool'
 import type { TMissionNodeJson } from '../missions/nodes/MissionNode'
 import type { TMissionPrototypeJson } from '../missions/nodes/MissionPrototype'
+import type { TChatChannelJson } from '../sessions/chat/ChatChannel'
+import type { TChatMessageJson } from '../sessions/chat/ChatMessage'
 import type { MemberRole } from '../sessions/members/MemberRole'
 import type {
   SessionMember,
@@ -309,6 +314,29 @@ export type TResourcePoolUpdatedData = {
   operand: number
 }
 
+/*
+ * The session panels that can carry an alert, excluding Messenger (which
+ * requires a channel ID to acknowledge).
+ */
+export const SESSION_PANEL_ALERTS_NO_MESSENGER = [
+  'Output',
+  'Files',
+  'Members',
+] as const
+
+/**
+ * All session panels that can carry an alert.
+ */
+const SESSION_PANEL_ALERTS = [
+  ...SESSION_PANEL_ALERTS_NO_MESSENGER,
+  'Messenger',
+] as const
+
+/**
+ * The session panels that can carry an alert.
+ */
+export type TSessionPanelAlert = (typeof SESSION_PANEL_ALERTS)[number]
+
 /**
  * General WS events emitted by the server, or caused due to a change in the connection with the server.
  */
@@ -376,7 +404,10 @@ export type TGenericServerEvents = {
   /**
    * Occurs when the open state of one or more nodes is updated.
    */
-  'node-open-state-updated': TConnectEvent<'node-open-state-updated', TNodeOpenStateBatchData>
+  'node-open-state-updated': TConnectEvent<
+    'node-open-state-updated',
+    TNodeOpenStateBatchData
+  >
   /**
    * Occurs when the block status of one or more nodes is updated.
    */
@@ -402,15 +433,24 @@ export type TGenericServerEvents = {
   /**
    * Occurs when the process time of one or more actions is updated.
    */
-  'action-process-time-updated': TConnectEvent<'action-process-time-updated', TActionProcessTimeUpdatedData>
+  'action-process-time-updated': TConnectEvent<
+    'action-process-time-updated',
+    TActionProcessTimeUpdatedData
+  >
   /**
    * Occurs when the success chance of one or more actions is updated.
    */
-  'action-success-chance-updated': TConnectEvent<'action-success-chance-updated', TActionSuccessChanceUpdatedData>
+  'action-success-chance-updated': TConnectEvent<
+    'action-success-chance-updated',
+    TActionSuccessChanceUpdatedData
+  >
   /**
    * Occurs when the resource cost of one or more actions is updated.
    */
-  'action-resource-cost-updated': TConnectEvent<'action-resource-cost-updated', TActionResourceCostUpdatedData>
+  'action-resource-cost-updated': TConnectEvent<
+    'action-resource-cost-updated',
+    TActionResourceCostUpdatedData
+  >
   /**
    * Occurs when the session has been destroyed while the participant was in it.
    */
@@ -489,6 +529,33 @@ export type TGenericServerEvents = {
       results: TEnvScriptResultJson[]
     }
   >
+  /**
+   * Occurs when a chat message is broadcast to members of a channel.
+   */
+  'chat-message-received': TConnectEvent<
+    'chat-message-received',
+    {
+      /**
+       * The chat message that was received.
+       */
+      message: TChatMessageJson
+    }
+  >
+  /**
+   * Occurs when the server determines that one or more session panel
+   * tabs require the member's attention.
+   */
+  'session-panel-alert': TConnectEvent<
+    'session-panel-alert',
+    {
+      /**
+       * The full set of session panels that currently have active alerts
+       * for an individual member.
+       * @see {@link TSessionPanelAlert}
+       */
+      panels: TSessionPanelAlert[]
+    }
+  >
 }
 
 /**
@@ -525,6 +592,10 @@ export type TResponseEvents = {
        * The file(s) that the client has access to.
        */
       files: TMissionFileJson[]
+      /**
+       * The chat channels available in this session.
+       */
+      chatChannels: TChatChannelJson[]
     },
     TClientEvents['request-start-session']
   >
@@ -574,6 +645,10 @@ export type TResponseEvents = {
        * The file(s) that the client has access to.
        */
       files: TMissionFileJson[]
+      /**
+       * The chat channels available in this session.
+       */
+      chatChannels: TChatChannelJson[]
     },
     TClientEvents['request-reset-session']
   >
@@ -715,6 +790,14 @@ export type TResponseEvents = {
     TClientEvents['request-send-output']
   >
   /**
+   * Occurs when the client has successfully sent a chat message.
+   */
+  'chat-message-sent': TResponseEvent<
+    'chat-message-sent',
+    TChatMessageJson,
+    TClientEvents['request-send-chat-message']
+  >
+  /**
    * Occurs when a node alert has been acknowledged successfully on the server.
    */
   'node-alert-acknowledged': TResponseEvent<
@@ -784,15 +867,16 @@ export type TServerEvents = TGenericServerEvents & TResponseEvents
 /**
  * General WS events emitted by the client, or caused due to a change in the connection with the client.
  */
+
 export type TGenericClientEvents = {
   /**
    * Occurs when the connection to the client is closed.
    */
-  close: TConnectEvent<'close'>
+  'close': TConnectEvent<'close'>
   /**
    * Occurs when the client emits an error.
    */
-  error: {
+  'error': {
     /**
      * The event method (Always "error").
      */
@@ -807,6 +891,34 @@ export type TGenericClientEvents = {
     message: string
     data: {}
   }
+  /**
+   * Occurs when the client acknowledges the activity that
+   * triggered a session panel alert.
+   */
+  'acknowledge-session-panel-alert': TConnectEvent<
+    'acknowledge-session-panel-alert',
+    | {
+        /**
+         * The session panel that has been acknowledged.
+         */
+        panel: Exclude<TSessionPanelAlert, 'Messenger'>
+      }
+    | {
+        /**
+         * The session panel that has been acknowledged.
+         */
+        panel: 'Messenger'
+        /**
+         * The ID of the channel within the Messenger panel that has been acknowledged.
+         */
+        channelId: string
+      }
+  >
+  /**
+   * Occurs when the client requests the server to fetch
+   * the current session panels with alerts triggered by activity.
+   */
+  'fetch-session-panel-alerts': TConnectEvent<'fetch-session-panel-alerts'>
 }
 
 /**
@@ -926,6 +1038,22 @@ export type TRequestEvents = {
    * Occurs when the client requests to send a pre-execution message to the output panel.
    */
   'request-send-output': TRequestEvent<'request-send-output', TOutputDatum>
+  /**
+   * Occurs when the client requests to send a chat message to a channel.
+   */
+  'request-send-chat-message': TRequestEvent<
+    'request-send-chat-message',
+    {
+      /**
+       * The ID of the channel to send the message to.
+       */
+      channelId: string
+      /**
+       * The HTML content of the message.
+       */
+      message: string
+    }
+  >
   /**
    * Occurs when the client requests to mark a node alert as acknowledged,
    * which will dismiss it from view.

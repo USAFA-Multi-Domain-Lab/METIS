@@ -11,7 +11,7 @@ import type {
 import { User } from '@shared/users/User'
 import { UserAccess } from '@shared/users/UserAccess'
 import { UserPermission } from '@shared/users/UserPermission'
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 import type { TMetisClientComponents } from '..'
 
 /**
@@ -424,6 +424,34 @@ export class ClientUser
   }
 
   /**
+   * Calls the API to check whether a username already exists in the database.
+   * @param username The username to check.
+   * @resolves The availability status of the username.
+   * @rejects The error that occurred while checking the username.
+   */
+  public static $checkUsername(
+    username: string,
+  ): Promise<TUsernameCheckResult> {
+    return new Promise<TUsernameCheckResult>(async (resolve, reject) => {
+      try {
+        await axios.get(`${ClientUser.API_ENDPOINT}/check-username/`, {
+          params: { username },
+        })
+        resolve('available')
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          if (error.response?.status === 409) return resolve('active')
+          if (error.response?.status === 410) return resolve('archived')
+        }
+
+        console.error('Failed to check username.')
+        console.error(error)
+        reject(error)
+      }
+    })
+  }
+
+  /**
    * Calls the API to create a new user.
    * @param clientUser The user to create.
    * @resolves The user that was created.
@@ -556,3 +584,12 @@ export type TClientUserJsonOptions = TUserJsonOptions & {
    */
   passwordIsRequired?: boolean
 }
+
+/**
+ * The result of a username availability check.
+ * @option `'available'` — the username is free to use.
+ * @option `'active'` — the username is already in use by an active user.
+ * @option `'archived'` — the username was previously used by a user that has
+ * since been archived (soft-deleted) and is no longer available.
+ */
+export type TUsernameCheckResult = 'available' | 'active' | 'archived'

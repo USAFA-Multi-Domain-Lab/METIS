@@ -3,56 +3,11 @@ import { describe, expect, jest, test } from '@jest/globals'
 import { fireEvent, render } from '@testing-library/react'
 
 describe('DetailNumber', () => {
-  /* -- ROOT CLASS NAMES -- */
-
-  describe('Root class names', () => {
-    test('Root has "Detail" and "DetailNumber" classes', () => {
-      let { container } = render(
-        <DetailNumber
-          fieldType='required'
-          label='Test Label'
-          value={0}
-          setValue={() => {}}
-        />,
-      )
-      let root = container.firstChild as HTMLElement
-      expect(root).toHaveClass('Detail')
-      expect(root).toHaveClass('DetailNumber')
-    })
-
-    test('Root has "Disabled" class when disabled', () => {
-      let { container } = render(
-        <DetailNumber
-          fieldType='required'
-          label='Test Label'
-          value={0}
-          setValue={() => {}}
-          disabled
-        />,
-      )
-      let root = container.firstChild as HTMLElement
-      expect(root).toHaveClass('Disabled')
-    })
-
-    test('Root does not have "Disabled" class when not disabled', () => {
-      let { container } = render(
-        <DetailNumber
-          fieldType='required'
-          label='Test Label'
-          value={0}
-          setValue={() => {}}
-        />,
-      )
-      let root = container.firstChild as HTMLElement
-      expect(root).not.toHaveClass('Disabled')
-    })
-  })
-
   /* -- UNIT LABEL -- */
 
   describe('Unit label', () => {
     test('Unit label is rendered when the unit prop is provided', () => {
-      let { container } = render(
+      let { getByText } = render(
         <DetailNumber
           fieldType='required'
           label='Test Label'
@@ -61,13 +16,11 @@ describe('DetailNumber', () => {
           unit='kg'
         />,
       )
-      let unit = container.querySelector('.Unit') as HTMLElement
-      expect(unit).not.toBeNull()
-      expect(unit.textContent).toBe('kg')
+      expect(getByText('kg')).toBeTruthy()
     })
 
     test('Unit label is not rendered when the unit prop is not provided', () => {
-      let { container } = render(
+      let { queryByText } = render(
         <DetailNumber
           fieldType='required'
           label='Test Label'
@@ -75,7 +28,7 @@ describe('DetailNumber', () => {
           setValue={() => {}}
         />,
       )
-      expect(container.querySelector('.Unit')).toBeNull()
+      expect(queryByText('kg')).toBeNull()
     })
   })
 

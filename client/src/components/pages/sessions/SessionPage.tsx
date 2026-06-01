@@ -16,6 +16,7 @@ import {
   useRequireLogin,
 } from '@client/toolbox/hooks'
 import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
+import type { TSessionPanelAlert } from '@shared/connect'
 import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { useEffect, useState } from 'react'
 import type { TPage_P } from '..'
@@ -28,6 +29,7 @@ import Panel from '../../content/general-layout/panels/Panel'
 import PanelLayout from '../../content/general-layout/panels/PanelLayout'
 import PanelView from '../../content/general-layout/panels/PanelView'
 import SessionMembersPanel from '../../content/session/members/SessionMembersPanel'
+import MessengerPanel from '../../content/session/messenger/MessengerPanel'
 import MissionMap from '../../content/session/mission-map/MissionMap'
 import NodeAlertIndicator from '../../content/session/mission-map/ui/indicators/NodeAlertIndicator'
 import ActionExecModal from '../../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
@@ -48,6 +50,18 @@ import SessionTopBar from './subcomponents/SessionTopBar'
  */
 const SECONDARY_PANEL_DEFAULT_SIZE: number = 400 //px
 
+/**
+ * The titles for the right-side panel tabs. Centralised here so that
+ * event-listener guards, `onViewSelected` handlers, and `PanelView`
+ * title props all share a single source of truth.
+ */
+export const RIGHT_PANEL: TPanelTitles = {
+  OUTPUT: 'Output',
+  MESSENGER: 'Messenger',
+  FILES: 'Files',
+  MEMBERS: 'Members',
+}
+
 /* -- COMPONENT -- */
 
 /**
@@ -62,11 +76,21 @@ export default function SessionPage(
   const { session, returnPage } = defaultedProps
   const { mission } = session
 
+  /* -- BUTTON ENGINE(S) -- */
+  const navButtonEngine = useButtonSvgEngine({
+    elements: [],
+  })
+  const mapButtonEngine = useButtonSvgEngine({})
+
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
   const state: TSessionPage_S = {
     resourcePools: useState<ClientResourcePool[]>([]),
+    messengerHasUnreadMessages: useState<boolean>(
+      session.pendingSessionPanelAlerts.includes(RIGHT_PANEL.MESSENGER),
+    ),
+    activeRightPanel: useState<TSessionPanelAlert | null>(null),
   }
   const [server] = globalContext.server
   const {
@@ -81,12 +105,8 @@ export default function SessionPage(
     null,
   )
   const [selectedForce, selectForce] = useState<ClientMissionForce | null>(null)
-  const [resourcePools, setResourcePools] = state.resourcePools
+  const [, setResourcePools] = state.resourcePools
   const {} = useRequireLogin()
-  const navButtonEngine = useButtonSvgEngine({
-    elements: [],
-  })
-  const mapButtonEngine = useButtonSvgEngine({})
   const [localFiles, setLocalFiles] = useState<ClientMissionFile[]>(
     mission.files,
   )
@@ -108,6 +128,15 @@ export default function SessionPage(
   )
   const [activePendingAlert, setActivePendingAlert] =
     useState<NodeAlert | null>(null)
+  const [messengerHasUnreadMessages, setMessengerHasUnreadMessages] =
+    state.messengerHasUnreadMessages
+  const [outputHasNew, setOutputHasNew] = useState<boolean>(
+    session.pendingSessionPanelAlerts.includes(RIGHT_PANEL.OUTPUT),
+  )
+  const [filesHasNew, setFilesHasNew] = useState<boolean>(
+    session.pendingSessionPanelAlerts.includes(RIGHT_PANEL.FILES),
+  )
+  const [activeRightPanel, setActiveRightPanel] = state.activeRightPanel
 
   /* -- FUNCTIONS -- */
 
@@ -480,43 +509,6 @@ export default function SessionPage(
   })
 
   /**
-   * The class name for the resources element.
-   */
-  const resourcesClass = compute(() => {
-    // Define default list.
-    let resourcesClassList: string[] = ['Resources']
-
-    // If there is no force selected, hide
-    // the resources.
-    if (!selectedForce) resourcesClassList.push('Hidden')
-
-    // Return the class list as a joined string.
-    return resourcesClassList.join(' ')
-  })
-
-  /**
-   * The class name for the resource count element.
-   */
-  const resourceCountClass = compute(() => {
-    // Define default list.
-    let resourceCountClassList: string[] = ['Count']
-
-    // If resources are infinite, add the infinite
-    // class to the resource count.
-    if (session.config.infiniteResources) {
-      resourceCountClassList.push('Infinite')
-    }
-    // If resources are finite, add the finite
-    // class to the resource count.
-    else {
-      resourceCountClassList.push('Finite')
-    }
-
-    // Return the class list as a joined string.
-    return resourceCountClassList.join(' ')
-  })
-
-  /**
    * Tabs for the mission map's tab bar.
    */
   const mapTabs: TTabBarTab[] = compute(() => {
@@ -644,13 +636,14 @@ export default function SessionPage(
     },
   )
 
-  // Update the list of local files when file access
-  // is granted or revoked.
-  useEventListener(
-    mission,
-    ['file-access-granted', 'file-access-revoked'],
-    () => setLocalFiles([...mission.files]),
-  )
+  // Update the list of local files when file access is granted or revoked.
+  useEventListener(mission, 'file-access-granted', () => {
+    setLocalFiles([...mission.files])
+  })
+
+  useEventListener(mission, 'file-access-revoked', () => {
+    setLocalFiles([...mission.files])
+  })
 
   // Recheck whether there are pending alerts
   // whenever a new-alert event is received from
@@ -660,6 +653,36 @@ export default function SessionPage(
     ['node-alert-added', 'node-alert-acknowledged'],
     () => {
       refreshAlerts()
+    },
+  )
+
+  // Highlight the appropriate tab when the server reports new activity.
+  useEventListener(
+    server,
+    'session-panel-alert',
+    (event: { data: { panels: TSessionPanelAlert[] } }) => {
+      for (const panel of event.data.panels) {
+        if (
+          panel === RIGHT_PANEL.OUTPUT &&
+          activeRightPanel !== RIGHT_PANEL.OUTPUT
+        ) {
+          setOutputHasNew(true)
+        }
+
+        if (
+          panel === RIGHT_PANEL.MESSENGER &&
+          activeRightPanel !== RIGHT_PANEL.MESSENGER
+        ) {
+          setMessengerHasUnreadMessages(true)
+        }
+
+        if (
+          panel === RIGHT_PANEL.FILES &&
+          activeRightPanel !== RIGHT_PANEL.FILES
+        ) {
+          setFilesHasNew(true)
+        }
+      }
     },
   )
 
@@ -719,13 +742,51 @@ export default function SessionPage(
                 </MissionMap>
               </PanelView>
             </Panel>
-            <Panel>
-              <PanelView title='Output'>
+            <Panel
+              onViewSelected={(title) => {
+                setActiveRightPanel(title as TSessionPanelAlert)
+
+                switch (title) {
+                  case RIGHT_PANEL.OUTPUT:
+                    setOutputHasNew(false)
+                    session.acknowledgeSessionPanelAlert('Output')
+                    break
+                  case RIGHT_PANEL.FILES:
+                    setFilesHasNew(false)
+                    session.acknowledgeSessionPanelAlert('Files')
+                    break
+                }
+              }}
+            >
+              <PanelView
+                title={RIGHT_PANEL.OUTPUT}
+                highlighted={outputHasNew}
+                description={
+                  outputHasNew ? '**New output(s) available**' : undefined
+                }
+              >
                 <If condition={!!selectedForce}>
                   <OutputPanel force={selectedForce!} />
                 </If>
               </PanelView>
-              <PanelView title='Files'>
+              <PanelView
+                title={RIGHT_PANEL.MESSENGER}
+                highlighted={messengerHasUnreadMessages}
+                description={
+                  messengerHasUnreadMessages
+                    ? `**New message(s) available**`
+                    : undefined
+                }
+              >
+                <MessengerPanel session={session} />
+              </PanelView>
+              <PanelView
+                title={RIGHT_PANEL.FILES}
+                highlighted={filesHasNew}
+                description={
+                  filesHasNew ? '**New file(s) available**' : undefined
+                }
+              >
                 <MissionFileList
                   name={'Files'}
                   items={localFiles}
@@ -754,7 +815,7 @@ export default function SessionPage(
                   }}
                 />
               </PanelView>
-              <PanelView title='Members'>
+              <PanelView title={RIGHT_PANEL.MEMBERS}>
                 <SessionMembersPanel session={session} key={'members-panel'} />
               </PanelView>
             </Panel>
@@ -800,6 +861,14 @@ export type TSessionPage_S = {
    * session state and updates when relevant events occur.
    */
   resourcePools: TReactState<ClientResourcePool[]>
+  /**
+   * Whether the Messenger tab has unread messages in any channel.
+   */
+  messengerHasUnreadMessages: TReactState<boolean>
+  /**
+   * The right-panel tab that's currently active.
+   */
+  activeRightPanel: TReactState<TSessionPanelAlert | null>
 }
 
 /**
@@ -808,6 +877,23 @@ export type TSessionPage_S = {
 export type TSessionPage_E = {}
 
 /**
- * Available tabs for the right panel on the session page.
+ * The titles for the panels in the session page.
  */
-export type TSessionRightPanelTab = 'output' | 'users'
+type TPanelTitles = {
+  /**
+   * The title for the output panel tab.
+   */
+  readonly OUTPUT: Extract<TSessionPanelAlert, 'Output'>
+  /**
+   * The title for the messenger panel tab.
+   */
+  readonly MESSENGER: Extract<TSessionPanelAlert, 'Messenger'>
+  /**
+   * The title for the files panel tab.
+   */
+  readonly FILES: Extract<TSessionPanelAlert, 'Files'>
+  /**
+   * The title for the members panel tab.
+   */
+  readonly MEMBERS: Extract<TSessionPanelAlert, 'Members'>
+}

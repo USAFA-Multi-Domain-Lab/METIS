@@ -1,50 +1,109 @@
 import { useGlobalContext } from '@client/context/global'
-import { compute } from '@client/toolbox'
+import { LocalContext, LocalContextProvider } from '@client/context/local'
+import { compute, getOs } from '@client/toolbox'
+import { useResizeObserver } from '@client/toolbox/hooks'
+import { Mission } from '@shared/missions/Mission'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
-import Underline from '@tiptap/extension-underline'
-import type { Editor } from '@tiptap/react'
-import {
-  BubbleMenu,
-  EditorContent,
-  FloatingMenu,
-  useEditor,
-} from '@tiptap/react'
+import TextAlign from '@tiptap/extension-text-align'
+import { Color, LineHeight, TextStyle } from '@tiptap/extension-text-style'
+import { Markdown } from '@tiptap/markdown'
+import type { EditorState } from '@tiptap/pm/state'
+import type { Editor, EditorEvents } from '@tiptap/react'
+import { EditorContent, useEditor } from '@tiptap/react'
+import { BubbleMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
 import { all, createLowlight } from 'lowlight'
-import { useEffect } from 'react'
-import type { TRichText_P } from '.'
+import { useEffect, useRef, useState } from 'react'
 import ButtonSvgPanel from '../../user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../../user-controls/buttons/panels/hooks'
-import If from '../../util/If'
 import './RichText.scss'
 import MetisParagraph from './extensions/paragraph'
 import MetisSpan from './extensions/span'
+import RichTextAlignPicker, {
+  ALIGN_OPTIONS,
+} from './subcomponents/RichTextAlignPicker'
+import RichTextColorPicker, {
+  normalizeColor,
+} from './subcomponents/RichTextColorPicker'
+import RichTextHeadingPicker, {
+  HEADING_LEVELS,
+} from './subcomponents/RichTextHeadingPicker'
+import RichTextLineSpacingPicker, {
+  LINE_HEIGHT_OPTIONS,
+} from './subcomponents/RichTextLineSpacingPicker'
+
+/**
+ * Local context for the {@link RichText} component.
+ */
+const richTextContext = new LocalContext<
+  TRichText_P,
+  TRichText_C,
+  TRichText_S,
+  {}
+>()
+
+/**
+ * Hook used by RichText subcomponents to access the RichText context.
+ */
+export const useRichTextContext = richTextContext.getHook()
 
 /**
  * Displays and manages rich text.
  */
-export default function RichText({
-  options,
-  deps,
-}: TRichText_P): TReactElement | null {
-  // Extract the options from the props.
+export default function RichText(props: TRichText_P): TReactElement | null {
+  const defaultedProps = { ...props } as Required<TRichText_P>
+  const { options, deps } = defaultedProps
+
+  // Extract the options.
   const {
     content,
     editable = true,
     placeholder = 'Enter text here...',
     listClassName,
     className,
+    editorRef,
     onUpdate,
     onBlur,
+    bubbleMenuAnchor,
   } = options ?? {}
 
   /* -- GLOBAL CONTEXT -- */
   const { prompt } = useGlobalContext().actions
 
-  /* -- ENGINES -- */
+  /* -- STATE -- */
+
+  const state: TRichText_S = {
+    isColorPickerOpen: useState<boolean>(false),
+    isHeadingPickerOpen: useState<boolean>(false),
+    isAlignPickerOpen: useState<boolean>(false),
+    isLineSpacingPickerOpen: useState<boolean>(false),
+    containerWidth: useState<number>(0),
+    isBubbleMenuForcedOpen: useState<boolean>(false),
+  }
+  const [isColorPickerOpen, setIsColorPickerOpen] = state.isColorPickerOpen
+  const [isHeadingPickerOpen, setIsHeadingPickerOpen] =
+    state.isHeadingPickerOpen
+  const [isAlignPickerOpen, setIsAlignPickerOpen] = state.isAlignPickerOpen
+  const [isLineSpacingPickerOpen, setIsLineSpacingPickerOpen] =
+    state.isLineSpacingPickerOpen
+  const [containerWidth, setContainerWidth] = state.containerWidth
+  const [isBubbleMenuForcedOpen, setIsBubbleMenuForcedOpen] =
+    state.isBubbleMenuForcedOpen
+
+  /* -- REFS -- */
+
+  // Used to resize the bubble menu when the container size changes
+  // so that it doesn't overflow horizontally.
+  const container = useRef<HTMLDivElement>(null)
+  // Used to help know when the bubble menu should be hidden or shown.
+  const bubbleMenuSuppressedRef = useRef<boolean>(false)
+  // Used to help trigger displaying the bubble menu when a new line is created.
+  const isCursorOnNewLine = useRef<boolean>(false)
+
+  /* -- ENGINE(S) -- */
 
   const bubbleToolbarButtonEngine = useButtonSvgEngine({
     elements: [
@@ -52,99 +111,154 @@ export default function RichText({
         key: 'undo',
         type: 'button',
         icon: 'undo',
-        onClick: () => editor?.chain().focus().undo().run(),
+        label: '**Undo**',
+        description: getOs() === 'windows' ? '`ctrl+z`' : '`cmd+z`',
+        onClick: () => editor?.commands.undo(),
       },
       {
         key: 'redo',
         type: 'button',
         icon: 'redo',
-        onClick: () => editor?.chain().focus().redo().run(),
+        label: '**Redo**',
+        description: getOs() === 'windows' ? '`ctrl+shift+z`' : '`cmd+shift+z`',
+        onClick: () => editor?.commands.redo(),
       },
       {
         key: 'ordered-list',
         type: 'button',
         icon: 'ordered-list',
-        onClick: () => editor?.chain().focus().toggleOrderedList().run(),
+        label: '**Ordered List**',
+        description: getOs() === 'windows' ? '`ctrl+shift+7`' : '`cmd+shift+7`',
+        onClick: () => editor?.commands.toggleOrderedList(),
       },
       {
         key: 'bullet-list',
         type: 'button',
         icon: 'bullet-list',
-        onClick: () => editor?.chain().focus().toggleBulletList().run(),
+        label: '**Bullet List**',
+        description: getOs() === 'windows' ? '`ctrl+shift+8`' : '`cmd+shift+8`',
+        onClick: () => editor?.commands.toggleBulletList(),
+      },
+      {
+        key: 'text-align',
+        type: 'button',
+        icon: 'align-left',
+        label: '**Text Align**',
+        description:
+          getOs() === 'windows'
+            ? '`ctrl+shift+a` to cycle'
+            : '`cmd+shift+a` to cycle',
+        onClick: () => openSubPanel(setIsAlignPickerOpen, isAlignPickerOpen),
+      },
+      {
+        key: 'line-spacing',
+        type: 'button',
+        icon: 'line-spacing',
+        label: '**Line Spacing**',
+        description:
+          getOs() === 'windows'
+            ? '`ctrl+shift+p` to cycle'
+            : '`cmd+shift+p` to cycle',
+        onClick: () =>
+          openSubPanel(setIsLineSpacingPickerOpen, isLineSpacingPickerOpen),
+      },
+      {
+        key: 'heading',
+        type: 'button',
+        icon: 'heading',
+        label: '**Headings**',
+        description:
+          getOs() === 'windows'
+            ? '`ctrl+shift+h` to cycle'
+            : '`cmd+shift+h` to cycle',
+        onClick: () =>
+          openSubPanel(setIsHeadingPickerOpen, isHeadingPickerOpen),
       },
       {
         key: 'bold',
         type: 'button',
         icon: 'bold',
-        onClick: () => editor?.chain().focus().toggleBold().run(),
+        label: '**Bold**',
+        description: getOs() === 'windows' ? '`ctrl+b`' : '`cmd+b`',
+        onClick: () => editor?.commands.toggleBold(),
       },
       {
         key: 'italic',
         type: 'button',
         icon: 'italic',
-        onClick: () => editor?.chain().focus().toggleItalic().run(),
+        label: '**Italic**',
+        description: getOs() === 'windows' ? '`ctrl+i`' : '`cmd+i`',
+        onClick: () => editor?.commands.toggleItalic(),
       },
       {
         key: 'underline',
         type: 'button',
         icon: 'underline',
-        onClick: () => editor?.chain().focus().toggleUnderline().run(),
+        label: '**Underline**',
+        description: getOs() === 'windows' ? '`ctrl+u`' : '`cmd+u`',
+        onClick: () => editor?.commands.toggleUnderline(),
       },
       {
         key: 'strike',
         type: 'button',
         icon: 'strike',
-        onClick: () => editor?.chain().focus().toggleStrike().run(),
+        label: '**Strikethrough**',
+        description: getOs() === 'windows' ? '`ctrl+shift+s`' : '`cmd+shift+s`',
+        onClick: () => editor?.commands.toggleStrike(),
+      },
+      {
+        key: 'font-color',
+        type: 'button',
+        icon: 'font-color',
+        label: '**Font Color**',
+        description:
+          getOs() === 'windows'
+            ? '`ctrl+shift+c` to cycle'
+            : '`cmd+shift+c` to cycle',
+        onClick: () => openSubPanel(setIsColorPickerOpen, isColorPickerOpen),
       },
       {
         key: 'code',
         type: 'button',
         icon: 'code',
-        onClick: () => editor?.chain().focus().toggleCode().run(),
+        label: '**Inline Code**',
+        description: getOs() === 'windows' ? '`ctrl+e`' : '`cmd+e`',
+        onClick: () => editor?.commands.toggleCode(),
       },
       {
         key: 'code-block',
         type: 'button',
         icon: 'code-block',
-        onClick: () => editor?.chain().focus().toggleCodeBlock().run(),
+        label: '**Code Block**',
+        description: getOs() === 'windows' ? '`ctrl+alt+c`' : '`cmd+opt+c`',
+        onClick: () => editor?.commands.toggleCodeBlock(),
       },
       {
         key: 'link',
         type: 'button',
         icon: 'link',
+        label: '**Link**',
+        description: getOs() === 'windows' ? '`ctrl+k`' : '`cmd+k`',
         onClick: async () => await toggleLink(editor),
+      },
+      {
+        key: 'blockquote',
+        type: 'button',
+        icon: 'blockquote',
+        label: '**Blockquote**',
+        description: getOs() === 'windows' ? '`ctrl+shift+b`' : '`cmd+shift+b`',
+        onClick: () => editor?.commands.toggleBlockquote(),
       },
       {
         key: 'clear-format',
         type: 'button',
         icon: 'clear-format',
+        label: '**Clear Format**',
+        description: getOs() === 'windows' ? '`ctrl+shift+0`' : '`cmd+shift+0`',
         onClick: () => {
-          editor?.chain().focus().unsetAllMarks().run()
-          editor?.chain().focus().clearNodes().run()
+          editor?.commands.unsetAllMarks()
+          editor?.commands.clearNodes()
         },
-      },
-    ],
-  })
-
-  const floatingToolbarButtonEngine = useButtonSvgEngine({
-    elements: [
-      {
-        key: 'ordered-list',
-        type: 'button',
-        icon: 'ordered-list',
-        onClick: () => editor?.chain().focus().toggleOrderedList().run(),
-      },
-      {
-        key: 'bullet-list',
-        type: 'button',
-        icon: 'bullet-list',
-        onClick: () => editor?.chain().focus().toggleBulletList().run(),
-      },
-      {
-        key: 'code-block',
-        type: 'button',
-        icon: 'code-block',
-        onClick: () => editor?.chain().focus().toggleCodeBlock().run(),
       },
     ],
   })
@@ -160,28 +274,49 @@ export default function RichText({
     return classList.value
   })
 
+  /**
+   * The CSS styling for the bubble menu toolbar.
+   */
+  const toolbarStyle = compute<React.CSSProperties>(() => {
+    let style: React.CSSProperties = {}
+
+    // We set the max width here so that the buttons
+    // in the toolbar break to a new line when their
+    // container's width gets too small.
+    if (containerWidth > 0) style.maxWidth = containerWidth
+
+    return style
+  })
+
   /* -- FUNCTIONS -- */
 
   /**
    * Toggles the link extension.
-   * @param editor The editor instance.
+   * @param editor The rich text editor instance.
    */
   const toggleLink = async (editor: Editor | null) => {
     if (!editor) return
 
-    // Get the previous URL if it exists.
-    const prevUrl = editor.getAttributes('link').href
-    // Prompt the user for a URL.
-    const { choice, text: url } = await prompt('', ['Cancel', 'Submit'], {
+    const hasLink = editor.isActive('link')
+    const prevUrl = hasLink ? (editor.getAttributes('link').href as string) : ''
+
+    const choices = hasLink
+      ? (['Cancel', 'Remove', 'Submit'] as ['Cancel', 'Remove', 'Submit'])
+      : (['Cancel', 'Submit'] as ['Cancel', 'Submit'])
+
+    const { choice, text: url } = await prompt('', choices, {
       textField: {
         boundChoices: ['Submit'],
         label: 'URL',
         initialValue: prevUrl,
       },
+      dangerousChoices: hasLink ? ['Remove'] : [],
       defaultChoice: 'Submit',
     })
-    // Set the link.
-    if (choice === 'Submit') {
+
+    if (choice === 'Remove') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run()
+    } else if (choice === 'Submit') {
       editor
         .chain()
         .focus()
@@ -189,6 +324,149 @@ export default function RichText({
         .setLink({ href: url })
         .run()
     }
+  }
+
+  /**
+   * Cycles through the heading levels for the current selection.
+   */
+  const cycleHeading = () => {
+    if (!editor) return
+
+    setIsBubbleMenuForcedOpen(true)
+    closeAllSubPanels()
+    setIsHeadingPickerOpen(true)
+
+    const activeLevel = HEADING_LEVELS.find((level) =>
+      editor.isActive('heading', { level }),
+    )
+    const currentIndex =
+      activeLevel !== undefined ? HEADING_LEVELS.indexOf(activeLevel) : -1
+
+    const nextIndex =
+      currentIndex >= HEADING_LEVELS.length - 1 ? 0 : currentIndex + 1
+
+    editor.commands.toggleHeading({ level: HEADING_LEVELS[nextIndex] })
+  }
+
+  /**
+   * Cycles through the approved font colors for the current selection.
+   */
+  const cycleColor = () => {
+    if (!editor) return
+
+    setIsBubbleMenuForcedOpen(true)
+    closeAllSubPanels()
+    setIsColorPickerOpen(true)
+
+    const currentColor = editor.getAttributes('textStyle').color as
+      | string
+      | undefined
+
+    let currentIndex = currentColor
+      ? Mission.COLOR_OPTIONS.findIndex(
+          (c) => normalizeColor(c) === normalizeColor(currentColor),
+        )
+      : -1
+
+    if (currentIndex >= Mission.COLOR_OPTIONS.length - 1) {
+      currentIndex = -1
+    }
+
+    editor.commands.setColor(Mission.COLOR_OPTIONS[currentIndex + 1])
+  }
+
+  /**
+   * Cycles through the alignment options for the current selection.
+   */
+  const cycleAlign = () => {
+    if (!editor) return
+
+    setIsBubbleMenuForcedOpen(true)
+    closeAllSubPanels()
+    setIsAlignPickerOpen(true)
+
+    const currentAlign = ALIGN_OPTIONS.find((option) =>
+      editor.isActive({ textAlign: option.value }),
+    )
+    const currentIndex = currentAlign ? ALIGN_OPTIONS.indexOf(currentAlign) : -1
+
+    const nextIndex =
+      currentIndex >= ALIGN_OPTIONS.length - 1 ? 0 : currentIndex + 1
+
+    editor.commands.setTextAlign(ALIGN_OPTIONS[nextIndex].value)
+  }
+
+  /**
+   * Cycles through the line spacing options for the current selection.
+   */
+  const cycleLineSpacing = () => {
+    if (!editor) return
+
+    setIsBubbleMenuForcedOpen(true)
+    closeAllSubPanels()
+    setIsLineSpacingPickerOpen(true)
+
+    const currentLineHeight = editor.getAttributes('textStyle').lineHeight as
+      | string
+      | undefined
+
+    let currentIndex = currentLineHeight
+      ? LINE_HEIGHT_OPTIONS.indexOf(currentLineHeight)
+      : -1
+
+    if (currentIndex >= LINE_HEIGHT_OPTIONS.length - 1) {
+      currentIndex = -1
+    }
+
+    editor.commands.setLineHeight(LINE_HEIGHT_OPTIONS[currentIndex + 1])
+  }
+
+  /**
+   * Checks if the icon with a sub-panel is active.
+   * @param icon The icon to check.
+   */
+  const isIconWithSubPanelActive = (icon: TMetisIcon): boolean => {
+    switch (icon) {
+      case 'heading': {
+        // *** Note: heading creates a block-level element which
+        // *** gets handled in the "isIconActive" function. So,
+        // *** we only need to check if the heading sub-panel is open.
+        if (isHeadingPickerOpen) return true
+        break
+      }
+      case 'font-color': {
+        const hasColoredText = !!editor?.getAttributes('textStyle').color
+        if (isColorPickerOpen || hasColoredText) return true
+        break
+      }
+      case 'line-spacing': {
+        const hasLineSpacing = LINE_HEIGHT_OPTIONS.some((spacing) =>
+          editor?.isActive('textStyle', { lineHeight: spacing }),
+        )
+        if (isLineSpacingPickerOpen || hasLineSpacing) return true
+        break
+      }
+      case 'align-left':
+      case 'align-center':
+      case 'align-right':
+      case 'align-justify': {
+        const alignIcons: TMetisIcon[] = ALIGN_OPTIONS.map(
+          (option) => option.icon,
+        )
+        if (alignIcons.includes(icon)) {
+          const hasAlign = ALIGN_OPTIONS.some((option) =>
+            editor?.isActive({ textAlign: option.value }),
+          )
+          if (isAlignPickerOpen || hasAlign) return true
+        }
+        break
+      }
+      default: {
+        return false
+      }
+    }
+
+    return false
   }
 
   /**
@@ -202,6 +480,9 @@ export default function RichText({
     // *** uses "camelCase" for its active state checks.
     // *** For example, 'ordered-list' becomes 'orderedList'.
     const camelCaseIcon = icon.replace(/-([a-z])/g, (g) => g[1].toUpperCase())
+
+    // Handle icons with sub-panels.
+    if (isIconWithSubPanelActive(icon)) return true
 
     // Check if the editor is active for the icon.
     return editor?.isActive(camelCaseIcon) ?? false
@@ -223,37 +504,237 @@ export default function RichText({
     }
   }
 
+  /**
+   * Updates the class names and disabled state of toolbar buttons based on the current editor state.
+   */
+  const updateButtonClassNames = () => {
+    bubbleToolbarButtonEngine.buttons.forEach(({ key, icon }) => {
+      bubbleToolbarButtonEngine.modifyClassList(key, (classList) =>
+        classList.switch('Selected', 'NotSelected', isIconActive(icon)),
+      )
+      bubbleToolbarButtonEngine.setDisabled(key, isButtonDisabled(icon))
+    })
+  }
+
+  /**
+   * Closes all toolbar sub-panels.
+   */
+  const closeAllSubPanels = () => {
+    setIsColorPickerOpen(false)
+    setIsHeadingPickerOpen(false)
+    setIsAlignPickerOpen(false)
+    setIsLineSpacingPickerOpen(false)
+  }
+
+  /**
+   * Opens a toolbar sub-panel, closing any other open sub-panel first.
+   * If the requested panel is already open, it is closed instead (toggle).
+   * @param panel The setter for the sub-panel to open.
+   * @param isOpen Whether the sub-panel is currently open.
+   */
+  const openSubPanel = (
+    panel: React.Dispatch<React.SetStateAction<boolean>>,
+    isOpen: boolean,
+  ) => {
+    closeAllSubPanels()
+    if (!isOpen) panel(true)
+  }
+
+  /**
+   * Handles all keyboard shortcuts for the editor and toolbar.
+   */
+  const handleKeyDownCapture = (event: React.KeyboardEvent) => {
+    const mod = event.metaKey || event.ctrlKey
+
+    // Enter triggers the bubble menu to appear automatically.
+    // @see - Editor.onUpdate()
+    if (event.key === 'Enter' && !mod && !event.shiftKey && !event.altKey) {
+      isCursorOnNewLine.current = true
+    }
+
+    // Tab / Shift+Tab — close the bubble menu before focus leaves the editor.
+    if (event.key === 'Tab') {
+      setIsBubbleMenuForcedOpen(false)
+      editor?.commands.setMeta('richTextBubbleMenu', 'hide')
+    }
+
+    // Escape priorities:
+    // 1. hides toolbar submenus
+    // 2. hides toolbar
+    if (event.key === 'Escape') {
+      if (
+        isColorPickerOpen ||
+        isHeadingPickerOpen ||
+        isAlignPickerOpen ||
+        isLineSpacingPickerOpen
+      ) {
+        event.preventDefault()
+        closeAllSubPanels()
+      } else {
+        event.preventDefault()
+        setIsBubbleMenuForcedOpen(false)
+        bubbleMenuSuppressedRef.current = true
+        editor?.commands.setMeta('richTextBubbleMenu', 'hide')
+      }
+    }
+
+    // Cmd/Ctrl+K — toggle link.
+    if (mod && !event.shiftKey && event.key === 'k') {
+      event.preventDefault()
+      toggleLink(editor)
+    }
+
+    // Cmd/Ctrl+Shift+0 — clear all formatting.
+    if (mod && event.shiftKey && event.key === '0') {
+      event.preventDefault()
+      editor.commands.unsetAllMarks()
+      editor.commands.clearNodes()
+    }
+
+    // Cmd/Ctrl+Shift+C — cycle font color and open the bubble menu + color picker.
+    if (mod && event.shiftKey && event.key === 'c') {
+      event.preventDefault()
+      cycleColor()
+    }
+
+    // Cmd/Ctrl+Shift+H — cycle heading level and open the bubble menu + heading picker.
+    if (mod && event.shiftKey && event.key === 'h') {
+      event.preventDefault()
+      cycleHeading()
+    }
+
+    // Cmd/Ctrl+Shift+A — cycle text alignment and open the bubble menu + align picker.
+    if (mod && event.shiftKey && event.key === 'a') {
+      event.preventDefault()
+      cycleAlign()
+    }
+
+    // Cmd/Ctrl+Shift+P — cycle line spacing and open the bubble menu + line spacing picker.
+    if (mod && event.shiftKey && event.key === 'p') {
+      event.preventDefault()
+      cycleLineSpacing()
+    }
+
+    // Cmd/Ctrl+Shift+M — toggle the bubble menu pinned open at the cursor.
+    if (mod && event.shiftKey && event.key === 'm') {
+      event.preventDefault()
+      if (isBubbleMenuForcedOpen) closeAllSubPanels()
+      setIsBubbleMenuForcedOpen((prev) => !prev)
+    }
+  }
+
+  /**
+   * Determines if the bubble menu toolbar should be shown based on the editor state.
+   * @param state The current editor state.
+   */
+  const shouldShowBubbleMenuToolbar = (state: EditorState): boolean =>
+    isBubbleMenuForcedOpen ||
+    (!state.selection.empty && !bubbleMenuSuppressedRef.current)
+
+  /**
+   * Tells the bubble menu where to appear by returning a fake element whose
+   * bounding rect matches the current cursor or selection position.
+   *
+   * Using the editor's own coordinate system (`{@link Editor.view.coordsAtPos}`)
+   * as the primary source avoids a browser quirk where an empty editor returns
+   * all-zero coordinates from the native DOM range API, which would place the
+   * menu at the top-left corner of the screen. The DOM range rect is still used
+   * for the width of a real text selection so the menu centers correctly.
+   *
+   * When {@link bubbleMenuAnchor} is provided, the menu's vertical position is
+   * clamped to help deal with positioning issues such as the editor wrapped in
+   * a scrollable container.
+   */
+  const getBubbleMenuVirtualElement = (): {
+    getBoundingClientRect: () => DOMRect
+  } | null => {
+    if (!editor) return null
+
+    // Use the editor's own coordinate system to locate the start of the cursor
+    // or selection. This is the primary position source because the browser's
+    // native DOM range API returns all-zero coordinates on an empty editor,
+    // which would place the menu at the top-left corner of the screen.
+    const { from, to } = editor.state.selection
+    const startCoords = editor.view.coordsAtPos(from)
+    let left = startCoords.left
+    let width = 0
+
+    // When text is selected (not just a cursor), override left and width using
+    // the native DOM range rect. This gives a bounding box that spans the full
+    // highlighted text so Floating UI can center the menu over the selection.
+    if (from !== to) {
+      const sel = window.getSelection()
+      const rect = sel && sel.rangeCount > 0 ? sel.getRangeAt(0).getBoundingClientRect() : null
+      if (rect && rect.width > 0) {
+        left = rect.left
+        width = rect.width
+      }
+    }
+
+    // If a scrollable container is provided, clamp the vertical position to
+    // the container's top edge. Without this, the menu can float above the
+    // container and be hidden by its overflow clipping.
+    const top = startCoords.top
+    const anchor = bubbleMenuAnchor?.current
+
+    if (!anchor) {
+      return { getBoundingClientRect: () => new DOMRect(left, top, width, 0) }
+    }
+
+    const anchorRect = anchor.getBoundingClientRect()
+    const clampedTop = Math.max(top, anchorRect.top)
+
+    return {
+      getBoundingClientRect: () => new DOMRect(left, clampedTop, width, 0),
+    }
+  }
+
   /* -- EFFECTS -- */
 
   const editor = useEditor(
     {
       content,
       editable,
-      onUpdate,
-      onBlur,
+      onCreate: ({ editor: e }) => {
+        if (editorRef) editorRef.current = e
+      },
+      onUpdate: (updateProps) => {
+        // When the user presses Enter, force the bubble menu open on the
+        // new line so they can immediately set formatting if they want.
+        if (isCursorOnNewLine.current) {
+          isCursorOnNewLine.current = false
+          setIsBubbleMenuForcedOpen(true)
+        }
+        updateButtonClassNames()
+        onUpdate?.(updateProps)
+      },
+      onBlur: (editorBlurProps) => {
+        closeAllSubPanels()
+        setIsBubbleMenuForcedOpen(false)
+        bubbleMenuSuppressedRef.current = false
+        editorBlurProps.editor.commands.setMeta('richTextBubbleMenu', 'hide')
+        onBlur?.(editorBlurProps)
+      },
+      onSelectionUpdate: () => {
+        bubbleMenuSuppressedRef.current = false
+        updateButtonClassNames()
+      },
       editorProps: {
         attributes: {
           class: 'Editor',
-        },
-        handleKeyDown: (view, event) => {
-          // Handles the keyboard shortcut for the link extension.
-          if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
-            event.preventDefault()
-            toggleLink(editor)
-          }
         },
       },
       extensions: [
         StarterKit.configure({
           paragraph: false,
           codeBlock: false,
+          link: false,
           listItem: {
             HTMLAttributes: {
               class: listClassName,
             },
           },
         }),
-        Underline,
         Placeholder.configure({
           placeholder,
         }),
@@ -266,40 +747,49 @@ export default function RichText({
           lowlight: createLowlight(all),
           defaultLanguage: 'plaintext',
         }),
+        TextAlign.configure({
+          types: ['heading', 'paragraph', 'codeBlock'],
+        }),
+        Color,
+        LineHeight,
+        Markdown,
+        TextStyle,
       ],
     },
     [deps],
   )
 
-  // Update the bubble toolbar button engine
-  // properties when the input content changes.
+  // Handles correct positioning for the bubble menu when any sub-panels
+  // open or close. Updates helpers for sub-panel buttons to ensure they're
+  // highlighted correctly.
   useEffect(() => {
-    bubbleToolbarButtonEngine.buttons.forEach(({ icon }) => {
-      // Set the class list for the button.
-      bubbleToolbarButtonEngine.modifyClassList(icon, (classList) =>
-        classList.switch('Selected', 'NotSelected', isIconActive(icon)),
-      )
+    updateButtonClassNames()
+    editor?.commands.setMeta('richTextBubbleMenu', 'updatePosition')
+  }, [
+    isColorPickerOpen,
+    isHeadingPickerOpen,
+    isAlignPickerOpen,
+    isLineSpacingPickerOpen,
+  ])
 
-      // Set the disabled state for the button.
-      const disabled = isButtonDisabled(icon)
-      bubbleToolbarButtonEngine.setDisabled(icon, disabled)
-    })
-  }, [content])
-
-  // Update the floating toolbar button engine
-  // properties when the input content changes.
+  // Shows or hides the bubble menu when the forced-open state changes.
+  // We send a separate updatePosition signal in a requestAnimationFrame
+  // so the menu is repositioned after the browser has finished painting -
+  // without this, the menu appears in the wrong spot on first render.
   useEffect(() => {
-    floatingToolbarButtonEngine.buttons.forEach(({ icon }) => {
-      // Set the class list for the button.
-      floatingToolbarButtonEngine.modifyClassList(icon, (classList) =>
-        classList.switch('Selected', 'NotSelected', editor?.isActive(icon)),
-      )
+    if (isBubbleMenuForcedOpen) {
+      editor?.commands.setMeta('richTextBubbleMenu', 'show')
 
-      // Set the disabled state for the button.
-      const disabled = isButtonDisabled(icon)
-      floatingToolbarButtonEngine.setDisabled(icon, disabled)
-    })
-  }, [content])
+      // We send a separate updatePosition signal in a requestAnimationFrame
+      // so the menu is repositioned after the browser has finished painting -
+      // without this, the menu appears in the wrong spot on first render.
+      requestAnimationFrame(() => {
+        editor?.commands.setMeta('richTextBubbleMenu', 'updatePosition')
+      })
+    } else {
+      editor?.commands.setMeta('richTextBubbleMenu', 'hide')
+    }
+  }, [isBubbleMenuForcedOpen])
 
   // Sync externally-provided content into the editor when it changes.
   // This is necessary because Tiptap's useEditor only consumes `content`
@@ -316,26 +806,162 @@ export default function RichText({
     }
   }, [editor, content])
 
+  // Helps dynamically adjust the bubble menu toolbar layout based on
+  // container width.
+  useResizeObserver(container, (width) => setContainerWidth(width))
+
   /* -- RENDER -- */
   if (!editor) return null
 
   return (
-    <div className={rootClassName}>
-      <BubbleMenu editor={editor} className='BubbleToolbar'>
-        <If condition={editor.isEditable}>
-          <div className='Toolbar'>
-            <ButtonSvgPanel engine={bubbleToolbarButtonEngine} />
-          </div>
-        </If>
-      </BubbleMenu>
-      <FloatingMenu editor={editor} className='FloatingToolbar'>
-        {editor.isEditable && (
-          <div className='Toolbar'>
-            <ButtonSvgPanel engine={floatingToolbarButtonEngine} />
-          </div>
-        )}
-      </FloatingMenu>
-      <EditorContent editor={editor} />
-    </div>
+    <LocalContextProvider
+      context={richTextContext}
+      defaultedProps={defaultedProps}
+      computed={{ editor }}
+      state={state}
+      elements={{}}
+    >
+      <div className={rootClassName} ref={container}>
+        <BubbleMenu
+          editor={editor}
+          className='BubbleToolbar'
+          // Used for the various editor setMeta commands that control
+          // the bubble menu.
+          pluginKey='richTextBubbleMenu'
+          shouldShow={({ state }) => shouldShowBubbleMenuToolbar(state)}
+          // "appendTo", "placement", and "getReferencedVirtualElement" are used to control
+          // where the bubble menu is rendered in the DOM and how it is positioned relative
+          // to the editor.
+          appendTo={() => document.body}
+          options={{ placement: 'top' }}
+          getReferencedVirtualElement={getBubbleMenuVirtualElement}
+          // Used to prevent the bubble menu from closing when clicking inside it.
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          {editor.isEditable && (
+            <>
+              <div className='Toolbar' style={toolbarStyle}>
+                <ButtonSvgPanel engine={bubbleToolbarButtonEngine} />
+                <RichTextColorPicker />
+                <RichTextHeadingPicker />
+                <RichTextAlignPicker />
+                <RichTextLineSpacingPicker />
+              </div>
+            </>
+          )}
+        </BubbleMenu>
+        <EditorContent
+          onKeyDownCapture={handleKeyDownCapture}
+          onKeyDown={() => updateButtonClassNames()}
+          editor={editor}
+        />
+      </div>
+    </LocalContextProvider>
   )
+}
+
+/* -- TYPES -- */
+
+/**
+ * Props for `RichText` component.
+ */
+type TRichText_P = {
+  options?: TRichTextOptions
+  /**
+   * The dependencies for the component.
+   * @note This is used to re-render the editor when the dependencies change.
+   */
+  deps?: React.DependencyList
+}
+
+/**
+ * The options for the `RichText` component.
+ */
+type TRichTextOptions = {
+  /**
+   * The content to display in the editor.
+   */
+  content?: string
+  /**
+   * Indicates whether the editor is editable.
+   * @default true
+   */
+  editable?: boolean
+  /**
+   * The placeholder text.
+   * @default 'Enter text here...'
+   */
+  placeholder?: string
+  /**
+   * The class name for the list items in the editor.
+   */
+  listClassName?: string
+  /**
+   * The class name for the root element.
+   */
+  className?: string
+  /**
+   * A ref that receives the Tiptap {@link Editor} instance once the editor
+   * mounts. Use this when the parent needs to imperatively read content or
+   * run commands (e.g. `clearContent`) without re-rendering on every keystroke.
+   */
+  editorRef?: React.RefObject<Editor | null>
+  /**
+   * The event handler for the update event.
+   * @note Equivalent to the `onChange` event for a text input.
+   */
+  onUpdate?: (props: EditorEvents['update']) => void
+  /**
+   * The event handler for the blur event.
+   * @note Equivalent to the `onBlur` event for a text input.
+   */
+  onBlur?: (props: EditorEvents['blur']) => void
+  /**
+   * A ref to a scrollable container that wraps this editor. When provided,
+   * the bubble menu's vertical position is clamped to the container's visible
+   * top edge so the menu never goes above the visible top edge for times like
+   * selecting a large amount of text that has overflowed and scrolled out of view.
+   */
+  bubbleMenuAnchor?: React.RefObject<HTMLElement | null>
+}
+
+/**
+ * Computed values derived from props and state for {@link RichText}.
+ */
+type TRichText_C = {
+  /**
+   * The Tiptap editor instance.
+   */
+  editor: Editor
+}
+
+/**
+ * Consolidated state for {@link RichText}.
+ */
+type TRichText_S = {
+  /**
+   * Whether the color picker is open.
+   */
+  isColorPickerOpen: TReactState<boolean>
+  /**
+   * Whether the heading picker is open.
+   */
+  isHeadingPickerOpen: TReactState<boolean>
+  /**
+   * Whether the text alignment picker is open.
+   */
+  isAlignPickerOpen: TReactState<boolean>
+  /**
+   * Whether the line spacing picker is open.
+   */
+  isLineSpacingPickerOpen: TReactState<boolean>
+  /**
+   * The width of the container element.
+   */
+  containerWidth: TReactState<number>
+  /**
+   * Whether the bubble menu toolbar is forced open at the cursor position
+   * even when no text is selected, allowing the user to pre-set formatting.
+   */
+  isBubbleMenuForcedOpen: TReactState<boolean>
 }

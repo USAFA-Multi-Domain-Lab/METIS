@@ -1,0 +1,26 @@
+@use '@client/assets/styles/config.scss' as *;
+
+.LineSpacingPicker {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: 0.25em;
+  padding: 0.25em 0.65em 0.35em;
+
+  .LineSpacingButton {
+    cursor: pointer;
+    font-weight: 700;
+    padding: 0.15em 0.4em;
+    font-size: 0.95rem;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.15s;
+
+    &:hover {
+      border-color: rgba($color-accent, 0.8);
+    }
+
+    &.Selected {
+      border-color: $color-accent;
+    }
+  }
+}

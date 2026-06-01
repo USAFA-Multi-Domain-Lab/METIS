@@ -1,15 +1,41 @@
 @use '@client/assets/styles/config.scss' as *;
 
 .PanelTabBar {
-  display: flex;
   overflow: hidden;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-  position: relative;
   border: 2px solid $color-secondary;
 
-  .PanelTab:not(:last-child) {
-    border-right: 2px solid $color-secondary;
+  .Tabs {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    &:hover {
+      scrollbar-width: thin;
+      scrollbar-color: #ffffff transparent;
+
+      &::-webkit-scrollbar {
+        display: block;
+        height: 3px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background-color: #ffffff;
+        border-radius: 2px;
+      }
+    }
+
+    .PanelTab:not(:last-child) {
+      border-right: 2px solid $color-secondary;
+    }
   }
 }

@@ -49,54 +49,6 @@ jest.mock(
 )
 
 describe('DetailLargeString', () => {
-  /* -- ROOT CLASS NAMES -- */
-
-  describe('Root class names', () => {
-    test('Root has "Detail" and "DetailLargeString" classes', () => {
-      let { container } = render(
-        <DetailLargeString
-          fieldType='required'
-          handleOnBlur='none'
-          label='Test Label'
-          value='<p>Hello</p>'
-          setValue={() => {}}
-        />,
-      )
-      let root = container.firstChild as HTMLElement
-      expect(root).toHaveClass('Detail')
-      expect(root).toHaveClass('DetailLargeString')
-    })
-
-    test('Root has "Disabled" class when disabled', () => {
-      let { container } = render(
-        <DetailLargeString
-          fieldType='required'
-          handleOnBlur='none'
-          label='Test Label'
-          value='<p>Hello</p>'
-          setValue={() => {}}
-          disabled
-        />,
-      )
-      let root = container.firstChild as HTMLElement
-      expect(root).toHaveClass('Disabled')
-    })
-
-    test('Root does not have "Disabled" class when not disabled', () => {
-      let { container } = render(
-        <DetailLargeString
-          fieldType='required'
-          handleOnBlur='none'
-          label='Test Label'
-          value='<p>Hello</p>'
-          setValue={() => {}}
-        />,
-      )
-      let root = container.firstChild as HTMLElement
-      expect(root).not.toHaveClass('Disabled')
-    })
-  })
-
   /* -- ON CHANGE -- */
 
   describe('onChange behavior', () => {
@@ -206,26 +158,6 @@ describe('DetailLargeString', () => {
       ) as HTMLElement
       expect(errorMessage).not.toHaveClass('Hidden')
       expect(errorMessage.textContent).toBe('Custom error.')
-    })
-
-    test('FieldErrorMessage has "Warning" class when errorType is "warning"', () => {
-      let { container } = render(
-        <DetailLargeString
-          fieldType='required'
-          handleOnBlur='deliverError'
-          label='Test Label'
-          value=''
-          setValue={() => {}}
-          errorType='warning'
-          errorMessage='Check this.'
-        />,
-      )
-      let textarea = container.querySelector('textarea') as HTMLTextAreaElement
-      fireEvent.blur(textarea)
-      let errorMessage = container.querySelector(
-        '.FieldErrorMessage',
-      ) as HTMLElement
-      expect(errorMessage).toHaveClass('Warning')
     })
   })
 

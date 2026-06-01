@@ -123,6 +123,54 @@ export class ComponentModifierBatchMap<
     })
   }
 
+  public emitMemberSpecific<
+    TMethod extends TServerMethod,
+    TPayloadData extends Omit<TServerEvents[TMethod], 'method'>,
+  >(
+    method: TMethod,
+    constructPayload: (
+      components: MissionComponentArray<TComponent>,
+      member: ServerSessionMember,
+      batchId: string,
+    ) => TPayloadData,
+  ): void {
+    let completeVisibilityMembers =
+      this.session.getMembersWithPermissions('completeVisibility')
+
+    // Emit a force-agnostic event to all complete-visibility members,
+    // if any.
+    if (completeVisibilityMembers.length) {
+      for (let member of completeVisibilityMembers) {
+        member.emit(
+          method,
+          constructPayload(
+            this.internalMap.get(
+              ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY,
+            )!,
+            member,
+            ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY,
+          ),
+        )
+      }
+    }
+
+    // Emit per-force events to force-specific (non-complete-visibility) members,
+    // if any.
+    this.internalMap.forEach((components, forceId) => {
+      if (
+        forceId !==
+        ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY
+      ) {
+        let members = this.session.getMembersForForce(forceId, {
+          limitedVisibilityOnly: true,
+        })
+        for (let member of members) {
+          member.emit(method, constructPayload(components, member, forceId))
+        }
+      }
+    })
+  }
+
   /**
    * Used by {@link ComponentModifierBatchMap} to index
    * a comprehensive list of all modified components regardless

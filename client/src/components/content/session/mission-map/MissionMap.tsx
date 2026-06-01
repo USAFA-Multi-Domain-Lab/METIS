@@ -684,14 +684,13 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
     if (!selectedForceInMap) {
       mission.deselect()
     }
-    // Otherwise, if there is no force selected in
-    // the mission currently, or if the currently
-    // selected force in the mission differs from
-    // the force selected in the map, update the
-    // selection in the mission.
+    // Else if there is no force selected in the
+    // mission currently or it is different
+    // from the force in the map, select the
+    // force in the map.
     else if (
       !selectedForceInMission ||
-      selectedForceInMission._id !== selectedForceInMap._id
+      selectedForceInMission !== selectedForceInMap
     ) {
       mission.select(selectedForceInMap)
     }

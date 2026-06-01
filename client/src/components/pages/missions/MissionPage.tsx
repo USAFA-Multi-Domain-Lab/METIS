@@ -431,16 +431,17 @@ export default function MissionPage(
 
   // Add an event listener to listen for cmd+s/ctrl+s
   // key presses to save the mission.
-  useEventListener(
-    document,
-    'keydown',
-    (event: KeyboardEvent) => {
-      if (event.key === 's' && (event.ctrlKey || event.metaKey)) {
-        event.preventDefault()
-        save()
-      }
-    },
-  )
+  useEventListener(document, 'keydown', (event: KeyboardEvent) => {
+    let modKey = event.ctrlKey || event.metaKey
+    let correctKeystroke = modKey && !event.shiftKey && event.key === 's'
+
+    if (correctKeystroke && areUnsavedChanges) {
+      event.preventDefault()
+      save()
+    } else if (correctKeystroke && !areUnsavedChanges) {
+      event.preventDefault()
+    }
+  })
 
   // Add event listener to watch for when a new
   // prototype is spawned in the mission.

@@ -4,6 +4,7 @@
 
 $color-primary: #0c1928;
 $color-primary-dark: color.adjust($color-primary, $lightness: -4%);
+$color-primary-medium: color.adjust($color-primary, $lightness: 8%);
 $color-primary-light: color.adjust($color-primary, $lightness: 80%);
 
 $color-secondary: #1b2937;
@@ -54,6 +55,7 @@ $z-index-loading-page: 90;
 $z-index-confirmation: 100;
 $z-index-context-blocker: 200;
 $z-index-context-pop-up: 201;
+$z-index-rich-text-editor: 249;
 $z-index-tooltips: 250;
 
 /* -- SIZING -- */

@@ -1,5 +1,13 @@
 # changelog
 
+# version-2.4.4 | 5-16-2026
+
+- Before, when a resource was excluded from a force, details such as the initial amount could still be updated. Now they are hidden from the force entry.
+- Node-alert boxes are now consistent in styling and match what is seen in the mission builder.
+- Additional context was added for when there is not enough resources to execute an action.
+- An issue was fixed where a mission couldn't be saved after creating a new force.
+- An issue was fixed where alerts placed on unrevealed nodes would not appear once the node was revealed.
+
 # version-2.4.3 | 4-28-2026
 
 - Various UI-related bugs have been fixed in the mission builder.

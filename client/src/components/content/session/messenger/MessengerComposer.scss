@@ -1,0 +1,97 @@
+@use '@client/assets/styles/config.scss' as *;
+
+@mixin scrollbarStyle($color: $color-primary-light, $background: transparent) {
+  scrollbar-color: $color $background;
+  ::-webkit-scrollbar {
+    background: $background;
+  }
+}
+
+.Composer {
+  flex-shrink: 0;
+  padding: 0.5em 0.75em;
+  border-top: 1px solid rgba($color-primary-light, 0.1);
+
+  .ComposerInput {
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.5em;
+    border: 1px solid transparent;
+    background-color: $color-secondary;
+    @include scrollbarStyle();
+
+    &:focus-within {
+      border-color: $color-accent;
+    }
+
+    .ComposerScroll {
+      min-width: 0;
+      max-height: 10em;
+      overflow-y: auto;
+      padding: 0.5em 0.875em;
+
+      // Ensure TipTap's editable div fills and wraps correctly.
+      .ProseMirror {
+        outline: none;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      p {
+        margin-block-start: 0;
+        margin-block-end: 0;
+      }
+    }
+
+    .ComposerToolbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 0.25em;
+      padding: 0.25em 0.5em;
+      border-top: 1px solid rgba($color-primary-light, 0.08);
+
+      .Shortcuts {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        text-decoration: none;
+      }
+
+      .SendButton {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: inherit;
+        padding: 0.25em 0.5em;
+        font-size: 0.85rem;
+
+        &:hover {
+          color: $color-accent;
+        }
+
+        &:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  .CharCounter {
+    text-align: right;
+    font-size: 0.7rem;
+    margin-top: 0.5em;
+    opacity: 0.3;
+
+    &.NearLimit {
+      opacity: 1;
+      color: $color-warning;
+    }
+
+    &.OverLimit {
+      opacity: 1;
+      color: $color-failure;
+    }
+  }
+}

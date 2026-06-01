@@ -12,10 +12,10 @@ import './PanelTab.scss'
  * A tab that, when toggled, will display a view
  * in a panel, hiding the previous view.
  */
-export default function ({ view }: TPanelTab_P): TReactElement | null {
+export default function PanelTab({ view }: TPanelTab_P): TReactElement | null {
   /* -- STATE -- */
 
-  const { state } = usePanelContext()
+  const { state, onViewSelected } = usePanelContext()
   const [selectedView, select] = state.selectedView
   const iconEngine = useButtonSvgEngine({
     elements: view.icon
@@ -54,6 +54,7 @@ export default function ({ view }: TPanelTab_P): TReactElement | null {
     // Prevent selection if disabled
     if (view.disabled) return
     select(view)
+    onViewSelected?.(view.title)
   }
 
   /* -- RENDER -- */

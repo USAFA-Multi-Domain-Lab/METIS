@@ -109,7 +109,9 @@ export default function ResourceCostBadges({
           <PropertyBadge
             key={cost._id}
             icon={cost.icon}
-            value={ClientActionCost.formatAmount(effectiveAmount, cost.hidden)}
+            value={ClientActionCost.formatAmount(effectiveAmount, {
+              amountHidden: cost.hidden,
+            })}
             description={`${StringToolbox.toTitleCase(resource.name)} Cost`}
             strikethrough={Boolean(resourceCostStrikethroughReason)}
             strikethroughReason={resourceCostStrikethroughReason}

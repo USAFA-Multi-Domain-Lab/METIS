@@ -201,6 +201,8 @@ const validate_mission_files_alias = (value: unknown) => {
  */
 const sanitizeHtml = (html: string): string => {
   try {
+    // todo: evaluate any security vulnerabilities
+    // todo: for the addition of "span" and "style."
     let sanitizedHTML = DOMPurify.sanitize(html, {
       ALLOWED_TAGS: [
         'a',
@@ -227,9 +229,10 @@ const sanitizeHtml = (html: string): string => {
         's',
         'del',
         'strike',
+        'span',
       ],
-      ALLOWED_ATTR: ['href', 'rel', 'target', 'class'],
-      FORBID_TAGS: ['script', 'style', 'iframe'],
+      ALLOWED_ATTR: ['href', 'rel', 'target', 'class', 'style'],
+      FORBID_TAGS: ['script', 'iframe'],
     })
 
     return sanitizedHTML
