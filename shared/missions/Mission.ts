@@ -806,6 +806,43 @@ export abstract class Mission<
   }
 
   /**
+   * @param data The data for looking up the node.
+   * @returns The node found based on the data, or undefined
+   * if no node is found.
+   */
+  public lookUpNode({
+    _id,
+    forceId,
+  }: TForceHostedLookUpData): TNode<T> | undefined {
+    return this.getNodeById(_id, { forceId })
+  }
+
+  /**
+   * @param data The data for looking up the pool.
+   * @returns The pool found based on the data, or undefined
+   * if no pool is found.
+   */
+  public lookUpPool({
+    _id,
+    forceId,
+  }: TForceHostedLookUpData): T['resourcePool'] | undefined {
+    return this.getPoolById(_id, { forceId })
+  }
+
+  /**
+   * @param data The data for looking up the action.
+   * @returns The action found based on the data, or undefined
+   * if no action is found.
+   */
+  public lookUpAction({
+    _id,
+    forceId,
+    nodeId,
+  }: TNodeHostedLookUpData): TAction<T> | undefined {
+    return this.getActionById(_id, { forceId, nodeId })
+  }
+
+  /**
    * The maximum length allowed for a mission's name.
    */
   public static readonly MAX_NAME_LENGTH: number = 175
@@ -1193,6 +1230,7 @@ export abstract class Mission<
           ? node.actions.find((action) => action._id === actionId)
           : node.actions.get(actionId)
         if (action) return action as TAction | TMissionActionJson
+        else if (nodeId) return undefined
         continue
       }
     }
@@ -1442,4 +1480,35 @@ export interface TActionByIdOptions extends TGetForceHostedComponentOptions {
    * improve performance when the mission is large.
    */
   nodeId?: string
+}
+
+/**
+ * Data needed to quickly look up a force-hosted component
+ * within a mission, without needing to search the entire
+ * mission structure.
+ */
+export interface TForceHostedLookUpData {
+  /**
+   * The ID of the component itself.
+   */
+  _id: string
+  /**
+   * The ID of the force that contains the component, narrowing
+   * down where to look for the component within the mission
+   * structure.
+   */
+  forceId: string
+}
+
+/**
+ * Data needed to quickly look up a node-hosted component
+ * within a mission, without needing to search the entire
+ * mission structure.
+ */
+export interface TNodeHostedLookUpData extends TForceHostedLookUpData {
+  /**
+   * The ID of the node that contains the component, narrowing
+   * down where to look for the component within the force.
+   */
+  nodeId: string
 }

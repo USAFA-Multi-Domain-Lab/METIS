@@ -27,6 +27,13 @@ export abstract class ResourcePool<
    */
   public readonly force: T['force']
 
+  /**
+   * The ID of the force that owns this resource pool.
+   */
+  public get forceId(): string {
+    return this.force._id
+  }
+
   // Implemented
   public get mission(): TMission<T> {
     return this.force.mission

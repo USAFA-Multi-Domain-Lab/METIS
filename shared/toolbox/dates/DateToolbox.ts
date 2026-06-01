@@ -234,4 +234,16 @@ export class DateToolbox {
   public static fromNullableISOString(date: string | null): Date | null {
     return date === null ? null : new Date(date)
   }
+
+  /**
+   * Normalizes a date input (which can be a Date object, a timestamp, or a date string)
+   * into a timestamp (number of milliseconds since the Unix epoch).
+   * @param date The date input to normalize.
+   * @returns The normalized timestamp.
+   */
+  public static normalizeStamp(date: Date | number | string): number {
+    if (date instanceof Date) return date.getTime()
+    if (typeof date === 'string') return new Date(date).getTime()
+    return date
+  }
 }

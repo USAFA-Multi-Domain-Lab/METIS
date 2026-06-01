@@ -614,7 +614,7 @@ export default function SessionPage(
   // Update the resources remaining when an action is executed.
   useEventListener(
     server,
-    ['action-execution-initiated', 'modifier-enacted'],
+    ['action-execution-initiated', 'resource-pool-updated'],
     () => syncResources(),
   )
 
@@ -657,7 +657,7 @@ export default function SessionPage(
   // the server.
   useEventListener(
     server,
-    ['modifier-enacted', 'node-alert-acknowledged'],
+    ['node-alert-added', 'node-alert-acknowledged'],
     () => {
       refreshAlerts()
     },

@@ -13,7 +13,6 @@ import { ClientTargetEnvironment } from '@client/target-environments/ClientTarge
 import { ClientUser } from '@client/users/ClientUser'
 import type {
   TGenericServerEvents,
-  TNodeNewAlertData,
   TNodeOpenStateData,
   TResponseEvents,
   TServerEvents,
@@ -24,7 +23,6 @@ import type {
   TExecutionCheats,
 } from '@shared/missions/actions/ActionExecution'
 import type { TExecutionOutcomeJson } from '@shared/missions/actions/ExecutionOutcome'
-import type { TActionModifier } from '@shared/missions/actions/MissionAction'
 import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
 import { MemberRole } from '@shared/sessions/members/MemberRole'
 import type { TSessionMemberJson } from '@shared/sessions/members/SessionMember'
@@ -35,6 +33,8 @@ import type {
 } from '@shared/sessions/MissionSession'
 import { MissionSession } from '@shared/sessions/MissionSession'
 import { EnvScriptResults } from '@shared/target-environments/EnvScriptResults'
+import type { TInstanceOrArray } from '@shared/toolbox/arrays/ArrayToolbox'
+import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import axios from 'axios'
 import type { TMetisClientComponents } from '..'
 import { ClientSessionMember } from './ClientSessionMember'
@@ -180,12 +180,17 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       ['node-opened', this.onNodeOpenedResponse],
       ['action-execution-initiated', this.onActionExecutionInitiated],
       ['action-execution-completed', this.onActionExecutionCompleted],
-      ['modifier-enacted', this.onModifierEnacted],
+      ['node-open-state-updated', this.onNodeOpenStateUpdated],
       ['node-block-status-updated', this.onNodeBlockStatusUpdated],
       ['file-access-updated', this.onFileAccessUpdated],
+      ['resource-pool-updated', this.onResourcePoolUpdated],
       ['send-output', this.onSendOutput],
       ['output-sent', this.onOutputSent],
       ['node-alert-acknowledged', this.onNodeAlertAcknowledged],
+      ['node-alert-added', this.onNodeAlertAdded],
+      ['action-process-time-updated', this.onActionModifierUpdated],
+      ['action-success-chance-updated', this.onActionModifierUpdated],
+      ['action-resource-cost-updated', this.onActionModifierUpdated],
       ['kicked', this.onKicked],
       ['banned', this.onBanned],
       ['dismissed', this.onDismissed],
@@ -1189,90 +1194,32 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
-   * Handles when a modifier has been enacted.
+   * Handles when the open state of one or more nodes is updated.
    * @param event The event emitted by the server.
    */
-  private onModifierEnacted = (
-    event: TServerEvents['modifier-enacted'],
+  private onNodeOpenStateUpdated = (
+    event: TServerEvents['node-open-state-updated'],
   ): void => {
-    // Extract data.
-    const { data } = event
-    // Handle the data.
-    switch (data.key) {
-      case 'node-update-open-state':
-        this.onChangeNodeOpenState({
-          nodeId: data.nodeId,
-          opened: data.opened,
-          structure: data.structure,
-          revealedDescendants: data.revealedDescendants,
-          revealedDescendantPrototypes: data.revealedDescendantPrototypes,
-        })
-        break
-      case 'node-new-alert':
-        this.onNodeAlert(data)
-        break
-      case 'node-action-success-chance':
-      case 'node-action-process-time':
-      case 'node-action-resource-cost':
-        this.onActionModifier(data)
-        break
-      case 'force-resource-pool':
-        this.onModifyResourcePool(data.poolId, data.operand)
-        break
-      default:
-        return console.warn(
-          `Error: Data format sent to modifier handler is not recognized. Data: ${data}`,
-        )
-    }
+    let { nodes, opened } = event.data
+    this.onChangeNodeOpenState(nodes, opened)
   }
 
   /**
-   * Handles an action modifier event from the server, building a
-   * {@link TActionModifier} from the event data and forwarding it
-   * to the target node.
+   * Handles when an action modifier is applied to one or more actions.
+   * @param event The event emitted by the server.
    */
-  private onActionModifier = (
-    data: Extract<
-      TServerEvents['modifier-enacted']['data'],
-      {
-        key:
-          | 'node-action-success-chance'
-          | 'node-action-process-time'
-          | 'node-action-resource-cost'
-      }
-    >,
+  private onActionModifierUpdated = (
+    event:
+      | TServerEvents['action-process-time-updated']
+      | TServerEvents['action-resource-cost-updated']
+      | TServerEvents['action-success-chance-updated'],
   ): void => {
-    let modifier: TActionModifier
+    let { lookUpData, modifier } = event.data
 
-    switch (data.key) {
-      case 'node-action-success-chance':
-        modifier = {
-          type: 'success-chance',
-          amount: data.successChanceOperand,
-          appliedAt: data.appliedAt,
-          resourceId: null,
-        }
-        break
-      case 'node-action-process-time':
-        modifier = {
-          type: 'process-time',
-          amount: data.processTimeOperand,
-          appliedAt: data.appliedAt,
-          resourceId: null,
-        }
-        break
-      case 'node-action-resource-cost':
-        modifier = {
-          type: 'resource-cost',
-          amount: data.resourceCostOperand,
-          appliedAt: data.appliedAt,
-          resourceId: data.resourceId,
-        }
-        break
+    for (let lookUpDatum of lookUpData) {
+      let action = this.mission.lookUpAction(lookUpDatum)
+      action?.onModify(modifier)
     }
-
-    const node = this.mission.getNodeById(data.nodeId)
-    node?.onModify(modifier, data.actionId)
   }
 
   /**
@@ -1282,23 +1229,25 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   private onNodeBlockStatusUpdated = (
     event: TServerEvents['node-block-status-updated'],
   ): void => {
-    const { nodeIds, blocked } = event.data
-    for (let nodeId of nodeIds) {
-      let node = this.mission.getNodeById(nodeId)
+    const { lookUpData, blocked } = event.data
+    for (let lookUpDatum of lookUpData) {
+      let node = this.mission.lookUpNode(lookUpDatum)
       if (node) node.blocked = blocked
     }
   }
 
   /**
-   * Modifies the resource pool of a force.
-   * @param poolId The ID of the resource pool to be modified.
-   * @param operand The operand to modify the resource pool by.
+   * Handles when a resource pool is modified.
+   * @param event The event emitted by the server.
    */
-  private onModifyResourcePool = (poolId: string, operand: number): void => {
-    // Find the pool, given the ID.
-    let pool = this.mission.getPoolById(poolId)
-    // Modify the resource pool for the force.
-    pool?.onModify(operand)
+  private onResourcePoolUpdated = (
+    event: TServerEvents['resource-pool-updated'],
+  ): void => {
+    let { lookUpData, operand } = event.data
+    for (let lookUpDatum of lookUpData) {
+      let pool = this.mission.lookUpPool(lookUpDatum)
+      pool?.onModify(operand)
+    }
   }
 
   /**
@@ -1392,21 +1341,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   private onNodeOpenedResponse = (
     event: TServerEvents['node-opened'],
   ): void => {
-    const {
-      nodeId,
-      opened,
-      structure,
-      revealedDescendants,
-      revealedDescendantPrototypes,
-    } = event.data
-
-    return this.onChangeNodeOpenState({
-      nodeId,
-      opened,
-      structure,
-      revealedDescendants,
-      revealedDescendantPrototypes,
-    })
+    return this.onChangeNodeOpenState(event.data, event.data.opened)
   }
 
   /**
@@ -1527,54 +1462,70 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @note This coordinates updates at both the prototype (template) and node (instance) levels.
    * @note If the node hasn't been revealed to this member yet, the event is ignored with a warning.
    */
-  private onChangeNodeOpenState = (data: TNodeOpenStateData): void => {
-    // Extract the event data.
-    const {
-      nodeId,
-      opened,
-      structure,
-      revealedDescendants,
-      revealedDescendantPrototypes,
-    } = data
+  private onChangeNodeOpenState = (
+    nodes: TInstanceOrArray<Omit<TNodeOpenStateData, 'opened'>>,
+    opened: boolean,
+  ): void => {
+    let hasRevealedDescendants = false
 
-    // Find the target node in the mission.
-    const node = this.mission.getNodeById(nodeId)
-    if (!node) {
-      return console.warn(
-        `Node "${nodeId}" was not found. This is likely due to an effect being applied to a node that has not yet been revealed to the user.`,
-      )
+    for (let data of ArrayToolbox.toArray(nodes)) {
+      // Extract the event data.
+      let { structure, revealedDescendants, revealedDescendantPrototypes } =
+        data
+
+      // Find the target node in the mission using lookup data.
+      let node = this.mission.lookUpNode(data)
+      if (!node) {
+        console.warn(
+          `Node "${data._id}" was not found. This is likely due to an effect being applied to a node that has not yet been revealed to the user.`,
+        )
+        continue
+      }
+      let { prototype } = node
+
+      // Update both the prototype (template level) and node (instance level).
+      if (opened) {
+        // Opening: Reveal descendants and establish structure relationships.
+        prototype.onOpen(revealedDescendantPrototypes, structure)
+        node.onOpen(revealedDescendants)
+      } else {
+        // Closing: Hide descendants (unless member has complete visibility).
+        prototype.onClose(this.member)
+        node.onClose(this.member)
+      }
+
+      if (revealedDescendants) hasRevealedDescendants = true
     }
-    const { prototype } = node
 
-    // Update both the prototype (template level) and node (instance level).
-    if (opened) {
-      // Opening: Reveal descendants and establish structure relationships.
-      prototype.onOpen(revealedDescendantPrototypes, structure)
-      node.onOpen(revealedDescendants)
-    } else {
-      // Closing: Hide descendants (unless member has complete visibility).
-      prototype.onClose(this.member)
-      node.onClose(this.member)
-    }
-
-    // Rebuild the action map if new nodes were revealed during opening.
-    if (revealedDescendants) this.mapActions()
+    // Rebuild the action map once if any node revealed new descendants.
+    if (hasRevealedDescendants) this.mapActions()
   }
 
   /**
    * Handles an event from the server indicating a new alert
    * was created for a node.
-   * @param data The event data containing the alert details.
+   * @param event The event emitted by the server.
    */
-  private onNodeAlert = (data: TNodeNewAlertData): void => {
-    const { nodeId, alert } = data
-    const node = this.mission.getNodeById(nodeId)
-    if (!node) {
-      return console.warn(
-        `Node "${nodeId}" was not found. This is likely due to an effect being applied to a node that has not yet been revealed to the user.`,
-      )
+  private onNodeAlertAdded = (
+    event: TServerEvents['node-alert-added'],
+  ): void => {
+    const { message, severityLevel, ids: alerts } = event.data
+    for (const { nodeId, alertId } of alerts) {
+      let node = this.mission.getNodeById(nodeId)
+      if (!node) {
+        console.warn(
+          `Node "${nodeId}" was not found. This is likely due to an effect being applied to a node that has not yet been revealed to the user.`,
+        )
+        continue
+      }
+      node.onAlert({
+        _id: alertId,
+        nodeId,
+        message,
+        severityLevel,
+        acknowledged: false,
+      })
     }
-    node.onAlert(alert)
   }
 
   /**

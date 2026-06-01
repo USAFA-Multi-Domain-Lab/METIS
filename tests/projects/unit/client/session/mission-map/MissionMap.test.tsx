@@ -383,7 +383,7 @@ describe('Mission Map + Alert System', () => {
       node.alerts.push(
         NodeAlert.createNew(node._id, 'Warning alert', 'warning'),
       )
-      server.emit('modifier-enacted')
+      server.emit('node-alert-added')
     })
 
     await waitFor(() => {

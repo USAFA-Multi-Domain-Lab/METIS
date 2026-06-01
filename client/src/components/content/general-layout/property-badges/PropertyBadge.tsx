@@ -1,5 +1,6 @@
 import { compute } from '@client/toolbox'
 import { getIconPath } from '@client/toolbox/icons'
+import type { TAdditionalClassesSupport } from '@shared/toolbox/html/ClassList'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useEffect, useRef, useState } from 'react'
 import Tooltip from '../../communication/Tooltip'
@@ -18,6 +19,8 @@ export default function PropertyBadge({
   description,
   strikethrough = false,
   strikethroughReason = '',
+  updated = false,
+  additionalClasses = new ClassList(),
 }: TPropertyBadge_P): TReactElement | null {
   /* -- STATE -- */
 
@@ -37,6 +40,8 @@ export default function PropertyBadge({
   const rootClasses = new ClassList('PropertyBadge')
     .set('Hidden', !active)
     .set('Strikethrough', strikethrough)
+    .set('Updated', updated)
+    .import(additionalClasses)
 
   /**
    * Classes applied to the element which displays
@@ -105,7 +110,7 @@ export default function PropertyBadge({
 /**
  * Props for {@link PropertyBadge}.
  */
-export type TPropertyBadge_P = {
+export interface TPropertyBadge_P extends TAdditionalClassesSupport {
   /**
    * Whether the property is currently active. If inactive,
    * the property will not be displayed at all.
@@ -146,4 +151,10 @@ export type TPropertyBadge_P = {
    * prop is true. There is no need to provide this otherwise.
    */
   strikethroughReason?: string
+  /**
+   * If marked as `true`, this will apply a style to the value to
+   * indicate that it has been recently updated.
+   * @default false
+   */
+  updated?: boolean
 }

@@ -10,10 +10,7 @@ import type { TRequestMethod } from '@shared/connect'
 import type { TListenerTargetEmittable } from '@shared/events/EventManager'
 import { EventManager } from '@shared/events/EventManager'
 import type { TActionExecutionJson } from '@shared/missions/actions/ActionExecution'
-import type {
-  TActionModifier,
-  TMissionActionJson,
-} from '@shared/missions/actions/MissionAction'
+import type { TMissionActionJson } from '@shared/missions/actions/MissionAction'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
 import { MissionNode } from '@shared/missions/nodes/MissionNode'
 import type { TNodeAlertJson } from '@shared/missions/nodes/NodeAlert'
@@ -581,26 +578,6 @@ export class ClientMissionNode
   }
 
   /**
-   * Callback for when a new modifier has been applied to this
-   * node.
-   * @param modifier The modifier that was applied to the node.
-   * @param actionId The ID of a specific action to apply the modifier to.
-   * If undefined, the modifier will be applied to all actions on the node.
-   */
-  public onModify(modifier: TActionModifier, actionId?: string): void {
-    if (!actionId) {
-      this.actions.forEach((action) => action.onModify(modifier))
-    } else {
-      const action = this.actions.get(actionId)
-      if (!action) return console.error(`Action "${actionId}" not found.`)
-      action.onModify(modifier)
-    }
-
-    // Emit event.
-    this.emitEvent('modify-actions')
-  }
-
-  /**
    * This will color all descendant nodes the same color as this node.
    */
   public applyColorFill(): void {
@@ -769,18 +746,12 @@ export class ClientMissionNode
  * Triggered when the node is opened.
  * @option 'closed'
  * Triggered when the node is closed.
- * @option 'modify-actions'
- * Triggered when the following occurs:
- * - The success chance of the node's actions are modified.
- * - The process time of the node's actions are modified.
- * - The resource cost of the node's actions are modified.
  * @option 'output-sent'
  * - Triggered when a message has been sent to the output panel.
  */
 export type TNodeEventMethod =
   | TMapCompatibleNodeEvent
   | 'closed'
-  | 'modify-actions'
   | 'opened'
   | 'output-sent'
   | 'request-made'

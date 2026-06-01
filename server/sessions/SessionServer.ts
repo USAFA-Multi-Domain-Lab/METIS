@@ -1,7 +1,7 @@
 import type { ClientConnection } from '@server/connect/ClientConnection'
 import type { ServerActionExecution } from '@server/missions/actions/ServerActionExecution'
 import type { ServerExecutionOutcome } from '@server/missions/actions/ServerExecutionOutcome'
-import type { ServerMissionAction } from '@server/missions/actions/ServerMissionAction'
+import { ServerMissionAction } from '@server/missions/actions/ServerMissionAction'
 import type { ServerEffect } from '@server/missions/effects/ServerEffect'
 import type { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
 import type { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
@@ -1625,7 +1625,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       let payload: TServerEvents['node-opened'] = {
         method: 'node-opened',
         data: {
-          nodeId,
+          _id: nodeId,
+          forceId: node.forceId,
           opened: true,
           structure: structure,
           revealedDescendants: descendants.map((n) => n.toJson()),
@@ -1932,6 +1933,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       // Update the payload with the gathered data.
       completionPayload.data = {
         ...completionPayload.data,
+        _id: node._id,
+        forceId: node.forceId,
         structure: structure,
         revealedDescendants: descendants.map((n) =>
           n.toJson({
@@ -2357,21 +2360,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
-   * Emites a 'modifier-enacted' event to all members in the force
-   * that a modifier has been enacted.
-   * @param node The node on which the modifier was enacted.
-   * @param data The payload for the event.
-   */
-  private emitModifierEnacted = (
-    force: ServerMissionForce,
-    data: TServerEvents['modifier-enacted']['data'],
-  ) => {
-    for (let { connection } of this.getMembersForForce(force._id)) {
-      connection.emit('modifier-enacted', { data })
-    }
-  }
-
-  /**
    * Handles the blocking and unblocking of nodes during a session.
    * @param nodes The nodes to block or unblock.
    * @param blocked Whether to block or unblock the nodes.
@@ -2385,77 +2373,76 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     let batchMap = new ComponentModifierBatchMap(this, nodes)
 
-    batchMap.emit('node-block-status-updated', (nodeIds) => ({
+    batchMap.emit('node-block-status-updated', (nodes) => ({
       data: {
         blocked,
-        nodeIds,
+        lookUpData: ArrayToolbox.mapProperties(nodes, ['_id', 'forceId']),
       },
     }))
   }
 
   /**
-   * Updates a node's open/closed state during an active session and notifies all force members.
-   * @param node The node whose open state should be changed.
-   * @param open True to open the node (revealing descendants), false to close it (hiding descendants).
-   * @note This method is idempotent - calling it when the node is already in the desired state is a no-op.
-   * @note If the node has `revealAllNodes` enabled, open/close operations are not allowed and will be skipped.
+   * Updates the open/closed state of the provided nodes during an active session and notifies all members.
+   * @param nodes The nodes whose open state should be changed.
+   * @param open True to open the nodes (revealing descendants), false to close them (hiding descendants).
+   * @note Nodes already in the desired state are skipped with a warning.
+   * @note Nodes with `revealAllNodes` enabled cannot be opened or closed and will be skipped.
    */
-  public updateNodeOpenState = (node: ServerMissionNode, open: boolean) => {
-    // Confirm the node belongs to this session's mission.
-    this.confirmComponentInMission(node)
+  public updateNodeOpenState = (nodes: ServerMissionNode[], open: boolean) => {
+    this.confirmComponentsInMission(nodes)
 
-    // Validate the operation is permitted (idempotent check).
-    if (open && !node.openable) {
-      targetEnvLogger.warn(
-        `Skipping open on node "${node.name}" (${node._id}): already opened or revealAllNodes enabled`,
-      )
-      return
-    } else if (!open && !node.closable) {
-      targetEnvLogger.warn(
-        `Skipping close on node "${node.name}" (${node._id}): already closed or revealAllNodes enabled`,
-      )
-      return
-    }
+    // Filter to nodes where the operation is actually permitted.
+    let validNodes = nodes.filter((node) => {
+      if (open && !node.openable) {
+        targetEnvLogger.warn(
+          `Skipping open on node "${node.name}" (${node._id}): already opened or revealAllNodes enabled`,
+        )
+        return false
+      } else if (!open && !node.closable) {
+        targetEnvLogger.warn(
+          `Skipping close on node "${node.name}" (${node._id}): already closed or revealAllNodes enabled`,
+        )
+        return false
+      }
+      return true
+    })
 
-    // Perform the open/close operation (may abort executing actions).
-    node.openState(open)
+    if (validNodes.length === 0) return
 
-    // Extract the revealed structure and descendants from the node.
-    // These properties reflect what should be visible to clients based on the new state.
-    const {
-      revealedStructure: structure,
-      revealedDescendants: descendants,
-      revealedDescendantPrototypes: prototypes,
-    } = node
+    // Perform the open/close operation on each valid node.
+    validNodes.forEach((node) => node.openState(open))
 
-    const member = this.getMembersForForce(node.force._id)[0]
-
-    if (!member) {
-      targetEnvLogger.warn(
-        `No members found for force "${node.force.name}" (${node.force._id}) when updating open state of node "${node.name}" (${node._id})`,
-      )
-      return
-    }
-
-    // Construct the payload containing the node's new state and revealed data.
-    let payload: TServerEvents['modifier-enacted']['data'] = {
-      key: 'node-update-open-state',
-      nodeId: node._id,
-      opened: open,
-      structure: structure,
-      revealedDescendants: descendants.map((n) =>
-        n.toJson({
-          sessionDataExposure: {
-            expose: 'member-specific',
-            memberId: member._id,
-          },
-        }),
-      ),
-      revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
-    }
-
-    // Notify all members of this force about the node's state change.
-    this.emitModifierEnacted(node.force, payload)
+    // Notify all members about the state changes.
+    let batchMap = new ComponentModifierBatchMap(this, validNodes)
+    batchMap.emit('node-open-state-updated', (batchNodes, members) => {
+      let nodes = batchNodes.map((node) => {
+        let {
+          revealedStructure: structure,
+          revealedDescendants: descendants,
+          revealedDescendantPrototypes: prototypes,
+        } = node
+        return {
+          _id: node._id,
+          forceId: node.forceId,
+          structure,
+          revealedDescendants: descendants.map((n) =>
+            n.toJson({
+              sessionDataExposure: {
+                expose: 'member-specific',
+                memberId: members[0]._id,
+              },
+            }),
+          ),
+          revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
+        }
+      })
+      return {
+        data: {
+          opened: open,
+          nodes,
+        },
+      }
+    })
   }
 
   /**
@@ -2468,135 +2455,141 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * effect belongs, unless configured otherwise.
    */
   public addNodeAlert = (
-    node: ServerMissionNode,
+    nodes: ServerMissionNode[],
     message: string,
     severityLevel: TNodeAlertSeverityLevel,
   ) => {
-    // Confirm the node exists.
-    this.confirmComponentInMission(node)
+    this.confirmComponentsInMission(nodes)
 
-    // Add the alert to the node.
-    let alert = node.alert(message, severityLevel)
-    this.emitModifierEnacted(node.force, {
-      key: 'node-new-alert',
-      nodeId: node._id,
-      alert: alert.json,
-    })
+    // Add the alert to each node and build a lookup map for batched emission.
+    let alertIdMap = new Map<string, string>()
+    for (let node of nodes) {
+      alertIdMap.set(node._id, node.alert(message, severityLevel)._id)
+    }
+
+    let batchMap = new ComponentModifierBatchMap(this, nodes)
+    batchMap.emit('node-alert-added', (nodes) => ({
+      data: {
+        message,
+        severityLevel,
+        ids: nodes.map((node) => ({
+          nodeId: node._id,
+          alertId: alertIdMap.get(node._id)!,
+        })),
+      },
+    }))
   }
 
   /**
-   * Applies the modifier to the action, and emits the modifier-enacted event.
-   * @param action The action to apply the modifier to.
+   * Applies a modifier to one or more actions and emits a batch event.
+   * @param actions The actions to modify.
    * @param modifier The modifier to apply.
-   * @param emitData The data to emit with the modifier-enacted event.
    */
-  private modifyAction = (
-    action: ServerMissionAction,
+  private modifyActions = (
+    actions: ServerMissionAction[],
     modifier: TActionModifier,
-    emitData: TServerEvents['modifier-enacted']['data'],
   ): void => {
-    this.confirmComponentInMission(action)
-    if (action) this.confirmComponentInMission(action)
-    action.applyModifier(modifier)
-    this.emitModifierEnacted(action.force, emitData)
-  }
+    let method = ServerMissionAction.getServerMethodForModifier(modifier)
 
-  /**
-   * Modifies the success chance of a specific action.
-   * @param data The data for the modification.
-   * @param data.operand The operand to modify the success chance by.
-   * @param data.action The action to modify.
-   */
-  public modifySuccessChance = (data: {
-    operand: number
-    action: ServerMissionAction
-  }) => {
-    const { operand, action } = data
-    const appliedAt = Date.now()
-    this.modifyAction(
-      action,
-      { type: 'success-chance', amount: operand, appliedAt, resourceId: null },
-      {
-        key: 'node-action-success-chance',
-        successChanceOperand: operand,
-        appliedAt,
-        nodeId: action.node._id,
-        actionId: action._id,
+    this.confirmComponentsInMission(actions)
+    actions.forEach((action) => action.applyModifier(modifier))
+
+    let batchMap = new ComponentModifierBatchMap(this, actions)
+    batchMap.emit(method, (actions) => ({
+      data: {
+        lookUpData: ArrayToolbox.mapProperties(actions, [
+          '_id',
+          'forceId',
+          'nodeId',
+        ]),
+        modifier,
       },
-    )
+    }))
   }
 
   /**
-   * Modifies the processing time of a specific action.
-   * @param data The data for the modification.
-   * @param data.operand The operand to modify the processing time by.
-   * @param data.action The action to modify.
+   * Modifies the success chance of one or more actions.
+   * @param actions The actions to modify.
+   * @param operand The operand to modify the success chance by.
    */
-  public modifyProcessTime = (data: {
-    operand: number
-    action: ServerMissionAction
-  }) => {
-    const { operand, action } = data
-    const appliedAt = Date.now()
-    this.modifyAction(
-      action,
-      { type: 'process-time', amount: operand, appliedAt, resourceId: null },
-      {
-        key: 'node-action-process-time',
-        processTimeOperand: operand,
-        appliedAt,
-        nodeId: action.node._id,
-        actionId: action._id,
-      },
-    )
+  public modifySuccessChance = (
+    actions: ServerMissionAction[],
+    operand: number,
+  ) => {
+    let appliedAt = Date.now()
+    let modifier: TActionModifier = {
+      type: 'success-chance',
+      amount: operand,
+      appliedAt,
+      resourceId: null,
+    }
+    this.modifyActions(actions, modifier)
   }
 
   /**
-   * Modifies the resource cost of a specific action.
-   * @param data The data for the modification.
-   * @param data.resourceId The ID of the resource whose cost to modify.
-   * @param data.operand The operand to modify the resource cost by.
-   * @param data.action The action to modify.
+   * Modifies the processing time of one or more actions.
+   * @param actions The actions to modify.
+   * @param operand The operand to modify the processing time by.
    */
-  public modifyResourceCost = (data: {
-    resourceId: string
-    operand: number
-    action: ServerMissionAction
-  }) => {
-    const { resourceId, operand, action } = data
-    const appliedAt = Date.now()
-    this.modifyAction(
-      action,
-      { type: 'resource-cost', amount: operand, appliedAt, resourceId },
-      {
-        key: 'node-action-resource-cost',
-        resourceId,
-        resourceCostOperand: operand,
-        appliedAt,
-        nodeId: action.node._id,
-        actionId: action._id,
-      },
-    )
+  public modifyProcessTime = (
+    actions: ServerMissionAction[],
+    operand: number,
+  ) => {
+    let appliedAt = Date.now()
+    let modifier: TActionModifier = {
+      type: 'process-time',
+      amount: operand,
+      appliedAt,
+      resourceId: null,
+    }
+    this.modifyActions(actions, modifier)
   }
 
   /**
-   * Modifies a resource pool by applying the given amount
-   * to the pool.
-   * @param pool The resource pool to modify.
-   * @param operand The amount by which to modify the resource pool.
+   * Modifies the resource cost of one or more actions.
+   * @param actions The actions to modify.
+   * @param resourceId The ID of the resource whose cost to modify.
+   * @param operand The operand to modify the resource cost by.
+   */
+  public modifyResourceCost = (
+    actions: ServerMissionAction[],
+    resourceId: string,
+    operand: number,
+  ) => {
+    let appliedAt = Date.now()
+    let modifier: TActionModifier = {
+      type: 'resource-cost',
+      amount: operand,
+      appliedAt,
+      resourceId,
+    }
+    this.modifyActions(actions, modifier)
+  }
+
+  /**
+   * Modifies one or more resource pools by applying the given amount
+   * to each pool.
+   * @param pools The resource pools to modify.
+   * @param operand The amount by which to modify each resource pool.
    * @note A negative value will subtract and a positive
-   * value will add to the resource pool.
+   * value will add to each resource pool.
    */
-  public modifyResourcePool = (pool: ServerResourcePool, operand: number) => {
-    // Confirm the pool exists in the mission, modify the resource pool,
-    // then emit an event to the members.
-    this.confirmComponentInMission(pool)
-    pool.onModify(operand)
-    this.emitModifierEnacted(pool.force, {
-      key: 'force-resource-pool',
-      poolId: pool._id,
-      operand,
-    })
+  public modifyResourcePool = (
+    pools: ServerResourcePool[],
+    operand: number,
+  ) => {
+    this.confirmComponentsInMission(pools)
+    pools.forEach((pool) => pool.onModify(operand))
+
+    // Send update to client connections to keep them
+    // synced with the server.
+    let batchMap = new ComponentModifierBatchMap(this, pools)
+    batchMap.emit('resource-pool-updated', (pools) => ({
+      data: {
+        lookUpData: ArrayToolbox.mapProperties(pools, ['_id', 'forceId']),
+        operand,
+      },
+    }))
   }
 
   /**
@@ -2615,8 +2608,12 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     let batchMap = new ComponentModifierBatchMap(this, forces)
 
-    batchMap.emit('file-access-updated', (forceIds) => ({
-      data: { granted, forceIds, files: files.map((file) => file.toJson()) },
+    batchMap.emit('file-access-updated', (forces) => ({
+      data: {
+        granted,
+        forceIds: forces._ids,
+        files: files.map((file) => file.toJson()),
+      },
     }))
   }
 

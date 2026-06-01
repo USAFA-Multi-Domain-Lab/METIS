@@ -241,6 +241,13 @@ export abstract class MissionAction<
   }
 
   /**
+   * The ID of the node of which the action is a part.
+   */
+  public get nodeId(): string {
+    return this.node._id
+  }
+
+  /**
    * A time-ordered record of every modifier applied to this action
    * over the course of a session which alters the requirements needed
    * to execute.

@@ -11,6 +11,7 @@ METIS is a **real-time cybersecurity training platform** designed for military a
 **General Instructions for Agents**
 
 - **Working With Classes** Always order class members as follows: instance properties, constructor, instance methods, static properties, static methods. Group getters and setters with their private properties, such as `private _name`, `get name()`, and `set name(value)`, without line gaps. All other members should have a one line gap.
+- **const vs let**: Use `let` for variables by default. `const` is only used for values where reassignment would be an actual concern. Most variables in the app are `let`.
 
 **Instructions Covering Specific Topics**
 

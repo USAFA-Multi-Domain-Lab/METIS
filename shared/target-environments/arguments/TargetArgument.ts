@@ -283,11 +283,6 @@ export abstract class TargetArgument<
         }
         break
       }
-      default: {
-        console.warn(
-          `applyDefault was called for parameter type "${json.type}", which is not supported.`,
-        )
-      }
     }
   }
 

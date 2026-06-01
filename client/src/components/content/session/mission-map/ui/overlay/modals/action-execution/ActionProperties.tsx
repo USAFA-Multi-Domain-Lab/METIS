@@ -3,13 +3,17 @@ import PropertyBadge from '@client/components/content/general-layout/property-ba
 import PropertyBadges from '@client/components/content/general-layout/property-badges/PropertyBadges'
 import RichText from '@client/components/content/general-layout/rich-text/RichText'
 import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
+import { useEventListener } from '@client/toolbox/hooks'
 import type { TExecutionCheats } from '@shared/missions/actions/ActionExecution'
+import type { TActionModifier } from '@shared/missions/actions/MissionAction'
 import {
   MissionSession,
   type TSessionConfig,
 } from '@shared/sessions/MissionSession'
+import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import { useState } from 'react'
 import './ActionProperties.scss'
 
 /**
@@ -21,12 +25,50 @@ export default function ActionProperties({
   config = MissionSession.DEFAULT_CONFIG,
   showDescription = true,
 }: TActionProperties_P): TReactElement | null {
+  /* -- STATE -- */
+
+  const [recentModifiers, setRecentModifiers] = useState<
+    Array<TActionModifier>
+  >([])
+
   /* -- COMPUTED -- */
 
   let descriptionClasses = new ClassList('ActionDescription').set(
     'Hidden',
     !action.description,
   )
+  let successChanceUpdated = recentModifiers.some(
+    (modifier) => modifier.type === 'success-chance',
+  )
+  let processTimeUpdated = recentModifiers.some(
+    (modifier) => modifier.type === 'process-time',
+  )
+
+  /* -- EFFECTS -- */
+
+  // Handle new modifiers being added while the action properties are being displayed.
+  useEventListener(action, 'new-modifier', () => {
+    // Get the new modifier. We'll track it if it isn't a
+    // resource-cost modifier. Resource cost modifiers are
+    // handled by the ResourceCostBadges component.
+    let newModifier = ArrayToolbox.lastOf(action.modifiers)!
+    if (newModifier.type === 'resource-cost') return
+
+    // Track recent modifier to apply an animation to
+    // draw the attention of the user.
+    setRecentModifiers((previousRecentModifiers) => {
+      // Clear the recent modifiers after a delay, ending the
+      // animation in the GUI.
+      setTimeout(() => {
+        setRecentModifiers((previousRecentModifiers) => {
+          return previousRecentModifiers.filter(
+            (modifier) => modifier !== newModifier,
+          )
+        })
+      }, 500)
+      return [...previousRecentModifiers, newModifier]
+    })
+  })
 
   /* -- RENDER -- */
 
@@ -47,6 +89,7 @@ export default function ActionProperties({
           description={'Success Chance'}
           strikethrough={cheats.guaranteedSuccess}
           strikethroughReason={'Cheats Applied'}
+          updated={successChanceUpdated}
         />
         <PropertyBadge
           icon={'timer'}
@@ -54,6 +97,7 @@ export default function ActionProperties({
           description={'Process Time'}
           strikethrough={cheats.instantaneous}
           strikethroughReason={'Cheats Applied'}
+          updated={processTimeUpdated}
         />
         <ResourceCostBadges action={action} cheats={cheats} config={config} />
         <PropertyBadge

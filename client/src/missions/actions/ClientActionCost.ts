@@ -89,6 +89,22 @@ export class ClientActionCost extends ActionResourceCost<TMetisClientComponents>
   }
 
   /**
+   * Duplicates this cost for the given action, creating a new cost with
+   * the same properties but a freshly generated identifier.
+   * @param action The action that will own the duplicated cost.
+   * @returns A new {@link ClientActionCost} with a new `_id`.
+   */
+  public duplicate(action: ClientMissionAction): ClientActionCost {
+    return new ClientActionCost(
+      action,
+      this.resource,
+      StringToolbox.generateRandomId(),
+      this.baseAmount,
+      this.hidden,
+    )
+  }
+
+  /**
    * @param amount The amount value to format.
    * @param amountHidden Whether the amount is actively hidden from view.
    * @returns The formatted value.

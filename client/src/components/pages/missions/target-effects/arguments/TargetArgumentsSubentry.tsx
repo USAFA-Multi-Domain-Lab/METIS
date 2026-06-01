@@ -10,7 +10,6 @@ import './TargetArgumentsSubentry.scss'
  */
 export default function TargetArgumentsEntry({
   effect,
-  effect: { target },
 }: TTargetParameterEntry_P): TReactElement | null {
   /* -- COMPUTED -- */
 

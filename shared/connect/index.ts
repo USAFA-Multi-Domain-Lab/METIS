@@ -1,4 +1,6 @@
-import type { TNodeAlertJson } from '@shared/missions/nodes/NodeAlert'
+import type { TForceHostedLookUpData, TNodeHostedLookUpData } from '@shared/missions/Mission'
+import type { TActionModifier } from '../missions/actions/MissionAction'
+import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
 import type { TEnvScriptResultJson } from '@shared/target-environments/EnvScriptResults'
 import type { MetisComponent } from '../MetisComponent'
 import type {
@@ -127,146 +129,76 @@ export type TServerMethod = keyof TServerEvents
 export type TServerEvent = TServerEvents[TServerMethod]
 
 /**
- * Used to identify the data structure.
- * @option `"node-update-open-state":` The data needed to open or close a node determining if its descendants are revealed.
- * @option `"node-action-success-chance":` The data needed to modify the success chance of all the node's actions.
- * @option `"node-action-process-time":` The data needed to modify the process time of all the node's actions.
- * @option `"node-action-resource-cost":` The data needed to modify the resource cost of all the node's actions.
- * @option `"force-resource-pool":` The data needed to modify the resource pool of a force.
+ * The data emitted when one or more alerts are added to nodes.
  */
-type TModifierDataKey =
-  | 'node-update-open-state'
-  | 'node-new-alert'
-  | 'node-action-success-chance'
-  | 'node-action-process-time'
-  | 'node-action-resource-cost'
-  | 'force-resource-pool'
-
-/**
- * The data necessary to apply a modifier to an object in METIS.
- */
-type TModifierData = [
-  {
-    /**
-     * @see {@link TModifierDataKey}
-     */
-    key: 'node-update-open-state'
-  } & TNodeOpenStateData,
-  {
-    /**
-     * @see {@link TModifierDataKey}
-     */
-    key: 'node-new-alert'
+export type TNodeAlertAddedData = {
+  /**
+   * The alert message, shared across all affected nodes.
+   */
+  message: string
+  /**
+   * The severity level, shared across all affected nodes.
+   */
+  severityLevel: TNodeAlertSeverityLevel
+  /**
+   * The node IDs paired with the IDs of their newly created alerts.
+   */
+  ids: Array<{
     /**
      * The ID of the node to which the alert was added.
      */
     nodeId: string
     /**
-     * The new alert that was added to the node.
+     * The ID of the alert that was added to the node.
      */
-    alert: TNodeAlertJson
-  },
-  {
-    /**
-     * @see {@link TModifierDataKey}
-     */
-    key: 'node-action-success-chance'
-    /**
-     * The operand used to modify the chance of succes for all the node's actions.
-     */
-    successChanceOperand: number
-    /**
-     * The timestamp (ms since epoch) at which this modifier was applied.
-     */
-    appliedAt: number
-    /**
-     * The ID of the node to modify.
-     */
-    nodeId: string
-    /**
-     * The ID of the action to modify.
-     * @note If not provided, all actions will be modified.
-     */
-    actionId?: string
-  },
-  {
-    /**
-     * @see {@link TModifierDataKey}
-     */
-    key: 'node-action-process-time'
-    /**
-     * The operand used to modify the process time for all the node's actions.
-     */
-    processTimeOperand: number
-    /**
-     * The timestamp (ms since epoch) at which this modifier was applied.
-     */
-    appliedAt: number
-    /**
-     * The ID of the node to modify.
-     */
-    nodeId: string
-    /**
-     * The ID of the action to modify.
-     * @note If not provided, all actions will be modified.
-     */
-    actionId?: string
-  },
-  {
-    /**
-     * @see {@link TModifierDataKey}
-     */
-    key: 'node-action-resource-cost'
-    /**
-     * The ID of the {@link MissionResource} being modified.
-     */
-    resourceId: string
-    /**
-     * The operand used to modify the resource cost for all the node's actions.
-     */
-    resourceCostOperand: number
-    /**
-     * The timestamp (ms since epoch) at which this modifier was applied.
-     */
-    appliedAt: number
-    /**
-     * The ID of the node to modify.
-     */
-    nodeId: string
-    /**
-     * The ID of the action to modify.
-     * @note If not provided, all actions will be modified.
-     */
-    actionId?: string
-  },
-  {
-    /**
-     * @see {@link TModifierDataKey}
-     */
-    key: 'force-resource-pool'
-    /**
-     * The ID of the resource pool to modify.
-     */
-    poolId: string
-    /**
-     * The operand used to modify the resource pool of the force.
-     */
-    operand: number
-  },
-]
+    alertId: string
+  }>
+}
 
 /**
- * Modifier data for a new alert that was added to a node.
+ * The data emitted when the process time of one or more actions is updated.
  */
-export type TNodeNewAlertData = Extract<
-  TModifierData[number],
-  { key: 'node-new-alert' }
->
+export type TActionProcessTimeUpdatedData = {
+  /**
+   * Data that can be used to quickly look up and find the affected
+   * actions within the mission.
+   */
+  lookUpData: Array<TNodeHostedLookUpData>
+  /**
+   * The modifier to apply to the actions.
+   */
+  modifier: TActionModifier
+}
 
 /**
- * The data needed to apply a modifier to an object in METIS.
+ * The data emitted when the success chance of one or more actions is updated.
  */
-type TModifierDatum = Extract<TModifierData[number], { key: TModifierDataKey }>
+export type TActionSuccessChanceUpdatedData = {
+  /**
+   * Data that can be used to quickly look up and find the affected
+   * actions within the mission.
+   */
+  lookUpData: Array<TNodeHostedLookUpData>
+  /**
+   * The modifier to apply to the actions.
+   */
+  modifier: TActionModifier
+}
+
+/**
+ * The data emitted when the resource cost of one or more actions is updated.
+ */
+export type TActionResourceCostUpdatedData = {
+  /**
+   * Data that can be used to quickly look up and find the affected
+   * actions within the mission.
+   */
+  lookUpData: Array<TNodeHostedLookUpData>
+  /**
+   * The modifier to apply to the actions.
+   */
+  modifier: TActionModifier
+}
 
 /**
  * The data necessary to send a message to the output panel.
@@ -293,11 +225,7 @@ export type TOutputDatum = TOutputData[number]
 /**
  * The data needed to open or close a node, determining if its descendants are revealed.
  */
-export type TNodeOpenStateData = {
-  /**
-   * The ID of the node to modify.
-   */
-  nodeId: string
+export type TNodeOpenStateData = TForceHostedLookUpData & {
   /**
    * Whether the node is open or closed.
    */
@@ -317,13 +245,28 @@ export type TNodeOpenStateData = {
 }
 
 /**
+ * The data emitted when the open/closed state of one or more nodes is updated in batch.
+ */
+export type TNodeOpenStateBatchData = {
+  /**
+   * Whether the nodes are opened or closed.
+   */
+  opened: boolean
+  /**
+   * Per-node data for each node whose open state changed.
+   */
+  nodes: Array<Omit<TNodeOpenStateData, 'opened'>>
+}
+
+/**
  * The data emitted when the block status of one or more nodes is updated.
  */
 export type TNodeBlockStatusData = {
   /**
-   * The IDs of the nodes whose block status was updated.
+   * Data that can be used to quickly look up and find the affected
+   * nodes within the mission.
    */
-  nodeIds: string[]
+  lookUpData: Array<TForceHostedLookUpData>
   /**
    * Whether the nodes are now blocked or unblocked.
    */
@@ -349,6 +292,21 @@ export type TFileAccessData = {
    * The serialized data for each file affected.
    */
   files: TMissionFileJson[]
+}
+
+/**
+ * The data emitted when a resource pool is modified.
+ */
+export type TResourcePoolUpdatedData = {
+  /**
+   * Data that can be used to quickly look up and find the affected
+   * resource pools within the mission.
+   */
+  lookUpData: Array<TForceHostedLookUpData>
+  /**
+   * The operand used to modify the balance of the resource pools.
+   */
+  operand: number
 }
 
 /**
@@ -416,9 +374,9 @@ export type TGenericServerEvents = {
     }
   >
   /**
-   * Occurs when modifiers are applied to an object in METIS.
+   * Occurs when the open state of one or more nodes is updated.
    */
-  'modifier-enacted': TConnectEvent<'modifier-enacted', TModifierDatum>
+  'node-open-state-updated': TConnectEvent<'node-open-state-updated', TNodeOpenStateBatchData>
   /**
    * Occurs when the block status of one or more nodes is updated.
    */
@@ -431,8 +389,32 @@ export type TGenericServerEvents = {
    */
   'file-access-updated': TConnectEvent<'file-access-updated', TFileAccessData>
   /**
+   * Occurs when a resource pool is modified.
+   */
+  'resource-pool-updated': TConnectEvent<
+    'resource-pool-updated',
+    TResourcePoolUpdatedData
+  >
+  /**
+   * Occurs when an alert is added to a node.
+   */
+  'node-alert-added': TConnectEvent<'node-alert-added', TNodeAlertAddedData>
+  /**
+   * Occurs when the process time of one or more actions is updated.
+   */
+  'action-process-time-updated': TConnectEvent<'action-process-time-updated', TActionProcessTimeUpdatedData>
+  /**
+   * Occurs when the success chance of one or more actions is updated.
+   */
+  'action-success-chance-updated': TConnectEvent<'action-success-chance-updated', TActionSuccessChanceUpdatedData>
+  /**
+   * Occurs when the resource cost of one or more actions is updated.
+   */
+  'action-resource-cost-updated': TConnectEvent<'action-resource-cost-updated', TActionResourceCostUpdatedData>
+  /**
    * Occurs when the session has been destroyed while the participant was in it.
    */
+
   'session-destroyed': TConnectEvent<
     'session-destroyed',
     {

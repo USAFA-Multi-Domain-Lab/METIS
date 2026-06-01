@@ -2,10 +2,15 @@ import PropertyBadge from '@client/components/content/general-layout/property-ba
 import { ClientActionCost } from '@client/missions/actions/ClientActionCost'
 import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
 import { compute } from '@client/toolbox'
+import { useEventListener } from '@client/toolbox/hooks'
 import type { TExecutionCheats } from '@shared/missions/actions/ActionExecution'
+import type { TActionModifier } from '@shared/missions/actions/MissionAction'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import { MissionSession } from '@shared/sessions/MissionSession'
+import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
+import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import { useState } from 'react'
 
 // ! No styles
 
@@ -20,6 +25,57 @@ export default function ResourceCostBadges({
   cheats = MissionSession.NO_CHEATS,
   config = MissionSession.DEFAULT_CONFIG,
 }: TResourceCostBadges_P): TReactElement | null {
+  /* -- COMPUTED -- */
+
+  // Normalize the date as a timestamp.
+  let normalizedEffectiveTime: number | null = null
+  if (effectiveTime) {
+    normalizedEffectiveTime = DateToolbox.normalizeStamp(effectiveTime)
+  }
+  // Only track incoming modifiers if the effective time is in the future
+  // or if it isn't provided at all. If the effective time is in the past, then
+  // incoming modifiers won't have any impact on the rendered costs, so there
+  // is no need to track them.
+  let modifierListenerTarget =
+    normalizedEffectiveTime && normalizedEffectiveTime <= Date.now()
+      ? null
+      : action
+
+  /* -- STATE -- */
+
+  const [recentModifiers, setRecentModifiers] = useState<
+    Array<TActionModifier>
+  >([])
+
+  /* -- EFFECTS -- */
+
+  // Handle new modifiers being added while the action properties are being displayed.
+  useEventListener(modifierListenerTarget, 'new-modifier', () => {
+    // Get the new modifier. Only track it if it's a resource-cost
+    // modifier and if it was applied before the effective time.
+    // If after the effective time, then it has no impact on the
+    // rendered costs.
+    let newModifier = ArrayToolbox.lastOf(action.modifiers)!
+    let afterEffectiveTime =
+      normalizedEffectiveTime && newModifier.appliedAt > normalizedEffectiveTime
+    if (newModifier.type !== 'resource-cost' || afterEffectiveTime) return
+
+    // Track recent modifier to apply an animation to
+    // draw the attention of the user.
+    setRecentModifiers((previousRecentModifiers) => {
+      // Clear the recent modifiers after a delay, ending the
+      // animation in the GUI.
+      setTimeout(() => {
+        setRecentModifiers((previousRecentModifiers) => {
+          return previousRecentModifiers.filter(
+            (modifier) => modifier !== newModifier,
+          )
+        })
+      }, 500)
+      return [...previousRecentModifiers, newModifier]
+    })
+  })
+
   return (
     <>
       {action.includedCosts.map((cost) => {
@@ -45,6 +101,9 @@ export default function ResourceCostBadges({
           if (config.infiniteResources) return 'Infinite Resources Enabled'
           return ''
         })
+        let updated = recentModifiers.some(
+          (modifier) => modifier.resourceId === cost.resourceId,
+        )
 
         return (
           <PropertyBadge
@@ -54,6 +113,7 @@ export default function ResourceCostBadges({
             description={`${StringToolbox.toTitleCase(resource.name)} Cost`}
             strikethrough={Boolean(resourceCostStrikethroughReason)}
             strikethroughReason={resourceCostStrikethroughReason}
+            updated={updated}
           />
         )
       })}
@@ -93,4 +153,8 @@ export type TResourceCostBadges_P = {
    * @default MissionSession.DEFAULT_CONFIG
    */
   config?: TSessionConfig
+  /**
+   * Modifiers that have been recently applied to the action, which may
+   * cause the resource cost to be updated.
+   */
 }

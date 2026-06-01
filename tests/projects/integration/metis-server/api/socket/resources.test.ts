@@ -585,26 +585,19 @@ describe('Action execution resource socket networking', () => {
 
     let listeners = createEventListeners(socket, [
       'action-execution-initiated',
-      'modifier-enacted',
+      'action-resource-cost-updated',
     ])
 
     // Triggers a modifier event.
-    session.modifyResourceCost({
-      resourceId: fuelPool.resourceId,
-      operand: resourceCostOperand,
-      node: action.node,
-      action,
-    })
+    session.modifyResourceCost([action], fuelPool.resourceId, resourceCostOperand)
 
-    let modifierEventData = (await listeners['modifier-enacted'])
-      .data as TResourceCostModifierEventData
+    let modifierEvent = await listeners['action-resource-cost-updated']
 
     // Make sure the modifier event data transferred cleanly via the socket connection.
-    expect(modifierEventData.key).toBe('node-action-resource-cost')
-    expect(modifierEventData.resourceId).toBe(fuelPool.resourceId)
-    expect(modifierEventData.resourceCostOperand).toBe(resourceCostOperand)
-    expect(modifierEventData.nodeId).toBe(action.node._id)
-    expect(modifierEventData.actionId).toBe(action._id)
+    expect(modifierEvent.data.modifier.resourceId).toBe(fuelPool.resourceId)
+    expect(modifierEvent.data.modifier.amount).toBe(resourceCostOperand)
+    expect(modifierEvent.data.lookUpData[0].nodeId).toBe(action.node._id)
+    expect(modifierEvent.data.lookUpData[0]._id).toBe(action._id)
 
     // Determine what the expected pool balances should be after the
     // action executes.
@@ -758,8 +751,3 @@ type TPrepareExecutionSessionOptions = {
   sessionConfig?: Partial<TSessionConfig>
   memberRole?: MemberRole
 }
-
-type TResourceCostModifierEventData = Extract<
-  TServerEvents['modifier-enacted']['data'],
-  { key: 'node-action-resource-cost' }
->

@@ -213,37 +213,29 @@ describe('Node alert socket networking', () => {
 
     let firstEventPromise = TestSocketClient.waitForEvent(
       sameForceMemberOne.socket,
-      (event) =>
-        (event as any).method === 'modifier-enacted' &&
-        (event as any).data?.key === 'node-new-alert',
+      (event) => (event as any).method === 'node-alert-added',
     )
     let secondEventPromise = TestSocketClient.waitForEvent(
       sameForceMemberTwo.socket,
-      (event) =>
-        (event as any).method === 'modifier-enacted' &&
-        (event as any).data?.key === 'node-new-alert',
+      (event) => (event as any).method === 'node-alert-added',
     )
     let noOtherForceEventPromise = expectNoMatchingEvent(
       otherForceMember.socket,
-      (event) =>
-        (event as any).method === 'modifier-enacted' &&
-        (event as any).data?.key === 'node-new-alert',
+      (event) => (event as any).method === 'node-alert-added',
     )
 
-    session.addNodeAlert(node, 'Network anomaly detected', 'warning')
+    session.addNodeAlert([node], 'Network anomaly detected', 'warning')
 
     let firstEvent = await firstEventPromise
     let secondEvent = await secondEventPromise
     await noOtherForceEventPromise
 
-    expect(firstEvent.data.key).toBe('node-new-alert')
-    expect(firstEvent.data.nodeId).toBe(node._id)
-    expect(firstEvent.data.alert.message).toBe('Network anomaly detected')
-    expect(firstEvent.data.alert.severityLevel).toBe('warning')
-    expect(typeof firstEvent.data.alert._id).toBe('string')
+    expect(firstEvent.data.ids[0].nodeId).toBe(node._id)
+    expect(firstEvent.data.message).toBe('Network anomaly detected')
+    expect(firstEvent.data.severityLevel).toBe('warning')
+    expect(typeof firstEvent.data.ids[0].alertId).toBe('string')
 
-    expect(secondEvent.data.key).toBe('node-new-alert')
-    expect(secondEvent.data.nodeId).toBe(node._id)
+    expect(secondEvent.data.ids[0].nodeId).toBe(node._id)
   })
 
   test('marks an alert as acknowledged and broadcasts node-alert-acknowledged to the owning force', async () => {

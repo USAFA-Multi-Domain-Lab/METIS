@@ -2,7 +2,10 @@ import { sessionLogger } from '@server/logging'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import type { TTargetEnvExposedAction } from '@server/target-environments/context/TargetEnvContext'
 import type { TActionResourceCostJson } from '@shared/missions/actions/ActionResourceCost'
-import type { TActionModifier } from '@shared/missions/actions/MissionAction'
+import type {
+  TActionModifier,
+  TActionModifierType,
+} from '@shared/missions/actions/MissionAction'
 import { MissionAction } from '@shared/missions/actions/MissionAction'
 import type {
   TEffectExecutionTriggered,
@@ -186,4 +189,29 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
    * @see {@link ServerMissionNode.validateActions}
    */
   public static readonly PROCESS_TIME_REGEX: RegExp = /^[0-9+-]+[.]?[0-9]{0,6}$/
+
+  /**
+   * @param type The type of modifier for which to get the
+   * corresponding server method.
+   * @returns The server method used to transmit this modifier
+   * from the server to the client via WS.
+   */
+  public static getServerMethodForModifier(
+    modifier: TActionModifier | TActionModifierType,
+  ):
+    | 'action-process-time-updated'
+    | 'action-success-chance-updated'
+    | 'action-resource-cost-updated' {
+    let type = typeof modifier === 'string' ? modifier : modifier.type
+    switch (type) {
+      case 'process-time':
+        return 'action-process-time-updated'
+      case 'success-chance':
+        return 'action-success-chance-updated'
+      case 'resource-cost':
+        return 'action-resource-cost-updated'
+      default:
+        throw new Error(`Unrecognized modifier type: ${type}`)
+    }
+  }
 }

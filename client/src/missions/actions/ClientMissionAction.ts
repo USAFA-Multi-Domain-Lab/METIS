@@ -1,6 +1,10 @@
 import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
 import type { TMetisClientComponents } from '@client/index'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
+import {
+  EventManager,
+  type TListenerTargetEmittable,
+} from '@shared/events/EventManager'
 import type { TActionResourceCostJson } from '@shared/missions/actions/ActionResourceCost'
 import type {
   TActionModifier,
@@ -22,7 +26,7 @@ import { ClientActionCost } from './ClientActionCost'
  */
 export class ClientMissionAction
   extends MissionAction<TMetisClientComponents>
-  implements TMissionOutlineItem
+  implements TMissionOutlineItem, TListenerTargetEmittable<TActionEventMethod>
 {
   /**
    * The formatted success chance to display to a session
@@ -138,6 +142,11 @@ export class ClientMissionAction
   }
 
   /**
+   * Manages the node's event listeners and events.
+   */
+  private eventManager: EventManager<TActionEventMethod>
+
+  /**
    * @param node The node that the action belongs to.
    * @param data The action data from which to create the action.
    * @note Any ommitted values will be set to their default properties
@@ -148,7 +157,21 @@ export class ClientMissionAction
     data: Partial<TClientMissionActionJson> = ClientMissionAction.DEFAULT_PROPERTIES,
   ) {
     super(node, data)
+
+    this.eventManager = new EventManager(this)
+    this.addEventListener = this.eventManager.addEventListener
+    this.removeEventListener = this.eventManager.removeEventListener
+    this.emitEvent = this.eventManager.emitEvent
   }
+
+  // Implemented
+  public emitEvent
+
+  // Implemented
+  public addEventListener
+
+  // Implemented
+  public removeEventListener
 
   // Implemented
   protected parseCosts(
@@ -201,9 +224,15 @@ export class ClientMissionAction
       localKey,
       _id: ClientMissionAction.DEFAULT_PROPERTIES._id,
       effects: [],
+      resourceCosts: [],
     }
 
     let duplicatedAction = new ClientMissionAction(node, data)
+
+    // Duplicate the resource costs with new IDs.
+    duplicatedAction.resourceCosts = new JsonSerializableArray(
+      ...this.resourceCosts.map((cost) => cost.duplicate(duplicatedAction)),
+    )
 
     // Duplicate the effects.
     duplicatedAction.effects = this.effects.map((effect) => {
@@ -262,6 +291,7 @@ export class ClientMissionAction
    */
   public onModify(modifier: TActionModifier): void {
     this.modifiers.push(modifier)
+    this.emitEvent('new-modifier')
   }
 
   /**
@@ -388,3 +418,11 @@ type TActionPropertyFormatOptions = {
    */
   executedAt?: number
 }
+
+/**
+ * An event that occurs on an action, which can be listened for.
+ *
+ * @option 'new-modifier'
+ * Triggered when a new modifier is applied to the action.
+ */
+export type TActionEventMethod = 'new-modifier'

@@ -408,9 +408,7 @@ export class TargetScriptContext<
     >,
     opened: boolean,
   ) => {
-    this.resolveServerNodes(nodes).forEach((serverNode) => {
-      this.session.updateNodeOpenState(serverNode, opened)
-    })
+    this.session.updateNodeOpenState(this.resolveServerNodes(nodes), opened)
   }
 
   /**
@@ -423,9 +421,11 @@ export class TargetScriptContext<
     message: string,
     severityLevel: TNodeAlertSeverityLevel,
   ) => {
-    this.resolveServerNodes(applyTo).forEach((serverNode) => {
-      this.session.addNodeAlert(serverNode, message, severityLevel)
-    })
+    this.session.addNodeAlert(
+      this.resolveServerNodes(applyTo),
+      message,
+      severityLevel,
+    )
   }
 
   /**
@@ -440,9 +440,10 @@ export class TargetScriptContext<
     >,
     operand: number,
   ) => {
-    this.resolveServerActionTargets(applyTo).forEach((action) => {
-      this.session.modifySuccessChance({ operand, action })
-    })
+    this.session.modifySuccessChance(
+      this.resolveServerActionTargets(applyTo),
+      operand,
+    )
   }
 
   /**
@@ -457,9 +458,10 @@ export class TargetScriptContext<
     >,
     operand: number,
   ) => {
-    this.resolveServerActionTargets(applyTo).forEach((action) => {
-      this.session.modifyProcessTime({ operand, action })
-    })
+    this.session.modifyProcessTime(
+      this.resolveServerActionTargets(applyTo),
+      operand,
+    )
   }
 
   /**
@@ -475,15 +477,10 @@ export class TargetScriptContext<
     resources: TInstanceOrArray<TTargetEnvExposedResource>,
     operand: number,
   ) => {
-    this.resolveServerActionTargets(applyTo).forEach((action) => {
-      ArrayToolbox.toArray(resources).forEach((resource) => {
-        this.session.modifyResourceCost({
-          resourceId: resource._id,
-          action,
-          operand,
-        })
-      })
-    })
+    let actions = this.resolveServerActionTargets(applyTo)
+    for (let resource of ArrayToolbox.toArray(resources)) {
+      this.session.modifyResourceCost(actions, resource._id, operand)
+    }
   }
 
   /**
@@ -495,9 +492,7 @@ export class TargetScriptContext<
     >,
     operand: number,
   ) => {
-    this.resolveServerPools(applyTo).forEach((serverPool) => {
-      this.session.modifyResourcePool(serverPool, operand)
-    })
+    this.session.modifyResourcePool(this.resolveServerPools(applyTo), operand)
   }
 
   /**

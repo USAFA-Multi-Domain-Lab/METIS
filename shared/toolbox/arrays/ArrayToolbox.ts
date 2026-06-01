@@ -40,8 +40,9 @@ export class ArrayToolbox {
    * storing the returned values of the method in a new array.
    * @param array The array to map.
    * @param method The method to call on each element.
+   * @return The array of returned values from the method calls.
    */
-  public static methodMap<
+  public static mapMethod<
     TInput extends Record<TMethodKey, (...args: any) => any>,
     TMethodKey extends TMethodKeys<TInput> = TMethodKeys<TInput>,
     TOutput extends ReturnType<TInput[TMethodKey]> = ReturnType<
@@ -49,6 +50,44 @@ export class ArrayToolbox {
     >,
   >(array: TInput[], key: TMethodKey): TOutput[] {
     return array.map((element: TInput) => element[key]())
+  }
+
+  /**
+   * Maps an array accessing the given property on each element,
+   * storing the values of the property in a new array.
+   * @param array The array to map.
+   * @param property The property to access on each element.
+   * @returns The array of property values.
+   */
+  public static mapProperty<
+    TInput extends Record<TPropertyKey, any>,
+    TPropertyKey extends keyof TInput = keyof TInput,
+    TOutput extends TInput[TPropertyKey] = TInput[TPropertyKey],
+  >(array: TInput[], property: TPropertyKey): TOutput[] {
+    return array.map((element: TInput) => element[property])
+  }
+
+  /**
+   * Maps an array accessing the given properties on each element,
+   * storing the values of the properties in a new array of objects.
+   * @param array The array to map.
+   * @param properties The properties to access on each element.
+   * @returns The array of objects containing the accessed property values.
+   */
+  public static mapProperties<
+    TInput extends Record<string, any>,
+    TPropertyKey extends keyof TInput = keyof TInput,
+    TOutput extends { [K in TPropertyKey]: TInput[K] } = {
+      [K in TPropertyKey]: TInput[K]
+    },
+  >(array: TInput[], properties: TPropertyKey[]): TOutput[] {
+    return array.map((element: TInput) => {
+      let mappedElement = {} as Record<TPropertyKey, TOutput>
+      for (let property of properties) {
+        mappedElement[property] = element[property]
+      }
+      return mappedElement as TOutput
+    })
   }
 
   /**
