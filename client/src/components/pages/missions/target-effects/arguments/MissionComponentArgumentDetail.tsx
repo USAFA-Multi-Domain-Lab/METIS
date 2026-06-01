@@ -19,7 +19,7 @@ import MissionOutline, {
  * Renders a multi-select for the argument whose type is `"mission-component"`.
  * @note Renders nothing if the argument or parameter type is not `"mission-component"`.
  */
-export default function MissionComponentTargetDetail2({
+export default function MissionComponentTargetDetail({
   argument,
 }: TMissionComponentTargetDetail_P): TReactElement | null {
   const { parameter } = argument
