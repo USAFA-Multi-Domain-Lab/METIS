@@ -201,9 +201,15 @@ export class ClientMissionAction
       localKey,
       _id: ClientMissionAction.DEFAULT_PROPERTIES._id,
       effects: [],
+      resourceCosts: [],
     }
 
     let duplicatedAction = new ClientMissionAction(node, data)
+
+    // Duplicate the resource costs with new IDs.
+    duplicatedAction.resourceCosts = new JsonSerializableArray(
+      ...this.resourceCosts.map((cost) => cost.duplicate(duplicatedAction)),
+    )
 
     // Duplicate the effects.
     duplicatedAction.effects = this.effects.map((effect) => {

@@ -30,8 +30,11 @@
     }
 
     &.NodeStructuring {
+      height: 100%;
+
       .BorderBox {
         overflow-y: hidden;
+        height: 100%;
 
         .BoxTop {
           grid-template-columns: 1fr 26px;
@@ -40,7 +43,7 @@
         .Nodes {
           overflow-x: auto;
           overflow-y: auto;
-          height: calc(100% - 70px);
+          height: 100%;
           padding: 0;
 
           .Padding {

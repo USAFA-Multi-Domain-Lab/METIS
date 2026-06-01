@@ -55,6 +55,9 @@ export default function useEffectItemButtonCallbacks<
           notify(`Successfully duplicated "${newEffect.name}".`)
           // Allow the user to save the changes.
           onChange(newEffect)
+          // If not selecting the new effect, the selection won't change,
+          // so a recheck must be triggered manually.
+          if (!selectNewEffect) setCheckForIssues(true)
           // Run the post-hook.
           onSuccessfulDuplicate(newEffect)
         } catch (error: any) {
