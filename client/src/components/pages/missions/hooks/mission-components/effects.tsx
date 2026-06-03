@@ -21,8 +21,7 @@ export default function useEffectItemButtonCallbacks<
   const globalContext = useGlobalContext()
   const { notify, prompt } = globalContext.actions
   const missionPageContext = useMissionPageContext()
-  const { onChange, state } = missionPageContext
-  const [, setCheckForIssues] = state.checkForIssues
+  const { onChange } = missionPageContext
 
   return {
     onDuplicateRequest: async (
@@ -55,9 +54,6 @@ export default function useEffectItemButtonCallbacks<
           notify(`Successfully duplicated "${newEffect.name}".`)
           // Allow the user to save the changes.
           onChange(newEffect)
-          // If not selecting the new effect, the selection won't change,
-          // so a recheck must be triggered manually.
-          if (!selectNewEffect) setCheckForIssues(true)
           // Run the post-hook.
           onSuccessfulDuplicate(newEffect)
         } catch (error: any) {
@@ -93,9 +89,6 @@ export default function useEffectItemButtonCallbacks<
       notify(`Successfully deleted "${effect.name}".`)
       // Allow the user to save the changes.
       onChange(effect)
-      // If not navigating back, the selection won't change, so
-      // a recheck must be triggered manually.
-      if (!navigateBack) setCheckForIssues(true)
       // Run the post-hook.
       onSuccessfulDeletion(effect)
     },

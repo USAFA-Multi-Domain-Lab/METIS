@@ -27,7 +27,6 @@ export default function IssueItem({
   const { state, onChange } = useMissionPageContext()
   const { state: panelState } = usePanelContext()
   const [mission] = state.mission
-  const [, setCheckForIssues] = state.checkForIssues
   const [, selectView] = panelState.selectedView
   const [pendingFix, setPendingFix] = useState<boolean>(false)
 
@@ -76,7 +75,6 @@ export default function IssueItem({
         await component.$migrateArguments()
 
         onChange(component)
-        setCheckForIssues(true)
       } catch (error) {
         setPendingFix(false)
         handleError({

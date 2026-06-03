@@ -17,7 +17,6 @@ export default function useForceItemButtonCallbacks(
   const missionPageContext = useMissionPageContext()
   const { onChange, state: missionPageState } = missionPageContext
   const [mission] = missionPageState.mission
-  const [, setCheckForIssues] = missionPageState.checkForIssues
 
   return {
     onDuplicateRequest: async (force: ClientMissionForce) => {
@@ -65,9 +64,6 @@ export default function useForceItemButtonCallbacks(
       notify(`Successfully deleted "${force.name}".`)
       // Allow the user to save the changes.
       onChange(force, ...deletedForces.filter((f) => f._id !== force._id))
-      // If the deleted force wasn't selected, the selection won't change,
-      // so a recheck must be triggered manually.
-      if (!mission.path.includes(force)) setCheckForIssues(true)
       // Run the post-hook.
       onSuccessfulDeletion(force)
     },

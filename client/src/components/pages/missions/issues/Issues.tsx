@@ -1,7 +1,4 @@
-import { usePanelContext } from '@client/components/content/general-layout/panels/Panel'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
-import { useGlobalContext } from '@client/context/global'
-import { useRequireLogin } from '@client/toolbox/hooks'
 import { useState } from 'react'
 import IssueItem from './IssueItem'
 import './Issues.scss'
@@ -14,16 +11,8 @@ export default function Issues({
 }: TIssues_P): TReactElement | null {
   /* -- STATE -- */
 
-  const globalContext = useGlobalContext()
-  const { prompt } = globalContext.actions
-  const { login } = useRequireLogin()
-  const { user } = login
-  const { state, onChange } = useMissionPageContext()
-  const { state: panelState } = usePanelContext()
-  const [mission] = state.mission
+  const { state } = useMissionPageContext()
   const [issues] = state.issues
-  const [, setCheckForIssues] = state.checkForIssues
-  const [, selectView] = panelState.selectedView
   const [searchQuery, setSearchQuery] = useState<string>('')
 
   /* -- COMPUTED -- */
@@ -55,7 +44,6 @@ export default function Issues({
         <div className='IssueListItems'>
           {filteredIssues.length > 0 ? (
             filteredIssues.map((issue) => {
-              const { component, message } = issue
               return (
                 <IssueItem
                   key={issue.component._id + ' ' + issue.message}

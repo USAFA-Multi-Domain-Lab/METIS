@@ -17,8 +17,7 @@ export default function useActionItemButtonCallbacks(
   const globalContext = useGlobalContext()
   const { notify, prompt } = globalContext.actions
   const missionPageContext = useMissionPageContext()
-  const { onChange, state } = missionPageContext
-  const [, setCheckForIssues] = state.checkForIssues
+  const { onChange } = missionPageContext
 
   return {
     onDuplicateRequest: async (
@@ -52,8 +51,6 @@ export default function useActionItemButtonCallbacks(
           notify(`Successfully duplicated "${newAction.name}".`)
           // Allow the user to save the changes.
           onChange(newAction)
-          // The new action may introduce issues; trigger a recheck.
-          setCheckForIssues(true)
           // Run the post-hook.
           onSuccessfulDuplicate(newAction)
         } catch (error: any) {
@@ -88,9 +85,6 @@ export default function useActionItemButtonCallbacks(
         notify(`Successfully deleted "${action.name}".`)
         // Allow the user to save the changes.
         onChange(action, action.node)
-        // If not navigating back, the selection won't change, so
-        // a recheck must be triggered manually.
-        if (!navigateBack) setCheckForIssues(true)
         // Run the post-hook.
         onSuccessfulDeletion(action)
       }

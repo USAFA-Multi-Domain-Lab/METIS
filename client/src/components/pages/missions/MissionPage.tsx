@@ -65,7 +65,7 @@ import NodeStructuring from './structures/NodeStructuring'
  * Debounce delay for issue checking to avoid
  * excessive recomputation on rapid changes.
  */
-const ISSUE_CHECK_DEBOUNCE_MS = 500
+const ISSUE_CHECK_DEBOUNCE_MS = 1000
 
 /**
  * The description for the structure view in the
@@ -627,6 +627,7 @@ export default function MissionPage(
     ...components: TNonEmptyArray<MissionComponent<TMetisClientComponents>>
   ): void => {
     setAreUnsavedChanges(true)
+    setCheckForIssues(true)
     forceUpdate()
   }
 
