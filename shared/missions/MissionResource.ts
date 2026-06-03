@@ -4,7 +4,6 @@ import {
 } from '@shared/toolbox/serialization/json'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { TMission } from './Mission'
-import type { TMissionComponentIssue } from './MissionComponent'
 import { MissionComponent } from './MissionComponent'
 
 /**
@@ -28,11 +27,6 @@ export abstract class MissionResource<
   // Implemented
   public get path(): [...MissionComponent<any, any>[], this] {
     return [...this.mission.path, this]
-  }
-
-  // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
-    return []
   }
 
   /**

@@ -1,9 +1,6 @@
 import { StringToolbox } from '../../toolbox/strings/StringToolbox'
 import type { TMission } from '../Mission'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from '../MissionComponent'
+import { MissionComponent } from '../MissionComponent'
 
 /**
  * This represents a prototype for a mission node displayed
@@ -32,11 +29,6 @@ export abstract class MissionPrototype<
 
   public get path(): [...MissionComponent<any, any>[], this] {
     return [this.mission, this]
-  }
-
-  // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
-    return []
   }
 
   /**

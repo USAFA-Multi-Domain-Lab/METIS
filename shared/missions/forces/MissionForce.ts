@@ -3,10 +3,7 @@ import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSeriali
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { context } from '../../context'
 import { Mission, type TMission, type TMissionJsonOptions } from '../Mission'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from '../MissionComponent'
+import { MissionComponent } from '../MissionComponent'
 import type { TMissionNodeJson, TNode } from '../nodes/MissionNode'
 import type { TPrototype } from '../nodes/MissionPrototype'
 import type { NodeAlert } from '../nodes/NodeAlert'
@@ -57,10 +54,6 @@ export abstract class MissionForce<
     return [this.mission, this]
   }
 
-  // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
-    return MissionForce.consolidateIssues(...this.nodes)
-  }
 
   /**
    * The color of the force.

@@ -5,7 +5,7 @@ import { useButtonSvgEngine } from '@client/components/content/user-controls/but
 import { useGlobalContext } from '@client/context/global'
 import { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { useRequireLogin } from '@client/toolbox/hooks'
-import type { TMissionComponentIssue } from '@shared/missions/MissionComponent'
+import type { MissionComponentIssue } from '@shared/missions/MissionComponentIssue'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useState } from 'react'
 import { useMissionPageContext } from '../context'
@@ -53,7 +53,7 @@ export default function IssueItem({
    * Handles selection of an issue in the list.
    * @param issue The issue that was selected.
    */
-  const onIssueSelection = async (issue: TMissionComponentIssue) => {
+  const onIssueSelection = async (issue: MissionComponentIssue) => {
     const { type, component } = issue
 
     if (component instanceof ClientEffect && type === 'outdated') {
@@ -120,5 +120,5 @@ export interface TIssueItem_P extends TIssues_P {
   /**
    * The issue to display.
    */
-  issue: TMissionComponentIssue
+  issue: MissionComponentIssue
 }

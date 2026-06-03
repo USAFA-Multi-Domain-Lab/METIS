@@ -4,10 +4,7 @@ import {
 } from '@shared/toolbox/serialization/json'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { Mission, type TMission } from '../Mission'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from '../MissionComponent'
+import { MissionComponent } from '../MissionComponent'
 import { MissionResource } from '../MissionResource'
 import type { TForce, TForceJsonOptions } from './MissionForce'
 
@@ -50,11 +47,6 @@ export abstract class ResourcePool<
   // Implemented
   public get name(): string {
     return this.resource.name
-  }
-
-  // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
-    return []
   }
 
   /**

@@ -7,10 +7,7 @@ import type {
 } from '../effects/Effect'
 import type { TForce } from '../forces/MissionForce'
 import { Mission, type TMission } from '../Mission'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from '../MissionComponent'
+import { MissionComponent } from '../MissionComponent'
 import type { TNode, TNodeJsonOptions } from '../nodes/MissionNode'
 import type { ActionResourceCost } from './ActionResourceCost'
 import { type TActionResourceCostJson } from './ActionResourceCost'
@@ -73,11 +70,6 @@ export abstract class MissionAction<
   // Implemented
   public get path(): [...MissionComponent<any, any>[], this] {
     return [this.mission, this.force, this.node, this]
-  }
-
-  // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
-    return MissionComponent.consolidateIssues(...this.effects)
   }
 
   /**

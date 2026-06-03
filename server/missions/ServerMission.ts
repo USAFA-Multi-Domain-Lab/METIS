@@ -201,7 +201,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   private static logIssues = (missionJson: TMissionSaveJson): void => {
     let mission = ServerMission.fromSaveJson(missionJson)
 
-    for (let issue of mission.issues) {
+    for (let issue of mission.allIssues) {
       databaseLogger.warn(issue.message)
     }
   }

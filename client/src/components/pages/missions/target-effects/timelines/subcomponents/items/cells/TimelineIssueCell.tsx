@@ -1,7 +1,7 @@
 import WarningIndicator from '@client/components/content/user-controls/WarningIndicator'
 import { compute } from '@client/toolbox'
 import type { TEffectType } from '@shared/missions/effects/Effect'
-import type { TMissionComponentIssue } from '@shared/missions/MissionComponent'
+import type { MissionComponentIssue } from '@shared/missions/MissionComponentIssue'
 import { TimelineItemCell } from './TimelineItemCell'
 
 /**
@@ -58,5 +58,5 @@ export type TTimelineIssueCell_P<TType extends TEffectType> = {
   /**
    * The issues present in the effect.
    */
-  issues: TMissionComponentIssue[]
+  issues: MissionComponentIssue[]
 }

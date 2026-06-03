@@ -38,10 +38,8 @@ import type {
   TEffectTrigger,
   TEffectType,
 } from '@shared/missions/effects/Effect'
-import type {
-  MissionComponent,
-  TMissionComponentIssue,
-} from '@shared/missions/MissionComponent'
+import type { MissionComponent } from '@shared/missions/MissionComponent'
+import type { MissionComponentIssue } from '@shared/missions/MissionComponentIssue'
 import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useEffect, useRef, useState } from 'react'
@@ -109,7 +107,7 @@ export default function MissionPage(
     selection: useState<MissionComponent<TMetisClientComponents>>(
       missionState[0].selection,
     ),
-    issues: useState<TMissionComponentIssue[]>([]),
+    issues: useState<MissionComponentIssue[]>([]),
     checkForIssues: useState<boolean>(true),
     globalFiles: useState<ClientFileReference[]>([]),
     localFiles: useState<ClientMissionFile[]>([]),
@@ -341,7 +339,7 @@ export default function MissionPage(
         setMission(mission)
         setLocalFiles(mission.files)
         setSelection(mission)
-        setIssues(mission.issues)
+        setIssues(mission.allIssues)
         setCheckForIssues(false)
 
         beginLoading('Loading global files...')
@@ -400,7 +398,7 @@ export default function MissionPage(
 
       // Schedule a new issue check after debounce delay
       issueCheckTimeout.current = window.setTimeout(() => {
-        setIssues(mission.issues)
+        setIssues(mission.allIssues)
         setCheckForIssues(false)
         issueCheckTimeout.current = undefined
       }, ISSUE_CHECK_DEBOUNCE_MS)
@@ -824,7 +822,7 @@ export type TMissionPage_S = {
    * The issues within mission components that must
    * be addressed for the mission to function correctly.
    */
-  issues: TReactState<TMissionComponentIssue[]>
+  issues: TReactState<MissionComponentIssue[]>
   /**
    * Triggers a recomputation of the components that have
    * issues, updating the state with the result.

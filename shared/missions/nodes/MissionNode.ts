@@ -13,7 +13,6 @@ import type { TOutcome } from '../actions/ExecutionOutcome'
 import type { TAction, TMissionActionJson } from '../actions/MissionAction'
 import type { TForce, TForceJsonOptions } from '../forces/MissionForce'
 import { type TMission, Mission } from '../Mission'
-import type { TMissionComponentIssue } from '../MissionComponent'
 import { MissionComponent } from '../MissionComponent'
 import { type TPrototype, MissionPrototype } from './MissionPrototype'
 import type { TNodeAlertJson } from './NodeAlert'
@@ -52,10 +51,6 @@ export abstract class MissionNode<
     return [this.mission, this.force, this]
   }
 
-  // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
-    return MissionNode.consolidateIssues(...this.actions.values())
-  }
 
   /**
    * The color for the node used as a border in the mission

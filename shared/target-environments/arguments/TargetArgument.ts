@@ -19,6 +19,7 @@ import {
   MissionComponent,
   type TMissionComponentIssue,
 } from '../../missions/MissionComponent'
+import type { MissionComponentIssueList } from '../../missions/MissionComponentIssueList'
 import type {
   TDropdownTargetParameter,
   TDropdownTargetParameterOptionVal,
@@ -101,12 +102,17 @@ export abstract class TargetArgument<
   }
 
   /**
-   * Cache for {@link additionalIssues} to avoid recomputing on every access.
+   * Cache populated by {@link scanForIssues} at construction time.
    */
   protected _additionalIssues: TMissionComponentIssue[]
+
   // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
-    return this._additionalIssues
+  protected override populateIssues(
+    list: MissionComponentIssueList<this>,
+  ): void {
+    for (const issue of this._additionalIssues) {
+      list.includeIf(() => true, issue.type, issue.message)
+    }
   }
 
   /**

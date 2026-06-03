@@ -1,9 +1,6 @@
 import type { TFileReferenceJson } from '@shared/files/FileReference'
 import { MissionForce } from '../forces/MissionForce'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from '../MissionComponent'
+import { MissionComponent } from '../MissionComponent'
 
 /**
  * A file that is attached to a mission as a part
@@ -61,11 +58,6 @@ export abstract class MissionFile<
   // Implemented
   public get path(): [...MissionComponent<any, any>[], this] {
     return [this.mission, this]
-  }
-
-  // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
-    return []
   }
 
   /**

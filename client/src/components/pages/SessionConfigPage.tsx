@@ -10,7 +10,7 @@ import {
   useMountHandler,
   useRequireLogin,
 } from '@client/toolbox/hooks'
-import type { TMissionComponentIssue } from '@shared/missions/MissionComponent'
+import type { MissionComponentIssue } from '@shared/missions/MissionComponentIssue'
 import { useState } from 'react'
 import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
@@ -70,7 +70,7 @@ export default function SessionConfigPage({
   /**
    * Renders JSX for the issue list item.
    */
-  const renderMissionComponent = (issue: TMissionComponentIssue) => {
+  const renderMissionComponent = (issue: MissionComponentIssue) => {
     const { component, message } = issue
 
     return (
@@ -125,7 +125,7 @@ export default function SessionConfigPage({
         // Prompt the user for a choice.
         let { choice } = await prompt(message, choices, {
           list: {
-            items: mission.issues,
+            items: mission.allIssues,
             headingText: 'Issues',
             sortByMethods: [ESortByMethod.Name],
             searchableProperties: ['message'],

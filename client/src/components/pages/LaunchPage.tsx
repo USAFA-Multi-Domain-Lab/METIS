@@ -3,7 +3,7 @@ import { ClientMission } from '@client/missions/ClientMission'
 import { SessionClient } from '@client/sessions/SessionClient'
 import { compute } from '@client/toolbox'
 import { useMountHandler, useRequireLogin } from '@client/toolbox/hooks'
-import type { TMissionComponentIssue } from '@shared/missions/MissionComponent'
+import type { MissionComponentIssue } from '@shared/missions/MissionComponentIssue'
 import { useState } from 'react'
 import { DefaultPageLayout } from '.'
 import { ESortByMethod } from '../content/general-layout/ListOld'
@@ -105,7 +105,7 @@ export default function LaunchPage({
   /**
    * Renders JSX for the effect list item.
    */
-  const renderObjectListItem = (issue: TMissionComponentIssue) => {
+  const renderObjectListItem = (issue: MissionComponentIssue) => {
     const { component, message } = issue
 
     return (
@@ -153,7 +153,7 @@ export default function LaunchPage({
           // Prompt the user for a choice.
           let { choice } = await prompt(message, choices, {
             list: {
-              items: mission.issues,
+              items: mission.allIssues,
               headingText: 'Issues',
               sortByMethods: [ESortByMethod.Name],
               searchableProperties: ['message'],

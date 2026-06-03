@@ -25,10 +25,8 @@ import type {
   TMissionForceSaveJson,
 } from './forces/MissionForce'
 import { MissionForce } from './forces/MissionForce'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from './MissionComponent'
+import { MissionComponent } from './MissionComponent'
+import type { MissionComponentIssue } from './MissionComponentIssue'
 import { MissionResource, type TMissionResourceJson } from './MissionResource'
 import type { TNode } from './nodes/MissionNode'
 import type {
@@ -106,16 +104,6 @@ export abstract class Mission<
   // Implemented
   public get path(): [...MissionComponent<any, any>[], this] {
     return [this]
-  }
-
-  // Implemented
-  public get additionalIssues(): TMissionComponentIssue[] {
-    return Mission.consolidateIssues(
-      ...this.prototypes,
-      ...this.forces,
-      ...this.files,
-      ...this.effects,
-    )
   }
 
   /**
@@ -785,15 +773,52 @@ export abstract class Mission<
     return undefined
   }
 
+  // todo: Simplify.
+  /**
+   * All issues across every component in the mission tree, collected
+   * by walking forces → nodes → actions → effects → arguments and
+   * the mission's own prototypes, resources, files, and effects.
+   */
+  public get allIssues(): MissionComponentIssue[] {
+    const components: MissionComponent<any, any>[] = [
+      this,
+      ...this.prototypes,
+      ...(this._resources as MissionComponent<any, any>[]),
+      ...this.files,
+      ...this.effects,
+      ...this.effects.flatMap((e) => [...e.arguments]),
+      ...this.forces,
+      ...this.forces.flatMap((f) => [
+        ...f.resourcePools,
+        ...f.nodes,
+        ...[...f.nodes].flatMap((n) => [
+          ...[...n.actions.values()],
+          ...[...n.actions.values()].flatMap((a) => [
+            ...a.effects,
+            ...a.effects.flatMap((e) => [...e.arguments]),
+          ]),
+        ]),
+      ]),
+    ]
+    return components.flatMap(
+      (c) =>
+        [...c.issues.items] as MissionComponentIssue<
+          MissionComponent<any, any>
+        >[],
+    )
+  }
+
   /**
    * @param config The session config for which to get relevant issues.
    * @returns All issues in the mission relevant the session
    * configuration passed. All issues related to target-environments
    * which are disabled by this config will be filtered out.
    */
-  public getIssuesForConfig(config: TSessionConfig): TMissionComponentIssue[] {
+  public getIssuesForConfig(
+    config: TSessionConfig,
+  ): MissionComponentIssue<MissionComponent<any, any>>[] {
     let { disabledTargetEnvs } = config
-    return this.issues.filter(({ component }) => {
+    return this.allIssues.filter(({ component }) => {
       if (
         component instanceof Effect &&
         disabledTargetEnvs.includes(component.environmentId)

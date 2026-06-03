@@ -10,7 +10,7 @@ import type { MissionComponentIssueList } from './MissionComponentIssueList'
  * it belongs to.
  */
 export class MissionComponentIssue<
-  TComponent extends MissionComponent<any, any>,
+  TComponent extends MissionComponent<any, any> = MissionComponent<any, any>,
 > {
   /**
    * The type of issue that is present.

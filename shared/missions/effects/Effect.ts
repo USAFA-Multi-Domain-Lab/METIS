@@ -4,10 +4,8 @@ import type { TTargetParameter } from '../../target-environments/parameters/Targ
 import type { TargetDependency } from '../../target-environments/targets/TargetDependency'
 import { StringToolbox } from '../../toolbox/strings/StringToolbox'
 import { VersionToolbox } from '../../toolbox/strings/VersionToolbox'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from '../MissionComponent'
+import { MissionComponent, type TMissionComponentIssue } from '../MissionComponent'
+import type { MissionComponentIssueList } from '../MissionComponentIssueList'
 
 /**
  * An effect that can be applied to a target.
@@ -150,15 +148,15 @@ export abstract class Effect<
   }
 
   /**
-   * Cache for {@link additionalIssues} to avoid unnecessary recalculations.
+   * Cache populated by {@link scanForIssues} at construction time.
    */
   private _additionalIssues: TMissionComponentIssue[]
+
   // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
-    return MissionComponent.consolidateIssues(
-      ...this._additionalIssues,
-      ...this.arguments,
-    )
+  protected override populateIssues(list: MissionComponentIssueList<this>): void {
+    for (const issue of this._additionalIssues) {
+      list.includeIf(() => true, issue.type, issue.message)
+    }
   }
 
   /**
