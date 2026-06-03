@@ -1995,7 +1995,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       member.outputPrefix,
       message,
       { type: 'execution-initiation', sourceExecutionId: execution._id },
-      { force: action.force, member },
+      { force: action.force },
     )
     // Apply the effects for the action that are triggered
     // immediately.
