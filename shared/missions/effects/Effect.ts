@@ -4,8 +4,7 @@ import type { TTargetParameter } from '../../target-environments/parameters/Targ
 import type { TargetDependency } from '../../target-environments/targets/TargetDependency'
 import { StringToolbox } from '../../toolbox/strings/StringToolbox'
 import { VersionToolbox } from '../../toolbox/strings/VersionToolbox'
-import { MissionComponent, type TMissionComponentIssue } from '../MissionComponent'
-import type { MissionComponentIssueList } from '../MissionComponentIssueList'
+import { MissionComponent } from '../MissionComponent'
 
 /**
  * An effect that can be applied to a target.
@@ -148,18 +147,6 @@ export abstract class Effect<
   }
 
   /**
-   * Cache populated by {@link scanForIssues} at construction time.
-   */
-  private _additionalIssues: TMissionComponentIssue[]
-
-  // Implemented
-  protected override populateIssues(list: MissionComponentIssueList<this>): void {
-    for (const issue of this._additionalIssues) {
-      list.includeIf(() => true, issue.type, issue.message)
-    }
-  }
-
-  /**
    * The impetus for the effect. Once the give event occurs
    * on an action, this effect will be enacted.
    */
@@ -249,7 +236,6 @@ export abstract class Effect<
     this.arguments = this.parseArguments(args)
     this.localKey = localKey
 
-    this._additionalIssues = []
     this.scanForIssues()
   }
 
@@ -342,43 +328,28 @@ export abstract class Effect<
   }
 
   /**
-   * Scans the argument for issues and caches them in
-   * {@link _additionalIssues}.
+   * Scans the effect for issues and registers them in {@link issues}.
    */
   private scanForIssues() {
-    this._additionalIssues = []
-
-    let { environment, target } = this
-
-    // If the effect could not find the corresponding target
-    // or target environment, then this effect cannot work
-    // properly.
-    if (!environment || !target) {
-      this._additionalIssues.push(
-        this.createIssue(
+    this.issues
+      .if(() => !this.environment || !this.target)
+      .add({
+        message:
           `The effect, "${this.name}", has a target or a target environment that couldn't be found. ` +
-            `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`,
-        ),
-      )
-    }
-    // If the effect's target environment version doesn't match
-    // the current version, then the effect must be updated.
-    else if (this.outdated) {
-      this._additionalIssues.push(
-        this.createIssue(
-          `The effect, "${this.name}", is incompatible with the current version of the target environment, "${environment.name}". ` +
-            `This effect must be updated to be made compatible. ` +
-            `Please click to resolve this.`,
-          { type: 'outdated' },
-        ),
-      )
-    } else if (this.environmentId === Effect.LEGACY_INFER_ENV_ID) {
-      this._additionalIssues.push(
-        this.createIssue(
-          `The effect, "${this.name}" has a reference to a target, but not to a target environment.`,
-        ),
-      )
-    }
+          `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`,
+      })
+      .elseIf(() => this.environmentId === Effect.LEGACY_INFER_ENV_ID)
+      .add({
+        message: `The effect, "${this.name}" has a reference to a target, but not to a target environment.`,
+      })
+      .elseIf(() => this.outdated)
+      .add({
+        message:
+          `The effect, "${this.name}", is incompatible with the current version of the target environment, "${this.environment?.name}". ` +
+          `This effect must be updated to be made compatible. ` +
+          `Please click to resolve this.`,
+        type: 'outdated',
+      })
   }
 
   /**

@@ -45,6 +45,13 @@ export class MissionComponentIssueList<
   public readonly component: TComponent
 
   /**
+   * Tracks whether call to {@link if} or {@link elseIf}
+   * methods were met, to determine whether subsequent
+   * {@link elseIf} calls should be evaluated.
+   */
+  private lastIfMet: boolean | null = null
+
+  /**
    * @param component The component this list belongs to.
    */
   public constructor(component: TComponent) {
@@ -54,33 +61,101 @@ export class MissionComponentIssueList<
 
   /**
    * Adds an issue with the provided type, message, and condition to the list.
-   * @param type The type of issue to include.
-   * @param message The message of the issue to include.
    * @param condition The condition that will be used to remove the issue
    * from the list when resolved.
+   * @param options Options for creating the new issues.
    */
-  private include(
-    type: TMissionComponentIssueType,
-    message: string,
+  private add(
     condition: TMissionComponentIssueCondition,
+    ...options: TIssueAddOptions[]
   ): void {
-    this._items.push(new MissionComponentIssue(type, message, condition, this))
+    for (let { message, type = 'general' } of options) {
+      this._items.push(
+        new MissionComponentIssue(type, message, condition, this),
+      )
+    }
   }
 
   /**
-   * Includes an issue with the provided type and message
+   * @param condition A condition to check.
+   * @returns Returns an object with follow up operation options,
+   * which, when called, will perform that operation only
    * if the provided condition is met.
-   * @param condition The condition that determines whether the issue is included.
-   * @param type The type of issue to include if the condition is met.
-   * @param message The message of the issue to include if the condition is met.
    */
-  public includeIf(
-    condition: TMissionComponentIssueCondition,
-    type: TMissionComponentIssueType,
-    message: string,
-  ): void {
-    if (condition()) {
-      this.include(type, message, condition)
+  public if(condition: TMissionComponentIssueCondition): TIfReturn<TComponent> {
+    return {
+      add: (...options: TIssueAddOptions[]) => {
+        let ifMet = condition()
+        if (ifMet) {
+          this.add(condition, ...options)
+        }
+        this.lastIfMet = ifMet
+        return this
+      },
     }
   }
+
+  /**
+   * Calls {@link if} with the provided condition and message
+   * only if the previous call to {@link if} or {@link elseIf}
+   * in the chain was not met.
+   * @param condition A condition to check, which will only be checked if the
+   * previous condition in the chain was not met.
+   * @returns An object with follow up operation options, which, when called,
+   * will perform that operation only if the provided condition is met and
+   * the previous condition in the chain was not met.
+   * @throws If this method is called before any other if call.
+   */
+  public elseIf(
+    condition: TMissionComponentIssueCondition,
+  ): TIfReturn<TComponent> {
+    if (this.lastIfMet === null) {
+      throw new Error('elseIf called before any if call')
+    }
+    return {
+      add: (...options: TIssueAddOptions[]) => {
+        if (!this.lastIfMet) {
+          let ifMet = condition()
+          if (ifMet) {
+            this.add(condition, ...options)
+          }
+          this.lastIfMet = ifMet
+        }
+        return this
+      },
+    }
+  }
+}
+
+/* -- TYPES -- */
+
+/**
+ * Options to provide when adding an issue to the list.
+ */
+export type TIssueAddOptions = {
+  /**
+   * The message describing the issue.
+   */
+  message: string
+  /**
+   * The type of issue to add.
+   * @default 'general'
+   */
+  type?: TMissionComponentIssueType
+}
+
+/**
+ * Returned by {@link if} method, as well as related methods,
+ * to allow a follow up operation in the case the condition was
+ * met.
+ */
+export type TIfReturn<TComponent extends MissionComponent<any, any>> = {
+  /**
+   * Adds an issue with the provided message to the list.
+   * @param options Options for creating the new issues.
+   * @returns The list itself for chaining.
+   * @note The previous condition provided in the chain is used
+   * to determine when the issue should be removed.
+   */
+  add(...options: TIssueAddOptions[]): MissionComponentIssueList<TComponent>
 }

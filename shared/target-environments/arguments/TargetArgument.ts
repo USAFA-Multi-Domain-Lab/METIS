@@ -15,11 +15,7 @@ import { type TJsonSerializable } from '@shared/toolbox/serialization/json'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import zod from 'zod'
 import { Mission, type TMission } from '../../missions/Mission'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from '../../missions/MissionComponent'
-import type { MissionComponentIssueList } from '../../missions/MissionComponentIssueList'
+import { MissionComponent } from '../../missions/MissionComponent'
 import type {
   TDropdownTargetParameter,
   TDropdownTargetParameterOptionVal,
@@ -102,20 +98,6 @@ export abstract class TargetArgument<
   }
 
   /**
-   * Cache populated by {@link scanForIssues} at construction time.
-   */
-  protected _additionalIssues: TMissionComponentIssue[]
-
-  // Implemented
-  protected override populateIssues(
-    list: MissionComponentIssueList<this>,
-  ): void {
-    for (const issue of this._additionalIssues) {
-      list.includeIf(() => true, issue.type, issue.message)
-    }
-  }
-
-  /**
    * The value supplied for the parameter.
    * The type of this field is determined by `P` — when `P` is a
    * concrete parameter type (e.g. `TNumberTargetParameter`) this
@@ -148,7 +130,6 @@ export abstract class TargetArgument<
     this.parameterId = parameterId
     this.context = context
     this.effect = effect.normalize()
-    this._additionalIssues = []
     this.scanForIssues()
   }
 
@@ -171,60 +152,49 @@ export abstract class TargetArgument<
   }
 
   /**
-   * Scans the argument for issues and caches them in
-   * {@link _additionalIssues}.
+   * Scans the argument for issues and registers them in {@link issues}.
    */
   private scanForIssues() {
-    this._additionalIssues = []
-
-    // Do not push issues if the target is missing or the effect is outdated.
-    // These issues should be handled at the effect level.
     if (!this.effect.target || this.effect.outdated) return
 
     let { parameter } = this
 
-    // Push an issue if the parameter cannot be found on the target.
-    if (!parameter) {
-      this._additionalIssues.push({
-        component: this,
-        type: 'general',
-        message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that could not be found on the target "${this.effect.target.name}".`,
+    this.issues
+      .if(() => !this.parameter)
+      .add({
+        message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that could not be found on the target "${this.effect.target!.name}".`,
       })
-    }
-    // Push an issue if the parameter type does not match the expected type.
-    else if (parameter.type !== this.type) {
-      this._additionalIssues.push({
-        component: this,
-        type: 'general',
-        message: `Effect "${this.effect.name}" has a type mismatch for parameter "${parameter.name}": expected "${parameter.type}", got "${this.type}".`,
+      .elseIf(() => {
+        let parameter = this.parameter
+        return !!parameter && parameter.type !== this.type
       })
-    }
-    // Push an issue if the parameter is a dropdown and the value does not
-    // match any of the options in the dropdown.
-    else if (
-      parameter.type === 'dropdown' &&
-      parameter.options.every((option) => option.value !== this.value)
-    ) {
-      this._additionalIssues.push({
-        component: this,
-        type: 'general',
+      .add({
+        message: `Effect "${this.effect.name}" has a type mismatch for parameter "${parameter?.name}": expected "${parameter?.type}", got "${this.type}".`,
+      })
+      .elseIf(() => {
+        let parameter = this.parameter
+        if (!parameter || parameter.type !== 'dropdown') return false
+        return parameter.options.every((option) => option.value !== this.value)
+      })
+      .add({
         message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that has a value "${this.context.value}" that does not match any of the dropdown options.`,
       })
-    }
-    // Push an issue if the parameter is a string with a pattern and
-    // the value does not match the specified pattern.
-    else if (
-      parameter.type === 'string' &&
-      this.context.type === 'string' &&
-      parameter.pattern &&
-      !parameter.pattern.test(this.context.value)
-    ) {
-      this._additionalIssues.push({
-        component: this,
-        type: 'general',
+      .elseIf(() => {
+        let parameter = this.parameter
+        if (
+          !parameter ||
+          parameter.type !== 'string' ||
+          this.context.type !== 'string'
+        ) {
+          return false
+        }
+        return (
+          !!parameter.pattern && !parameter.pattern.test(this.context.value)
+        )
+      })
+      .add({
         message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that does not match the required pattern.`,
       })
-    }
   }
 
   /**

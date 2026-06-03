@@ -1,6 +1,6 @@
 import { MetisComponent } from '../MetisComponent'
-import { MissionComponentIssueList } from './MissionComponentIssueList'
 import type { Mission } from './Mission'
+import { MissionComponentIssueList } from './MissionComponentIssueList'
 
 /**
  * An object that makes up a part of a mission, including
@@ -23,25 +23,9 @@ export abstract class MissionComponent<
   public abstract get path(): [...MissionComponent<any, any>[], Self]
 
   /**
-   * The issues associated with this component only (not descendants).
-   * Override {@link populateIssues} to add component-specific issues.
+   * Issues associated with the component that need to be resolved.
    */
-  public get issues(): MissionComponentIssueList<this> {
-    const list = new MissionComponentIssueList<this>(this)
-    list.includeIf(
-      () => this.deleted,
-      'general',
-      `"${this.name}" has been marked as deleted.`,
-    )
-    this.populateIssues(list)
-    return list
-  }
-
-  /**
-   * Override to add component-specific issues to the list.
-   * The base `deleted` check is handled automatically.
-   */
-  protected populateIssues(_list: MissionComponentIssueList<this>): void {}
+  public readonly issues: MissionComponentIssueList<typeof this>
 
   /**
    * Whether the component has some issue that needs to
@@ -49,6 +33,16 @@ export abstract class MissionComponent<
    */
   public get hasIssues(): boolean {
     return !this.issues.isEmpty
+  }
+
+  public constructor(id: string, name: string, deleted: boolean) {
+    super(id, name, deleted)
+    this.issues = new MissionComponentIssueList(this)
+    this.issues
+      .if(() => this.deleted)
+      .add({
+        message: `"${this.name}" has been marked as deleted.`,
+      })
   }
 
   /**
@@ -66,7 +60,6 @@ export abstract class MissionComponent<
       message,
     }
   }
-
 }
 
 /* -- TYPES -- */
