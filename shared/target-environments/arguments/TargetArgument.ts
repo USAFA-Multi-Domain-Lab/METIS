@@ -152,49 +152,52 @@ export abstract class TargetArgument<
   }
 
   /**
-   * Scans the argument for issues and registers them in {@link issues}.
+   * Registers all issue conditions for this argument and performs the
+   * initial evaluation by firing the `'initialization'` event. Each
+   * condition is also re-evaluated whenever an `'updated'` event fires.
    */
   private scanForIssues() {
-    if (!this.effect.target || this.effect.outdated) return
-
-    let { parameter } = this
-
     this.issues
-      .if(() => !this.parameter)
-      .add({
-        message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that could not be found on the target "${this.effect.target!.name}".`,
+      .when('updated', 'initialization')
+      .if(() => !!this.effect.target && !this.effect.outdated && !this.parameter)
+      .include({
+        key: 'parameter-not-found',
+        message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that could not be found on the target "${this.effect.target?.name}".`,
       })
-      .elseIf(() => {
+      .when('updated', 'initialization')
+      .if(() => {
+        if (!this.effect.target || this.effect.outdated) return false
         let parameter = this.parameter
         return !!parameter && parameter.type !== this.type
       })
-      .add({
-        message: `Effect "${this.effect.name}" has a type mismatch for parameter "${parameter?.name}": expected "${parameter?.type}", got "${this.type}".`,
+      .include({
+        key: 'type-mismatch',
+        message: `Effect "${this.effect.name}" has a type mismatch for parameter "${this.parameter?.name}": expected "${this.parameter?.type}", got "${this.type}".`,
       })
-      .elseIf(() => {
+      .when('updated', 'initialization')
+      .if(() => {
+        if (!this.effect.target || this.effect.outdated) return false
         let parameter = this.parameter
         if (!parameter || parameter.type !== 'dropdown') return false
         return parameter.options.every((option) => option.value !== this.value)
       })
-      .add({
+      .include({
+        key: 'dropdown-value-mismatch',
         message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that has a value "${this.context.value}" that does not match any of the dropdown options.`,
       })
-      .elseIf(() => {
+      .when('updated', 'initialization')
+      .if(() => {
+        if (!this.effect.target || this.effect.outdated) return false
         let parameter = this.parameter
-        if (
-          !parameter ||
-          parameter.type !== 'string' ||
-          this.context.type !== 'string'
-        ) {
+        if (!parameter || parameter.type !== 'string' || this.context.type !== 'string')
           return false
-        }
-        return (
-          !!parameter.pattern && !parameter.pattern.test(this.context.value)
-        )
+        return !!parameter.pattern && !parameter.pattern.test(this.context.value)
       })
-      .add({
+      .include({
+        key: 'pattern-mismatch',
         message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that does not match the required pattern.`,
       })
+      .handle('initialization')
   }
 
   /**

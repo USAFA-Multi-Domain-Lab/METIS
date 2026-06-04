@@ -13,6 +13,12 @@ export class MissionComponentIssue<
   TComponent extends MissionComponent<any, any> = MissionComponent<any, any>,
 > {
   /**
+   * A unique identifier for the issue, used for tracking
+   * and resolving the issue.
+   */
+  public readonly key: string
+
+  /**
    * The type of issue that is present.
    * This affects how the issue is handled.
    */
@@ -42,6 +48,8 @@ export class MissionComponentIssue<
   }
 
   /**
+   * @param key A unique identifier for the issue, used for tracking
+   * and resolving the issue.
    * @param type The type of issue, which affects how the issue is handled.
    * @param message The message describing the issue.
    * @param condition The condition that determines whether the issue is still
@@ -50,11 +58,13 @@ export class MissionComponentIssue<
    * @param list The list this issue belongs to.
    */
   public constructor(
+    key: string,
     type: TMissionComponentIssue['type'],
     message: string,
     condition: TMissionComponentIssueCondition,
     list: MissionComponentIssueList<TComponent>,
   ) {
+    this.key = key
     this.type = type
     this.message = message
     this.condition = condition

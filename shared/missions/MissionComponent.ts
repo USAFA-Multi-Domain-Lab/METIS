@@ -12,6 +12,12 @@ export abstract class MissionComponent<
   T extends TMetisBaseComponents = TMetisBaseComponents,
   Self extends MissionComponent<T, Self> = MissionComponent<T, any>,
 > extends MetisComponent {
+  // Overridden
+  public set deleted(value: boolean) {
+    super.deleted = value
+    this.issues.handle('deleted-is-set')
+  }
+
   /**
    * The mission associated with the component.
    */
@@ -39,8 +45,10 @@ export abstract class MissionComponent<
     super(id, name, deleted)
     this.issues = new MissionComponentIssueList(this)
     this.issues
+      .when('deleted-is-set')
       .if(() => this.deleted)
-      .add({
+      .include({
+        key: 'deleted',
         message: `"${this.name}" has been marked as deleted.`,
       })
   }
