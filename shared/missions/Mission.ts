@@ -27,6 +27,8 @@ import type {
 import { MissionForce } from './forces/MissionForce'
 import { MissionComponent } from './MissionComponent'
 import type { MissionComponentIssue } from './MissionComponentIssue'
+import { MissionComponentIssueRegistry } from './MissionComponentIssueRegistry'
+import { TargetArgument } from '../target-environments/arguments/TargetArgument'
 import { MissionResource, type TMissionResourceJson } from './MissionResource'
 import type { TNode } from './nodes/MissionNode'
 import type {
@@ -53,6 +55,12 @@ export abstract class Mission<
   public get mission(): this {
     return this
   }
+
+  /**
+   * The centralized registry of issues for all components within the mission.
+   */
+  public readonly issueRegistry: MissionComponentIssueRegistry =
+    new MissionComponentIssueRegistry()
 
   /**
    * All nodes that exist in the mission across
@@ -113,9 +121,19 @@ export abstract class Mission<
 
   // Implemented
   public get subComponents(): Array<
-    T['prototype'] | T['force'] | T['resource'] | T['missionFile'] | T['sessionTriggeredEffect']
+    | T['prototype']
+    | T['force']
+    | T['resource']
+    | T['missionFile']
+    | T['sessionTriggeredEffect']
   > {
-    return [...this.root.children, ...this.forces, ...this.resources, ...this.files, ...this.effects]
+    return [
+      ...this.root.children,
+      ...this.forces,
+      ...this.resources,
+      ...this.files,
+      ...this.effects,
+    ]
   }
 
   /**
@@ -249,6 +267,19 @@ export abstract class Mission<
     this.importForces(forceData)
     this.importFiles(fileData)
     this.importEffects(effectData)
+
+    this.initializeIssueRegistry()
+  }
+
+  /**
+   * Registers all issue checkers with the {@link issueRegistry}.
+   * Subclasses can override this to register additional checkers.
+   * Called once during construction before components are imported.
+   */
+  protected initializeIssueRegistry(): void {
+    MissionComponent.registerIssueCheckers(this.issueRegistry)
+    Effect.registerIssueCheckers(this.issueRegistry)
+    TargetArgument.registerIssueCheckers(this.issueRegistry)
   }
 
   /**

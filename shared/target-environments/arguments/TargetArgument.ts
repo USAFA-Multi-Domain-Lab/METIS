@@ -3,6 +3,7 @@ import type { Effect, TEffectType } from '@shared/missions/effects/Effect'
 import { MissionFile } from '@shared/missions/files/MissionFile'
 import { MissionForce } from '@shared/missions/forces/MissionForce'
 import { ResourcePool } from '@shared/missions/forces/ResourcePool'
+import type { MissionComponentIssueRegistry } from '@shared/missions/MissionComponentIssueRegistry'
 import { MissionResource } from '@shared/missions/MissionResource'
 import { MissionNode } from '@shared/missions/nodes/MissionNode'
 import type { TMissionComponentSerializedSelection } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter2'
@@ -122,6 +123,23 @@ export abstract class TargetArgument<
   // Implemented
   public get json(): TTargetArgumentJson {
     return this.serialize()
+  }
+
+  /**
+   * Whether the corresponding parameter could
+   * not be found for the given target.
+   */
+  public get parameterIsMissing(): boolean {
+    return !this.parameter
+  }
+
+  /**
+   * Whether the type of this argument's value conflicts with the type of the
+   * corresponding parameter on the target. If `parameter` is `undefined, `false`
+   * is returned.
+   */
+  public get hasTypeMismatch(): boolean {
+    return !this.parameterIsMissing && this.parameter!.type !== this.type
   }
 
   /**
@@ -316,6 +334,77 @@ export abstract class TargetArgument<
         value: json.value,
       } as TTargetArgumentContext<T>
     }
+  }
+
+  /**
+   * Registers issue checkers for all {@link TargetArgument} instances
+   * with the provided registry.
+   * @param registry The registry to register checkers with.
+   */
+  public static registerIssueCheckers(
+    registry: MissionComponentIssueRegistry,
+  ): void {
+    registry
+      .check({
+        key: 'parameter-not-found',
+        message: (argument) =>
+          `Effect "${argument.effect.name}" has an argument with parameter ID "${argument.parameterId}" that could not be found on the target "${argument.effect.target?.name}".`,
+        what: [TargetArgument],
+        when: ['initialization', 'effect-updated'],
+        if: (argument) =>
+          !argument.effect.targetArgumentsLocked && argument.parameterIsMissing,
+      })
+      .check({
+        key: 'type-mismatch',
+        message: (argument) =>
+          `Effect "${argument.effect.name}" has a type mismatch for parameter "${argument.parameter?.name}": expected "${argument.parameter?.type}", got "${argument.type}".`,
+        what: [TargetArgument],
+        when: ['initialization', 'effect-updated'],
+        if: (argument) =>
+          !argument.effect.targetArgumentsLocked && argument.hasTypeMismatch,
+      })
+      .check({
+        key: 'dropdown-value-mismatch',
+        message: (argument) =>
+          `Effect "${argument.effect.name}" has an argument with parameter ID "${argument.parameterId}" that has a value "${argument.context.value}" that does not match any of the dropdown options.`,
+        what: [TargetArgument],
+        when: ['initialization', 'effect-updated'],
+        if: (argument) => {
+          if (
+            argument.effect.targetArgumentsLocked ||
+            argument.parameterIsMissing ||
+            argument.hasTypeMismatch ||
+            argument.parameter?.type !== 'dropdown'
+          ) {
+            return false
+          }
+          return argument.parameter.options.every(
+            (option) => option.value !== argument.value,
+          )
+        },
+      })
+      .check({
+        key: 'pattern-mismatch',
+        message: (argument) =>
+          `Effect "${argument.effect.name}" has an argument with parameter ID "${argument.parameterId}" that does not match the required pattern.`,
+        what: [TargetArgument],
+        when: ['initialization', 'effect-updated'],
+        if: (argument) => {
+          let { parameter } = argument
+          if (
+            argument.effect.targetArgumentsLocked ||
+            argument.parameterIsMissing ||
+            argument.hasTypeMismatch ||
+            parameter?.type !== 'string'
+          ) {
+            return false
+          }
+          return (
+            !!parameter.pattern &&
+            !parameter.pattern.test(`${argument.context.value}`)
+          )
+        },
+      })
   }
 
   /**

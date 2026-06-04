@@ -78,7 +78,7 @@ export class MissionComponentIssueList<
     if (condition()) {
       for (let { key, message, type = 'general' } of options) {
         this._items.push(
-          new MissionComponentIssue(key, type, message, condition, this),
+          new MissionComponentIssue(key, type, message, this.component),
         )
       }
     }

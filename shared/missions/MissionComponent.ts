@@ -1,6 +1,7 @@
 import { MetisComponent } from '../MetisComponent'
 import type { Mission } from './Mission'
 import { MissionComponentIssueList } from './MissionComponentIssueList'
+import type { MissionComponentIssueRegistry } from './MissionComponentIssueRegistry'
 
 /**
  * An object that makes up a part of a mission, including
@@ -15,7 +16,7 @@ export abstract class MissionComponent<
   // Overridden
   public set deleted(value: boolean) {
     super.deleted = value
-    this.issues.handle('deleted-is-set')
+    this.mission.issueRegistry.emit('deleted-is-set', this)
   }
 
   /**
@@ -64,6 +65,11 @@ export abstract class MissionComponent<
         key: 'deleted',
         message: `"${this.name}" has been marked as deleted.`,
       })
+    // Defer initial issue check to ensure all
+    // components are constructed and registered.
+    queueMicrotask(() =>
+      this.mission.issueRegistry.emit('initialization', this),
+    )
   }
 
   /**
@@ -80,6 +86,23 @@ export abstract class MissionComponent<
       type,
       message,
     }
+  }
+
+  /**
+   * Registers issue checkers common to all {@link MissionComponent} instances
+   * with the provided registry.
+   * @param registry The registry to register checkers with.
+   */
+  public static registerIssueCheckers(
+    registry: MissionComponentIssueRegistry,
+  ): void {
+    registry.check({
+      key: 'deleted',
+      message: (component) => `"${component.name}" has been marked as deleted.`,
+      what: [MissionComponent],
+      when: ['initialization', 'deletion'],
+      if: (component) => component.deleted,
+    })
   }
 }
 

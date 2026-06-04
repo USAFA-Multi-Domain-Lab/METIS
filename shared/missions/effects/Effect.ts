@@ -5,6 +5,7 @@ import type { TargetDependency } from '../../target-environments/targets/TargetD
 import { StringToolbox } from '../../toolbox/strings/StringToolbox'
 import { VersionToolbox } from '../../toolbox/strings/VersionToolbox'
 import { MissionComponent } from '../MissionComponent'
+import type { MissionComponentIssueRegistry } from '../MissionComponentIssueRegistry'
 
 /**
  * An effect that can be applied to a target.
@@ -190,15 +191,43 @@ export abstract class Effect<
   public localKey: string
 
   /**
+   * Whether the effect is missing its target or target
+   * environment, which are necessary for the effect to
+   * be enacted.
+   */
+  public get missingTargetOrEnvironment(): boolean {
+    return !this.environment || !this.target
+  }
+
+  /**
+   * `true` if the effect predates the tracking of `environmentId`
+   * within effects and the effect target-environment cannot be
+   * inferred.
+   */
+  public get failedEnvironmentInference(): boolean {
+    return (
+      !this.missingTargetOrEnvironment &&
+      this.environmentId === Effect.LEGACY_INFER_ENV_ID
+    )
+  }
+
+  /**
    * Whether the given is outdated given the current
    * version of the target environment.
    */
   public get outdated(): boolean {
-    let target = this.target
+    let { target } = this
 
-    // If the target is not set, then assume
-    // the effect is not outdated.
-    if (!target) return false
+    // If the effect is missing its target or environment,
+    // or if the target environment cannot be inferred,
+    // then there is no way to know if the effect is outdated.
+    if (
+      this.missingTargetOrEnvironment ||
+      this.failedEnvironmentInference ||
+      !target
+    ) {
+      return false
+    }
 
     let latestMigratableVersion = target.latestMigratableVersion
 
@@ -214,6 +243,20 @@ export abstract class Effect<
       latestMigratableVersion,
     )
     return result === 'earlier'
+  }
+
+  /**
+   * Marks the target arguments of this effect as locked
+   * if the effect is incompatible with the current version
+   * of the target environment or if the environment cannot
+   * be resolved.
+   */
+  public get targetArgumentsLocked(): boolean {
+    return (
+      this.missingTargetOrEnvironment ||
+      this.failedEnvironmentInference ||
+      this.outdated
+    )
   }
 
   /**
@@ -447,6 +490,42 @@ export abstract class Effect<
     parameterId: string,
   ): T['targetArgument'] | undefined => {
     return this.arguments.find((arg) => arg.parameterId === parameterId)
+  }
+
+  /**
+   * Registers issue checkers for all {@link Effect} instances
+   * with the provided registry.
+   * @param registry The registry to register checkers with.
+   */
+  public static registerIssueCheckers(
+    registry: MissionComponentIssueRegistry,
+  ): void {
+    registry.check({
+      key: 'missing-target-or-environment',
+      message: (effect) =>
+        `The effect, "${effect.name}", has a target or a target environment that couldn't be found. ` +
+        `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`,
+      what: [Effect],
+      if: (effect) => effect.missingTargetOrEnvironment,
+    })
+
+    registry.check({
+      key: 'legacy-infer-env',
+      message: (effect) =>
+        `The effect, "${effect.name}" has a reference to a target, but not to a target environment.`,
+      what: [Effect],
+      if: (effect) => effect.failedEnvironmentInference,
+    })
+    registry.check({
+      key: 'outdated',
+      message: (effect) =>
+        `The effect, "${effect.name}", is incompatible with the current version of the target environment, "${effect.environment?.name}". ` +
+        `This effect must be updated to be made compatible. ` +
+        `Please click to resolve this.`,
+      what: [Effect],
+      when: ['initialization', 'effect-updated'],
+      if: (effect) => effect.outdated,
+    })
   }
 
   /**

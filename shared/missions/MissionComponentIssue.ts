@@ -2,12 +2,9 @@ import type {
   MissionComponent,
   TMissionComponentIssue,
 } from './MissionComponent'
-import type { MissionComponentIssueList } from './MissionComponentIssueList'
 
 /**
  * Represents a single issue associated with a mission component.
- * When resolved, it removes itself from the {@link MissionComponentIssueList}
- * it belongs to.
  */
 export class MissionComponentIssue<
   TComponent extends MissionComponent<any, any> = MissionComponent<any, any>,
@@ -30,45 +27,26 @@ export class MissionComponentIssue<
   public readonly message: string
 
   /**
-   * The condition that determines whether the issue is still
-   * present in the list.
+   * The component to which this issue belongs.
    */
-  public readonly condition: TMissionComponentIssueCondition
+  public readonly component: TComponent
 
   /**
-   * The list this issue belongs to, or `null` if not yet added to one.
-   */
-  public readonly list: MissionComponentIssueList<TComponent>
-
-  /**
-   * The component that has the issue.
-   */
-  public get component(): TComponent {
-    return this.list.component
-  }
-
-  /**
-   * @param key A unique identifier for the issue, used for tracking
-   * and resolving the issue.
-   * @param type The type of issue, which affects how the issue is handled.
+   * @param key A unique identifier for the issue, used for deduplication.
+   * @param type The type of issue, which affects how it is handled.
    * @param message The message describing the issue.
-   * @param condition The condition that determines whether the issue is still
-   * present in the list. When the condition is no longer met, the issue will
-   * be removed from the list.
-   * @param list The list this issue belongs to.
+   * @param component The component this issue belongs to.
    */
   public constructor(
     key: string,
     type: TMissionComponentIssue['type'],
     message: string,
-    condition: TMissionComponentIssueCondition,
-    list: MissionComponentIssueList<TComponent>,
+    component: TComponent,
   ) {
     this.key = key
     this.type = type
     this.message = message
-    this.condition = condition
-    this.list = list
+    this.component = component
   }
 }
 
