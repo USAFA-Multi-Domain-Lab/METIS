@@ -24,6 +24,16 @@ export abstract class ResourcePool<
    */
   public readonly force: T['force']
 
+  // Implemented
+  public get superComponent(): T['force'] {
+    return this.force
+  }
+
+  // Implemented
+  public get subComponents(): [] {
+    return []
+  }
+
   /**
    * The ID of the force that owns this resource pool.
    */

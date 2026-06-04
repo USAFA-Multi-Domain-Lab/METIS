@@ -29,6 +29,19 @@ export abstract class MissionComponent<
   public abstract get path(): [...MissionComponent<any, any>[], Self]
 
   /**
+   * The component from which this component descends in the
+   * mission hierarchy.
+   * @note This will be `null` for the mission root.
+   */
+  public abstract get superComponent(): MissionComponent<any, any> | null
+
+  /**
+   * The components that directly descend from this component
+   * in the mission hierarchy.
+   */
+  public abstract get subComponents(): MissionComponent<any, any>[]
+
+  /**
    * Issues associated with the component that need to be resolved.
    */
   public readonly issues: MissionComponentIssueList<typeof this>

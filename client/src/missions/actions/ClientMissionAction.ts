@@ -133,12 +133,12 @@ export class ClientMissionAction
 
   // Implemented
   public get outlineChildren(): TMissionOutlineItem[] {
-    return this.effects
+    return this.subComponents
   }
 
   // Implemented
   public get outlineParent(): TMissionOutlineItem | null {
-    return this.node
+    return this.superComponent
   }
 
   /**

@@ -72,6 +72,16 @@ export abstract class MissionAction<
     return [this.mission, this.force, this.node, this]
   }
 
+  // Implemented
+  public get superComponent(): TNode<T> {
+    return this.node
+  }
+
+  // Implemented
+  public get subComponents(): T['executionTriggeredEffect'][] {
+    return this.effects
+  }
+
   /**
    * The description of the action.
    */

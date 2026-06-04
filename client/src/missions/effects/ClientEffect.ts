@@ -41,7 +41,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
 
   // Implemented
   public get outlineParent(): TMissionOutlineItem | null {
-    return this.context.host
+    return this.superComponent
   }
 
   // Implemented

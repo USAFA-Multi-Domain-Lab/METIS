@@ -97,6 +97,18 @@ export abstract class TargetArgument<
     return [...this.effect.path, this]
   }
 
+  // Implemented
+  public get superComponent():
+    | T['executionTriggeredEffect']
+    | T['sessionTriggeredEffect'] {
+    return this.effect
+  }
+
+  // Implemented
+  public get subComponents(): [] {
+    return []
+  }
+
   /**
    * The value supplied for the parameter.
    * The type of this field is determined by `P` — when `P` is a
@@ -159,7 +171,9 @@ export abstract class TargetArgument<
   private scanForIssues() {
     this.issues
       .when('updated', 'initialization')
-      .if(() => !!this.effect.target && !this.effect.outdated && !this.parameter)
+      .if(
+        () => !!this.effect.target && !this.effect.outdated && !this.parameter,
+      )
       .include({
         key: 'parameter-not-found',
         message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that could not be found on the target "${this.effect.target?.name}".`,
@@ -189,9 +203,15 @@ export abstract class TargetArgument<
       .if(() => {
         if (!this.effect.target || this.effect.outdated) return false
         let parameter = this.parameter
-        if (!parameter || parameter.type !== 'string' || this.context.type !== 'string')
+        if (
+          !parameter ||
+          parameter.type !== 'string' ||
+          this.context.type !== 'string'
+        )
           return false
-        return !!parameter.pattern && !parameter.pattern.test(this.context.value)
+        return (
+          !!parameter.pattern && !parameter.pattern.test(this.context.value)
+        )
       })
       .include({
         key: 'pattern-mismatch',

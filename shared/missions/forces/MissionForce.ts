@@ -54,6 +54,15 @@ export abstract class MissionForce<
     return [this.mission, this]
   }
 
+  // Implemented
+  public get superComponent(): TMission<T> {
+    return this.mission
+  }
+
+  // Implemented
+  public get subComponents(): Array<T['node'] | T['resourcePool']> {
+    return [...this.root.children, ...this.resourcePools]
+  }
 
   /**
    * The color of the force.

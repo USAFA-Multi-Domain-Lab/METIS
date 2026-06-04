@@ -29,6 +29,16 @@ export abstract class MissionResource<
     return [...this.mission.path, this]
   }
 
+  // Implemented
+  public get superComponent(): TMission<T> {
+    return this.mission
+  }
+
+  // Implemented
+  public get subComponents(): [] {
+    return []
+  }
+
   /**
    * The icon to display for this resource.
    */

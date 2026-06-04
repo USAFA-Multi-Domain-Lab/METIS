@@ -124,6 +124,16 @@ export abstract class Effect<
   public targetEnvironmentVersion: string
 
   // Implemented
+  public get superComponent(): TSelectEffectContext<T>[TType]['host'] {
+    return this.host
+  }
+
+  // Implemented
+  public get subComponents(): T['targetArgument'][] {
+    return [...this.arguments]
+  }
+
+  // Implemented
   public get path(): [...MissionComponent<any, any>[], this] {
     // Dynamically construct the path based on
     // the trigger data.
@@ -342,12 +352,14 @@ export abstract class Effect<
           `The effect, "${this.name}", has a target or a target environment that couldn't be found. ` +
           `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`,
       })
+    this.issues
       .if(() => isMissingTargetOrEnvironment && isLegacyInferEnv)
       .include({
         key: 'legacy-infer-env',
         message: `The effect, "${this.name}" has a reference to a target, but not to a target environment.`,
       })
-      .when('updated', 'initialization')
+    this.issues
+      .when('updated', 'initialized')
       .if(
         () => isMissingTargetOrEnvironment && isLegacyInferEnv && this.outdated,
       )
@@ -359,7 +371,7 @@ export abstract class Effect<
           `Please click to resolve this.`,
         type: 'outdated',
       })
-      .handle('initialization')
+    this.issues.handle('initialized')
   }
 
   /**

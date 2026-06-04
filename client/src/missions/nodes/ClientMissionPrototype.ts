@@ -189,16 +189,12 @@ export class ClientMissionPrototype
 
   // Implemented
   public get outlineChildren(): TMissionOutlineItem[] {
-    return this.children
+    return this.subComponents
   }
 
   // Implemented
   public get outlineParent(): TMissionOutlineItem | null {
-    let parent = this.parent
-    if (parent === null || parent === this.mission.root) {
-      return this.mission as ClientMission
-    }
-    return parent
+    return this.superComponent
   }
 
   /**

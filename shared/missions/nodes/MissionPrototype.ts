@@ -31,6 +31,20 @@ export abstract class MissionPrototype<
     return [this.mission, this]
   }
 
+  // Implemented
+  public get superComponent(): TMission<T> | TPrototype<T> {
+    let parent = this.parent
+    if (parent === null || parent === this.mission.root) {
+      return this.mission
+    }
+    return parent
+  }
+
+  // Implemented
+  public get subComponents(): TPrototype<T>[] {
+    return this.children
+  }
+
   /**
    * The parent of this prototype in the tree structure.
    */

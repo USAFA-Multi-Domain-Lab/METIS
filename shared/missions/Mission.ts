@@ -106,6 +106,18 @@ export abstract class Mission<
     return [this]
   }
 
+  // Implemented
+  public get superComponent(): null {
+    return null
+  }
+
+  // Implemented
+  public get subComponents(): Array<
+    T['prototype'] | T['force'] | T['resource'] | T['missionFile'] | T['sessionTriggeredEffect']
+  > {
+    return [...this.root.children, ...this.forces, ...this.resources, ...this.files, ...this.effects]
+  }
+
   /**
    * The file name to use to store an export for the mission.
    */

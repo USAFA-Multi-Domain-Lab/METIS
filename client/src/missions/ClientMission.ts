@@ -264,12 +264,12 @@ export class ClientMission
 
   // Implemented
   public get outlineChildren(): TMissionOutlineItem[] {
-    return [...this.root.outlineChildren, ...this.forces, ...this.resources, ...this.files, ...this.effects]
+    return this.subComponents
   }
 
   // Implemented
   public get outlineParent(): TMissionOutlineItem | null {
-    return null
+    return this.superComponent
   }
 
   protected constructor(

@@ -60,6 +60,16 @@ export abstract class MissionFile<
     return [this.mission, this]
   }
 
+  // Implemented
+  public get superComponent(): T['mission'] {
+    return this.mission
+  }
+
+  // Implemented
+  public get subComponents(): [] {
+    return []
+  }
+
   /**
    * The MIME type of the file.
    */

@@ -51,6 +51,20 @@ export abstract class MissionNode<
     return [this.mission, this.force, this]
   }
 
+  // Implemented
+  public get superComponent(): TForce<T> | TNode<T> {
+    let parent = this.parent
+    if (parent === null || parent === this.force.root) {
+      return this.force
+    }
+    return parent
+  }
+
+  // Implemented
+  public get subComponents(): Array<TNode<T> | T['action']> {
+    return [...this.children, ...this.actions.values()]
+  }
+
 
   /**
    * The color for the node used as a border in the mission

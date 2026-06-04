@@ -61,12 +61,12 @@ export class ClientMissionForce
 
   // Implemented
   public get outlineChildren(): TMissionOutlineItem[] {
-    return [...this.root.outlineChildren, ...this.resourcePools]
+    return this.subComponents
   }
 
   // Implemented
   public get outlineParent(): TMissionOutlineItem | null {
-    return this.mission as ClientMission
+    return this.superComponent
   }
 
   /**
