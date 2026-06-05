@@ -160,7 +160,6 @@ export abstract class TargetArgument<
     this.parameterId = parameterId
     this.context = context
     this.effect = effect.normalize()
-    this.scanForIssues()
   }
 
   // Implemented
@@ -179,63 +178,6 @@ export abstract class TargetArgument<
         ...this.context,
       }
     }
-  }
-
-  /**
-   * Registers all issue conditions for this argument and performs the
-   * initial evaluation by firing the `'initialization'` event. Each
-   * condition is also re-evaluated whenever an `'updated'` event fires.
-   */
-  private scanForIssues() {
-    this.issues
-      .when('updated', 'initialization')
-      .if(
-        () => !!this.effect.target && !this.effect.outdated && !this.parameter,
-      )
-      .include({
-        key: 'parameter-not-found',
-        message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that could not be found on the target "${this.effect.target?.name}".`,
-      })
-      .when('updated', 'initialization')
-      .if(() => {
-        if (!this.effect.target || this.effect.outdated) return false
-        let parameter = this.parameter
-        return !!parameter && parameter.type !== this.type
-      })
-      .include({
-        key: 'type-mismatch',
-        message: `Effect "${this.effect.name}" has a type mismatch for parameter "${this.parameter?.name}": expected "${this.parameter?.type}", got "${this.type}".`,
-      })
-      .when('updated', 'initialization')
-      .if(() => {
-        if (!this.effect.target || this.effect.outdated) return false
-        let parameter = this.parameter
-        if (!parameter || parameter.type !== 'dropdown') return false
-        return parameter.options.every((option) => option.value !== this.value)
-      })
-      .include({
-        key: 'dropdown-value-mismatch',
-        message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that has a value "${this.context.value}" that does not match any of the dropdown options.`,
-      })
-      .when('updated', 'initialization')
-      .if(() => {
-        if (!this.effect.target || this.effect.outdated) return false
-        let parameter = this.parameter
-        if (
-          !parameter ||
-          parameter.type !== 'string' ||
-          this.context.type !== 'string'
-        )
-          return false
-        return (
-          !!parameter.pattern && !parameter.pattern.test(this.context.value)
-        )
-      })
-      .include({
-        key: 'pattern-mismatch',
-        message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that does not match the required pattern.`,
-      })
-      .handle('initialization')
   }
 
   /**

@@ -1,24 +1,60 @@
+import {
+  EventManager,
+  type TListenerTargetEmittable,
+} from '../events/EventManager'
 import type { MissionComponent } from './MissionComponent'
 import { MissionComponentIssue } from './MissionComponentIssue'
+import { MissionComponentIssueChecker } from './MissionComponentIssueChecker'
 
 /**
  * A centralized registry of {@link MissionComponentIssue} instances
  * for all components within a mission. Checkers are registered once and
  * apply to every component that matches their {@link MissionComponentIssueChecker.what},
  * so memory scales with the number of rules, not the number of components.
+ *
+ * Implements {@link TListenerTargetEmittable} with a single `'change'` event
+ * that fires whenever the issue set is modified.
  */
-export class MissionComponentIssueRegistry {
+export class MissionComponentIssueRegistry implements TListenerTargetEmittable<TMissionIssueRegistryEvent> {
+  /**
+   * The checkers registered with this registry, evaluated on each {@link trigger} call.
+   */
   private _checkers: MissionComponentIssueChecker<any>[] = []
+
+  /**
+   * The current issues keyed by the component they belong to.
+   */
   private _issues: Map<
     MissionComponent<any, any>,
     MissionComponentIssue<any>[]
   > = new Map()
 
   /**
+   * Manages {@link TListenerTargetEmittable} event listeners for this registry.
+   */
+  private eventManager: EventManager<TMissionIssueRegistryEvent>
+
+  // Implemented
+  public addEventListener: TListenerTargetEmittable<TMissionIssueRegistryEvent>['addEventListener']
+
+  // Implemented
+  public removeEventListener: TListenerTargetEmittable<TMissionIssueRegistryEvent>['removeEventListener']
+
+  // Implemented
+  public emitEvent: TListenerTargetEmittable<TMissionIssueRegistryEvent>['emitEvent']
+
+  public constructor() {
+    this.eventManager = new EventManager(this)
+    this.addEventListener = this.eventManager.addEventListener
+    this.removeEventListener = this.eventManager.removeEventListener
+    this.emitEvent = this.eventManager.emitEvent
+  }
+
+  /**
    * Constructs a {@link MissionComponentIssueChecker} from the provided options
    * and registers it with this registry.
    * @param options Options for the checker.
-   * @return Itself for chaining.
+   * @returns Itself for chaining.
    */
   public check<TComponent extends MissionComponent<any, any>>(
     options: TIssueCheckerOptions<TComponent>,
@@ -30,47 +66,75 @@ export class MissionComponentIssueRegistry {
       when = ['initialization'],
       if: condition,
     } = options
-    let checker = new MissionComponentIssueChecker<TComponent>(
-      key,
-      message,
-      what,
-      when,
-      condition,
+    this._checkers.push(
+      new MissionComponentIssueChecker<TComponent>(
+        key,
+        message,
+        what,
+        when,
+        condition,
+      ),
     )
-    this._checkers.push(checker)
     return this
   }
 
   /**
-   * Fires an event for a specific component. All checkers whose
-   * {@link MissionComponentIssueChecker.when} list includes the event and
-   * whose {@link MissionComponentIssueChecker.what} match the
-   * component are re-evaluated. Matching issues are scrubbed and
-   * conditionally re-added.
-   * @param event The event name to emit.
-   * @param component The component for which to emit the event.
+   * Re-evaluates all checkers whose {@link MissionComponentIssueChecker.when}
+   * list includes the trigger name and whose
+   * {@link MissionComponentIssueChecker.what} matches the component type.
+   * Matching issues are removed if no longer relevant or added if newly
+   * relevant. Fires a `'change'` event if the issue set for the component
+   * was modified.
+   * @param triggerName The trigger to fire.
+   * @param component The component for which to fire the trigger.
    */
-  public emit(event: string, component: MissionComponent<any, any>): void {
+  public trigger(
+    triggerName: string,
+    component: MissionComponent<any, any>,
+  ): void {
+    let changed = false
+
+    // Loop through all checkers and evaluate those
+    // that match the trigger and component type.
     for (let checker of this._checkers) {
       if (
         checker.what.some((type) => component instanceof type) &&
-        checker.when.includes(event)
+        checker.when.includes(triggerName)
       ) {
-        let componentIssues = (this._issues.get(component) ?? []).filter(
-          (issue) => issue.key !== checker.key,
+        let componentIssues = this._issues.get(component) ?? []
+        let hasIssue = componentIssues.some(
+          (issue) => issue.key === checker.key,
         )
+        let shouldHaveIssue = checker.condition(component)
 
-        if (checker.condition(component)) {
-          componentIssues.push(
+        // Skip if the current state is correct for this checker.
+        if (hasIssue === shouldHaveIssue) continue
+
+        // If the issue needs to be there, add it.
+        if (shouldHaveIssue) {
+          componentIssues = [
+            ...componentIssues,
             new MissionComponentIssue(
               checker.key,
               'general',
               checker.message(component),
               component,
             ),
+          ]
+        }
+        // If the issue shouldn't be there, remove it.
+        else {
+          componentIssues = componentIssues.filter(
+            (issue) => issue.key !== checker.key,
           )
         }
 
+        changed = true
+
+        // Update the registry with the new issue set
+        // for the component. If there are no issues
+        // for the component, exclude the component from
+        // the registry entirely.
         if (componentIssues.length > 0) {
           this._issues.set(component, componentIssues)
         } else {
@@ -78,15 +142,19 @@ export class MissionComponentIssueRegistry {
         }
       }
     }
+
+    if (changed) {
+      this.emitEvent('change')
+    }
   }
 
   /**
    * Returns all issues currently registered for the provided component.
    * @param component The component to retrieve issues for.
    */
-  public getFor(
-    component: MissionComponent<any, any>,
-  ): MissionComponentIssue<any>[] {
+  public getFor<TComponent extends MissionComponent<any, any>>(
+    component: TComponent,
+  ): MissionComponentIssue<TComponent>[] {
     return this._issues.get(component) ?? []
   }
 
@@ -98,30 +166,12 @@ export class MissionComponentIssueRegistry {
   }
 }
 
-/**
- * Defines a condition-based rule for generating issues on components
- * that match the specified types. Registered with
- * {@link MissionComponentIssueRegistry} once and evaluated for every
- * matching component whenever a relevant event fires.
- */
-export class MissionComponentIssueChecker<
-  TComponent extends MissionComponent<any, any> = MissionComponent<any, any>,
-> {
-  public constructor(
-    /** A unique key identifying the issue this checker produces. */
-    public readonly key: string,
-    /** A function that produces the issue message for the component. */
-    public readonly message: (component: TComponent) => string,
-    /** The component types this checker applies to. */
-    public readonly what: Array<Function & { prototype: TComponent }>,
-    /** The events that trigger this checker to re-evaluate. */
-    public readonly when: string[],
-    /** A predicate that determines whether the issue is present. */
-    public readonly condition: (component: TComponent) => boolean,
-  ) {}
-}
-
 /* -- TYPES -- */
+
+/**
+ * Events emitted by {@link MissionComponentIssueRegistry}.
+ */
+export type TMissionIssueRegistryEvent = 'change'
 
 /**
  * Options for constructing a {@link MissionComponentIssueChecker} via
@@ -143,12 +193,12 @@ export type TIssueCheckerOptions<
    */
   what: Array<Function & { prototype: TComponent }>
   /**
-   * The events that trigger this checker to re-evaluate.
+   * The triggers that cause this checker to re-evaluate.
    * @default ['initialization']
    */
   when?: string[]
   /**
-   * A predicate that determines whether the issue should be present.
+   * A predicate that determines whether the issue is present.
    */
   if: (component: TComponent) => boolean
 }

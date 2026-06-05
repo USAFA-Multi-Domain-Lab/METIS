@@ -137,9 +137,9 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
     // Store the migrated data in the component.
     this.targetEnvironmentVersion = results.version
     this.arguments = this.parseArguments(results.data)
-    this.mission.issueRegistry.emit('effect-updated', this)
+    this.mission.issueRegistry.trigger('effect-updated', this)
     for (let argument of this.arguments) {
-      argument.mission.issueRegistry.emit('effect-updated', argument)
+      argument.mission.issueRegistry.trigger('effect-updated', argument)
     }
   }
 

@@ -288,8 +288,6 @@ export abstract class Effect<
     this.description = description
     this.arguments = this.parseArguments(args)
     this.localKey = localKey
-
-    this.initializeIssues()
   }
 
   /**
@@ -378,43 +376,6 @@ export abstract class Effect<
     }
 
     return executionTriggeredJson
-  }
-
-  /**
-   * Scans the effect for issues and registers them in {@link issues}.
-   */
-  private initializeIssues() {
-    let isMissingTargetOrEnvironment = !this.environment || !this.target
-    let isLegacyInferEnv = this.environmentId === Effect.LEGACY_INFER_ENV_ID
-
-    this.issues
-      .if(() => isMissingTargetOrEnvironment)
-      .include({
-        key: 'missing-target-or-environment',
-        message:
-          `The effect, "${this.name}", has a target or a target environment that couldn't be found. ` +
-          `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`,
-      })
-    this.issues
-      .if(() => isMissingTargetOrEnvironment && isLegacyInferEnv)
-      .include({
-        key: 'legacy-infer-env',
-        message: `The effect, "${this.name}" has a reference to a target, but not to a target environment.`,
-      })
-    this.issues
-      .when('updated', 'initialized')
-      .if(
-        () => isMissingTargetOrEnvironment && isLegacyInferEnv && this.outdated,
-      )
-      .include({
-        key: 'outdated',
-        message:
-          `The effect, "${this.name}", is incompatible with the current version of the target environment, "${this.environment?.name}". ` +
-          `This effect must be updated to be made compatible. ` +
-          `Please click to resolve this.`,
-        type: 'outdated',
-      })
-    this.issues.handle('initialized')
   }
 
   /**

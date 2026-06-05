@@ -42,6 +42,7 @@ import type { MissionComponent } from '@shared/missions/MissionComponent'
 import type { MissionComponentIssue } from '@shared/missions/MissionComponentIssue'
 import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
+import { s } from '@shared/toolbox/strings/StringToolbox'
 import { useEffect, useRef, useState } from 'react'
 import type { TPage_P } from '..'
 import { DefaultPageLayout } from '..'
@@ -58,12 +59,6 @@ import Issues from './issues/Issues'
 import MissionPageMap from './map/MissionPageMap'
 import './MissionPage.scss'
 import NodeStructuring from './structures/NodeStructuring'
-
-/**
- * Debounce delay for issue checking to avoid
- * excessive recomputation on rapid changes.
- */
-const ISSUE_CHECK_DEBOUNCE_MS = 1000
 
 /**
  * The description for the structure view in the
@@ -104,11 +99,10 @@ export default function MissionPage(
   const missionState = useState<ClientMission>(() => ClientMission.createNew())
   const state: TMissionPage_S = {
     mission: missionState,
+    issues: useState<MissionComponentIssue<any>[]>([]),
     selection: useState<MissionComponent<TMetisClientComponents>>(
       missionState[0].selection,
     ),
-    issues: useState<MissionComponentIssue[]>([]),
-    checkForIssues: useState<boolean>(true),
     globalFiles: useState<ClientFileReference[]>([]),
     localFiles: useState<ClientMissionFile[]>([]),
     effectModalActive: useState<boolean>(false),
@@ -118,6 +112,7 @@ export default function MissionPage(
     }),
   }
   const [mission, setMission] = state.mission
+  const [issues, setIssues] = state.issues
   const [globalFiles, setGlobalFiles] = state.globalFiles
   const [localFiles, setLocalFiles] = state.localFiles
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(
@@ -126,10 +121,7 @@ export default function MissionPage(
   const [selection, setSelection] = state.selection
   const [, setEffectModalActive] = state.effectModalActive
   const [, setEffectModalArgs] = state.effectModalArgs
-  const [issues, setIssues] = state.issues
-  const [checkForIssues, setCheckForIssues] = state.checkForIssues
   const root = useRef<HTMLDivElement>(null)
-  const issueCheckTimeout = useRef<number | undefined>(undefined)
   const navButtonEngine = useButtonSvgEngine({
     elements: [
       {
@@ -212,6 +204,8 @@ export default function MissionPage(
   const { isAuthorized } = useRequireLogin()
 
   /* -- COMPUTED -- */
+
+  const issueCount = compute(() => issues.length)
 
   /**
    * Default size of the side panel.
@@ -307,6 +301,18 @@ export default function MissionPage(
    */
   const inspectorTabTitle = compute<string>(() => 'Inspector')
 
+  /**
+   * The description for the issues view in the
+   * side panel.
+   */
+  const issuesViewDescription = compute<string>(() => {
+    if (!issueCount) {
+      return 'No issues detected in this mission.'
+    } else {
+      return `${issueCount} unresolved issue${s(issueCount)} detected. Click to review.`
+    }
+  })
+
   /* -- EFFECTS -- */
 
   // componentDidMount
@@ -340,8 +346,6 @@ export default function MissionPage(
         setLocalFiles(mission.files)
         setSelection(mission)
         setIssues(mission.allIssues)
-        setCheckForIssues(false)
-
         beginLoading('Loading global files...')
 
         // The user currently logged in must
@@ -375,9 +379,6 @@ export default function MissionPage(
 
   // Handle selection changes.
   useEffect(() => {
-    // Trigger a check for issues, now
-    // that the user has made a new selection.
-    setCheckForIssues(true)
     // Cleanup when a new effect is created.
     setEffectModalActive(false)
     // Auto-switch to the files tab if a file
@@ -386,31 +387,6 @@ export default function MissionPage(
       selectPrimaryView.current('Files')
     }
   }, [selection])
-
-  // Debounced issue checking to avoid excessive recomputation
-  // on rapid changes (e.g., resolving one issue in 800 issues)
-  useEffect(() => {
-    if (checkForIssues) {
-      // Clear any pending issue check
-      if (issueCheckTimeout.current) {
-        clearTimeout(issueCheckTimeout.current)
-      }
-
-      // Schedule a new issue check after debounce delay
-      issueCheckTimeout.current = window.setTimeout(() => {
-        setIssues(mission.allIssues)
-        setCheckForIssues(false)
-        issueCheckTimeout.current = undefined
-      }, ISSUE_CHECK_DEBOUNCE_MS)
-    }
-
-    // Cleanup timeout on unmount or when dependencies change
-    return () => {
-      if (issueCheckTimeout.current) {
-        clearTimeout(issueCheckTimeout.current)
-      }
-    }
-  }, [checkForIssues, mission])
 
   // Guards against refreshing or navigating away
   // with unsaved changes.
@@ -463,6 +439,12 @@ export default function MissionPage(
     },
   )
 
+  // Update the master list of issues whenever a change
+  // is made to the issue registry in the mission.
+  useEventListener(mission.issueRegistry, 'change', () =>
+    setIssues(mission.allIssues),
+  )
+
   /* -- FUNCTIONS -- */
 
   /**
@@ -480,10 +462,6 @@ export default function MissionPage(
         // Save the mission and notify
         // the user.
         await mission.saveToServer()
-        // Trigger a check for issues, now
-        // that the user has decided to save
-        // the mission.
-        setCheckForIssues(true)
         notify('Mission successfully saved.')
         return true
       } else {
@@ -625,7 +603,6 @@ export default function MissionPage(
     ...components: TNonEmptyArray<MissionComponent<TMetisClientComponents>>
   ): void => {
     setAreUnsavedChanges(true)
-    setCheckForIssues(true)
     forceUpdate()
   }
 
@@ -773,15 +750,9 @@ export default function MissionPage(
               <PanelView
                 title=''
                 icon='warning-transparent'
-                disabled={!issues.length}
-                highlighted={!!issues.length}
-                description={
-                  issues.length > 0
-                    ? `${issues.length} unresolved issue${
-                        issues.length === 1 ? '' : 's'
-                      } detected. Click to review.`
-                    : 'No issues detected in this mission.'
-                }
+                disabled={!issueCount}
+                highlighted={Boolean(issueCount)}
+                description={issuesViewDescription}
               >
                 <Issues switchToPanel={inspectorTabTitle} />
               </PanelView>
@@ -819,16 +790,6 @@ export type TMissionPage_S = {
    */
   selection: TReactState<MissionComponent<TMetisClientComponents>>
   /**
-   * The issues within mission components that must
-   * be addressed for the mission to function correctly.
-   */
-  issues: TReactState<MissionComponentIssue[]>
-  /**
-   * Triggers a recomputation of the components that have
-   * issues, updating the state with the result.
-   */
-  checkForIssues: TReactState<boolean>
-  /**
    * The current list of files available in the store.
    */
   globalFiles: TReactState<ClientFileReference[]>
@@ -836,6 +797,11 @@ export type TMissionPage_S = {
    * The current list of files attached to the mission.
    */
   localFiles: TReactState<ClientMissionFile[]>
+  /**
+   * The issues within mission components that must
+   * be addressed for the mission to function correctly.
+   */
+  issues: TReactState<MissionComponentIssue<any>[]>
   /**
    * Whether the effect modal is currently active.
    */

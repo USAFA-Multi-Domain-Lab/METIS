@@ -1,6 +1,6 @@
 import { MetisComponent } from '../MetisComponent'
 import type { Mission } from './Mission'
-import { MissionComponentIssueList } from './MissionComponentIssueList'
+import type { MissionComponentIssue } from './MissionComponentIssue'
 import type { MissionComponentIssueRegistry } from './MissionComponentIssueRegistry'
 
 /**
@@ -16,7 +16,7 @@ export abstract class MissionComponent<
   // Overridden
   public set deleted(value: boolean) {
     super.deleted = value
-    this.mission.issueRegistry.emit('deleted-is-set', this)
+    this.mission.issueRegistry.trigger('deleted-is-set', this)
   }
 
   /**
@@ -45,47 +45,25 @@ export abstract class MissionComponent<
   /**
    * Issues associated with the component that need to be resolved.
    */
-  public readonly issues: MissionComponentIssueList<typeof this>
+  public get issues(): MissionComponentIssue<this>[] {
+    return this.mission.issueRegistry.getFor(this)
+  }
 
   /**
    * Whether the component has some issue that needs to
    * be resolved by the designer of the mission.
    */
   public get hasIssues(): boolean {
-    return !this.issues.isEmpty
+    return this.issues.length > 0
   }
 
   public constructor(id: string, name: string, deleted: boolean) {
     super(id, name, deleted)
-    this.issues = new MissionComponentIssueList(this)
-    this.issues
-      .when('deleted-is-set')
-      .if(() => this.deleted)
-      .include({
-        key: 'deleted',
-        message: `"${this.name}" has been marked as deleted.`,
-      })
     // Defer initial issue check to ensure all
     // components are constructed and registered.
     queueMicrotask(() =>
-      this.mission.issueRegistry.emit('initialization', this),
+      this.mission.issueRegistry.trigger('initialization', this),
     )
-  }
-
-  /**
-   * @param message The message describing the issue.
-   * @returns A new general issue object with the given message and the component as context.
-   */
-  public createIssue(
-    message: string,
-    options: TCreateIssueOptions = {},
-  ): TMissionComponentIssue {
-    let { type = 'general' } = options
-    return {
-      component: this,
-      type,
-      message,
-    }
   }
 
   /**
@@ -100,7 +78,7 @@ export abstract class MissionComponent<
       key: 'deleted',
       message: (component) => `"${component.name}" has been marked as deleted.`,
       what: [MissionComponent],
-      when: ['initialization', 'deletion'],
+      when: ['initialization', 'deleted-is-set'],
       if: (component) => component.deleted,
     })
   }
@@ -116,35 +94,3 @@ export type TMissionComponentPath<
   T extends TMetisBaseComponents,
   Self extends MissionComponent<T, Self>,
 > = [...MissionComponent<any, any>[], Self]
-
-/**
- * Represents an issue with a mission component
- * that needs to be resolved by the designer in
- * order for the mission to function properly.
- */
-export interface TMissionComponentIssue {
-  /**
-   * The component that has the issue.
-   */
-  component: MissionComponent<any, any>
-  /**
-   * The type of issue that is present.
-   * This affects how the issue is handled.
-   */
-  type: 'general' | 'outdated'
-  /**
-   * The message describing the issue.
-   */
-  message: string
-}
-
-/**
- * Options for `createIssue` method.
- */
-export interface TCreateIssueOptions {
-  /**
-   * The type of issue to create.
-   * @default 'general'
-   */
-  type?: TMissionComponentIssue['type']
-}

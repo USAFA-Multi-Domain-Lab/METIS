@@ -1,7 +1,4 @@
-import type {
-  MissionComponent,
-  TMissionComponentIssue,
-} from './MissionComponent'
+import type { MissionComponent } from './MissionComponent'
 
 /**
  * Represents a single issue associated with a mission component.
@@ -39,7 +36,7 @@ export class MissionComponentIssue<
    */
   public constructor(
     key: string,
-    type: TMissionComponentIssue['type'],
+    type: TMissionComponentIssueType,
     message: string,
     component: TComponent,
   ) {

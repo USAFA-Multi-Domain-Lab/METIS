@@ -6,6 +6,7 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { TCreatedByJson, User } from '@shared/users/User'
 import { context } from '../context'
 import type { MetisComponent } from '../MetisComponent'
+import { TargetArgument } from '../target-environments/arguments/TargetArgument'
 import type { TExecution } from './actions/ActionExecution'
 import {
   MissionAction,
@@ -28,7 +29,6 @@ import { MissionForce } from './forces/MissionForce'
 import { MissionComponent } from './MissionComponent'
 import type { MissionComponentIssue } from './MissionComponentIssue'
 import { MissionComponentIssueRegistry } from './MissionComponentIssueRegistry'
-import { TargetArgument } from '../target-environments/arguments/TargetArgument'
 import { MissionResource, type TMissionResourceJson } from './MissionResource'
 import type { TNode } from './nodes/MissionNode'
 import type {
@@ -816,39 +816,13 @@ export abstract class Mission<
     return undefined
   }
 
-  // todo: Simplify.
   /**
    * All issues across every component in the mission tree, collected
    * by walking forces → nodes → actions → effects → arguments and
    * the mission's own prototypes, resources, files, and effects.
    */
   public get allIssues(): MissionComponentIssue[] {
-    const components: MissionComponent<any, any>[] = [
-      this,
-      ...this.prototypes,
-      ...(this._resources as MissionComponent<any, any>[]),
-      ...this.files,
-      ...this.effects,
-      ...this.effects.flatMap((e) => [...e.arguments]),
-      ...this.forces,
-      ...this.forces.flatMap((f) => [
-        ...f.resourcePools,
-        ...f.nodes,
-        ...[...f.nodes].flatMap((n) => [
-          ...[...n.actions.values()],
-          ...[...n.actions.values()].flatMap((a) => [
-            ...a.effects,
-            ...a.effects.flatMap((e) => [...e.arguments]),
-          ]),
-        ]),
-      ]),
-    ]
-    return components.flatMap(
-      (c) =>
-        [...c.issues.items] as MissionComponentIssue<
-          MissionComponent<any, any>
-        >[],
-    )
+    return this.issueRegistry.allIssues
   }
 
   /**
