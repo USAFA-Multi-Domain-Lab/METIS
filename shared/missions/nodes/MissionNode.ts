@@ -1,6 +1,5 @@
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
-import { MapToolbox } from '@shared/toolbox/maps/MapToolbox'
 import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
@@ -62,7 +61,7 @@ export abstract class MissionNode<
 
   // Implemented
   public get subComponents(): Array<TNode<T> | T['action']> {
-    return [...this.children, ...this.actions.values()]
+    return [...this.children, ...this.actions]
   }
 
   // Implemented
@@ -127,9 +126,8 @@ export abstract class MissionNode<
 
   /**
    * The actions that can be performed on the node.
-   * @note Mapped by action ID.
    */
-  public actions: Map<string, T['action']>
+  public actions: JsonSerializableArray<T['action']>
 
   /**
    * Determines if this node should be excluded from the node structure.
@@ -176,7 +174,7 @@ export abstract class MissionNode<
   public get readyToExecute(): boolean {
     return (
       this.executable &&
-      this.actions.size > 0 &&
+      this.actions.length > 0 &&
       this.executionStatus !== 'executing'
     )
   }
@@ -668,7 +666,7 @@ export abstract class MissionNode<
     this._executable =
       data.executable ?? MissionNode.DEFAULT_PROPERTIES.executable
     this._device = data.device ?? MissionNode.DEFAULT_PROPERTIES.device
-    this.actions = new Map<string, TAction<T>>()
+    this.actions = new JsonSerializableArray<TAction<T>>()
     this._exclude = data.exclude ?? MissionNode.DEFAULT_PROPERTIES.exclude
     this.localKey = data.localKey ?? force.generateNodeKey()
     this._executions = []
@@ -730,8 +728,8 @@ export abstract class MissionNode<
       preExecutionText: this.preExecutionText,
       executable: this.executable,
       device: this.device,
-      actions: MapToolbox.mapToArray(this.actions, (action: TAction<T>) =>
-        action.toJson(options),
+      actions: this.actions.map((action: TAction<T>) =>
+        action.serialize(options),
       ),
       exclude: this.exclude,
       initiallyBlocked: this.initiallyBlocked,
@@ -770,6 +768,15 @@ export abstract class MissionNode<
   }
 
   /**
+   * @param _id The ID of the action to retrieve.
+   * @returns The action with the given ID, or `undefined`
+   * if no action with the given ID is found.
+   */
+  public getAction(_id: string): T['action'] | undefined {
+    return this.actions.find((action) => action._id === _id)
+  }
+
+  /**
    * @param _id The ID of the execution to retrieve.
    * @returns The execution with the given ID, or `undefined`
    * if no execution with the given ID is found.
@@ -795,7 +802,7 @@ export abstract class MissionNode<
     // Initialize
     let newKey: number = 0
 
-    for (let action of this.actions.values()) {
+    for (let action of this.actions) {
       let actionKey: number = Number(action.localKey)
       // If the action has a key, and it is greater than the current
       // new key, set the new key to the action's key.

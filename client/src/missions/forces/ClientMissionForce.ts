@@ -13,7 +13,6 @@ import { Counter } from '@shared/toolbox/numbers/Counter'
 import type { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import type { TWithKey } from '@shared/toolbox/objects/ObjectToolbox'
 import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
-import type { ClientMissionAction } from '../actions/ClientMissionAction'
 import type { ClientMission } from '../ClientMission'
 import { ClientMissionNode } from '../nodes/ClientMissionNode'
 import { ClientOutput } from './ClientOutput'
@@ -32,21 +31,6 @@ export class ClientMissionForce
    * The lines used to connect nodes on the mission map.
    */
   public relationshipLines: TWithKey<TLine_P>[]
-
-  /**
-   * All actions that exist in the force.
-   */
-  public get actions(): Map<string, ClientMissionAction> {
-    let actions = new Map<string, ClientMissionAction>()
-
-    for (let node of this.nodes) {
-      for (let action of node.actions.values()) {
-        actions.set(action._id, action)
-      }
-    }
-
-    return actions
-  }
 
   /**
    * Manages the force's event listeners and events.

@@ -75,7 +75,7 @@ export abstract class Mission<
    * every node in every force.
    */
   public get allActions(): T['action'][] {
-    return this.allNodes.flatMap((node) => Array.from(node.actions.values()))
+    return this.allNodes.flatMap((node) => node.actions)
   }
 
   /**
@@ -1267,9 +1267,7 @@ export abstract class Mission<
       if (forceId && force._id !== forceId) continue
       for (let node of force.nodes) {
         if (nodeId && node._id !== nodeId) continue
-        let action = Array.isArray(node.actions)
-          ? node.actions.find((action) => action._id === actionId)
-          : node.actions.get(actionId)
+        let action = node.actions.find((action) => action._id === actionId)
         if (action) return action as TAction | TMissionActionJson
         else if (nodeId) return undefined
         continue
@@ -1304,15 +1302,7 @@ export abstract class Mission<
     let node = force.nodes.find((node) => node.localKey === nodeKey)
     if (!node) return undefined
 
-    const { actions } = node
-    let action = undefined
-
-    if (Array.isArray(actions)) {
-      action = actions.find((a) => a.localKey === actionKey)
-    } else if (actions instanceof Map) {
-      let actionsArray = Array.from(actions.values())
-      action = actionsArray.find((a) => a.localKey === actionKey)
-    }
+    let action = node.actions.find((action) => action.localKey === actionKey)
 
     return action as TAction | TMissionActionJson
   }

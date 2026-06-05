@@ -44,7 +44,7 @@ export default function useActionItemButtonCallbacks(
             localKey: node.generateActionKey(),
           })
           // Add the new action to the node.
-          node.actions.set(newAction._id, newAction)
+          node.actions.push(newAction)
           // Select the new action if necessary.
           if (selectNewAction) node.mission.select(newAction)
           // Notify the user that the force was duplicated.
@@ -66,7 +66,7 @@ export default function useActionItemButtonCallbacks(
       let { actions } = action.node
 
       // Delete the action if the node has more than 2 actions.
-      if (actions.size > 1) {
+      if (actions.length > 1) {
         // Prompt the user to confirm the deletion.
         let { choice } = await prompt(
           `Please confirm the deletion of this action.`,
@@ -79,7 +79,7 @@ export default function useActionItemButtonCallbacks(
         if (navigateBack) node.mission.selectBack()
 
         // Remove the action from the node.
-        actions.delete(action._id)
+        action.delete()
 
         // Notify the user that the action was deleted.
         notify(`Successfully deleted "${action.name}".`)

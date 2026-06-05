@@ -27,7 +27,7 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
   protected importActions(data: TMissionActionJson[]): void {
     data.forEach((datum) => {
       let action: ServerMissionAction = new ServerMissionAction(this, datum)
-      this.actions.set(action._id, action)
+      this.actions.push(action)
     })
   }
 
@@ -35,7 +35,7 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
   protected importExecutions(data: TActionExecutionJson[]): void {
     this._executions = data.map(
       ({ _id, actionId, outcome: outcomeData, start, end }) => {
-        let action: ServerMissionAction | undefined = this.actions.get(actionId)
+        let action = this.getAction(actionId) as ServerMissionAction | undefined
         if (!action) throw new Error(`Action "${actionId}" not found.`)
         return new ServerActionExecution(_id, action, start, end, {
           outcomeData,
@@ -126,7 +126,7 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
         return self.force.toTargetEnvContext()
       },
       get actions() {
-        return Array.from(self.actions.values()).map((action) =>
+        return self.actions.map((action) =>
           action.toTargetEnvContext(),
         )
       },

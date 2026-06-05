@@ -219,7 +219,7 @@ export class ClientMissionAction
 
     // Build data then initialize certain properties.
     const data = {
-      ...this.toJson(),
+      ...this.serialize(),
       name,
       localKey,
       _id: ClientMissionAction.DEFAULT_PROPERTIES._id,

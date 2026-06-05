@@ -75,13 +75,13 @@ export default function ActionEntry({
         type: 'button',
         icon: 'remove',
         description: compute(() => {
-          if (node.actions.size < 2) {
+          if (node.actions.length < 2) {
             return 'This action cannot be deleted because the node must have at least one action if it is executable.'
           } else {
             return 'Delete action'
           }
         }),
-        disabled: node.actions.size < 2,
+        disabled: node.actions.length < 2,
         permissions: ['missions_write'],
         onClick: async () => await onDeleteActionRequest(action, true),
       },

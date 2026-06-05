@@ -71,7 +71,7 @@ export abstract class MissionFile<
   }
 
   // Implemented
-  public get sourceList(): T['missionFile'][] {
+  public get sourceList() {
     return this.mission.files
   }
 

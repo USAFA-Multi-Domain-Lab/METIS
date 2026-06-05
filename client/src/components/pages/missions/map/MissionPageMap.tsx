@@ -111,7 +111,7 @@ export default function MissionPageMap(): TReactElement {
     if (
       selection instanceof ClientMissionNode &&
       selection.executable &&
-      selection.actions.size === 0
+      selection.actions.length === 0
     ) {
       // Checks to make sure the selected node has at least
       // one action to choose from. If the selected node doesn't

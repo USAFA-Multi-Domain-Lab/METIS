@@ -473,7 +473,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Loops through and maps each action.
     this.mission.forces.forEach((force) =>
       force.nodes.forEach((node) =>
-        node.actions.forEach((action) => this.actions.set(action._id, action)),
+        node.actions.forEach((action) => this.actions.set(action._id, action))
       ),
     )
   }
