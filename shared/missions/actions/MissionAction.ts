@@ -82,6 +82,13 @@ export abstract class MissionAction<
     return this.effects
   }
 
+  // Implemented — temporary: actions are stored in a Map so this returns a derived
+  // array rather than the actual backing store. delete() will not work correctly
+  // until node.actions is refactored to an array.
+  public get sourceList() {
+    return Array.from(this.node.actions.values())
+  }
+
   /**
    * The description of the action.
    */

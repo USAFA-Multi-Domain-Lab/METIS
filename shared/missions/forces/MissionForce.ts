@@ -64,6 +64,11 @@ export abstract class MissionForce<
     return [...this.root.children, ...this.resourcePools]
   }
 
+  // Implemented
+  public get sourceList(): T['force'][] {
+    return this.mission.forces
+  }
+
   /**
    * The color of the force.
    */

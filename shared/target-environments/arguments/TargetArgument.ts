@@ -110,6 +110,11 @@ export abstract class TargetArgument<
     return []
   }
 
+  // Implemented
+  public get sourceList() {
+    return this.effect.arguments
+  }
+
   /**
    * The value supplied for the parameter.
    * The type of this field is determined by `P` — when `P` is a

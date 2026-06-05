@@ -45,6 +45,11 @@ export abstract class MissionPrototype<
     return this.children
   }
 
+  // Implemented
+  public get sourceList() {
+    return this.mission.prototypes
+  }
+
   /**
    * The parent of this prototype in the tree structure.
    */

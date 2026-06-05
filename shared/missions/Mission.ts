@@ -136,6 +136,11 @@ export abstract class Mission<
     ]
   }
 
+  // Implemented
+  public get sourceList(): [] {
+    return []
+  }
+
   /**
    * The file name to use to store an export for the mission.
    */
@@ -189,16 +194,10 @@ export abstract class Mission<
   public forces: T['force'][]
 
   /**
-   * @see {@link resources}
-   */
-  protected _resources: JsonSerializableArray<T['resource']>
-  /**
    * A collection of resource definitions which define the currencies
    * used within the mission.
    */
-  public get resources(): JsonSerializableArray<T['resource']> {
-    return new JsonSerializableArray(...this._resources)
-  }
+  public resources: JsonSerializableArray<T['resource']>
 
   /**
    * Files attached to the mission that will be used
@@ -256,7 +255,7 @@ export abstract class Mission<
     this.createdByUsername = createdByUsername
 
     this.prototypes = []
-    this._resources = new JsonSerializableArray()
+    this.resources = new JsonSerializableArray()
     this.forces = []
     this.files = []
     this.effects = []

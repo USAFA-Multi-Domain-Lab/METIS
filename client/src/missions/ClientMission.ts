@@ -379,7 +379,7 @@ export class ClientMission
   // Implemented
   protected importResources(data: TMissionResourceJson[]): void {
     let resources = ClientMissionResource.fromJson(this, data)
-    this._resources.push(...resources)
+    this.resources.push(...resources)
   }
 
   // Implemented
@@ -431,7 +431,7 @@ export class ClientMission
         `Cannot have more than ${Mission.MAX_RESOURCE_TYPES} resource types in a mission.`,
       )
     }
-    this._resources.push(resource)
+    this.resources.push(resource)
     this.emitEvent('resource-list-change')
     return resource
   }
@@ -443,9 +443,9 @@ export class ClientMission
    */
   public removeResource(resource: string | ClientMissionResource): void {
     let resourceId = typeof resource === 'string' ? resource : resource._id
-    let index = this._resources.findIndex(({ _id }) => _id === resourceId)
+    let index = this.resources.findIndex(({ _id }) => _id === resourceId)
     if (index !== -1) {
-      this._resources.splice(index, 1)
+      this.resources.splice(index, 1)
       this.emitEvent('resource-list-change')
     } else {
       console.warn(
@@ -453,6 +453,7 @@ export class ClientMission
       )
     }
   }
+
   /**
    * Imports previously omitted force and structure data
    * into the mission on session start.

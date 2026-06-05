@@ -39,6 +39,11 @@ export abstract class MissionResource<
     return []
   }
 
+  // Implemented
+  public get sourceList() {
+    return this.mission.resources
+  }
+
   /**
    * The icon to display for this resource.
    */

@@ -62,6 +62,11 @@ export abstract class ActionResourceCost<
   }
 
   // Implemented
+  public get sourceList() {
+    return this.action.resourceCosts
+  }
+
+  // Implemented
   public get name(): string {
     return this.resource.name
   }

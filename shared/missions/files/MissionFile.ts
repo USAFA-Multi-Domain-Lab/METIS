@@ -70,6 +70,11 @@ export abstract class MissionFile<
     return []
   }
 
+  // Implemented
+  public get sourceList(): T['missionFile'][] {
+    return this.mission.files
+  }
+
   /**
    * The MIME type of the file.
    */

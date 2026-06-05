@@ -135,6 +135,11 @@ export abstract class Effect<
   }
 
   // Implemented
+  public get sourceList() {
+    return this.host.effects
+  }
+
+  // Implemented
   public get path(): [...MissionComponent<any, any>[], this] {
     // Dynamically construct the path based on
     // the trigger data.

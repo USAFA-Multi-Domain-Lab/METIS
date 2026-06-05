@@ -43,6 +43,14 @@ export abstract class MissionComponent<
   public abstract get subComponents(): MissionComponent<any, any>[]
 
   /**
+   * The exact list where this component is stored within
+   * the mission. This list must be the actual list, not a
+   * copy. Otherwise, operations such as {@link delete} won't
+   * work correctly.
+   */
+  public abstract get sourceList(): MissionComponent<any, any>[]
+
+  /**
    * Issues associated with the component that need to be resolved.
    */
   public get issues(): MissionComponentIssue<this>[] {
@@ -64,6 +72,15 @@ export abstract class MissionComponent<
     queueMicrotask(() =>
       this.mission.issueRegistry.trigger('initialization', this),
     )
+  }
+
+  /**
+   * Deletes the component by marking {@link deleted} as `true`
+   * and removing it from {@link sourceList}.
+   */
+  public delete(): void {
+    this.sourceList.splice(this.sourceList.indexOf(this), 1)
+    this.deleted = true
   }
 
   /**

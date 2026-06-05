@@ -65,6 +65,10 @@ export abstract class MissionNode<
     return [...this.children, ...this.actions.values()]
   }
 
+  // Implemented
+  public get sourceList() {
+    return this.force.nodes
+  }
 
   /**
    * The color for the node used as a border in the mission

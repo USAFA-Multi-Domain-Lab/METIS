@@ -81,7 +81,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   // Implemented
   protected importResources(data: TMissionResourceJson[]): void {
     let resources = ServerMissionResource.fromJson(this, data)
-    this._resources.push(...resources)
+    this.resources.push(...resources)
   }
 
   // Implemented

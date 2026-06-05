@@ -34,6 +34,11 @@ export abstract class ResourcePool<
     return []
   }
 
+  // Implemented
+  public get sourceList() {
+    return this.force.resourcePools
+  }
+
   /**
    * The ID of the force that owns this resource pool.
    */
