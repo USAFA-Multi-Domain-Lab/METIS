@@ -1,10 +1,10 @@
-import { compute } from '@client/toolbox'
 import inputs from '@client/toolbox/inputs'
 import { useEffect, useState } from 'react'
 import type { TDetail_P } from '.'
 import './DetailNumber.scss'
 import DetailTitleRow from './DetailTitleRow'
 import { useDetailClassNames } from './useDetailClassNames'
+import { useErrorMessages } from './useDisplayError'
 
 /**
  * This will render a detail for
@@ -24,7 +24,7 @@ export function DetailNumber({
   placeholder = 'Enter a number here...',
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
-  errorMessage = undefined,
+  errorMessage = '',
   errorType = 'default',
   disabled = false,
   tooltipDescription = '',
@@ -39,7 +39,10 @@ export function DetailNumber({
    * The boolean that determines if the
    * error message should be displayed.
    */
-  const displayError: boolean = compute(() => errorMessage !== undefined)
+  const { displayError, activeErrorMessage } = useErrorMessages({
+    errorMethod: 'simple',
+    errorMessage: errorMessage,
+  })
   const { rootClasses, labelClasses, fieldClasses, fieldErrorClasses } =
     useDetailClassNames({
       componentName: 'DetailNumber',
@@ -216,7 +219,7 @@ export function DetailNumber({
         }}
       />
       {unit && <div className='Unit'>{unit}</div>}
-      <div className={fieldErrorClasses.value}>{errorMessage}</div>
+      <div className={fieldErrorClasses.value}>{activeErrorMessage}</div>
     </div>
   )
 }

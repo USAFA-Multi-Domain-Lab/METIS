@@ -1,9 +1,9 @@
-import { compute } from '@client/toolbox'
 import type { TDetailBase_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import './DetailLocked.scss'
 import DetailTitleRow from './DetailTitleRow'
 import { useDetailClassNames } from './useDetailClassNames'
+import { useErrorMessages } from './useDisplayError'
 
 /**
  * This will render a detail for a form,
@@ -17,16 +17,15 @@ export function DetailLocked({
   disabled = false,
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
-  errorMessage = undefined,
+  errorMessage = '',
   errorType = 'default',
   tooltipDescription = '',
 }: TDetailLocked_P): TReactElement | null {
   /* -- COMPUTED -- */
-  /**
-   * The boolean that determines if the
-   * error message should be displayed.
-   */
-  const displayError: boolean = compute(() => errorMessage !== undefined)
+  let { displayError, activeErrorMessage } = useErrorMessages({
+    errorMethod: 'simple',
+    errorMessage: errorMessage,
+  })
 
   const { rootClasses, labelClasses, fieldClasses, fieldErrorClasses } =
     useDetailClassNames({
@@ -51,7 +50,7 @@ export function DetailLocked({
           <Tooltip description='This is locked and cannot be changed.' />
         </span>
       </div>
-      <div className={fieldErrorClasses.value}>{errorMessage}</div>
+      <div className={fieldErrorClasses.value}>{activeErrorMessage}</div>
     </div>
   )
 }
@@ -61,7 +60,7 @@ export function DetailLocked({
 /**
  * The properties for the Detail Locked component.
  */
-export type TDetailLocked_P = TDetailBase_P & {
+export type TDetailLocked_P = Omit<TDetailBase_P, 'errorDisplay'> & {
   /**
    * The value displayed in the detail.
    */

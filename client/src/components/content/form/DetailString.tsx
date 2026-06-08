@@ -1,13 +1,13 @@
-import { compute } from "@client/toolbox";
-import { ClassList } from "@shared/toolbox/html/ClassList";
-import React, { useState } from "react";
-import type { TDetailWithInput_P } from ".";
-import "./DetailString.scss";
-import DetailTitleRow from "./DetailTitleRow";
-import { useDetailClassNames } from "./useDetailClassNames";
+import { compute } from '@client/toolbox'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import React, { useState } from 'react'
+import type { TDetailWithInput_P } from '.'
+import './DetailString.scss'
+import DetailTitleRow from './DetailTitleRow'
+import { useDetailClassNames } from './useDetailClassNames'
+import { useErrorMessages } from './useDisplayError'
 
-const DEFAULT_ERROR_MESSAGE: string =
-  "At least one character is required here.";
+const BLANK_ERROR_MESSAGE: string = 'At least one character is required here.'
 
 /**
  * This will render a detail for
@@ -22,110 +22,80 @@ export function DetailString({
   setValue: setState,
   // Optional Properties
   defaultValue = undefined,
-  errorMessage = DEFAULT_ERROR_MESSAGE,
-  errorType = "default",
-  errorDisplay = "on-blur",
+  errorMessage = '',
+  errorType = 'default',
+  errorDisplay = 'on-blur',
   disabled = false,
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
-  inputType = "text",
-  placeholder = "Enter text here...",
-  tooltipDescription = "",
+  inputType = 'text',
+  placeholder = 'Enter text here...',
+  tooltipDescription = '',
   maxLength = undefined,
   onBeforeBlur = undefined,
   onAfterBlur = undefined,
 }: TDetailString_P): TReactElement {
   /* -- STATE -- */
-  const [leftField, setLeftField] = useState<boolean>(false);
-  const [currentInputType, setCurrentInputType] = useState<TInput>(inputType);
+  const [currentInputType, setCurrentInputType] = useState<TInput>(inputType)
   const [displayPasswordText, setDisplayPasswordText] = useState<
-    "show" | "hide"
-  >("show");
+    'show' | 'hide'
+  >('show')
 
   /* -- COMPUTED -- */
-  /**
-   * The boolean that determines if the
-   * error message should be displayed.
-   */
-  const displayError: boolean = compute(() => {
-    let display: boolean = false;
 
-    // Whether the user has satisfied the interaction requirement.
-    // In 'immediate' mode this is always true; in 'on-blur' mode
-    // the user must have left the field at least once.
-    let interactionSatisfied: boolean =
-      errorDisplay === "immediate" || leftField;
-
-    // Show a non-default error message (covers both 'default' and 'warning'
-    // errorType) once the interaction requirement is satisfied.
-    if (
-      interactionSatisfied &&
-      handleOnBlur === "deliverError" &&
-      errorMessage !== DEFAULT_ERROR_MESSAGE
-    ) {
-      display = true;
-    }
-
-    // Lets the user know that the field cannot be left
-    // empty if the field is required and they have left
-    // the field without entering any information.
-    if (
-      interactionSatisfied &&
-      fieldType === "required" &&
-      handleOnBlur === "deliverError" &&
-      errorMessage === DEFAULT_ERROR_MESSAGE &&
-      stateValue === ""
-    ) {
-      display = true;
-    }
-
-    // Return the boolean.
-    return display;
-  });
+  const { displayError, activeErrorMessage, markLeftField } = useErrorMessages({
+    errorMethod: 'interactive',
+    errorMessage,
+    errorDisplay,
+    handleOnBlur,
+    fieldType,
+    stateIsEmpty: stateValue === '',
+    blankErrorMessage: BLANK_ERROR_MESSAGE,
+  })
   const { rootClasses, labelClasses, fieldClasses, fieldErrorClasses } =
     useDetailClassNames({
-      componentName: "DetailString",
+      componentName: 'DetailString',
       disabled,
       displayError,
       errorType,
       uniqueLabelClassName,
       uniqueFieldClassName,
-    });
-  fieldClasses.set("Password", inputType === "password");
+    })
+  fieldClasses.set('Password', inputType === 'password')
   /**
    * Class names for the toggle password display container.
    * @note Appears as a button with the text "show" or "hide".
    */
-  const togglePasswordButtonClasses = new ClassList("TogglePasswordButton").set(
-    "Hidden",
-    inputType !== "password",
-  );
+  const togglePasswordButtonClasses = new ClassList('TogglePasswordButton').set(
+    'Hidden',
+    inputType !== 'password',
+  )
   /**
    * The placeholder text being displayed.
    */
   const placeholderDisplayed: string = compute(() => {
-    let placeholderText: string = placeholder;
+    let placeholderText: string = placeholder
 
-    if (inputType === "password" && placeholder === "Enter text here...") {
-      placeholderText = "Enter password here...";
+    if (inputType === 'password' && placeholder === 'Enter text here...') {
+      placeholderText = 'Enter password here...'
     }
 
-    return placeholderText;
-  });
+    return placeholderText
+  })
   /* -- FUNCTIONS -- */
 
   /**
    * Toggles the display of the password.
    */
   const togglePasswordDisplay = (): void => {
-    if (currentInputType === "password") {
-      setCurrentInputType("text");
-      setDisplayPasswordText("hide");
+    if (currentInputType === 'password') {
+      setCurrentInputType('text')
+      setDisplayPasswordText('hide')
     } else {
-      setCurrentInputType("password");
-      setDisplayPasswordText("show");
+      setCurrentInputType('password')
+      setDisplayPasswordText('show')
     }
-  };
+  }
 
   /* -- RENDER -- */
 
@@ -139,29 +109,27 @@ export function DetailString({
       />
       <div className={fieldClasses.value}>
         <input
-          className={"Input"}
+          className={'Input'}
           type={currentInputType}
           value={stateValue}
           placeholder={placeholderDisplayed}
           maxLength={maxLength}
           disabled={disabled}
           onFocus={(event: React.FocusEvent<HTMLInputElement>) => {
-            event.target.select();
+            event.target.select()
           }}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            let target: HTMLInputElement = event.target as HTMLInputElement;
-            let value: string = target.value;
-            setState(value);
+            let target: HTMLInputElement = event.target as HTMLInputElement
+            let value: string = target.value
+            setState(value)
           }}
           onBlur={(event: React.FocusEvent) => {
-            let target: HTMLInputElement = event.target as HTMLInputElement;
-            let value: string | undefined = target.value;
+            let target: HTMLInputElement = event.target as HTMLInputElement
+            let value: string | undefined = target.value
 
-            onBeforeBlur?.();
+            onBeforeBlur?.()
 
-            // Indicate that the user has left the field.
-            // @note - This allows errors to be displayed.
-            setLeftField(true);
+            markLeftField()
 
             // If the field is empty or in a default
             // state and the error message is not displayed
@@ -169,43 +137,43 @@ export function DetailString({
             // empty string, and the field is required, then
             // set the input's value to a default value.
             if (
-              (value === "" || value === undefined) &&
+              (value === '' || value === undefined) &&
               !displayError &&
-              handleOnBlur === "repopulateValue" &&
-              fieldType === "required"
+              handleOnBlur === 'repopulateValue' &&
+              fieldType === 'required'
             ) {
-              if (defaultValue !== undefined && defaultValue !== "") {
-                setState(defaultValue);
+              if (defaultValue !== undefined && defaultValue !== '') {
+                setState(defaultValue)
               } else {
-                setState(placeholderDisplayed);
+                setState(placeholderDisplayed)
               }
             }
 
-            onAfterBlur?.();
+            onAfterBlur?.()
           }}
           onMouseDown={(event: React.MouseEvent<HTMLInputElement>) => {
             if (document.activeElement !== event.currentTarget) {
-              event.preventDefault();
-              event.currentTarget.focus();
+              event.preventDefault()
+              event.currentTarget.focus()
             }
           }}
         />
         <input
           className={togglePasswordButtonClasses.value}
           onClick={togglePasswordDisplay}
-          type="button"
+          type='button'
           value={displayPasswordText}
-          disabled={inputType !== "password"}
+          disabled={inputType !== 'password'}
         />
       </div>
       {maxLength ? (
-        <div className="CharacterCount">
+        <div className='CharacterCount'>
           {stateValue.length}/{maxLength}
         </div>
       ) : null}
-      <div className={fieldErrorClasses.value}>{errorMessage}</div>
+      <div className={fieldErrorClasses.value}>{activeErrorMessage}</div>
     </div>
-  );
+  )
 }
 
 /* ---------------------------- TYPES FOR DETAIL STRING ---------------------------- */
@@ -213,7 +181,7 @@ export function DetailString({
 /**
  * Input types for the Detail component.
  */
-type TInput = "password" | "text";
+type TInput = 'password' | 'text'
 
 /**
  * The properties for the Detail String component.
@@ -223,17 +191,17 @@ type TDetailString_P = TDetailWithInput_P<string> & {
    * The type of input to render (i.e., text or password).
    * @default 'text'
    */
-  inputType?: TInput;
+  inputType?: TInput
   /**
    * The maximum number of characters that can be entered.
    */
-  maxLength?: number;
+  maxLength?: number
   /**
    * Called at the very start of the blur handler, before any built-in logic runs.
    */
-  onBeforeBlur?: () => void;
+  onBeforeBlur?: () => void
   /**
    * Called at the very end of the blur handler, after all built-in logic has run.
    */
-  onAfterBlur?: () => void;
-};
+  onAfterBlur?: () => void
+}
