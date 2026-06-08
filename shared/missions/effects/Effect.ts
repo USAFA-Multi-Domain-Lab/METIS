@@ -474,7 +474,6 @@ export abstract class Effect<
       what: [Effect],
       if: (effect) => effect.missingTargetOrEnvironment,
     })
-
     registry.check({
       key: 'legacy-infer-env',
       message: (effect) =>

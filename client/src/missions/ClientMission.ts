@@ -437,24 +437,6 @@ export class ClientMission
   }
 
   /**
-   * Removes the given resource from the mission.
-   * @param resource The resource or the ID of the resource
-   * to remove.
-   */
-  public removeResource(resource: string | ClientMissionResource): void {
-    let resourceId = typeof resource === 'string' ? resource : resource._id
-    let index = this.resources.findIndex(({ _id }) => _id === resourceId)
-    if (index !== -1) {
-      this.resources.splice(index, 1)
-      this.emitEvent('resource-list-change')
-    } else {
-      console.warn(
-        'Attempted to remove a resource that does not exist in the mission.',
-      )
-    }
-  }
-
-  /**
    * Imports previously omitted force and structure data
    * into the mission on session start.
    * @param forces The JSON data for the forces.
@@ -1235,39 +1217,6 @@ export class ClientMission
     this.handleStructureChange()
 
     return duplicatedForces
-  }
-
-  /**
-   * Deletes the selected forces in the mission.
-   * @param forceIds The IDs of the forces to delete.
-   */
-  public deleteForces(
-    ...forceIds: TNonEmptyArray<ClientMissionForce['_id']>
-  ): ClientMissionForce[] {
-    let deletedForces: ClientMissionForce[] = []
-
-    // If the forces is not an array, make it an array.
-    if (!Array.isArray(forceIds)) forceIds = [forceIds]
-
-    // Remove the forces from the mission.
-    this.forces = this.forces.filter((force) => {
-      let deleteIt = forceIds.includes(force._id)
-      if (deleteIt) deletedForces.push(force)
-      return !deleteIt
-    })
-
-    // Remove forces from the inital access
-    // of any files that reference them.
-    this.files.forEach((file) => {
-      file.initialAccess = file.initialAccess.filter(
-        (forceId) => !forceIds.includes(forceId),
-      )
-    })
-
-    // Handle structure change.
-    this.handleStructureChange()
-
-    return deletedForces
   }
 
   /**

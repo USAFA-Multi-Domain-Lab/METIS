@@ -58,12 +58,12 @@ export default function useForceItemButtonCallbacks(
       // If the user cancels, abort.
       if (choice === 'Cancel') return
       // Delete the force.
-      let deletedForces = mission.deleteForces(force._id)
+      force.delete()
 
       // Notify the user that the force was deleted.
       notify(`Successfully deleted "${force.name}".`)
       // Allow the user to save the changes.
-      onChange(force, ...deletedForces.filter((f) => f._id !== force._id))
+      onChange(force)
       // Run the post-hook.
       onSuccessfulDeletion(force)
     },

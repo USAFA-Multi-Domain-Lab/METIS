@@ -45,7 +45,7 @@ export default function (props: TFileReferenceList_P): TReactElement | null {
     if (choice === 'Confirm') {
       try {
         beginLoading('Deleting file...')
-        await ClientFileReference.$delete(reference._id)
+        await reference.$delete()
         finishLoading()
         notify(`Successfully deleted "${reference.name}".`)
         onSuccessfulDeletion(reference)

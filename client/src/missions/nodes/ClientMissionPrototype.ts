@@ -368,46 +368,42 @@ export class ClientMissionPrototype
         }
 
         this.childrenOfParent.splice(this.childrenOfParent.indexOf(this), 1)
-        this.mission.prototypes = this.mission.prototypes.filter(
-          (prototype) => prototype._id !== this._id,
-        )
+        super.delete()
         break
       case 'shift-children':
         let parentOfThis: ClientMissionPrototype | null = this.parent
         let childrenofThis: ClientMissionPrototype[] = [...this.children]
 
-        childrenofThis.forEach((child: ClientMissionPrototype) => {
-          if (parentOfThis !== null) {
-            parentOfThis.children.splice(
-              parentOfThis.children.indexOf(this),
+        if (parentOfThis !== null) {
+          // Orphan children before super.delete() so the base recursion
+          // does not delete them. They are re-parented immediately after.
+          this.children = []
+          parentOfThis.children.splice(parentOfThis.children.indexOf(this), 1)
+          super.delete()
+
+          childrenofThis.forEach((child: ClientMissionPrototype) => {
+            parentOfThis!.children.splice(
+              parentOfThis!.children.indexOf(this),
               0,
               child,
             )
             child.parent = parentOfThis
-          }
-        })
-
-        if (parentOfThis !== null) {
-          parentOfThis.children.splice(parentOfThis.children.indexOf(this), 1)
-          this.mission.prototypes = this.mission.prototypes.filter(
-            (prototype) => prototype._id !== this._id,
-          )
-          this.mission.handleStructureChange()
+          })
         }
         break
     }
 
-    if (calledByParentDelete !== true) {
-      // Structure change is handled as long
-      // as one prototype exists. If not, a new
-      // prototype is created. Creating this prototype
-      // will handle the structure change for
-      // us.
-      if (this.mission.prototypes.length > 0) {
-        this.mission.handleStructureChange()
-      } else {
-        this.mission.createPrototype()
-      }
+    if (calledByParentDelete) return
+
+    // Structure change is handled as long
+    // as one prototype exists. If not, a new
+    // prototype is created. Creating this prototype
+    // will handle the structure change for
+    // us.
+    if (this.mission.prototypes.length > 0) {
+      this.mission.handleStructureChange()
+    } else {
+      this.mission.createPrototype()
     }
   }
 

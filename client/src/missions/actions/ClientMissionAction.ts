@@ -275,14 +275,19 @@ export class ClientMissionAction
     // resources, the list of costs will end up in the same
     // order as the resources, which will be user friendly in
     // the UI.
-    this.resourceCosts = new JsonSerializableArray(
-      ...this.mission.resources.map((resource) => {
-        let existingCost = this.resourceCosts.find(
-          ({ resourceId }) => resourceId === resource._id,
-        )
-        return existingCost ?? ClientActionCost.createNew(this, resource)
-      }),
-    )
+    let updatedCosts = this.mission.resources.map((resource) => {
+      let existingCost = this.resourceCosts.find(
+        ({ resourceId }) => resourceId === resource._id,
+      )
+      return existingCost ?? ClientActionCost.createNew(this, resource)
+    })
+
+    // Delete orphaned costs so the issue registry is notified.
+    for (let cost of [...this.resourceCosts]) {
+      if (!updatedCosts.includes(cost)) cost.delete()
+    }
+
+    this.resourceCosts = new JsonSerializableArray(...updatedCosts)
   }
 
   /**

@@ -31,11 +31,10 @@ export class ClientMissionResource
     return this.superComponent
   }
 
-  /**
-   * Removes the resource from the mission via {@link ClientMission.removeResource}.
-   */
-  public remove() {
-    this.mission.removeResource(this._id)
+  // Overridden
+  public delete(): void {
+    super.delete()
+    this.mission.emitEvent('resource-list-change')
   }
 
   /**

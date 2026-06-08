@@ -456,6 +456,7 @@ export default function List<TItem extends MetisComponent>(
     else return next
   }
 
+  // todo: This has no way of detecting other types of issues.
   /**
    * @see {@link TListContextData.getWarningText}
    */

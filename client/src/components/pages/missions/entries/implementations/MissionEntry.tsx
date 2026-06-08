@@ -62,7 +62,7 @@ export default function MissionEntry({
    * @param resource The resource to remove.
    */
   function onClickDelete(resource: ClientMissionResource): void {
-    resource.remove()
+    resource.delete()
     onChange(resource)
   }
 

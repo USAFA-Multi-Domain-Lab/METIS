@@ -19,7 +19,7 @@ import {
   type TEffectSessionTriggered,
   type TEffectSessionTriggeredJson,
 } from './effects/Effect'
-import type { TMissionFileJson } from './files/MissionFile'
+import { MissionFile, type TMissionFileJson } from './files/MissionFile'
 import type {
   TForce,
   TMissionForceJson,
@@ -59,8 +59,7 @@ export abstract class Mission<
   /**
    * The centralized registry of issues for all components within the mission.
    */
-  public readonly issueRegistry: MissionComponentIssueRegistry =
-    new MissionComponentIssueRegistry()
+  public readonly issueRegistry: MissionComponentIssueRegistry
 
   /**
    * All nodes that exist in the mission across
@@ -267,6 +266,7 @@ export abstract class Mission<
     this.importFiles(fileData)
     this.importEffects(effectData)
 
+    this.issueRegistry = new MissionComponentIssueRegistry()
     this.initializeIssueRegistry()
   }
 
@@ -276,8 +276,8 @@ export abstract class Mission<
    * Called once during construction before components are imported.
    */
   protected initializeIssueRegistry(): void {
-    MissionComponent.registerIssueCheckers(this.issueRegistry)
     Effect.registerIssueCheckers(this.issueRegistry)
+    MissionFile.registerIssueCheckers(this.issueRegistry)
     TargetArgument.registerIssueCheckers(this.issueRegistry)
   }
 

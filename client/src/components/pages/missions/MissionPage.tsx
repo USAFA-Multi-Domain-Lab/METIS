@@ -280,6 +280,14 @@ export default function MissionPage(
       if (viewMode === 'preview') return
       onAttachFileRequest(reference)
     },
+    onSuccessfulDeletion: (reference) => {
+      let orphanedFile = localFiles.find(
+        (file) => file.referenceId === reference._id,
+      )
+      if (orphanedFile) {
+        mission.issueRegistry.trigger('file-orphaned', orphanedFile)
+      }
+    },
   }
 
   /**
@@ -317,18 +325,19 @@ export default function MissionPage(
 
   // componentDidMount
   const [mountHandled] = useMountHandler(async (done) => {
-    // Make sure the user has access to the page.
-    if (!isAuthorized('missions_write') && !isAuthorized('missions_read')) {
-      handleError(
-        'You do not have access to this page. Please contact an administrator.',
-      )
-      return done()
-    }
+    try {
+      // Make sure the user has access to the page.
+      if (!isAuthorized('missions_write') && !isAuthorized('missions_read')) {
+        handleError(
+          'You do not have access to this page. Please contact an administrator.',
+        )
+        return done()
+      }
 
-    // Handle the editing of an existing mission.
-    if (props.missionId !== null) {
-      try {
+      // Handle the editing of an existing mission.
+      if (props.missionId !== null) {
         beginLoading('Loading mission...')
+
         let mission = await ClientMission.$fetchOne(props.missionId, {
           nonRevealedDisplayMode: 'show',
         })
@@ -346,23 +355,23 @@ export default function MissionPage(
         setLocalFiles(mission.files)
         setSelection(mission)
         setIssues(mission.allIssues)
-        beginLoading('Loading global files...')
-
-        // The user currently logged in must
-        // have restricted access to view the
-        // files.
-        if (isAuthorized('files_read')) await loadGlobalFiles(mission)
-      } catch {
-        handleError('Failed to load mission.')
+      } else {
+        mission.context = 'edit'
       }
-    } else {
-      mission.context = 'edit'
-    }
 
-    // Finish loading.
-    finishLoading()
-    // Mark mount as handled.
-    done()
+      // The user currently logged in must
+      // have restricted access to view the
+      // files.
+      if (isAuthorized('files_read')) {
+        beginLoading('Loading global files...')
+        await loadGlobalFiles(mission)
+      }
+
+      finishLoading()
+      done()
+    } catch {
+      handleError('Failed to load mission.')
+    }
   })
 
   // Update the files in the mission when the

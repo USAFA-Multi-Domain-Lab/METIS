@@ -1,7 +1,6 @@
 import { MetisComponent } from '../MetisComponent'
 import type { Mission } from './Mission'
 import type { MissionComponentIssue } from './MissionComponentIssue'
-import type { MissionComponentIssueRegistry } from './MissionComponentIssueRegistry'
 
 /**
  * An object that makes up a part of a mission, including
@@ -15,8 +14,14 @@ export abstract class MissionComponent<
 > extends MetisComponent {
   // Overridden
   public set deleted(value: boolean) {
+    if (value === true) {
+      for (let component of this.subComponents) {
+        if (!component.deleted) component.delete()
+      }
+      this.sourceList.splice(this.sourceList.indexOf(this), 1)
+    }
     super.deleted = value
-    this.mission.issueRegistry.trigger('deleted-is-set', this)
+    this.mission.issueRegistry.onDelete(this)
   }
 
   /**
@@ -75,29 +80,11 @@ export abstract class MissionComponent<
   }
 
   /**
-   * Deletes the component by marking {@link deleted} as `true`
-   * and removing it from {@link sourceList}.
+   * Deletes the component by recursively deleting all sub-components,
+   * removing it from {@link sourceList}, and marking {@link deleted} as `true`.
    */
   public delete(): void {
-    this.sourceList.splice(this.sourceList.indexOf(this), 1)
     this.deleted = true
-  }
-
-  /**
-   * Registers issue checkers common to all {@link MissionComponent} instances
-   * with the provided registry.
-   * @param registry The registry to register checkers with.
-   */
-  public static registerIssueCheckers(
-    registry: MissionComponentIssueRegistry,
-  ): void {
-    registry.check({
-      key: 'deleted',
-      message: (component) => `"${component.name}" has been marked as deleted.`,
-      what: [MissionComponent],
-      when: ['initialization', 'deleted-is-set'],
-      if: (component) => component.deleted,
-    })
   }
 }
 

@@ -39,7 +39,7 @@ export default function TargetArgumentDetail({
   /* -- RENDER -- */
 
   // Return early if the argument is not ready for display.
-  if (argument.valueIsMalformed || !allDependenciesMet) return null
+  if (!allDependenciesMet) return null
 
   let internalDetailJsx = compute<TReactElement | null>(() => {
     switch (argument.type) {

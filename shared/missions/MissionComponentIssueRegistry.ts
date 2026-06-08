@@ -30,9 +30,23 @@ export class MissionComponentIssueRegistry implements TListenerTargetEmittable<T
   > = new Map()
 
   /**
+   * All issues currently in the registry across all components.
+   */
+  public get allIssues(): MissionComponentIssue<any>[] {
+    return [...this._issues.values()].flat()
+  }
+
+  /**
    * Manages {@link TListenerTargetEmittable} event listeners for this registry.
    */
   private eventManager: EventManager<TMissionIssueRegistryEvent>
+
+  public constructor() {
+    this.eventManager = new EventManager(this)
+    this.addEventListener = this.eventManager.addEventListener
+    this.removeEventListener = this.eventManager.removeEventListener
+    this.emitEvent = this.eventManager.emitEvent
+  }
 
   // Implemented
   public addEventListener: TListenerTargetEmittable<TMissionIssueRegistryEvent>['addEventListener']
@@ -42,13 +56,6 @@ export class MissionComponentIssueRegistry implements TListenerTargetEmittable<T
 
   // Implemented
   public emitEvent: TListenerTargetEmittable<TMissionIssueRegistryEvent>['emitEvent']
-
-  public constructor() {
-    this.eventManager = new EventManager(this)
-    this.addEventListener = this.eventManager.addEventListener
-    this.removeEventListener = this.eventManager.removeEventListener
-    this.emitEvent = this.eventManager.emitEvent
-  }
 
   /**
    * Constructs a {@link MissionComponentIssueChecker} from the provided options
@@ -159,10 +166,17 @@ export class MissionComponentIssueRegistry implements TListenerTargetEmittable<T
   }
 
   /**
-   * All issues currently in the registry across all components.
+   * Handles the deletion of a component by removing it from the
+   * registry, if present.
+   * @param component The component that was deleted.
+   * @note Emits a `'change'` event if the component was
+   * present in the registry.
    */
-  public get allIssues(): MissionComponentIssue<any>[] {
-    return [...this._issues.values()].flat()
+  public onDelete(component: MissionComponent<any, any>): void {
+    if (this._issues.has(component)) {
+      this._issues.delete(component)
+      this.emitEvent('change')
+    }
   }
 }
 

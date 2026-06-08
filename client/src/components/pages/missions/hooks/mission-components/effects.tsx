@@ -79,11 +79,8 @@ export default function useEffectItemButtonCallbacks<
         host.mission.selectBack()
       }
 
-      // Filter out the effect from the action.
-      host.effects = host.effects.filter(
-        (actionEffect: TMetisClientComponents[THost['effectType']]) =>
-          actionEffect._id !== effect._id,
-      )
+      // Remove the effect from its host.
+      effect.delete()
 
       // Notify the user.
       notify(`Successfully deleted "${effect.name}".`)
