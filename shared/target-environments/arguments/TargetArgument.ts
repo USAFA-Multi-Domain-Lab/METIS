@@ -8,6 +8,7 @@ import { MissionResource } from '@shared/missions/MissionResource'
 import { MissionNode } from '@shared/missions/nodes/MissionNode'
 import type { TMissionComponentSerializedSelection } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter2'
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
+import { BooleanToolbox } from '@shared/toolbox/booleans/BooleanToolbox'
 import {
   ObjectToolbox,
   type TSatisfies,
@@ -144,7 +145,32 @@ export abstract class TargetArgument<
    * is returned.
    */
   public get hasTypeMismatch(): boolean {
-    return !this.parameterIsMissing && this.parameter!.type !== this.type
+    return this.parameter?.type !== this.type
+  }
+
+  /**
+   * Whether this argument has a dropdown parameter whose options do not include
+   * the assigned value. If `parameter` is `undefined` or not a dropdown type, `false`
+   * is returned.
+   */
+  public get valueIsInvalidOption(): boolean {
+    return (
+      this.parameter?.type === 'dropdown' &&
+      this.parameter.options.every((option) => option.value !== this.value)
+    )
+  }
+
+  /**
+   * Whether this argument has a string parameter with a pattern that does not match
+   * the assigned value.
+   * @note If `parameter` is `undefined` or not a string type, `false` is returned.
+   */
+  public get hasPatternMismatch(): boolean {
+    return (
+      this.parameter?.type === 'string' &&
+      !!this.parameter.pattern &&
+      !this.parameter.pattern.test(`${this.value}`)
+    )
   }
 
   /**
@@ -299,7 +325,10 @@ export abstract class TargetArgument<
         what: [TargetArgument],
         when: ['initialization', 'effect-updated'],
         if: (argument) =>
-          !argument.effect.targetArgumentsLocked && argument.parameterIsMissing,
+          BooleanToolbox.onlyLast(
+            argument.effect.targetArgumentsLocked,
+            argument.parameterIsMissing,
+          ),
       })
       .check({
         key: 'type-mismatch',
@@ -308,7 +337,11 @@ export abstract class TargetArgument<
         what: [TargetArgument],
         when: ['initialization', 'effect-updated'],
         if: (argument) =>
-          !argument.effect.targetArgumentsLocked && argument.hasTypeMismatch,
+          BooleanToolbox.onlyLast(
+            argument.effect.targetArgumentsLocked,
+            argument.parameterIsMissing,
+            argument.hasTypeMismatch,
+          ),
       })
       .check({
         key: 'dropdown-value-mismatch',
@@ -316,19 +349,13 @@ export abstract class TargetArgument<
           `Effect "${argument.effect.name}" has an argument with parameter ID "${argument.parameterId}" that has a value "${argument.context.value}" that does not match any of the dropdown options.`,
         what: [TargetArgument],
         when: ['initialization', 'effect-updated'],
-        if: (argument) => {
-          if (
-            argument.effect.targetArgumentsLocked ||
-            argument.parameterIsMissing ||
-            argument.hasTypeMismatch ||
-            argument.parameter?.type !== 'dropdown'
-          ) {
-            return false
-          }
-          return argument.parameter.options.every(
-            (option) => option.value !== argument.value,
-          )
-        },
+        if: (argument) =>
+          BooleanToolbox.onlyLast(
+            argument.effect.targetArgumentsLocked,
+            argument.parameterIsMissing,
+            argument.hasTypeMismatch,
+            argument.valueIsInvalidOption,
+          ),
       })
       .check({
         key: 'pattern-mismatch',
@@ -336,21 +363,13 @@ export abstract class TargetArgument<
           `Effect "${argument.effect.name}" has an argument with parameter ID "${argument.parameterId}" that does not match the required pattern.`,
         what: [TargetArgument],
         when: ['initialization', 'effect-updated'],
-        if: (argument) => {
-          let { parameter } = argument
-          if (
-            argument.effect.targetArgumentsLocked ||
-            argument.parameterIsMissing ||
-            argument.hasTypeMismatch ||
-            parameter?.type !== 'string'
-          ) {
-            return false
-          }
-          return (
-            !!parameter.pattern &&
-            !parameter.pattern.test(`${argument.context.value}`)
-          )
-        },
+        if: (argument) =>
+          BooleanToolbox.onlyLast(
+            argument.effect.targetArgumentsLocked,
+            argument.parameterIsMissing,
+            argument.hasTypeMismatch,
+            argument.hasPatternMismatch,
+          ),
       })
   }
 

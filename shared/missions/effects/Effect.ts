@@ -1,5 +1,6 @@
 import type { TTargetArgumentJson } from '@shared/target-environments/arguments/TargetArgument'
 import type { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
+import { BooleanToolbox } from '@shared/toolbox/booleans/BooleanToolbox'
 import type { TTargetParameter } from '../../target-environments/parameters/TargetParameter'
 import type { TargetDependency } from '../../target-environments/targets/TargetDependency'
 import { StringToolbox } from '../../toolbox/strings/StringToolbox'
@@ -196,12 +197,11 @@ export abstract class Effect<
   public localKey: string
 
   /**
-   * Whether the effect is missing its target or target
-   * environment, which are necessary for the effect to
-   * be enacted.
+   * Whether the effect is missing its target, which is
+   * necessary for the effect to be enacted.
    */
-  public get missingTargetOrEnvironment(): boolean {
-    return !this.environment || !this.target
+  public get missingTarget(): boolean {
+    return !this.target
   }
 
   /**
@@ -210,10 +210,7 @@ export abstract class Effect<
    * inferred.
    */
   public get failedEnvironmentInference(): boolean {
-    return (
-      !this.missingTargetOrEnvironment &&
-      this.environmentId === Effect.LEGACY_INFER_ENV_ID
-    )
+    return this.environmentId === Effect.LEGACY_INFER_ENV_ID
   }
 
   /**
@@ -223,16 +220,7 @@ export abstract class Effect<
   public get outdated(): boolean {
     let { target } = this
 
-    // If the effect is missing its target or environment,
-    // or if the target environment cannot be inferred,
-    // then there is no way to know if the effect is outdated.
-    if (
-      this.missingTargetOrEnvironment ||
-      this.failedEnvironmentInference ||
-      !target
-    ) {
-      return false
-    }
+    if (!target) return false
 
     let latestMigratableVersion = target.latestMigratableVersion
 
@@ -258,9 +246,7 @@ export abstract class Effect<
    */
   public get targetArgumentsLocked(): boolean {
     return (
-      this.missingTargetOrEnvironment ||
-      this.failedEnvironmentInference ||
-      this.outdated
+      this.missingTarget || this.failedEnvironmentInference || this.outdated
     )
   }
 
@@ -467,19 +453,23 @@ export abstract class Effect<
     registry: MissionComponentIssueRegistry,
   ): void {
     registry.check({
-      key: 'missing-target-or-environment',
+      key: 'missing-target',
       message: (effect) =>
-        `The effect, "${effect.name}", has a target or a target environment that couldn't be found. ` +
+        `The effect, "${effect.name}", has a target that couldn't be found. ` +
         `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`,
       what: [Effect],
-      if: (effect) => effect.missingTargetOrEnvironment,
+      if: (effect) => effect.missingTarget,
     })
     registry.check({
       key: 'legacy-infer-env',
       message: (effect) =>
         `The effect, "${effect.name}" has a reference to a target, but not to a target environment.`,
       what: [Effect],
-      if: (effect) => effect.failedEnvironmentInference,
+      if: (effect) =>
+        BooleanToolbox.onlyLast(
+          effect.missingTarget,
+          effect.failedEnvironmentInference,
+        ),
     })
     registry.check({
       key: 'outdated',
@@ -489,7 +479,12 @@ export abstract class Effect<
         `Please click to resolve this.`,
       what: [Effect],
       when: ['initialization', 'effect-updated'],
-      if: (effect) => effect.outdated,
+      if: (effect) =>
+        BooleanToolbox.onlyLast(
+          effect.missingTarget,
+          effect.failedEnvironmentInference,
+          effect.outdated,
+        ),
     })
   }
 

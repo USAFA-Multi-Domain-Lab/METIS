@@ -75,4 +75,19 @@ export class BooleanToolbox {
       return false
     }
   }
+
+  /**
+   * @returns `true` if every value is false except the last one
+   * which must be true.
+   * @example [false, false, true] => true ✅
+   * @example [false, true, false] => false ❌
+   * @example [true, false, false] => false ❌
+   * @example [true, true, true] => false ❌
+   */
+  public static onlyLast(...values: boolean[]): boolean {
+    return Boolean(
+      values[values.length - 1] &&
+      values.slice(0, -1).every((value) => value === false),
+    )
+  }
 }
