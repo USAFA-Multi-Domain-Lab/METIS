@@ -52,6 +52,9 @@ declare global {
   export type TTargetScriptContext = TargetEnvTypes.TTargetScriptExposedContext
   export type TTargetSchemaOptions = TargetEnvTypes.TTargetSchemaOptions
   export type TTargetScript = TargetEnvTypes.TTargetScript
+  export type TContextWithParams<
+    TSchemas extends readonly TTargetParameterJson[],
+  > = TTargetScriptContext & TargetEnvTypes.TNamedParamsContext<TSchemas>
   export type TTargetEnvExposedForce = ServerContextTypes.TTargetEnvExposedForce
   export type TTargetEnvExposedNode = ServerContextTypes.TTargetEnvExposedNode
   export type TTargetEnvExposedAction =

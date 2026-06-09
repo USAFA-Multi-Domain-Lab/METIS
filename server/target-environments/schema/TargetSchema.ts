@@ -148,7 +148,21 @@ export class TargetSchema {
         )
         return match?.value
       }) as InferArgumentsTuple<Params>
-      return typedScript(context, ...argValues)
+
+      const namedParams: Record<string, unknown> = {}
+      for (let i = 0; i < parameters.length; i++) {
+        namedParams[parameters[i]._id] = argValues[i]
+      }
+
+      const typedContext = new Proxy(context, {
+        get(target, prop, receiver) {
+          if (prop in target) return Reflect.get(target, prop, receiver)
+          if (typeof prop === 'string' && prop in namedParams) return namedParams[prop]
+          return Reflect.get(target, prop, receiver)
+        },
+      }) as unknown as TTargetScriptExposedContext & TNamedParamsContext<Params>
+
+      return typedScript(typedContext, ...argValues)
     }
 
     return new TargetSchema({
@@ -194,6 +208,7 @@ export interface TTargetSchemaOptions extends Omit<
  * {@link TTargetParameter} are structural subtypes of this.
  */
 type TParamLike = {
+  _id: string
   type: keyof TSelectExposedArgumentValue
   required?: boolean
   validComponentTypes?:
@@ -258,6 +273,23 @@ export type InferArgumentsTuple<Params extends readonly TParamLike[]> = {
 }
 
 /**
+ * Creates a named-property map from a parameter schema tuple, mapping each
+ * parameter's `_id` literal to its runtime value type. Used to enrich the
+ * context type in {@link TTypedTargetScript} and {@link TContextWithParams}.
+ *
+ * @example
+ * ```ts
+ * type Ctx = TTargetScriptContext & TNamedParamsContext<typeof MyTarget.SCHEMAS>
+ * // ctx.callsign → string, ctx.heading → number, etc.
+ * ```
+ */
+export type TNamedParamsContext<Params extends readonly TParamLike[]> = {
+  readonly [P in Params[number] as P extends { _id: infer K extends string }
+    ? string extends K ? never : K
+    : never]: SingleParamToArgValue<P>
+}
+
+/**
  * A typed script that receives one positional argument per parameter, in
  * declaration order, in addition to the context object.
  *
@@ -265,7 +297,7 @@ export type InferArgumentsTuple<Params extends readonly TParamLike[]> = {
  * argument types from the `parameters` array at the call site.
  */
 export type TTypedTargetScript<Params extends readonly TParamLike[]> = (
-  context: TTargetScriptExposedContext,
+  context: TTargetScriptExposedContext & TNamedParamsContext<Params>,
   ...args: InferArgumentsTuple<Params>
 ) => Promise<void>
 
