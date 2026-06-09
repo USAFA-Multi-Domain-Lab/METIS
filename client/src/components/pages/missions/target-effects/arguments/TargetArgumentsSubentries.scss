@@ -1,6 +1,6 @@
 @use '@client/assets/styles/config.scss' as *;
 
-.TargetArgumentsSubentry {
+.TargetArgumentSubentry {
   margin: 1.25rem 0 0;
 
   .Title {
@@ -10,10 +10,11 @@
     margin: 0 0 1.5em;
   }
 
-  .ArgumentsIssueMessage {
+  .ArgumentIssueMessage {
     margin-top: 1em;
     color: $color-faded;
     font-size: 0.85em;
     font-style: italic;
+    line-height: 1.3em;
   }
 }

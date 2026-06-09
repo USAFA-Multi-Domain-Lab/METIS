@@ -59,7 +59,7 @@ export abstract class MissionComponent<
    * Issues associated with the component that need to be resolved.
    */
   public get issues(): MissionComponentIssue<this>[] {
-    return this.mission.issueRegistry.getFor(this)
+    return this.mission.issueRegistry.getComponentIssues(this)
   }
 
   /**
@@ -85,6 +85,14 @@ export abstract class MissionComponent<
    */
   public delete(): void {
     this.deleted = true
+  }
+
+  /**
+   * @param issueKey The identifier for the issue.
+   * @returns Whether the component has the issue associated with the key.
+   */
+  public hasIssue(issueKey: string): boolean {
+    return this.mission.issueRegistry.componentHasIssue(this, issueKey)
   }
 }
 

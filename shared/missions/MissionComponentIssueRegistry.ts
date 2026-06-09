@@ -159,10 +159,24 @@ export class MissionComponentIssueRegistry implements TListenerTargetEmittable<T
    * Returns all issues currently registered for the provided component.
    * @param component The component to retrieve issues for.
    */
-  public getFor<TComponent extends MissionComponent<any, any>>(
+  public getComponentIssues<TComponent extends MissionComponent<any, any>>(
     component: TComponent,
   ): MissionComponentIssue<TComponent>[] {
     return this._issues.get(component) ?? []
+  }
+
+  /**
+   * Returns whether the provided component currently has an issue with the
+   * provided key.
+   * @param component The component to check.
+   * @param key The issue key to check.
+   */
+  public componentHasIssue(
+    component: MissionComponent<any, any>,
+    key: string,
+  ): boolean {
+    let componentIssues = this._issues.get(component) ?? []
+    return componentIssues.some((issue) => issue.key === key)
   }
 
   /**

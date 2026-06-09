@@ -11,6 +11,7 @@ $detail-field-horizontal-padding: 1.2em;
 $detail-field-padding: $detail-field-vertical-padding
   $detail-field-horizontal-padding;
 $detail-field-font-size: 0.92rem;
+$form-row-gap: 1.5em;
 
 @mixin detail-field-styling() {
   box-sizing: border-box;
@@ -30,14 +31,14 @@ $detail-field-font-size: 0.92rem;
 
   &.Warning {
     border: 2px solid $color-neutral;
-    color: $color-neutral;
+    color: $color-neutral-light;
   }
 }
 
 @mixin form-container {
   display: grid;
   align-content: start;
-  row-gap: 1.5em;
+  row-gap: $form-row-gap;
 }
 
 @mixin detail-info-styling() {
@@ -79,7 +80,7 @@ $detail-field-font-size: 0.92rem;
   }
 
   &.Warning {
-    color: $color-neutral;
+    color: $color-neutral-light;
   }
 }
 
@@ -114,11 +115,13 @@ $detail-field-font-size: 0.92rem;
 
   .FieldErrorMessage {
     font-size: 0.7em;
+    line-height: 1.3em;
+    font-style: italic;
     color: $color-failure-light;
     font-weight: bold;
 
     &.Warning {
-      color: $color-neutral;
+      color: $color-neutral-light;
     }
 
     &.hide {

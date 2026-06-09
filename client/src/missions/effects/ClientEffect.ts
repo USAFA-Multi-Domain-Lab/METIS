@@ -44,6 +44,13 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
     return this.superComponent
   }
 
+  /**
+   * Tracks whether a migration is currently in progress for this
+   * effect, preventing multiple simultaneous migrations and allowing
+   * the UI to respond accordingly.
+   */
+  public migrationInProgress: boolean = false
+
   // Implemented
   protected parseArguments(
     data: TTargetArgumentJson[],
@@ -133,6 +140,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
    * @rejects If there was an error during the migration process.
    */
   public async $migrateArguments(): Promise<void> {
+    this.migrationInProgress = true
     let results = await ClientTargetEnvironment.$migrateTargetArguments(this)
     // Store the migrated data in the component.
     this.targetEnvironmentVersion = results.version
@@ -141,6 +149,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
     for (let argument of this.arguments) {
       argument.mission.issueRegistry.trigger('effect-updated', argument)
     }
+    this.migrationInProgress = false
   }
 
   /**

@@ -453,7 +453,7 @@ export abstract class Effect<
     registry: MissionComponentIssueRegistry,
   ): void {
     registry.check({
-      key: 'missing-target',
+      key: Effect.ISSUE_KEY_MISSING_TARGET,
       message: (effect) =>
         `The effect, "${effect.name}", has a target that couldn't be found. ` +
         `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`,
@@ -461,7 +461,7 @@ export abstract class Effect<
       if: (effect) => effect.missingTarget,
     })
     registry.check({
-      key: 'legacy-infer-env',
+      key: Effect.ISSUE_KEY_LEGACY_INFER,
       message: (effect) =>
         `The effect, "${effect.name}" has a reference to a target, but not to a target environment.`,
       what: [Effect],
@@ -472,7 +472,7 @@ export abstract class Effect<
         ),
     })
     registry.check({
-      key: 'outdated',
+      key: Effect.ISSUE_KEY_OUTDATED,
       message: (effect) =>
         `The effect, "${effect.name}", is incompatible with the current version of the target environment, "${effect.environment?.name}". ` +
         `This effect must be updated to be made compatible. ` +
@@ -505,6 +505,24 @@ export abstract class Effect<
    * indicates missing target environment reference.
    */
   public static readonly LEGACY_INFER_ENV_ID: string = 'infer-for-build_000038'
+
+  /**
+   * Key used to index an issue when an effect is missing
+   * its target.
+   */
+  public static readonly ISSUE_KEY_MISSING_TARGET = 'missing-target'
+
+  /**
+   * Key used to index an issue when an effect predates the
+   * tracking of `environmentId` and the target environment cannot
+   * be inferred.
+   */
+  public static readonly ISSUE_KEY_LEGACY_INFER = 'legacy-infer-env'
+
+  /**
+   * Key used to index an issue when an effect is outdated.
+   */
+  public static readonly ISSUE_KEY_OUTDATED = 'outdated'
 
   /**
    * Default properties set when creating a new

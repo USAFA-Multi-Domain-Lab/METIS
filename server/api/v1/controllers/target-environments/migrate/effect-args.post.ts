@@ -4,6 +4,8 @@ import { databaseLogger } from '@server/logging'
 import { ServerMission } from '@server/missions/ServerMission'
 import { ApiResponse } from '../../../library/ApiResponse'
 
+let updates = 0
+
 /**
  * This will run a migration script on the effect
  * arguments passed.

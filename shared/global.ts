@@ -115,6 +115,7 @@ declare global {
     | 'undo'
     | 'unlink'
     | 'up'
+    | 'update'
     | 'upload'
     | 'user'
     | 'warning-transparent'
