@@ -61,11 +61,14 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
         ClientTargetArgument.fromJson(datum, this),
     )
 
-    // Extra step on the client, which ensures any
-    // missing arguments are auto-generated and included
-    // in the effect. Skip if the effect is outdated, since
-    // a migration will supply the missing arguments instead.
+    // Extra step on the client to keep arguments in sync with the target's
+    // current parameters. Skip if the effect is outdated or the target cannot
+    // be resolved, since a migration will supply the correct arguments instead.
     if (this.target && !this.outdated) {
+      targetArguments = targetArguments.filter((argument) =>
+        this.target!.getParameterById(argument.parameterId),
+      )
+
       for (let parameter of this.target.parameters) {
         if (!targetArguments.find((arg) => arg.parameterId === parameter._id)) {
           targetArguments.push(

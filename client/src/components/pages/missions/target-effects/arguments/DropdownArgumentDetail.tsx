@@ -1,5 +1,4 @@
 import type { ClientTargetArgument } from '@client/target-environments/arguments/ClientTargetArgument'
-import { compute } from '@client/toolbox'
 import { useObjectFormSync } from '@client/toolbox/hooks'
 import type { TDropdownTargetParameterOption } from '@shared/target-environments/parameters/DropdownTargetParameter'
 import { DetailDropdown } from '../../../../content/form/dropdowns/standard/DetailDropdown'
@@ -38,23 +37,26 @@ export default function DropdownArgumentDetail({
 
   /* -- COMPUTED -- */
 
-  let availableOptions = compute<TDropdownTargetParameterOption[]>(() =>
-    parameter.options.filter((option) =>
-      argument.effect.allDependenciesMet(option.dependencies),
-    ),
-  )
   let currentOption =
     parameter.options.find((option) => option.value === value) ?? null
+  let staleWarningMessage =
+    'The previously selected option is no longer available. Please select a new option.'
 
   /* -- RENDER -- */
 
   if (parameter.required) {
-    const value = currentOption ?? parameter.default
+    let displayValue: TDropdownTargetParameterOption =
+      currentOption ?? {
+        _id: `${argument._id}-stale`,
+        name: `${String(value)} (no longer available)`,
+        value: value,
+      }
 
     const setValue: TReactSetter<TDropdownTargetParameterOption> = (
       newValue: TReactSetterParameter<TDropdownTargetParameterOption>,
     ): void => {
-      const option = typeof newValue === 'function' ? newValue(value) : newValue
+      const option =
+        typeof newValue === 'function' ? newValue(displayValue) : newValue
       setContext({ ...context, value: option.value })
     }
 
@@ -62,26 +64,33 @@ export default function DropdownArgumentDetail({
       <DetailDropdown<TDropdownTargetParameterOption>
         fieldType='required'
         label={parameter.name}
-        options={availableOptions}
-        value={value}
+        options={parameter.options}
+        value={displayValue}
         setValue={setValue}
         isExpanded={false}
         tooltipDescription={parameter.tooltipDescription}
         getKey={({ _id }) => _id}
         render={({ name }) => name}
-        handleInvalidOption={{
-          method: 'setToDefault',
-          defaultValue: parameter.default,
-        }}
+        handleInvalidOption={{ method: 'warning', message: staleWarningMessage }}
         key={`arg-${argument._id}_type-${parameter.type}_required`}
       />
     )
   } else {
+    let isStale =
+      value !== null && value !== undefined && currentOption === null
+    let displayValue: TDropdownTargetParameterOption | null = isStale
+      ? {
+          _id: `${argument._id}-stale`,
+          name: `${String(value)} (no longer available)`,
+          value: value,
+        }
+      : currentOption
+
     const setValue: TReactSetter<TDropdownTargetParameterOption | null> = (
       newValue: TReactSetterParameter<TDropdownTargetParameterOption | null>,
     ): void => {
       let option =
-        typeof newValue === 'function' ? newValue(currentOption) : newValue
+        typeof newValue === 'function' ? newValue(displayValue) : newValue
       setContext({
         ...context,
         value: option?.value ?? null,
@@ -92,17 +101,14 @@ export default function DropdownArgumentDetail({
       <DetailDropdown<TDropdownTargetParameterOption>
         fieldType='optional'
         label={parameter.name}
-        options={availableOptions}
-        value={currentOption}
+        options={parameter.options}
+        value={displayValue}
         setValue={setValue}
         isExpanded={false}
         tooltipDescription={parameter.tooltipDescription}
         getKey={(option) => option?._id}
         render={(option) => option?.name}
-        handleInvalidOption={{
-          method: 'setToDefault',
-          defaultValue: null,
-        }}
+        handleInvalidOption={{ method: 'warning', message: staleWarningMessage }}
         key={`arg-${argument._id}_type-${parameter.type}_optional`}
       />
     )

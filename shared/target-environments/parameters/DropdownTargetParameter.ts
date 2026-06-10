@@ -1,4 +1,3 @@
-import type { TargetDependency } from '../targets/TargetDependency'
 import type { TBaseTargetParameter, TBaseTargetParameterJson } from '../types'
 import { TargetParameter } from './TargetParameter'
 
@@ -55,9 +54,6 @@ export class DropdownTargetParameter {
         _id: option._id,
         name: option.name,
         value: option.value,
-        dependencies: option.dependencies
-          ? TargetParameter.encodeDependencies(option.dependencies)
-          : undefined,
       }
     })
   }
@@ -73,9 +69,6 @@ export class DropdownTargetParameter {
       _id: option._id,
       name: option.name,
       value: option.value,
-      dependencies: option.dependencies
-        ? TargetParameter.encodeDependencies(option.dependencies)
-        : undefined,
     }
   }
 
@@ -127,9 +120,6 @@ export class DropdownTargetParameter {
         _id: option._id,
         name: option.name,
         value: option.value,
-        dependencies: option.dependencies
-          ? TargetParameter.decodeDependencies(option.dependencies)
-          : undefined,
       }
     })
   }
@@ -145,9 +135,6 @@ export class DropdownTargetParameter {
       _id: option._id,
       name: option.name,
       value: option.value,
-      dependencies: option.dependencies
-        ? TargetParameter.decodeDependencies(option.dependencies)
-        : undefined,
     }
   }
   /**
@@ -309,83 +296,6 @@ export type TDropdownTargetParameterOption<
    * ```
    */
   value: Value
-  /**
-   * These are the keys of the arguments that the current option depends on.
-   * @note If the option depends on another argument, the option will only be displayed in the dropdown list if the dependency is met.
-   * @note If the option depends on multiple arguments, all dependencies must be met for the option to be displayed in the dropdown list.
-   * @note If the dependency has no dependencies (i.e. set to `undefined` or `[]`), the option will always be displayed in the dropdown list.
-   * @default undefined
-   * @example
-   * ```typescript
-   * // This option is always displayed because it has no dependencies.
-   * // Note: The argument itself is also always displayed because it has no dependencies as well.
-   * {
-   *    _id: 'argument1',
-   *    name: 'Argument 1',
-   *    required: false,
-   *    groupingId: 'argument',
-   *    type: 'dropdown',
-   *    options: [
-   *      {
-   *       _id: 'option1',
-   *       name: 'Option 1',
-   *     },
-   * },
-   * {
-   *    _id: 'argument2',
-   *    name: 'Argument 2',
-   *    required: false,
-   *    groupingId: 'argument',
-   *    type: 'dropdown',
-   *    options: [
-   *      {
-   *       _id: 'option1',
-   *       name: 'Option 1',
-   *       // This option is only displayed if the value of 'argument1' is truthy (i.e. 1, 'a', true, etc.)
-   *       // or not falsy (i.e. null, undefined, 0, false, '', etc.).
-   *       dependencies: [Dependency.TRUTHY('argument1')],
-   *     },
-   *    // Note: The argument itself is only displayed if the value of 'argument1' is truthy (i.e. 1, 'a', true, etc.)
-   *    // or not falsy (i.e. null, undefined, 0, false, '', etc.).
-   *    dependencies: [Dependency.TRUTHY('argument1')],
-   * }
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // This option is always displayed because it has no dependencies.
-   * // Note: The argument itself is also always displayed because it has no dependencies as well.
-   * {
-   *    _id: 'argument1',
-   *    name: 'Argument 1',
-   *    required: false,
-   *    groupingId: 'argument',
-   *    type: 'dropdown',
-   *    options: [
-   *      {
-   *       _id: 'option1',
-   *       name: 'Option 1',
-   *     },
-   * },
-   * {
-   *    _id: 'argument2',
-   *    name: 'Argument 2',
-   *    required: false,
-   *    groupingId: 'argument',
-   *    type: 'dropdown',
-   *    options: [
-   *      {
-   *       _id: 'option1',
-   *       name: 'Option 1',
-   *       // This option is only displayed if the value of 'argument1' is equal to 1, 2, or 3.
-   *       dependencies: [Dependency.SOME('argument1', [1, 2, 3])],
-   *     },
-   *    // Note: The argument itself is only displayed if the value of 'argument1' is equal to 1, 2, or 3.
-   *    dependencies: [Dependency.SOME('argument1', [1, 2, 3])],
-   * }
-   * ```
-   */
-  dependencies?: TargetDependency[]
 }
 /**
  * The dropdown argument type for a target.
@@ -532,83 +442,6 @@ export type TDropdownTargetParameterOptionJson<
    * ```
    */
   value: Value
-  /**
-   * These are the keys of the arguments that the current option depends on.
-   * @note If the option depends on another argument, the option will only be displayed in the dropdown list if the dependency is met.
-   * @note If the option depends on multiple arguments, all dependencies must be met for the option to be displayed in the dropdown list.
-   * @note If the dependency has no dependencies (i.e. set to `undefined` or `[]`), the option will always be displayed in the dropdown list.
-   * @default undefined
-   * @example
-   * ```typescript
-   * // This option is always displayed because it has no dependencies.
-   * // Note: The argument itself is also always displayed because it has no dependencies as well.
-   * {
-   *    _id: 'argument1',
-   *    name: 'Argument 1',
-   *    required: false,
-   *    groupingId: 'argument',
-   *    type: 'dropdown',
-   *    options: [
-   *      {
-   *       _id: 'option1',
-   *       name: 'Option 1',
-   *     },
-   * },
-   * {
-   *    _id: 'argument2',
-   *    name: 'Argument 2',
-   *    required: false,
-   *    groupingId: 'argument',
-   *    type: 'dropdown',
-   *    options: [
-   *      {
-   *       _id: 'option1',
-   *       name: 'Option 1',
-   *       // This option is only displayed if the value of 'argument1' is truthy (i.e. 1, 'a', true, etc.)
-   *       // or not falsy (i.e. null, undefined, 0, false, '', etc.).
-   *       dependencies: [Dependency.TRUTHY('argument1')],
-   *     },
-   *    // Note: The argument itself is only displayed if the value of 'argument1' is truthy (i.e. 1, 'a', true, etc.)
-   *    // or not falsy (i.e. null, undefined, 0, false, '', etc.).
-   *    dependencies: [Dependency.TRUTHY('argument1')],
-   * }
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // This option is always displayed because it has no dependencies.
-   * // Note: The argument itself is also always displayed because it has no dependencies as well.
-   * {
-   *    _id: 'argument1',
-   *    name: 'Argument 1',
-   *    required: false,
-   *    groupingId: 'argument',
-   *    type: 'dropdown',
-   *    options: [
-   *      {
-   *       _id: 'option1',
-   *       name: 'Option 1',
-   *     },
-   * },
-   * {
-   *    _id: 'argument2',
-   *    name: 'Argument 2',
-   *    required: false,
-   *    groupingId: 'argument',
-   *    type: 'dropdown',
-   *    options: [
-   *      {
-   *       _id: 'option1',
-   *       name: 'Option 1',
-   *       // This option is only displayed if the value of 'argument1' is equal to 1, 2, or 3.
-   *       dependencies: [Dependency.SOME('argument1', [1, 2, 3])],
-   *     },
-   *    // Note: The argument itself is only displayed if the value of 'argument1' is equal to 1, 2, or 3.
-   *    dependencies: [Dependency.SOME('argument1', [1, 2, 3])],
-   * }
-   * ```
-   */
-  dependencies?: string[]
 }
 
 /**
