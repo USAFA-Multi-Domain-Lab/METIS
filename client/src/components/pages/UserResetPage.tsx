@@ -85,7 +85,7 @@ export default function UserResetPage(): TReactElement | null {
 
     if (user.hasValidPassword1 && password1 !== '') {
       removeUserEmptyString('password1')
-      setPassword1ErrorMessage(undefined)
+      setPassword1ErrorMessage('')
       setAreUnsavedChanges(true)
     }
 
@@ -108,7 +108,7 @@ export default function UserResetPage(): TReactElement | null {
     // If the user has entered a password in the second password field
     // and the two passwords match, remove the error.
     else if (user.passwordsMatch && user.password2) {
-      setPassword2ErrorMessage(undefined)
+      setPassword2ErrorMessage('')
     }
   }, [password1])
 
@@ -118,7 +118,7 @@ export default function UserResetPage(): TReactElement | null {
 
     if (user.hasValidPassword2 && password2 !== '') {
       removeUserEmptyString('password2')
-      setPassword2ErrorMessage(undefined)
+      setPassword2ErrorMessage('')
       setAreUnsavedChanges(true)
     }
 
@@ -229,4 +229,3 @@ export default function UserResetPage(): TReactElement | null {
  * The props for the UserResetPage component.
  */
 export interface IUserResetPage extends TPage_P {}
-
