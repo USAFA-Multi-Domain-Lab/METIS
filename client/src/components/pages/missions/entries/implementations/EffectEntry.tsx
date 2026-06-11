@@ -169,7 +169,6 @@ export default function EffectEntry<TType extends TEffectType>({
       </div>
       <DetailString
         fieldType='required'
-        handleOnBlur='repopulateValue'
         label='Name'
         value={name}
         setValue={setName}
@@ -195,7 +194,6 @@ export default function EffectEntry<TType extends TEffectType>({
       />
       <DetailLargeString
         fieldType='optional'
-        handleOnBlur='none'
         label='Description'
         value={description}
         setValue={setDescription}

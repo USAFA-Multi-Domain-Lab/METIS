@@ -119,7 +119,6 @@ export default function ForceEntry({
     <Entry missionComponent={force} svgEngines={[svgEngine]}>
       <DetailString
         fieldType='required'
-        handleOnBlur='repopulateValue'
         label='Name'
         value={name}
         setValue={setName}
@@ -149,7 +148,6 @@ export default function ForceEntry({
       />
       <DetailLargeString
         fieldType='required'
-        handleOnBlur='repopulateValue'
         label='Introduction Message'
         value={introMessage}
         setValue={setIntroMessage}

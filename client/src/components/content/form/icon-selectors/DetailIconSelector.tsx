@@ -2,7 +2,7 @@ import { LocalContextProvider } from '@client/context/local'
 import { useDefaultProps } from '@client/toolbox/hooks'
 import type { TDetailRequired_P } from '..'
 import DetailTitleRow from '../DetailTitleRow'
-import { useDetailClassNames } from '../useDetailClassNames'
+import { useDetailClassNames } from '../hooks/useDetailClassNames'
 import { detailIconSelectorContext } from './context'
 import './DetailIconSelector.scss'
 import IconSelectorRow from './subcomponents/IconSelectorRow'
@@ -99,7 +99,7 @@ export function DetailIconSelector(
  */
 export type TDetailIconSelector_P = Omit<
   TDetailRequired_P<TMetisIcon>,
-  'fieldType' | 'errorMessage' | 'errorType' | 'errorDisplay'
+  'fieldType' | 'errorMessage' | 'errorType'
 > & {
   /**
    * Field type for the detail.

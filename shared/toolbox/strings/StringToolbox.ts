@@ -180,6 +180,22 @@ export class StringToolbox {
   public static s(count: number): string {
     return count === 1 ? '' : 's'
   }
+
+  /**
+   * @param value The value to check.
+   * @returns If the value is either `null`, `undefined`, or `''` after trimming.
+   */
+  public static isEmpty(value: string | null | undefined): boolean {
+    return value === null || value === undefined || value.trim() === ''
+  }
+
+  /**
+   * @param value The value to check.
+   * @returns True if the value is not `null`, `undefined`, or `''` after trimming.
+   */
+  public static isFilled(value: string | null | undefined): boolean {
+    return !StringToolbox.isEmpty(value)
+  }
 }
 
 /** Returns `"s"` or `""` based on count — for inline template literals.

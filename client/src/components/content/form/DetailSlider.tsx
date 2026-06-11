@@ -2,7 +2,7 @@ import { compute } from '@client/toolbox'
 import type { TDetail_P } from '.'
 import './DetailSlider.scss'
 import DetailTitleRow from './DetailTitleRow'
-import { useDetailClassNames } from './useDetailClassNames'
+import { useDetailClassNames } from './hooks/useDetailClassNames'
 
 /**
  * This will render a detail for

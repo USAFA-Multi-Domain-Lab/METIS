@@ -79,7 +79,6 @@ export default function MissionEntry({
     <Entry missionComponent={mission}>
       <DetailString
         fieldType='required'
-        handleOnBlur='repopulateValue'
         label='Name'
         value={name}
         setValue={setName}
@@ -108,7 +107,6 @@ export default function MissionEntry({
         <PanelView title='General'>
           <DetailString
             fieldType='required'
-            handleOnBlur='repopulateValue'
             label='Name'
             value={name}
             setValue={setName}

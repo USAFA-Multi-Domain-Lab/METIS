@@ -1,13 +1,14 @@
-import { compute } from '@client/toolbox'
-import type { EditorEvents } from '@tiptap/react'
+import type { Editor, EditorEvents } from '@tiptap/react'
+import { useRef, useState } from 'react'
 import type { TDetailWithInput_P } from '.'
 import RichText from '../general-layout/rich-text/RichText'
 import ButtonSvgPanel from '../user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../user-controls/buttons/panels/hooks'
 import './DetailLargeString.scss'
 import DetailTitleRow from './DetailTitleRow'
-import { useDetailClassNames } from './useDetailClassNames'
-import { useErrorMessages } from './useDisplayError'
+import { useDefaultValue } from './hooks/useDefaultValue'
+import { useDetailClassNames } from './hooks/useDetailClassNames'
+import { useErrorMessages } from './hooks/useErrorMessages'
 
 const BLANK_ERROR_MESSAGE: string = 'At least one character is required here.'
 
@@ -18,15 +19,13 @@ const BLANK_ERROR_MESSAGE: string = 'At least one character is required here.'
  */
 export function DetailLargeString({
   fieldType,
-  handleOnBlur,
   label,
   value: stateValue,
   setValue: setState,
   // Optional Properties
-  defaultValue = undefined,
+  defaultValue = '',
   errorMessage = '',
   errorType = 'default',
-  errorDisplay = 'on-blur',
   disabled = false,
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
@@ -34,6 +33,9 @@ export function DetailLargeString({
   tooltipDescription = '',
 }: TDetailLargeString_P): TReactElement | null {
   /* -- STATE -- */
+
+  const [focused, setFocused] = useState<boolean>(false)
+  const editorRef = useRef<Editor | null>(null)
   const buttonEngine = useButtonSvgEngine({
     elements: [
       {
@@ -46,13 +48,11 @@ export function DetailLargeString({
   })
 
   /* -- COMPUTED -- */
-  let { displayError, activeErrorMessage, markLeftField } = useErrorMessages({
-    errorMethod: 'interactive',
+  let { displayError, activeErrorMessage } = useErrorMessages({
     errorMessage,
-    errorDisplay,
-    handleOnBlur,
     fieldType,
-    stateIsEmpty: stateValue === '',
+    inputValue: stateValue,
+    focused,
     blankErrorMessage: BLANK_ERROR_MESSAGE,
   })
   const { rootClasses, labelClasses, fieldClasses, fieldErrorClasses } =
@@ -64,16 +64,6 @@ export function DetailLargeString({
       uniqueLabelClassName,
       uniqueFieldClassName,
     })
-  /**
-   * The boolean that determines if the field
-   * should be repopulated with the default value.
-   */
-  const shouldRepopulate: boolean = compute(
-    () =>
-      !displayError &&
-      handleOnBlur === 'repopulateValue' &&
-      fieldType === 'required',
-  )
 
   /* -- FUNCTIONS -- */
 
@@ -105,26 +95,23 @@ export function DetailLargeString({
    * Handles the blur event for the editor.
    * @param editor The editor instance.
    */
-  const onBlur = ({ editor }: EditorEvents['blur']) => {
-    const value: string = editor.getHTML()
-    const isEmptyContent = checkForEmptyHtmlContent(value)
-    let { setContent } = editor.commands
-
-    markLeftField()
-
-    if (isEmptyContent && shouldRepopulate) {
-      // Update the parent component's state value
-      // and the editor's value (ensures both values
-      // are in sync without the need for a re-render).
-      if (!!defaultValue) {
-        setState(defaultValue)
-        setContent(defaultValue)
-      } else {
-        setState(placeholder)
-        setContent(placeholder)
-      }
-    }
+  const onBlur = () => {
+    setFocused(false)
   }
+
+  /* -- EFFECTS -- */
+
+  useDefaultValue({
+    fieldType,
+    stateValue,
+    setState,
+    defaultValue,
+    focused,
+    // When the default value is applied, we also need
+    // to refresh the content in the editor to reflect
+    // the new state value.
+    onApply: (value) => editorRef.current?.commands.setContent(value),
+  })
 
   /* -- RENDER -- */
 
@@ -145,7 +132,9 @@ export function DetailLargeString({
           content: stateValue,
           className: fieldClasses.value,
           placeholder,
+          editorRef,
           onUpdate,
+          onFocus: () => setFocused(true),
           onBlur,
           editable: !disabled,
         }}

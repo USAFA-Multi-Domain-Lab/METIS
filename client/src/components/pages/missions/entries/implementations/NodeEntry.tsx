@@ -254,7 +254,6 @@ export default function NodeEntry({
     <Entry missionComponent={node} svgEngines={[svgEngine]}>
       <DetailString
         fieldType='required'
-        handleOnBlur='repopulateValue'
         label='Name'
         value={name}
         setValue={setName}
@@ -278,7 +277,6 @@ export default function NodeEntry({
       />
       <DetailLargeString
         fieldType='optional'
-        handleOnBlur='none'
         label='Description'
         value={description}
         setValue={setDescription}
@@ -289,7 +287,6 @@ export default function NodeEntry({
       />
       <DetailLargeString
         fieldType='optional'
-        handleOnBlur='none'
         label='Pre-Execution Text'
         value={preExecutionText}
         setValue={setPreExecutionText}

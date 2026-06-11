@@ -102,7 +102,6 @@ export default function MissionFileEntry({
       />
       <DetailString
         fieldType='optional'
-        handleOnBlur='none'
         label='Alias'
         value={alias}
         setValue={setAlias}

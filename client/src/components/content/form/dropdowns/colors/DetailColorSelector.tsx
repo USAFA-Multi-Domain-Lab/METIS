@@ -4,7 +4,7 @@ import type { TButtonText_P } from '../../../user-controls/buttons/ButtonText'
 import { ButtonText } from '../../../user-controls/buttons/ButtonText'
 import If from '../../../util/If'
 import DetailTitleRow from '../../DetailTitleRow'
-import { useDetailClassNames } from '../../useDetailClassNames'
+import { useDetailClassNames } from '../../hooks/useDetailClassNames'
 import './DetailColorSelector.scss'
 
 /**

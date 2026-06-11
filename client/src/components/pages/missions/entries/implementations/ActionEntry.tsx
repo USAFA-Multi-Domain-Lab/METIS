@@ -116,7 +116,6 @@ export default function ActionEntry({
     <Entry missionComponent={action} svgEngines={[svgEngine]}>
       <DetailString
         fieldType='required'
-        handleOnBlur='repopulateValue'
         label='Name'
         value={name}
         setValue={setName}
@@ -128,7 +127,6 @@ export default function ActionEntry({
       />
       <DetailLargeString
         fieldType='optional'
-        handleOnBlur='none'
         label='Description'
         value={description}
         setValue={setDescription}

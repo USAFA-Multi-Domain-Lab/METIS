@@ -173,7 +173,6 @@ export default function AuthPage(): TReactElement | null {
         >
           <DetailString
             fieldType='required'
-            handleOnBlur='deliverError'
             label={'Username'}
             value={username}
             setValue={setUsername}
@@ -182,7 +181,6 @@ export default function AuthPage(): TReactElement | null {
           />
           <DetailString
             fieldType='required'
-            handleOnBlur='deliverError'
             label={'Password'}
             value={password}
             setValue={setPassword}

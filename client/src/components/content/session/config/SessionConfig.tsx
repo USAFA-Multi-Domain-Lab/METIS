@@ -104,7 +104,6 @@ export default function SessionConfig({
               value={name}
               setValue={setName}
               fieldType='required'
-              handleOnBlur='repopulateValue'
               defaultValue={mission.name}
             />
             {accessibilityJsx}

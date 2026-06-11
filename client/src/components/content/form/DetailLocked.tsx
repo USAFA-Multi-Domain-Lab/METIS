@@ -2,8 +2,8 @@ import type { TDetailBase_P } from '.'
 import Tooltip from '../communication/Tooltip'
 import './DetailLocked.scss'
 import DetailTitleRow from './DetailTitleRow'
-import { useDetailClassNames } from './useDetailClassNames'
-import { useErrorMessages } from './useDisplayError'
+import { useDetailClassNames } from './hooks/useDetailClassNames'
+import { useErrorMessages } from './hooks/useErrorMessages'
 
 /**
  * This will render a detail for a form,
@@ -22,9 +22,12 @@ export function DetailLocked({
   tooltipDescription = '',
 }: TDetailLocked_P): TReactElement | null {
   /* -- COMPUTED -- */
+
   let { displayError, activeErrorMessage } = useErrorMessages({
-    errorMethod: 'simple',
-    errorMessage: errorMessage,
+    errorMessage,
+    fieldType: 'required',
+    inputValue: value,
+    focused: false,
   })
 
   const { rootClasses, labelClasses, fieldClasses, fieldErrorClasses } =
@@ -60,7 +63,7 @@ export function DetailLocked({
 /**
  * The properties for the Detail Locked component.
  */
-export type TDetailLocked_P = Omit<TDetailBase_P, 'errorDisplay'> & {
+export type TDetailLocked_P = TDetailBase_P & {
   /**
    * The value displayed in the detail.
    */

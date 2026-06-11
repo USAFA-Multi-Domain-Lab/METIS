@@ -4,8 +4,9 @@ import React, { useState } from 'react'
 import type { TDetailWithInput_P } from '.'
 import './DetailString.scss'
 import DetailTitleRow from './DetailTitleRow'
-import { useDetailClassNames } from './useDetailClassNames'
-import { useErrorMessages } from './useDisplayError'
+import { useDefaultValue } from './hooks/useDefaultValue'
+import { useDetailClassNames } from './hooks/useDetailClassNames'
+import { useErrorMessages } from './hooks/useErrorMessages'
 
 const BLANK_ERROR_MESSAGE: string = 'At least one character is required here.'
 
@@ -16,15 +17,13 @@ const BLANK_ERROR_MESSAGE: string = 'At least one character is required here.'
  */
 export function DetailString({
   fieldType,
-  handleOnBlur,
   label,
   value: stateValue,
   setValue: setState,
   // Optional Properties
-  defaultValue = undefined,
+  defaultValue = '',
   errorMessage = '',
   errorType = 'default',
-  errorDisplay = 'on-blur',
   disabled = false,
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
@@ -32,24 +31,22 @@ export function DetailString({
   placeholder = 'Enter text here...',
   tooltipDescription = '',
   maxLength = undefined,
-  onBeforeBlur = undefined,
-  onAfterBlur = undefined,
+  onBlur = () => {},
 }: TDetailString_P): TReactElement {
   /* -- STATE -- */
   const [currentInputType, setCurrentInputType] = useState<TInput>(inputType)
   const [displayPasswordText, setDisplayPasswordText] = useState<
     'show' | 'hide'
   >('show')
+  const [focused, setFocused] = useState<boolean>(false)
 
   /* -- COMPUTED -- */
 
-  const { displayError, activeErrorMessage, markLeftField } = useErrorMessages({
-    errorMethod: 'interactive',
+  const { displayError, activeErrorMessage } = useErrorMessages({
     errorMessage,
-    errorDisplay,
-    handleOnBlur,
     fieldType,
-    stateIsEmpty: stateValue === '',
+    inputValue: stateValue,
+    focused,
     blankErrorMessage: BLANK_ERROR_MESSAGE,
   })
   const { rootClasses, labelClasses, fieldClasses, fieldErrorClasses } =
@@ -82,6 +79,7 @@ export function DetailString({
 
     return placeholderText
   })
+
   /* -- FUNCTIONS -- */
 
   /**
@@ -96,6 +94,16 @@ export function DetailString({
       setDisplayPasswordText('show')
     }
   }
+
+  /* -- EFFECTS -- */
+
+  useDefaultValue({
+    fieldType,
+    stateValue,
+    setState,
+    defaultValue,
+    focused,
+  })
 
   /* -- RENDER -- */
 
@@ -116,6 +124,7 @@ export function DetailString({
           maxLength={maxLength}
           disabled={disabled}
           onFocus={(event: React.FocusEvent<HTMLInputElement>) => {
+            setFocused(true)
             event.target.select()
           }}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,33 +132,9 @@ export function DetailString({
             let value: string = target.value
             setState(value)
           }}
-          onBlur={(event: React.FocusEvent) => {
-            let target: HTMLInputElement = event.target as HTMLInputElement
-            let value: string | undefined = target.value
-
-            onBeforeBlur?.()
-
-            markLeftField()
-
-            // If the field is empty or in a default
-            // state and the error message is not displayed
-            // and the default value is defined, but not an
-            // empty string, and the field is required, then
-            // set the input's value to a default value.
-            if (
-              (value === '' || value === undefined) &&
-              !displayError &&
-              handleOnBlur === 'repopulateValue' &&
-              fieldType === 'required'
-            ) {
-              if (defaultValue !== undefined && defaultValue !== '') {
-                setState(defaultValue)
-              } else {
-                setState(placeholderDisplayed)
-              }
-            }
-
-            onAfterBlur?.()
+          onBlur={(event: React.FocusEvent<HTMLInputElement>) => {
+            setFocused(false)
+            onBlur(event)
           }}
           onMouseDown={(event: React.MouseEvent<HTMLInputElement>) => {
             if (document.activeElement !== event.currentTarget) {
@@ -197,11 +182,8 @@ type TDetailString_P = TDetailWithInput_P<string> & {
    */
   maxLength?: number
   /**
-   * Called at the very start of the blur handler, before any built-in logic runs.
+   * Callback function to externally handle blur events on the input.
+   * @default () => {}
    */
-  onBeforeBlur?: () => void
-  /**
-   * Called at the very end of the blur handler, after all built-in logic has run.
-   */
-  onAfterBlur?: () => void
+  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
 }

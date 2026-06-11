@@ -1,5 +1,4 @@
 import type { ClientTargetArgument } from '@client/target-environments/arguments/ClientTargetArgument'
-import { compute } from '@client/toolbox'
 import { useObjectFormSync } from '@client/toolbox/hooks'
 import { useMemo } from 'react'
 import { DetailString } from '../../../../content/form/DetailString'
@@ -38,7 +37,6 @@ export default function StringArgumentDetail({
   const setValue: TReactSetter<string> = (
     newValue: TReactSetterParameter<string>,
   ): void => {
-    console.log('setting value')
     setContext({
       ...context,
       value: typeof newValue === 'function' ? newValue(value) : newValue,
@@ -81,30 +79,17 @@ export default function StringArgumentDetail({
 
     return undefined
   }, [value, parameter])
-  let handleOnBlur = compute<'deliverError' | 'repopulateValue' | 'none'>(
-    () => {
-      if (patternErrorMessage) {
-        return 'deliverError'
-      } else if (parameter.required) {
-        return 'repopulateValue'
-      } else {
-        return 'none'
-      }
-    },
-  )
-
   /* -- RENDER -- */
+
   return (
     <DetailString
       fieldType={parameter.required ? 'required' : 'optional'}
-      handleOnBlur={handleOnBlur}
       label={parameter.name}
       value={value}
       setValue={setValue}
       defaultValue={parameter.required ? parameter.default : undefined}
       errorMessage={patternErrorMessage}
       errorType='warning'
-      errorDisplay={'immediate'}
       tooltipDescription={parameter.tooltipDescription}
       key={`arg-${argument._id}_name-${parameter.name}_type-${parameter.type}_${
         parameter.required ? 'required' : 'optional'
