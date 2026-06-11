@@ -11,7 +11,9 @@ export class DropdownTargetParameter {
    * @param arg The dropdown argument to convert.
    * @returns The dropdown argument as JSON.
    */
-  public static toJson = (arg: TDropdownTargetParameter): TDropdownTargetParameterJson => {
+  public static toJson = (
+    arg: TDropdownTargetParameter,
+  ): TDropdownTargetParameterJson => {
     // Return the appropriate properties based on
     // whether the argument is required or not.
     return arg.required
@@ -55,6 +57,7 @@ export class DropdownTargetParameter {
         _id: option._id,
         name: option.name,
         value: option.value,
+        tooltipDescription: option.tooltipDescription,
         dependencies: option.dependencies
           ? TargetParameter.encodeDependencies(option.dependencies)
           : undefined,
@@ -73,6 +76,7 @@ export class DropdownTargetParameter {
       _id: option._id,
       name: option.name,
       value: option.value,
+      tooltipDescription: option.tooltipDescription,
       dependencies: option.dependencies
         ? TargetParameter.encodeDependencies(option.dependencies)
         : undefined,
@@ -84,7 +88,9 @@ export class DropdownTargetParameter {
    * @param arg The dropdown argument as JSON to convert.
    * @returns The dropdown argument.
    */
-  public static fromJson = (arg: TDropdownTargetParameterJson): TDropdownTargetParameter => {
+  public static fromJson = (
+    arg: TDropdownTargetParameterJson,
+  ): TDropdownTargetParameter => {
     // Return the appropriate properties based on
     // whether the argument is required or not.
     return arg.required
@@ -127,6 +133,7 @@ export class DropdownTargetParameter {
         _id: option._id,
         name: option.name,
         value: option.value,
+        tooltipDescription: option.tooltipDescription,
         dependencies: option.dependencies
           ? TargetParameter.decodeDependencies(option.dependencies)
           : undefined,
@@ -145,6 +152,7 @@ export class DropdownTargetParameter {
       _id: option._id,
       name: option.name,
       value: option.value,
+      tooltipDescription: option.tooltipDescription,
       dependencies: option.dependencies
         ? TargetParameter.decodeDependencies(option.dependencies)
         : undefined,
@@ -251,7 +259,8 @@ type TDropdownTargetParameterRequired = {
  * The dropdown argument option type for a target.
  */
 export type TDropdownTargetParameterOption<
-  Value extends TDropdownTargetParameterOptionVal = TDropdownTargetParameterOptionVal,
+  Value extends TDropdownTargetParameterOptionVal =
+    TDropdownTargetParameterOptionVal,
 > = {
   /**
    * The ID of the option.
@@ -309,6 +318,12 @@ export type TDropdownTargetParameterOption<
    * ```
    */
   value: Value
+  /**
+   * This will be used for a hover-over tooltip.
+   * @note This can be used to provide additional information or clarification about the argument.
+   * @default undefined
+   */
+  tooltipDescription?: string
   /**
    * These are the keys of the arguments that the current option depends on.
    * @note If the option depends on another argument, the option will only be displayed in the dropdown list if the dependency is met.
@@ -391,7 +406,10 @@ export type TDropdownTargetParameterOption<
  * The dropdown argument type for a target.
  */
 export type TDropdownTargetParameterJson = TBaseTargetParameterJson &
-  (TDropdownTargetParameterOptionalJson | TDropdownTargetParameterRequiredJson) & {
+  (
+    | TDropdownTargetParameterOptionalJson
+    | TDropdownTargetParameterRequiredJson
+  ) & {
     /**
      * The argument's input type.
      * @note This will render as a dropdown box with
@@ -474,7 +492,8 @@ type TDropdownTargetParameterRequiredJson = {
  * The dropdown argument option type for a target.
  */
 export type TDropdownTargetParameterOptionJson<
-  Value extends TDropdownTargetParameterOptionVal = TDropdownTargetParameterOptionVal,
+  Value extends TDropdownTargetParameterOptionVal =
+    TDropdownTargetParameterOptionVal,
 > = {
   /**
    * The ID of the option.
@@ -532,6 +551,12 @@ export type TDropdownTargetParameterOptionJson<
    * ```
    */
   value: Value
+  /**
+   * This will be used for a hover-over tooltip.
+   * @note This can be used to provide additional information or clarification about the argument.
+   * @default undefined
+   */
+  tooltipDescription?: string
   /**
    * These are the keys of the arguments that the current option depends on.
    * @note If the option depends on another argument, the option will only be displayed in the dropdown list if the dependency is met.
@@ -614,7 +639,11 @@ export type TDropdownTargetParameterOptionJson<
 /**
  * The option value types for a required dropdown argument.
  */
-export type TReqDropdownTargetParameterOptionVal = string | number | boolean | object
+export type TReqDropdownTargetParameterOptionVal =
+  | string
+  | number
+  | boolean
+  | object
 
 /**
  * The option value types for an optional dropdown argument.
