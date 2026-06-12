@@ -322,31 +322,6 @@ export abstract class TargetArgument<
   ): void {
     registry
       .check({
-        key: TargetArgument.ISSUE_KEY_MISSING_PARAMETER,
-        message: (argument) =>
-          `Effect "${argument.effect.name}" has an argument with parameter ID "${argument.parameterId}" that could not be found on the target "${argument.effect.target?.name}".`,
-        what: [TargetArgument],
-        when: ['initialization', 'effect-updated'],
-        if: (argument) =>
-          BooleanToolbox.onlyLast(
-            argument.effect.targetArgumentsLocked,
-            argument.parameterIsMissing,
-          ),
-      })
-      .check({
-        key: TargetArgument.ISSUE_KEY_TYPE_MISMATCH,
-        message: (argument) =>
-          `Effect "${argument.effect.name}" has a type mismatch for parameter "${argument.parameter?.name}": expected "${argument.parameter?.type}", got "${argument.type}".`,
-        what: [TargetArgument],
-        when: ['initialization', 'effect-updated'],
-        if: (argument) =>
-          BooleanToolbox.onlyLast(
-            argument.effect.targetArgumentsLocked,
-            argument.parameterIsMissing,
-            argument.hasTypeMismatch,
-          ),
-      })
-      .check({
         key: TargetArgument.ISSUE_KEY_DROPDOWN_VALUE_MISMATCH,
         message: (argument) =>
           `Effect "${argument.effect.name}" has an argument with parameter ID "${argument.parameterId}" that has a value "${argument.context.value}" that does not match any of the dropdown options.`,
@@ -359,8 +334,6 @@ export abstract class TargetArgument<
         if: (argument) =>
           BooleanToolbox.onlyLast(
             argument.effect.targetArgumentsLocked,
-            argument.parameterIsMissing,
-            argument.hasTypeMismatch,
             argument.valueIsInvalidOption,
           ),
       })
@@ -377,8 +350,6 @@ export abstract class TargetArgument<
         if: (argument) =>
           BooleanToolbox.onlyLast(
             argument.effect.targetArgumentsLocked,
-            argument.parameterIsMissing,
-            argument.hasTypeMismatch,
             argument.hasPatternMismatch,
           ),
       })
@@ -396,18 +367,6 @@ export abstract class TargetArgument<
       type: 'string',
     }
   }
-
-  /**
-   * Key used to index an issue when a target argument has a
-   * missing parameter.
-   */
-  public static readonly ISSUE_KEY_MISSING_PARAMETER = 'missing-parameter'
-
-  /**
-   * Key used to index an issue when a target argument has a type mismatch
-   * with its parameter.
-   */
-  public static readonly ISSUE_KEY_TYPE_MISMATCH = 'type-mismatch'
 
   /**
    * Key used to index an issue when a target argument has a dropdown value that

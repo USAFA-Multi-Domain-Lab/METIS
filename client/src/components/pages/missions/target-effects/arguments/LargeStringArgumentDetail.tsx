@@ -22,7 +22,11 @@ export default function LargeStringArgumentDetail({
 
   /* -- VALIDATION -- */
 
-  if (context.type !== 'large-string' || !parameter || parameter.type !== 'large-string') {
+  if (
+    context.type !== 'large-string' ||
+    !parameter ||
+    parameter.type !== 'large-string'
+  ) {
     return null
   }
 
