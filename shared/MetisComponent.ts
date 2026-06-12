@@ -111,6 +111,15 @@ export abstract class MetisComponent {
     return this._disabledReason
   }
 
+  /**
+   * A warning message to display in UI contexts that support
+   * inline warnings, such as list items.
+   */
+  public get warningText(): string {
+    if (this.deleted) return 'This item has been marked as deleted.'
+    return ''
+  }
+
   public constructor(
     /**
      * Uniquely identifies the component.

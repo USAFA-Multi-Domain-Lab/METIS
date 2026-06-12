@@ -116,6 +116,20 @@ export class SessionBasic
   /**
    * The number of members joined to the session.
    */
+  // Overridden
+  public override get warningText(): string {
+    let superText = super.warningText
+    if (superText) return superText
+
+    if (this.setupFailed) {
+      return 'The session encountered an error during setup. For details concerning the error, please reference the server logs. Please perform a hard delete and recreate this session.'
+    } else if (this.teardownFailed) {
+      return 'The session encountered an error during teardown. For details concerning the error, please reference the server logs. Please perform a hard delete for this session.'
+    }
+
+    return ''
+  }
+
   public get memberCount(): number {
     return (
       this.participantIds.length +

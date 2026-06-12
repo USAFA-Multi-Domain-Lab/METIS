@@ -1,4 +1,5 @@
 import { MetisComponent } from '../MetisComponent'
+import { StringToolbox } from '../toolbox/strings/StringToolbox'
 import type { Mission } from './Mission'
 import type { MissionComponentIssue } from './MissionComponentIssue'
 
@@ -68,6 +69,21 @@ export abstract class MissionComponent<
    */
   public get hasIssues(): boolean {
     return this.issues.length > 0
+  }
+
+  // Overridden
+  public override get warningText(): string {
+    let superText = super.warningText
+    if (superText) return superText
+
+    let issues = this.issues
+    if (!issues.length) return ''
+    let result = issues[0].message
+    if (issues.length > 1) {
+      let remaining = issues.length - 1
+      result += `\n**(+${remaining} other issue${StringToolbox.s(remaining)})**`
+    }
+    return result
   }
 
   public constructor(id: string, name: string, deleted: boolean) {
