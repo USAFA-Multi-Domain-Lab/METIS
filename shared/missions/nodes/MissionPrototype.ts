@@ -46,7 +46,7 @@ export abstract class MissionPrototype<
   }
 
   // Implemented
-  public get sourceList() {
+  public get sourceList(): T['prototype'][] {
     return this.mission.prototypes
   }
 

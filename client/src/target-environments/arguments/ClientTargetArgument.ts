@@ -82,7 +82,7 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
       case 'dropdown':
         context = {
           type: 'dropdown',
-          value: parameter.required ? parameter.default : null,
+          value: parameter.required ? parameter.default.value : null,
         }
         break
       case 'mission-component':

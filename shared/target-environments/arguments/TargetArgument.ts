@@ -63,7 +63,7 @@ export abstract class TargetArgument<
    * it satisfies and the value assigned to that parameter. The type of
    * `value` is determined by the `type` field.
    */
-  public readonly context: Readonly<TTargetArgumentContext<T>>
+  public readonly context: TTargetArgumentContext<T>
 
   /**
    * The type of the parameter this argument satisfies. This is a
@@ -112,7 +112,7 @@ export abstract class TargetArgument<
   }
 
   // Implemented
-  public get sourceList() {
+  public get sourceList(): T['targetArgument'][] {
     return this.effect.arguments
   }
 
@@ -124,6 +124,9 @@ export abstract class TargetArgument<
    */
   public get value(): TTargetArgumentValue<T> {
     return this.context.value
+  }
+  public set value(newValue: TTargetArgumentValue<T>) {
+    this.context.value = newValue
   }
 
   // Implemented
@@ -319,7 +322,7 @@ export abstract class TargetArgument<
   ): void {
     registry
       .check({
-        key: 'parameter-not-found',
+        key: TargetArgument.ISSUE_KEY_MISSING_PARAMETER,
         message: (argument) =>
           `Effect "${argument.effect.name}" has an argument with parameter ID "${argument.parameterId}" that could not be found on the target "${argument.effect.target?.name}".`,
         what: [TargetArgument],
@@ -331,7 +334,7 @@ export abstract class TargetArgument<
           ),
       })
       .check({
-        key: 'type-mismatch',
+        key: TargetArgument.ISSUE_KEY_TYPE_MISMATCH,
         message: (argument) =>
           `Effect "${argument.effect.name}" has a type mismatch for parameter "${argument.parameter?.name}": expected "${argument.parameter?.type}", got "${argument.type}".`,
         what: [TargetArgument],
@@ -344,11 +347,15 @@ export abstract class TargetArgument<
           ),
       })
       .check({
-        key: 'dropdown-value-mismatch',
+        key: TargetArgument.ISSUE_KEY_DROPDOWN_VALUE_MISMATCH,
         message: (argument) =>
           `Effect "${argument.effect.name}" has an argument with parameter ID "${argument.parameterId}" that has a value "${argument.context.value}" that does not match any of the dropdown options.`,
         what: [TargetArgument],
-        when: ['initialization', 'effect-updated'],
+        when: [
+          'initialization',
+          'effect-updated',
+          'dropdown-mismatch-resolved',
+        ],
         if: (argument) =>
           BooleanToolbox.onlyLast(
             argument.effect.targetArgumentsLocked,
@@ -358,11 +365,15 @@ export abstract class TargetArgument<
           ),
       })
       .check({
-        key: 'pattern-mismatch',
+        key: TargetArgument.ISSUE_KEY_PATTERN_MISMATCH,
         message: (argument) =>
           `Effect "${argument.effect.name}" has an argument with parameter ID "${argument.parameterId}" that does not match the required pattern.`,
         what: [TargetArgument],
-        when: ['initialization', 'effect-updated'],
+        when: [
+          'initialization',
+          'effect-updated',
+          'string-argument-pattern-check',
+        ],
         if: (argument) =>
           BooleanToolbox.onlyLast(
             argument.effect.targetArgumentsLocked,
@@ -385,6 +396,31 @@ export abstract class TargetArgument<
       type: 'string',
     }
   }
+
+  /**
+   * Key used to index an issue when a target argument has a
+   * missing parameter.
+   */
+  public static readonly ISSUE_KEY_MISSING_PARAMETER = 'missing-parameter'
+
+  /**
+   * Key used to index an issue when a target argument has a type mismatch
+   * with its parameter.
+   */
+  public static readonly ISSUE_KEY_TYPE_MISMATCH = 'type-mismatch'
+
+  /**
+   * Key used to index an issue when a target argument has a dropdown value that
+   * does not match any of the parameter's options.
+   */
+  public static readonly ISSUE_KEY_DROPDOWN_VALUE_MISMATCH =
+    'dropdown-value-mismatch'
+
+  /**
+   * Key used to index an issue when a target argument has a pattern mismatch
+   * with its parameter.
+   */
+  public static readonly ISSUE_KEY_PATTERN_MISMATCH = 'pattern-mismatch'
 
   /**
    * Deserializes a selection of serialized mission components back into

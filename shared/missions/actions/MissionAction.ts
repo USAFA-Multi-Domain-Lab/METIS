@@ -86,7 +86,7 @@ export abstract class MissionAction<
   }
 
   // Implemented
-  public get sourceList() {
+  public get sourceList(): T['action'][] {
     return this.node.actions
   }
 

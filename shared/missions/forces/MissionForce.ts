@@ -65,7 +65,7 @@ export abstract class MissionForce<
   }
 
   // Implemented
-  public get sourceList() {
+  public get sourceList(): T['force'][] {
     return this.mission.forces
   }
 

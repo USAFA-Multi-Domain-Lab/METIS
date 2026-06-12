@@ -136,8 +136,8 @@ export abstract class Effect<
   }
 
   // Implemented
-  public get sourceList() {
-    return this.host.effects
+  public get sourceList(): T[TType][] {
+    return this.host.effects as T[TType][]
   }
 
   // Implemented

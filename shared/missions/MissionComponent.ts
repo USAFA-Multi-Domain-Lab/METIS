@@ -94,6 +94,14 @@ export abstract class MissionComponent<
   public hasIssue(issueKey: string): boolean {
     return this.mission.issueRegistry.componentHasIssue(this, issueKey)
   }
+
+  /**
+   * @param triggerName The trigger to fire within the registry of the mission
+   * associated with this component.
+   */
+  public triggerIssueCheck(triggerName: string): void {
+    this.mission.issueRegistry.trigger(triggerName, this)
+  }
 }
 
 /* -- TYPES -- */

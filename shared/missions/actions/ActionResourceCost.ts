@@ -62,7 +62,7 @@ export abstract class ActionResourceCost<
   }
 
   // Implemented
-  public get sourceList() {
+  public get sourceList(): T['resourceCost'][] {
     return this.action.resourceCosts
   }
 

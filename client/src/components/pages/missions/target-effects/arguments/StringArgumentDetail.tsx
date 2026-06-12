@@ -79,6 +79,7 @@ export default function StringArgumentDetail({
 
     return undefined
   }, [value, parameter])
+
   /* -- RENDER -- */
 
   return (
@@ -94,6 +95,10 @@ export default function StringArgumentDetail({
       key={`arg-${argument._id}_name-${parameter.name}_type-${parameter.type}_${
         parameter.required ? 'required' : 'optional'
       }`}
+      onActiveErrorMessageChange={() => {
+        argument.value = value // Error message change triggers before form sync is carried out. Therefore a preemptive set is needed here.
+        argument.triggerIssueCheck('string-argument-pattern-check')
+      }}
     />
   )
 }

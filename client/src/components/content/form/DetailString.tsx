@@ -1,6 +1,6 @@
 import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import type { TDetailWithInput_P } from '.'
 import './DetailString.scss'
 import DetailTitleRow from './DetailTitleRow'
@@ -32,6 +32,7 @@ export function DetailString({
   tooltipDescription = '',
   maxLength = undefined,
   onBlur = () => {},
+  onActiveErrorMessageChange = () => {},
 }: TDetailString_P): TReactElement {
   /* -- STATE -- */
   const [currentInputType, setCurrentInputType] = useState<TInput>(inputType)
@@ -104,6 +105,10 @@ export function DetailString({
     defaultValue,
     focused,
   })
+
+  useEffect(() => {
+    onActiveErrorMessageChange(activeErrorMessage)
+  }, [activeErrorMessage])
 
   /* -- RENDER -- */
 
@@ -186,4 +191,13 @@ type TDetailString_P = TDetailWithInput_P<string> & {
    * @default () => {}
    */
   onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
+  /**
+   * Callback function to handle changes to the active error message.
+   * @note The active error message is the current error message being
+   * displayed on the detail. This may or may not be the same as the
+   * `errorMessage` prop, depending on the context of the detail
+   * (e.g., focused, blurred, left blank).
+   * @default () => {}
+   */
+  onActiveErrorMessageChange?: (activeErrorMessage: string) => void
 }

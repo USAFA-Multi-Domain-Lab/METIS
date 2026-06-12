@@ -657,7 +657,8 @@ export default function MissionPage(
   const onDetachFileRequest = (file: ClientMissionFile): void => {
     if (viewMode === 'preview') return
     // Remove the file from the mission.
-    setLocalFiles(localFiles.filter((f) => f._id !== file._id))
+    file.delete()
+    setLocalFiles([...file.sourceList])
     // Re-enable the file-reference in the global files list.
     const fileRefId = file.reference._id
     const fileRef = globalFiles.find(({ _id }) => _id === fileRefId)

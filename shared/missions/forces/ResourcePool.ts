@@ -35,7 +35,7 @@ export abstract class ResourcePool<
   }
 
   // Implemented
-  public get sourceList() {
+  public get sourceList(): T['resourcePool'][] {
     return this.force.resourcePools
   }
 

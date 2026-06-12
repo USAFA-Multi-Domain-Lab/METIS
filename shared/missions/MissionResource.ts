@@ -40,7 +40,7 @@ export abstract class MissionResource<
   }
 
   // Implemented
-  public get sourceList() {
+  public get sourceList(): T['resource'][] {
     return this.mission.resources
   }
 
