@@ -277,8 +277,9 @@ export abstract class Effect<
     this.context = context
     this.order = order
     this.description = description
-    this.arguments = this.parseArguments(args)
     this.localKey = localKey
+    this.arguments = this.parseArguments(args)
+    this.sortArguments()
   }
 
   /**
@@ -300,6 +301,21 @@ export abstract class Effect<
   protected abstract parseArguments(
     data: TTargetArgumentJson[],
   ): JsonSerializableArray<T['targetArgument']>
+
+  /**
+   * Re-orders {@link arguments} to match the declaration order of parameters
+   * on the current target. Arguments whose `parameterId` is not found in the
+   * target are sorted to the end. A no-op if {@link target} is absent.
+   */
+  public sortArguments(): void {
+    if (!this.target) return
+    let parameterIds = this.target.parameters.map((param) => param._id)
+    this.arguments.sort(
+      (a, b) =>
+        parameterIds.indexOf(a.parameterId) -
+        parameterIds.indexOf(b.parameterId),
+    )
+  }
 
   /**
    * @returns A JSON representation of the Effect.

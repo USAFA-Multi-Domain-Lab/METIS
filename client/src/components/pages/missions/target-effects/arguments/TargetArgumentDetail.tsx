@@ -2,7 +2,6 @@ import type { ClientTargetArgument } from '@client/target-environments/arguments
 import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import { DetailLocked } from '../../../../content/form/DetailLocked'
 import BooleanArgumentDetail from './BooleanArgumentDetail'
 import DropdownArgumentDetail from './DropdownArgumentDetail'
 import LargeStringArgumentDetail from './LargeStringArgumentDetail'
@@ -37,29 +36,14 @@ export default function TargetArgumentDetail({
     `TargetArgumentDetail_${StringToolbox.toCamelCase(argument.type)}`,
   )
 
-  let { mission } = argument.effect
-  let hasTypeMismatchIssue = mission.issueRegistry.componentHasIssue(
-    argument,
-    'type-mismatch',
-  )
-
   /* -- RENDER -- */
 
   // Return early if the argument is not ready for display.
   if (!allDependenciesMet) return null
 
-  if (hasTypeMismatchIssue) {
-    return (
-      <div className={rootClasses.value}>
-        <DetailLocked
-          label={argument.parameter?.name ?? 'Unknown Argument'}
-          value={String(argument.value ?? '')}
-          errorType='warning'
-          errorMessage={`This argument's type ("${argument.type}") does not match the expected parameter type ("${argument.parameter?.type}").`}
-        />
-      </div>
-    )
-  }
+  // Hide stale arguments whose stored type no longer matches the parameter.
+  // A correctly-typed argument is added alongside in parseArguments.
+  if (argument.parameter?.type !== argument.type) return null
 
   let internalDetailJsx = compute<TReactElement | null>(() => {
     switch (argument.type) {

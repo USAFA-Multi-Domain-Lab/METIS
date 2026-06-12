@@ -22,11 +22,7 @@ export default function LargeStringArgumentDetail({
 
   /* -- VALIDATION -- */
 
-  if (
-    context.type !== 'large-string' ||
-    !parameter ||
-    parameter.type !== 'large-string'
-  ) {
+  if (context.type !== 'large-string' || !parameter || parameter.type !== 'large-string') {
     return null
   }
 
@@ -52,9 +48,7 @@ export default function LargeStringArgumentDetail({
       setValue={setValue}
       defaultValue={parameter.required ? parameter.default : undefined}
       tooltipDescription={parameter.tooltipDescription}
-      key={`arg-${argument._id}_name-${parameter.name}_type-${parameter.type}_${
-        parameter.required ? 'required' : 'optional'
-      }`}
+      key={`arg-${argument._id}_name-${parameter.name}_type-${parameter.type}`}
     />
   )
 }

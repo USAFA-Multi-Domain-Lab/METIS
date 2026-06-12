@@ -92,9 +92,7 @@ export default function StringArgumentDetail({
       errorMessage={patternErrorMessage}
       errorType='warning'
       tooltipDescription={parameter.tooltipDescription}
-      key={`arg-${argument._id}_name-${parameter.name}_type-${parameter.type}_${
-        parameter.required ? 'required' : 'optional'
-      }`}
+      key={`arg-${argument._id}_name-${parameter.name}_type-${parameter.type}`}
       onActiveErrorMessageChange={() => {
         argument.value = value // Error message change triggers before form sync is carried out. Therefore a preemptive set is needed here.
         argument.triggerIssueCheck('string-argument-pattern-check')

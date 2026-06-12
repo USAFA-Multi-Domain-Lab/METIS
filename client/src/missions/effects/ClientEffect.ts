@@ -16,6 +16,7 @@ import type {
 } from '@shared/missions/effects/Effect'
 import { Effect } from '@shared/missions/effects/Effect'
 import type { TTargetArgumentJson } from '@shared/target-environments/arguments/TargetArgument'
+
 import { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import type { ClientMission } from '../ClientMission'
 import type { ClientMissionAction } from '../actions/ClientMissionAction'
@@ -65,12 +66,15 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
     // current parameters. Skip if the effect is outdated or the target cannot
     // be resolved, since a migration will supply the correct arguments instead.
     if (this.target && !this.outdated) {
-      targetArguments = targetArguments.filter((argument) =>
-        this.target!.getParameterById(argument.parameterId),
-      )
-
       for (let parameter of this.target.parameters) {
-        if (!targetArguments.find((arg) => arg.parameterId === parameter._id)) {
+        // Add a new default argument if there is no argument corresponding
+        // to the parameter in type. This could cause duplicate arguments. However,
+        // arguments with mismatching types will be filtered out in the UI.
+        let foundWithMatchingType = targetArguments.find(
+          (arg) =>
+            arg.parameterId === parameter._id && arg.type === parameter.type,
+        )
+        if (!foundWithMatchingType) {
           targetArguments.push(
             ClientTargetArgument.createDefault(parameter, this),
           )
@@ -148,6 +152,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
     // Store the migrated data in the component.
     this.targetEnvironmentVersion = results.version
     this.arguments = this.parseArguments(results.data)
+    this.sortArguments()
     this.mission.issueRegistry.trigger('effect-updated', this)
     for (let argument of this.arguments) {
       argument.mission.issueRegistry.trigger('effect-updated', argument)
