@@ -329,7 +329,7 @@ export abstract class TargetArgument<
       .check({
         key: TargetArgument.ISSUE_KEY_DROPDOWN_VALUE_MISMATCH,
         message: (argument) =>
-          `Effect "${argument.effect.name}" has an argument with parameter ID "${argument.parameterId}" that has a value "${argument.context.value}" that does not match any of the dropdown options.`,
+          `Parameter "${argument.parameterId}" has a value "${argument.context.value}" that does not match any of the dropdown options.`,
         what: [TargetArgument],
         when: [
           'initialization',
@@ -345,7 +345,7 @@ export abstract class TargetArgument<
       .check({
         key: TargetArgument.ISSUE_KEY_PATTERN_MISMATCH,
         message: (argument) =>
-          `Effect "${argument.effect.name}" has an argument with parameter ID "${argument.parameterId}" that does not match the required pattern.`,
+          `Parameter "${argument.parameterId}" does not match the required pattern.`,
         what: [TargetArgument],
         when: [
           'initialization',

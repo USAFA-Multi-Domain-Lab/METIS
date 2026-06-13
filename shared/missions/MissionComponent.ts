@@ -124,6 +124,16 @@ export abstract class MissionComponent<
   }
 
   /**
+   * @param issueKey The identifier for the issue.
+   * @returns The message for the issue associated with the key.
+   * @note If the issue is not present for the component, this will
+   * return an empty string.
+   */
+  public getIssueMessage(issueKey: string): string {
+    return this.mission.issueRegistry.getMessage(issueKey, this)
+  }
+
+  /**
    * @param triggerName The trigger to fire within the registry of the mission
    * associated with this component.
    */
