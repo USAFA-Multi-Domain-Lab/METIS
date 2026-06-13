@@ -176,6 +176,11 @@ export abstract class TargetArgument<
     )
   }
 
+  // Overridden
+  public override get usesSubentry(): boolean {
+    return true
+  }
+
   /**
    * @param effect The effect that uses this argument when calling
    * the target script.

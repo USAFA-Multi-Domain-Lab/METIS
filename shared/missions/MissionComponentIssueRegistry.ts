@@ -30,10 +30,53 @@ export class MissionComponentIssueRegistry implements TListenerTargetEmittable<T
   > = new Map()
 
   /**
+   * Cached result of {@link groupedIssueEntries}. Null when stale.
+   */
+  private _groupedIssueEntriesCache:
+    | [MissionComponent<any, any>, MissionComponentIssue<any>[]][]
+    | null = null
+
+  /**
    * All issues currently in the registry across all components.
    */
   public get allIssues(): MissionComponentIssue<any>[] {
     return [...this._issues.values()].flat()
+  }
+
+  /**
+   * All issues currently in the registry, grouped by component.
+   */
+  public get issueEntries(): [
+    MissionComponent<any, any>,
+    MissionComponentIssue<any>[],
+  ][] {
+    return [...this._issues.entries()]
+  }
+
+  /**
+   * All issues currently in the registry, grouped by the component that
+   * should own them in the UI. Components that {@link MissionComponent.usesSubentry}
+   * have their issues merged under their super component instead.
+   */
+  public get groupedIssueEntries(): [
+    MissionComponent<any, any>,
+    MissionComponentIssue<any>[],
+  ][] {
+    let grouped = new Map<
+      MissionComponent<any, any>,
+      MissionComponentIssue<any>[]
+    >()
+
+    for (let [component, issues] of this._issues.entries()) {
+      let key =
+        component.usesSubentry && component.superComponent
+          ? component.superComponent
+          : component
+      let existing = grouped.get(key) ?? []
+      grouped.set(key, [...existing, ...issues])
+    }
+
+    return [...grouped.entries()]
   }
 
   /**
@@ -124,7 +167,7 @@ export class MissionComponentIssueRegistry implements TListenerTargetEmittable<T
             new MissionComponentIssue(
               checker.key,
               'general',
-              checker.message(component),
+              `${checker.message(component)}`,
               component,
             ),
           ]
@@ -177,6 +220,22 @@ export class MissionComponentIssueRegistry implements TListenerTargetEmittable<T
   ): boolean {
     let componentIssues = this._issues.get(component) ?? []
     return componentIssues.some((issue) => issue.key === key)
+  }
+
+  /**
+   * @param key The issue key.
+   * @param component The component to retrieve the issue message for.
+   * @returns the message for the issue with the provided key for the given component.
+   * @note This will be an empty string if the component does
+   * not have an issue with the key.
+   */
+  public getMessage(
+    key: string,
+    component: MissionComponent<any, any>,
+  ): string {
+    let componentIssues = this._issues.get(component) ?? []
+    let issue = componentIssues.find((issue) => issue.key === key)
+    return issue ? issue.message : ''
   }
 
   /**

@@ -60,6 +60,11 @@ export abstract class MissionResource<
     return this.serialize()
   }
 
+  // Overridden
+  public override get usesSubentry(): boolean {
+    return true
+  }
+
   /**
    * @param mission The mission that owns this resource definition.
    * @param _id The unique identifier for this resource.

@@ -106,19 +106,16 @@ export default function EffectEntry<TType extends TEffectType>({
 
   /* -- COMPUTED -- */
 
-  let mission = effect.mission
-  let hasMissingTargetIssue = mission.issueRegistry.componentHasIssue(
-    effect,
+  let missingTargetIssueMessage = effect.getIssueMessage(
     ClientEffect.ISSUE_KEY_MISSING_TARGET,
   )
-  let hasLegacyInferIssue = mission.issueRegistry.componentHasIssue(
-    effect,
+  let legacyInferIssueMessage = effect.getIssueMessage(
     ClientEffect.ISSUE_KEY_LEGACY_INFER,
   )
-  let hasOutdatedIssue = mission.issueRegistry.componentHasIssue(
-    effect,
-    ClientEffect.ISSUE_KEY_OUTDATED,
-  )
+  let hasMissingTargetIssue = Boolean(missingTargetIssueMessage)
+  let hasLegacyInferIssue = Boolean(legacyInferIssueMessage)
+  let targetEnvironmentErrorMessage =
+    missingTargetIssueMessage || legacyInferIssueMessage
   let targetEnvironmentName = compute<string>(() => {
     if (hasMissingTargetIssue || hasLegacyInferIssue) {
       return 'Environment not found.'
@@ -135,20 +132,6 @@ export default function EffectEntry<TType extends TEffectType>({
       return target.name
     } else {
       return 'No target selected.'
-    }
-  })
-  let targetEnvironmentErrorMessage = compute<string>(() => {
-    if (hasMissingTargetIssue || hasLegacyInferIssue) {
-      return `This effect's target environment could not be found. Please reinstall/repair the corresponding target environment or delete this effect.`
-    } else {
-      return ''
-    }
-  })
-  let targetErrorMessage = compute<string>(() => {
-    if (hasMissingTargetIssue || hasLegacyInferIssue) {
-      return `This effect's target could not be found. Please reinstall/repair the corresponding target environment or delete this effect.`
-    } else {
-      return ''
     }
   })
   let updateComponentClasses = new ClassList('UpdateComponent').add(updateState)
@@ -212,7 +195,7 @@ export default function EffectEntry<TType extends TEffectType>({
         value={targetName}
         disabled={viewMode === 'preview'}
         errorType={'warning'}
-        errorMessage={targetErrorMessage}
+        errorMessage={targetEnvironmentErrorMessage}
       />
       <TargetArgumentsEntry
         effect={effect}

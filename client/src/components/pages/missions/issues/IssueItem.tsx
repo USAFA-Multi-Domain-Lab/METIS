@@ -105,7 +105,7 @@ export default function IssueItem({
       <ButtonSvgPanel engine={buttonEngine} />
       <div className='IssueMessage'>
         {issue.message}
-        <Tooltip description='Click to resolve.' />
+        <Tooltip description={issue.message} />
       </div>
     </div>
   )

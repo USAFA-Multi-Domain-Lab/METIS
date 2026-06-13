@@ -470,16 +470,15 @@ export abstract class Effect<
   ): void {
     registry.check({
       key: Effect.ISSUE_KEY_MISSING_TARGET,
-      message: (effect) =>
-        `The effect, "${effect.name}", has a target that couldn't be found. ` +
-        `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`,
+      message: () =>
+        `The corresponding target environment could not be found. Please reinstall/repair the corresponding target environment or delete this effect.`,
       what: [Effect],
       if: (effect) => effect.missingTarget,
     })
     registry.check({
       key: Effect.ISSUE_KEY_LEGACY_INFER,
-      message: (effect) =>
-        `The effect, "${effect.name}" has a reference to a target, but not to a target environment.`,
+      message: () =>
+        `The corresponding target environment could not be found. Please reinstall/repair the corresponding target environment or delete this effect.`,
       what: [Effect],
       if: (effect) =>
         BooleanToolbox.onlyLast(
@@ -489,10 +488,8 @@ export abstract class Effect<
     })
     registry.check({
       key: Effect.ISSUE_KEY_OUTDATED,
-      message: (effect) =>
-        `The effect, "${effect.name}", is incompatible with the current version of the target environment, "${effect.environment?.name}". ` +
-        `This effect must be updated to be made compatible. ` +
-        `Please click to resolve this.`,
+      message: () =>
+        'Update required to be made compatible with the current version of the target environment.',
       what: [Effect],
       when: ['initialization', 'effect-updated'],
       if: (effect) =>

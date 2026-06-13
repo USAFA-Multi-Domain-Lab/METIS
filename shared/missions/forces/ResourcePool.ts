@@ -69,6 +69,11 @@ export abstract class ResourcePool<
    */
   public readonly resource: T['resource']
 
+  // Overridden
+  public override get usesSubentry(): boolean {
+    return true
+  }
+
   /**
    * The ID of the {@link MissionResource} this pool tracks.
    */

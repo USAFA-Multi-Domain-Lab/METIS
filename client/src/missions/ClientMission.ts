@@ -2,8 +2,6 @@ import type { TLine_P } from '@client/components/content/session/mission-map/obj
 import type { TMapCompatibleNode } from '@client/components/content/session/mission-map/objects/nodes'
 import type { TPrototypeSlot_P } from '@client/components/content/session/mission-map/objects/PrototypeSlot'
 import type { TMissionOutlineItem } from '@client/components/pages/missions/structures/MissionOutline'
-import { ClientChatChannel } from '@client/sessions/chat/ClientChatChannel'
-import { ClientTargetArgument } from '@client/target-environments/arguments/ClientTargetArgument'
 import type { ClientTarget } from '@client/target-environments/ClientTarget'
 import { ClientUser } from '@client/users/ClientUser'
 import type { TListenerTargetEmittable } from '@shared/events/EventManager'
@@ -49,13 +47,11 @@ import type { User } from '@shared/users/User'
 import type { AxiosProgressEvent, AxiosResponse } from 'axios'
 import axios from 'axios'
 import type { TMetisClientComponents } from '..'
-import { ClientActionCost } from './actions/ClientActionCost'
 import { ClientMissionAction } from './actions/ClientMissionAction'
 import { ClientMissionResource } from './ClientMissionResource'
 import { ClientEffect } from './effects/ClientEffect'
 import { ClientMissionFile } from './files/ClientMissionFile'
 import { ClientMissionForce } from './forces/ClientMissionForce'
-import { ClientResourcePool } from './forces/ClientResourcePool'
 import { ClientMissionNode } from './nodes/ClientMissionNode'
 import type { TPrototypeRelation } from './nodes/ClientMissionPrototype'
 import { ClientMissionPrototype } from './nodes/ClientMissionPrototype'
@@ -1098,21 +1094,10 @@ export class ClientMission
     // Some components are rendered in subentries,
     // meaning they are rendered as a part of the
     // super component's entry. Therefore, a redirect
-    // to the super component is needed in the following
-    // cases to ensure proper display of the desired
-    // selection.
-    let subentriedComponentClasses = [
-      ClientMissionResource,
-      ClientChatChannel,
-      ClientResourcePool,
-      ClientActionCost,
-      ClientTargetArgument,
-    ]
-    for (let subentriedComponentClass of subentriedComponentClasses) {
-      if (selection instanceof subentriedComponentClass) {
-        selection = selection.superComponent as MissionComponent<any, any>
-        break
-      }
+    // to the super component is needed to ensure
+    // proper display of the desired selection.
+    if (selection.usesSubentry) {
+      selection = selection.superComponent ?? selection
     }
 
     this._selection = selection

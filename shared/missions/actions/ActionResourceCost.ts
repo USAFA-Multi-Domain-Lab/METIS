@@ -27,6 +27,11 @@ export abstract class ActionResourceCost<
    */
   public readonly action: TAction<T>
 
+  // Overridden
+  public override get usesSubentry(): boolean {
+    return true
+  }
+
   // Implemented
   public get mission(): TMission<T> {
     return this.action.mission

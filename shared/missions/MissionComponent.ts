@@ -71,6 +71,18 @@ export abstract class MissionComponent<
     return this.issues.length > 0
   }
 
+  /**
+   * Whether this component is rendered within a subentry of its
+   * super component in the inspector, rather than as its own entry.
+   * When `true`, selecting this component will redirect to its super
+   * component.
+   * @note Override this in a subclass to specify that the component
+   * uses a subentry.
+   */
+  public get usesSubentry(): boolean {
+    return false
+  }
+
   // Overridden
   public override get warningText(): string {
     let superText = super.warningText

@@ -10,7 +10,10 @@ import type { ClientMissionForce } from './ClientMissionForce'
 /**
  * Client implementation of {@link ResourcePool}.
  */
-export class ClientResourcePool extends ResourcePool<TMetisClientComponents> implements TMissionOutlineItem {
+export class ClientResourcePool
+  extends ResourcePool<TMetisClientComponents>
+  implements TMissionOutlineItem
+{
   // Implemented
   public get outlineIcon(): TMetisIcon {
     return this.icon
