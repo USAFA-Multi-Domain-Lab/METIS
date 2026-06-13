@@ -1,6 +1,7 @@
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import { useEventListener } from '@client/toolbox/hooks'
 import { useState } from 'react'
+import EffectUpdateControl from './EffectUpdateControl'
 import IssueGroup from './IssueGroup'
 import './Issues.scss'
 
@@ -54,6 +55,7 @@ export default function Issues({
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+          <EffectUpdateControl scope={'mission-wide'} mission={mission} />
         </div>
         <div className='IssueListItems'>
           {groups.length > 0 ? (

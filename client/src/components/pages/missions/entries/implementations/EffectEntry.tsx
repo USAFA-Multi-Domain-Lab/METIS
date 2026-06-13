@@ -1,8 +1,8 @@
 import { DetailDropdown } from '@client/components/content/form/dropdowns/standard/DetailDropdown'
-import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import useEffectItemButtonCallbacks from '@client/components/pages/missions/hooks/mission-components/effects'
+import EffectUpdateControl from '@client/components/pages/missions/issues/EffectUpdateControl'
 import type { TMetisClientComponents } from '@client/index'
 import { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { compute } from '@client/toolbox'
@@ -11,9 +11,7 @@ import type {
   TEffectType,
   TSelectEffectContext,
 } from '@shared/missions/effects/Effect'
-import { ClassList } from '@shared/toolbox/html/ClassList'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import { useState } from 'react'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailLocked } from '../../../../content/form/DetailLocked'
 import { DetailString } from '../../../../content/form/DetailString'
@@ -28,6 +26,7 @@ export default function EffectEntry<TType extends TEffectType>({
   effect: { target, environment },
 }: TEffectEntry_P<TType>): TReactElement | null {
   /* -- STATE -- */
+
   const { onChange, viewMode } = useMissionPageContext()
   const { onDuplicateRequest, onDeleteRequest } = useEffectItemButtonCallbacks(
     effect.host,
@@ -41,48 +40,6 @@ export default function EffectEntry<TType extends TEffectType>({
   const [trigger, setTrigger] = effectState.trigger
   const [description, setDescription] = effectState.description
   const [targetArguments, setTargetArguments] = effectState.arguments
-  const [updateState, setUpdateState] = useState<TEffectUpdateState>(() => {
-    if (effect.migrationInProgress) {
-      return 'UpdateInProgress'
-    } else if (effect.hasIssue(ClientEffect.ISSUE_KEY_OUTDATED)) {
-      return 'UpdateAvailable'
-    } else {
-      return 'NoUpdate'
-    }
-  })
-  const updateEngine = useButtonSvgEngine({
-    elements: [
-      {
-        key: 'update',
-        type: 'button',
-        icon: 'update',
-        label: '',
-        onClick: async () => {
-          try {
-            let migrationPromise = effect.$migrateArguments()
-            setUpdateState('UpdateInProgress')
-            await migrationPromise
-            setUpdateState('UpdateSucceeded')
-            onChange(effect)
-          } catch (error) {
-            setUpdateState('UpdateFailed')
-          }
-        },
-      },
-    ],
-    options: { revealLabels: true },
-  })
-  const updateSuccessCloseEngine = useButtonSvgEngine({
-    elements: [
-      {
-        key: 'close',
-        type: 'button',
-        icon: 'close',
-        description: 'Dismiss',
-        onClick: () => setUpdateState('NoUpdate'),
-      },
-    ],
-  })
   const svgEngine = useButtonSvgEngine({
     elements: [
       {
@@ -134,22 +91,11 @@ export default function EffectEntry<TType extends TEffectType>({
       return 'No target selected.'
     }
   })
-  let updateComponentClasses = new ClassList('UpdateComponent').add(updateState)
-
   /* -- RENDER -- */
 
   return (
     <Entry missionComponent={effect} svgEngines={[svgEngine]}>
-      <div className={updateComponentClasses.value}>
-        <div className='UpdateButtons'>
-          <ButtonSvgPanel engine={updateEngine} />
-        </div>
-        <div className='UpdateStatusContent'>
-          <div className='UpdateStatusIndicator'></div>
-          <div className='UpdateStatusMessage'></div>
-          <ButtonSvgPanel engine={updateSuccessCloseEngine} />
-        </div>
-      </div>
+      <EffectUpdateControl scope={'focused'} effect={effect} />
       <DetailString
         fieldType='required'
         label='Name'
@@ -217,14 +163,3 @@ export type TEffectEntry_P<TType extends TEffectType> = {
    */
   effect: TMetisClientComponents[TType]
 }
-
-/**
- * The update state of the effect, which determines whether
- * the update component is shown and what message it displays.
- */
-export type TEffectUpdateState =
-  | 'NoUpdate'
-  | 'UpdateAvailable'
-  | 'UpdateInProgress'
-  | 'UpdateSucceeded'
-  | 'UpdateFailed'
