@@ -94,25 +94,6 @@ $form-row-gap: 1.5em;
   grid-template-columns: repeat(auto-fill, minmax(225px, 100%));
   row-gap: 0.5em;
 
-  &.DetailDropdown .TitleRow .TitleColumnOne {
-    .Warning {
-      $content-size: 1.1em;
-
-      background-image: url('../../../assets/images/icons/warning-transparent.svg');
-      background-size: $content-size;
-      background-repeat: no-repeat;
-      background-position: center;
-      width: $content-size;
-      height: $content-size;
-      margin: 1.5px 8px 0 0;
-
-      &:hover {
-        background-image: url('../../../assets/images/icons/warning-filled.svg');
-        transition: background-image 0.5s;
-      }
-    }
-  }
-
   .FieldErrorMessage {
     font-size: 0.7em;
     line-height: 1.3em;

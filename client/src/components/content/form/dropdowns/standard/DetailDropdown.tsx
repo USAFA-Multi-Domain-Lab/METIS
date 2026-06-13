@@ -1,4 +1,3 @@
-import Tooltip from '@client/components/content/communication/Tooltip'
 import { LocalContext, LocalContextProvider } from '@client/context/local'
 import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
@@ -89,15 +88,49 @@ export function DetailDropdown<TOption>(
 
   /* -- COMPUTED -- */
 
-  const { rootClasses, labelClasses, fieldClasses } = useDetailClassNames({
-    componentName: 'DetailDropdown',
-    disabled,
-    displayError: false,
-    errorType: 'default',
-    uniqueClassName,
-    uniqueLabelClassName,
-    uniqueFieldClassName,
+  /**
+   * Determines if the warning state should be displayed.
+   */
+  const displayWarning: boolean = compute(() => {
+    if (
+      fieldType === 'required' &&
+      handleInvalidOption.method === 'warning' &&
+      !options.includes(value)
+    ) {
+      return true
+    } else if (
+      fieldType === 'optional' &&
+      handleInvalidOption.method === 'warning' &&
+      value &&
+      !options.includes(value)
+    ) {
+      return true
+    } else {
+      return false
+    }
   })
+
+  /**
+   * The message displayed below the field when the selected option is invalid.
+   */
+  const warningTooltipDescription: string = compute(() => {
+    if (handleInvalidOption.method === 'warning') {
+      return handleInvalidOption.message ?? ''
+    } else {
+      return ''
+    }
+  })
+
+  const { rootClasses, labelClasses, fieldClasses, fieldErrorClasses } =
+    useDetailClassNames({
+      componentName: 'DetailDropdown',
+      disabled,
+      displayError: displayWarning,
+      errorType: 'warning',
+      uniqueClassName,
+      uniqueLabelClassName,
+      uniqueFieldClassName,
+    })
   rootClasses.add('DetailDropdownCommon')
   fieldClasses.switch('Expanded', 'Collapsed', expanded)
 
@@ -128,46 +161,6 @@ export function DetailDropdown<TOption>(
     // that indicates an option should be selected.
     else {
       return emptyText
-    }
-  })
-  /**
-   * Determines if the warning icon should be displayed.
-   */
-  const displayWarning: boolean = compute(() => {
-    if (
-      fieldType === 'required' &&
-      handleInvalidOption.method === 'warning' &&
-      !options.includes(value)
-    ) {
-      return true
-    } else if (
-      fieldType === 'optional' &&
-      handleInvalidOption.method === 'warning' &&
-      value &&
-      !options.includes(value)
-    ) {
-      return true
-    } else {
-      return false
-    }
-  })
-
-  /**
-   * The class names for the warning icon.
-   */
-  const warningClasses = new ClassList().switch(
-    'Warning',
-    'Hidden',
-    displayWarning,
-  )
-  /**
-   * The tooltip description for the warning icon.
-   */
-  const warningTooltipDescription: string = compute(() => {
-    if (handleInvalidOption.method === 'warning') {
-      return handleInvalidOption.message ?? ''
-    } else {
-      return ''
     }
   })
 
@@ -288,11 +281,7 @@ export function DetailDropdown<TOption>(
           labelClassName={labelClasses.value}
           tooltipDescription={tooltipDescription}
           fieldType={fieldType}
-        >
-          <div className={warningClasses.value}>
-            <Tooltip description={warningTooltipDescription} />
-          </div>
-        </DetailTitleRow>
+        />
         <div className={fieldClasses.value}>
           <DropdownOption
             selected
@@ -303,6 +292,7 @@ export function DetailDropdown<TOption>(
           </DropdownOption>
           <div className={availableOptionsClasses.value}>{optionsJsx}</div>
         </div>
+        <div className={fieldErrorClasses.value}>{warningTooltipDescription}</div>
       </div>
     </LocalContextProvider>
   )
