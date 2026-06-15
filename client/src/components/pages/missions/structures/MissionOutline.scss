@@ -62,7 +62,7 @@
 
           .OutlineItemContent {
             display: grid;
-            grid-template-columns: 1.8em 1fr;
+            grid-template-columns: 1.8em 1fr auto;
             cursor: default;
             user-select: none;
 
@@ -83,6 +83,20 @@
               &.isCollapsed {
                 transform: rotate(-90deg);
               }
+            }
+
+            .SelectionBadge {
+              cursor: pointer;
+              align-self: center;
+              background-color: rgba($color-accent, 0.25);
+              color: $color-accent;
+              border-radius: 10px;
+              padding: 0.1em 0.45em;
+              font-size: 0.75em;
+              font-weight: 700;
+              min-width: 1.4em;
+              text-align: center;
+              line-height: 1.4;
             }
 
             .SelectionZone {

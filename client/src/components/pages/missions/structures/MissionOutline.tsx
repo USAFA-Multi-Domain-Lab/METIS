@@ -1,9 +1,8 @@
-import { useGlobalContext } from '@client/context/global'
 import { LocalContext, LocalContextProvider } from '@client/context/local'
 import { compute } from '@client/toolbox'
 import { useDefaultProps } from '@client/toolbox/hooks'
 import { getIconPath } from '@client/toolbox/icons'
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './MissionOutline.scss'
 import MissionOutlineItem from './MissionOutlineItem'
 import MissionOutlineSelectionCount from './MissionOutlineSelectionCount'
@@ -42,14 +41,13 @@ export default function MissionOutline(
     isIndirectlySelectable: () => true,
     onSelectionChange: () => {},
   })
-  const [value, setValue] = defaultedProps.selectionState
-  const { isSelectable: originalIsSelectable, isIndirectlySelectable } =
-    defaultedProps
 
   /* -- STATE -- */
 
-  const globalContext = useGlobalContext()
-  const { forceUpdate } = globalContext.actions
+  const [value, setValue] = defaultedProps.selectionState
+  const { isSelectable: originalIsSelectable, isIndirectlySelectable } =
+    defaultedProps
+  const [expansionUpdate, setExpansionUpdate] = useState(0)
 
   /* -- FUNCTIONS -- */
 
@@ -60,7 +58,7 @@ export default function MissionOutline(
    */
   const toggleItem = (item: TMissionOutlineItem): void => {
     item.expandedInOutline = !item.expandedInOutline
-    forceUpdate()
+    setExpansionUpdate((previous) => previous + 1)
   }
 
   /**
@@ -80,6 +78,37 @@ export default function MissionOutline(
     }
 
     setValue([...updatedItems])
+  }
+
+  /**
+   * Returns the number of selected descendants hidden inside a collapsed item.
+   * @param item The item to check.
+   */
+  const getDescendantSelectionCount = (item: TMissionOutlineItem): number => {
+    return badgeCounts.get(item) ?? 0
+  }
+
+  /**
+   * Expands all ancestors of each selected item that lives inside the given
+   * collapsed item, making every hidden selection visible in the outline.
+   * @param item The collapsed item whose hidden selections should be revealed.
+   */
+  const revealSelectedDescendants = (item: TMissionOutlineItem): void => {
+    for (let selected of value) {
+      let current: TMissionOutlineItem | null = selected.outlineParent
+      let path: TMissionOutlineItem[] = []
+      while (current !== null) {
+        path.push(current)
+        if (current === item) {
+          for (let ancestor of path) {
+            ancestor.expandedInOutline = true
+          }
+          break
+        }
+        current = current.outlineParent
+      }
+    }
+    setExpansionUpdate((previous) => previous + 1)
   }
 
   /**
@@ -140,9 +169,29 @@ export default function MissionOutline(
 
   /* -- COMPUTED -- */
 
+  let badgeCounts = useMemo(() => {
+    let map = new Map<TMissionOutlineItem, number>()
+    for (let item of value) {
+      let current = item.outlineParent
+      while (current !== null) {
+        let parent = current.outlineParent
+        if (!current.expandedInOutline) {
+          if (parent === null || parent.expandedInOutline) {
+            map.set(current, (map.get(current) ?? 0) + 1)
+            break
+          }
+        }
+        current = parent
+      }
+    }
+    return map
+  }, [value, expansionUpdate])
+
   const computed: TMissionOutline_C = {
     toggleItem,
     toggleSelection,
+    getDescendantSelectionCount,
+    revealSelectedDescendants,
   }
   const elements: TMissionOutline_E = {}
 
@@ -249,6 +298,17 @@ export type TMissionOutline_C = {
    * @param item The item to toggle selection for.
    */
   toggleSelection: (item: TMissionOutlineItem) => void
+  /**
+   * Returns the number of selected descendants hidden inside a collapsed item.
+   * @param item The item to check.
+   */
+  getDescendantSelectionCount: (item: TMissionOutlineItem) => number
+  /**
+   * Expands all ancestors of each selected item that lives inside the given
+   * collapsed item, making every hidden selection visible in the outline.
+   * @param item The collapsed item whose hidden selections should be revealed.
+   */
+  revealSelectedDescendants: (item: TMissionOutlineItem) => void
 }
 
 /**

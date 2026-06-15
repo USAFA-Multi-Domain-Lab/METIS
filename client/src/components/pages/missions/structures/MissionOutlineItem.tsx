@@ -1,6 +1,7 @@
 import Tooltip from '@client/components/content/communication/Tooltip'
 import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
+import { s } from '@shared/toolbox/strings/StringToolbox'
 import type { TMissionOutlineItem } from './MissionOutline'
 import {
   computeOutlineIconStyling,
@@ -17,8 +18,15 @@ import MissionOutlineChildren from './MissionOutlineChildren'
 export default function MissionOutlineItem({
   item,
 }: TMissionOutlineItem_P): TReactElement | null {
-  const { filter, isSelectable, toggleItem, toggleSelection, selectionState } =
-    useMissionOutlineContext()
+  const {
+    filter,
+    isSelectable,
+    toggleItem,
+    toggleSelection,
+    selectionState,
+    getDescendantSelectionCount,
+    revealSelectedDescendants,
+  } = useMissionOutlineContext()
   const [value] = selectionState
 
   let children = item.outlineChildren.filter(filter)
@@ -26,6 +34,8 @@ export default function MissionOutlineItem({
   let expanded = item.expandedInOutline
   let selectable = isSelectable(item)
   let selected = value.includes(item)
+  let descendantSelectionCount = getDescendantSelectionCount(item)
+  let showBadge = !expanded && descendantSelectionCount > 0
   let tooltipDescription = compute<string>(() => {
     if (!selectable) return ''
     return selected ? 'Deselect item' : 'Select item'
@@ -60,6 +70,20 @@ export default function MissionOutlineItem({
           <div className='Name'>{item.name}</div>
           <Tooltip description={tooltipDescription} />
         </div>
+        {showBadge && (
+          <div
+            className='SelectionBadge'
+            onClick={(event) => {
+              event.stopPropagation()
+              revealSelectedDescendants(item)
+            }}
+          >
+            {descendantSelectionCount}
+            <Tooltip
+              description={`Click to reveal ${descendantSelectionCount} selected descendant${s(descendantSelectionCount)}`}
+            />
+          </div>
+        )}
       </div>
       <MissionOutlineChildren parent={item} />
     </div>
