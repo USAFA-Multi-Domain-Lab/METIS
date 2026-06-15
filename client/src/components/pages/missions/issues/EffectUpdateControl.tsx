@@ -41,16 +41,10 @@ export default function EffectUpdateControl(
         icon: 'update',
         label: '',
         onClick: async () => {
-          try {
-            setUpdateState('UpdateInProgress')
-            for (let effect of outdatedEffects) {
-              await effect.$migrateArguments()
-              onChange(effect)
-            }
-            setUpdateState('UpdateSucceeded')
-          } catch (error) {
-            setUpdateState('UpdateFailed')
+          for (let effect of outdatedEffects) {
+            effect.$migrateArguments()
           }
+          setUpdateState('UpdateInProgress')
         },
       },
     ],
@@ -100,9 +94,15 @@ export default function EffectUpdateControl(
       effect.hasIssue(ClientEffect.ISSUE_KEY_OUTDATED),
     )
     setOutdatedEffects(effects)
-    setUpdateState((current) =>
-      current === 'NoUpdate' && effects.length > 0 ? 'UpdateAvailable' : current,
-    )
+    setUpdateState((current) => {
+      if (effects.some((effect) => effect.migrationInProgress)) {
+        return 'UpdateInProgress'
+      }
+      if (current === 'NoUpdate' && effects.length > 0) {
+        return 'UpdateAvailable'
+      }
+      return current
+    })
   }
 
   /* -- EFFECTS -- */
@@ -112,6 +112,30 @@ export default function EffectUpdateControl(
     refreshOutdated()
   }, [effect, mission])
   useEventListener(mission.issueRegistry, 'change', () => refreshOutdated())
+
+  // If an update is in progress, await the completion of all
+  // migrations and update the state accordingly.
+  useEffect(() => {
+    if (updateState === 'UpdateInProgress') {
+      let migratingEffects = outdatedEffects.filter(
+        (effect) => effect.migrationPromise !== null,
+      )
+      Promise.allSettled(
+        migratingEffects.map((effect) => effect.migrationPromise!),
+      ).then((results) => {
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            onChange(migratingEffects[index])
+          }
+        })
+        if (results.some((result) => result.status === 'rejected')) {
+          setUpdateState('UpdateFailed')
+        } else {
+          setUpdateState('UpdateSucceeded')
+        }
+      })
+    }
+  }, [updateState])
 
   /* -- RENDER -- */
 

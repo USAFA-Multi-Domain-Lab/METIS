@@ -1,7 +1,6 @@
 import type { MissionComponent } from '@shared/missions/MissionComponent'
 import type { MissionComponentIssue } from '@shared/missions/MissionComponentIssue'
 import { ClassList } from '@shared/toolbox/html/ClassList'
-import { useState } from 'react'
 import {
   computeOutlineIconStyling,
   type TMissionOutlineItem,
@@ -16,11 +15,9 @@ export default function IssueGroup({
   component,
   issues,
   switchToPanel,
+  expanded,
+  onToggle,
 }: TIssueGroup_P): TReactElement | null {
-  /* -- STATE -- */
-
-  let [expanded, setExpanded] = useState<boolean>(true)
-
   /* -- COMPUTED -- */
 
   let outlineItem = component as unknown as TMissionOutlineItem
@@ -33,7 +30,7 @@ export default function IssueGroup({
 
   return (
     <div className='IssueGroup'>
-      <div className='IssueGroupHeader' onClick={() => setExpanded(!expanded)}>
+      <div className='IssueGroupHeader' onClick={onToggle}>
         <div className={indicatorClasses.value}></div>
         <div
           className='IssueGroupIcon'
@@ -71,4 +68,12 @@ export interface TIssueGroup_P extends TIssues_P {
    * The issues belonging to this component.
    */
   issues: MissionComponentIssue<any>[]
+  /**
+   * Whether this group is currently expanded.
+   */
+  expanded: boolean
+  /**
+   * Called when the user clicks the group header to toggle its collapsed state.
+   */
+  onToggle: () => void
 }

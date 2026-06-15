@@ -46,11 +46,20 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
   }
 
   /**
+   * A promise that resolves when the current migration in progress
+   * is complete. A current migration will only be present if
+   * {@link $migrateArguments} has been called and has not yet completed.
+   */
+  public migrationPromise: Promise<void> | null = null
+
+  /**
    * Tracks whether a migration is currently in progress for this
    * effect, preventing multiple simultaneous migrations and allowing
    * the UI to respond accordingly.
    */
-  public migrationInProgress: boolean = false
+  public get migrationInProgress(): boolean {
+    return this.migrationPromise !== null
+  }
 
   // Implemented
   protected parseArguments(
@@ -146,18 +155,27 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
    * @resolves After the migration is complete and the effect's arguments have been updated.
    * @rejects If there was an error during the migration process.
    */
-  public async $migrateArguments(): Promise<void> {
-    this.migrationInProgress = true
-    let results = await ClientTargetEnvironment.$migrateTargetArguments(this)
-    // Store the migrated data in the component.
-    this.targetEnvironmentVersion = results.version
-    this.arguments = this.parseArguments(results.data)
-    this.sortArguments()
-    this.mission.issueRegistry.trigger('effect-updated', this)
-    for (let argument of this.arguments) {
-      argument.mission.issueRegistry.trigger('effect-updated', argument)
-    }
-    this.migrationInProgress = false
+  public $migrateArguments(): Promise<void> {
+    this.migrationPromise = new Promise(async (resolve, reject) => {
+      try {
+        let results =
+          await ClientTargetEnvironment.$migrateTargetArguments(this)
+        // Store the migrated data in the component.
+        this.targetEnvironmentVersion = results.version
+        this.arguments = this.parseArguments(results.data)
+        this.sortArguments()
+        this.mission.issueRegistry.trigger('effect-updated', this)
+        for (let argument of this.arguments) {
+          argument.mission.issueRegistry.trigger('effect-updated', argument)
+        }
+        resolve()
+      } catch (error) {
+        reject(error)
+      } finally {
+        this.migrationPromise = null
+      }
+    })
+    return this.migrationPromise
   }
 
   /**

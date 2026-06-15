@@ -37,8 +37,6 @@ export default function IssueItem({
         type: 'button',
         icon: 'warning-transparent',
         cursor: 'help',
-        description:
-          'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
       },
     ],
   })
@@ -46,6 +44,7 @@ export default function IssueItem({
   /* -- COMPUTED -- */
 
   let rootClasses = new ClassList('IssueItem')
+  let description = `${issue.message}\n\t\n**Click to view associated component**`
 
   /* -- FUNCTIONS -- */
 
@@ -102,10 +101,10 @@ export default function IssueItem({
 
   return (
     <div className={rootClasses.value} onClick={() => onIssueSelection(issue)}>
+      <Tooltip description={description} />
       <ButtonSvgPanel engine={buttonEngine} />
       <div className='IssueMessage'>
         {issue.message}
-        <Tooltip description={issue.message} />
       </div>
     </div>
   )

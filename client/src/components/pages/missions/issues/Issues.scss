@@ -14,6 +14,9 @@
     overflow: hidden;
 
     .IssueListHeader {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      column-gap: 0.5em;
       padding: 1em;
 
       h3 {
@@ -45,6 +48,7 @@
       }
 
       .UpdateComponent {
+        grid-column: span 2;
         margin: 1em 0 0;
       }
     }
@@ -55,10 +59,6 @@
       padding: 0.5em;
 
       .IssueGroup {
-        &:last-child {
-          margin-bottom: 0;
-        }
-
         .IssueGroupHeader {
           display: flex;
           align-items: center;
@@ -127,9 +127,8 @@
         display: flex;
         align-items: center;
         gap: 0.333em;
-        margin-bottom: 0.5em;
         border-radius: 4px;
-        padding: 0 0.85em;
+        padding: 0.25em 0.85em;
         font-size: 0.75rem;
         transition: all 0.15s ease;
 
@@ -144,6 +143,7 @@
         }
 
         .ButtonSvg {
+          pointer-events: none;
           font-size: 1.6em;
         }
 
@@ -154,10 +154,10 @@
           text-overflow: ellipsis;
           position: relative;
           font-style: italic;
+        }
 
-          &:hover {
-            color: $color-accent;
-          }
+        &:hover {
+          @include background-mask($opacity: 0.05);
         }
       }
 

@@ -2,6 +2,13 @@
 @use '@client/assets/styles/util.scss' as *;
 
 .UpdateComponent {
+  // Preloads the spinner image so it is available before UpdateInProgress is entered.
+  &::before {
+    content: '';
+    position: absolute;
+    background-image: url(../../../../assets/images/icons/pending.png);
+  }
+
   .UpdateButtons {
     .ButtonSvgPanel {
       display: none;
@@ -114,7 +121,7 @@
     }
 
     .UpdateStatusMessage::after {
-      content: 'Updating effect...';
+      content: 'Updating...';
     }
   }
 
