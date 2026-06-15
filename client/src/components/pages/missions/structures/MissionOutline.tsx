@@ -89,6 +89,25 @@ export default function MissionOutline(
   }
 
   /**
+   * Performs a deep toggle on the given item and all its descendants —
+   * expanding everything if the item is collapsed, collapsing everything
+   * if the item is expanded.
+   * @param item The item to deep-toggle.
+   */
+  const toggleAllDescendants = (item: TMissionOutlineItem): void => {
+    let expanding = !item.expandedInOutline
+    let stack = [item]
+    while (stack.length > 0) {
+      let current = stack.pop()!
+      current.expandedInOutline = expanding
+      for (let child of current.outlineChildren) {
+        stack.push(child)
+      }
+    }
+    setExpansionUpdate((previous) => previous + 1)
+  }
+
+  /**
    * Expands all ancestors of each selected item that lives inside the given
    * collapsed item, making every hidden selection visible in the outline.
    * @param item The collapsed item whose hidden selections should be revealed.
@@ -190,6 +209,7 @@ export default function MissionOutline(
   const computed: TMissionOutline_C = {
     toggleItem,
     toggleSelection,
+    toggleAllDescendants,
     getDescendantSelectionCount,
     revealSelectedDescendants,
   }
@@ -298,6 +318,13 @@ export type TMissionOutline_C = {
    * @param item The item to toggle selection for.
    */
   toggleSelection: (item: TMissionOutlineItem) => void
+  /**
+   * Performs a deep toggle on the given item and all its descendants —
+   * expanding everything if the item is collapsed, collapsing everything
+   * if the item is expanded.
+   * @param item The item to deep-toggle.
+   */
+  toggleAllDescendants: (item: TMissionOutlineItem) => void
   /**
    * Returns the number of selected descendants hidden inside a collapsed item.
    * @param item The item to check.

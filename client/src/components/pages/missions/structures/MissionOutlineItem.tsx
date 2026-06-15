@@ -23,6 +23,7 @@ export default function MissionOutlineItem({
     isSelectable,
     toggleItem,
     toggleSelection,
+    toggleAllDescendants,
     selectionState,
     getDescendantSelectionCount,
     revealSelectedDescendants,
@@ -58,6 +59,11 @@ export default function MissionOutlineItem({
           className={indicatorClasses.value}
           onClick={() => {
             if (hasChildren) toggleItem(item)
+          }}
+          onContextMenu={(event) => {
+            if (!hasChildren) return
+            event.preventDefault()
+            toggleAllDescendants(item)
           }}
         ></div>
         <div
