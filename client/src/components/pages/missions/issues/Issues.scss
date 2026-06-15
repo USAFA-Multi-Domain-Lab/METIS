@@ -101,6 +101,9 @@
           .IssueGroupName {
             font-weight: 600;
             line-height: 1.8em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
 
           .IssueGroupBadge {

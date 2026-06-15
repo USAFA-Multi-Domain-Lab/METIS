@@ -46,7 +46,7 @@ export default function Issues({
       {
         key: 'expand-all',
         type: 'button',
-        icon: 'expand',
+        icon: 'expand-list',
         cursor: 'pointer',
         label: 'Expand all',
         hidden: !allCollapsed,
@@ -55,7 +55,7 @@ export default function Issues({
       {
         key: 'collapse-all',
         type: 'button',
-        icon: 'collapse',
+        icon: 'collapse-list',
         cursor: 'pointer',
         label: 'Collapse all',
         hidden: allCollapsed,
