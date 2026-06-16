@@ -1,3 +1,4 @@
+import type { TDetailMultiSelectHandle } from '@client/components/content/form/dropdowns/multiselect/DetailMultiSelect'
 import DetailMultiSelect from '@client/components/content/form/dropdowns/multiselect/DetailMultiSelect'
 import { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
 import { ClientMission } from '@client/missions/ClientMission'
@@ -8,9 +9,12 @@ import { ClientResourcePool } from '@client/missions/forces/ClientResourcePool'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import type { ClientTargetArgument } from '@client/target-environments/arguments/ClientTargetArgument'
 import { useObjectFormSync } from '@client/toolbox/hooks'
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useMissionPageContext } from '../../context'
-import type { TMissionOutlineItem } from '../../structures/MissionOutline'
+import type {
+  TMissionOutlineHandle,
+  TMissionOutlineItem,
+} from '../../structures/MissionOutline'
 import MissionOutline, {
   computeOutlineIconStyling,
 } from '../../structures/MissionOutline'
@@ -31,6 +35,8 @@ export default function MissionComponentTargetDetail({
     onChange: () => onChange(argument),
   })
   const [context, setContext] = formState.context
+  const outlineRef = useRef<TMissionOutlineHandle>(null)
+  const multiSelectRef = useRef<TDetailMultiSelectHandle>(null)
 
   /* -- VALIDATION -- */
 
@@ -132,11 +138,16 @@ export default function MissionComponentTargetDetail({
 
   return (
     <DetailMultiSelect<TMissionOutlineItem>
+      ref={multiSelectRef}
       label={parameter.name}
       tooltipDescription={parameter.tooltipDescription}
       value={value}
       setValue={setValue}
       getKey={({ _id }) => _id}
+      onPillClick={(item) => {
+        multiSelectRef.current?.expand()
+        outlineRef.current?.revealItem(item)
+      }}
       render={(item) => {
         return (
           <div className='ComponentItemContent'>
@@ -148,6 +159,7 @@ export default function MissionComponentTargetDetail({
       options={[]}
       renderOptions={() => (
         <MissionOutline
+          ref={outlineRef}
           root={mission}
           selectionState={[value, setValue]}
           isSelectable={(item) =>

@@ -2,7 +2,7 @@ import { LocalContext, LocalContextProvider } from '@client/context/local'
 import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import type { ReactNode } from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useImperativeHandle, useState } from 'react'
 import type { TDetailBase_P } from '../..'
 import DetailTitleRow from '../../DetailTitleRow'
 import { useDetailClassNames } from '../../hooks/useDetailClassNames'
@@ -56,10 +56,13 @@ export default function DetailMultiSelect<TOption>(
     errorMessage: props.errorMessage ?? '',
     errorType: props.errorType ?? 'default',
     isExpanded: props.isExpanded ?? false,
+    onPillClick: props.onPillClick ?? (() => {}),
+    ref: props.ref ?? null,
   }
 
   // Extract props.
   const {
+    ref,
     label,
     options,
     value,
@@ -74,6 +77,7 @@ export default function DetailMultiSelect<TOption>(
     isExpanded,
     tooltipDescription,
     emptyText,
+    onPillClick,
   } = defaultedProps
 
   /* -- STATE -- */
@@ -108,6 +112,12 @@ export default function DetailMultiSelect<TOption>(
    * so there is no meaningful distinction between required and optional.
    */
   /* -- EFFECTS -- */
+
+  useImperativeHandle(ref, () => ({
+    expand: () => setExpanded(true),
+    collapse: () => setExpanded(false),
+    toggleExpansion: () => setExpanded((previous) => !previous),
+  }))
 
   // Close multiselect when clicking outside.
   useEffect(() => {
@@ -164,7 +174,10 @@ export default function DetailMultiSelect<TOption>(
         <div
           key={key}
           className='SelectedPill'
-          onClick={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation()
+            onPillClick(selectedOption)
+          }}
         >
           <span className='PillText'>{displayText}</span>
           <button
@@ -221,6 +234,24 @@ export default function DetailMultiSelect<TOption>(
 /* -- TYPES -- */
 
 /**
+ * Imperative handle exposed by {@link DetailMultiSelect} via `forwardRef`.
+ */
+export interface TDetailMultiSelectHandle {
+  /**
+   * Expands the multiselect dropdown.
+   */
+  expand: () => void
+  /**
+   * Collapses the multiselect dropdown.
+   */
+  collapse: () => void
+  /**
+   * Toggles the expansion state of the multiselect dropdown.
+   */
+  toggleExpansion: () => void
+}
+
+/**
  * The base properties for the Detail Multi-Select component.
  */
 type TDetailMultiSelectBase_P = TDetailBase_P & {
@@ -274,6 +305,20 @@ export type TDetailMultiSelect_P<TOption> = TDetailMultiSelectBase_P & {
    * @returns The key for the given option.
    */
   getKey: (option: TOption) => string
+  /**
+   * Called when a selected pill body is clicked (not the remove button).
+   * Receives the option whose pill was clicked.
+   * @note This is only for the pills. This will not call back if
+   * the multiselect is expanded and one of the dropdown options
+   * are clicked in the list.
+   * @param option The option whose pill was clicked.
+   */
+  onPillClick?: (option: TOption) => void
+  /**
+   * An optional ref that exposes imperative controls for the multiselect,
+   * such as programmatically expanding or collapsing the dropdown.
+   */
+  ref?: React.Ref<TDetailMultiSelectHandle>
   /**
    * Field type for the detail.
    * @note Always treated as required — a multi-select always produces a defined

@@ -8,10 +8,17 @@
       flex-direction: column;
       overflow-y: hidden;
 
+      .OutlineHeader {
+        display: flex;
+        justify-content: flex-end;
+        padding: 0.25em 0.5em 0;
+        flex-shrink: 0;
+      }
+
       .OutlineTree {
         overflow-x: auto;
         overflow-y: auto;
-        height: calc(100% - 70px);
+        flex: 1;
         padding: 1em;
         font-size: 0.75rem;
         white-space: nowrap;

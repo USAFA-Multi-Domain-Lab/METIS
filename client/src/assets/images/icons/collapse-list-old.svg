@@ -23,11 +23,11 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="15.204051"
-     inkscape:cx="7.3335718"
-     inkscape:cy="10.095993"
-     inkscape:window-width="1568"
+     inkscape:cx="7.2678"
+     inkscape:cy="10.095994"
+     inkscape:window-width="1544"
      inkscape:window-height="992"
-     inkscape:window-x="164"
+     inkscape:window-x="186"
      inkscape:window-y="33"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg1" />
@@ -35,20 +35,25 @@
      points="10,7 6.5,14 3,7 "
      fill="#ffffff"
      id="polygon1"
-     transform="rotate(-90,3.5,10.5)" />
+     transform="rotate(180,13.5,14.5)" />
+  <polygon
+     points="3,7 10,7 6.5,14 "
+     fill="#ffffff"
+     id="polygon1-6"
+     transform="translate(14,-5)" />
   <path
      style="fill:#ffffff;stroke:#ffffff;stroke-width:2.5"
-     d="m 10.048165,5.2499732 13.943652,0.091281"
+     d="m 0.028174,5.2499732 13.943652,0.091281"
      id="path1"
      sodipodi:nodetypes="cc" />
   <path
      style="fill:#ffffff;stroke:#ffffff;stroke-width:2.5"
-     d="m 10.048,11.95436 13.943817,0.09128"
+     d="M 0.00818285,11.95436 13.951835,12.04564"
      id="path1-8"
      sodipodi:nodetypes="cc" />
   <path
      style="fill:#ffffff;stroke:#ffffff;stroke-width:2.5"
-     d="m 10.048,18.658973 13.943817,0.09128"
+     d="M 0.00818276,18.658973 13.951835,18.750253"
      id="path1-5"
      sodipodi:nodetypes="cc" />
 </svg>

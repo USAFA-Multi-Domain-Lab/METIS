@@ -20,6 +20,7 @@ export default function MissionOutlineItem({
 }: TMissionOutlineItem_P): TReactElement | null {
   const {
     filter,
+    isExpanded,
     isSelectable,
     toggleItem,
     toggleSelection,
@@ -32,7 +33,7 @@ export default function MissionOutlineItem({
 
   let children = item.outlineChildren.filter(filter)
   let hasChildren = children.length > 0
-  let expanded = item.expandedInOutline
+  let expanded = isExpanded(item)
   let selectable = isSelectable(item)
   let selected = value.includes(item)
   let descendantSelectionCount = getDescendantSelectionCount(item)
