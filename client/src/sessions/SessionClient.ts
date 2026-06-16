@@ -1,17 +1,18 @@
 import type {
   ServerConnection,
   TServerHandler,
-} from "@client/connect/ServerConnection";
-import { ClientActionCost } from "@client/missions/actions/ClientActionCost";
-import { ClientActionExecution } from "@client/missions/actions/ClientActionExecution";
-import { ClientExecutionOutcome } from "@client/missions/actions/ClientExecutionOutcome";
-import type { ClientMissionAction } from "@client/missions/actions/ClientMissionAction";
-import { ClientMission } from "@client/missions/ClientMission";
-import { ClientMissionFile } from "@client/missions/files/ClientMissionFile";
-import { ClientOutput } from "@client/missions/forces/ClientOutput";
-import type { ClientMissionNode } from "@client/missions/nodes/ClientMissionNode";
-import { ClientTargetEnvironment } from "@client/target-environments/ClientTargetEnvironment";
-import { ClientUser } from "@client/users/ClientUser";
+} from '@client/connect/ServerConnection'
+import { ClientActionCost } from '@client/missions/actions/ClientActionCost'
+import { ClientActionExecution } from '@client/missions/actions/ClientActionExecution'
+import { ClientExecutionOutcome } from '@client/missions/actions/ClientExecutionOutcome'
+import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
+import { ClientMission } from '@client/missions/ClientMission'
+import { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
+import { ClientOutput } from '@client/missions/forces/ClientOutput'
+import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
+import { Logging } from '@client/toolbox/Logging'
+import { ClientUser } from '@client/users/ClientUser'
 import type {
   TGenericServerEvents,
   TNodeOpenStateData,
@@ -19,31 +20,31 @@ import type {
   TServerEvents,
   TServerMethod,
   TSessionPanelAlert,
-} from "@shared/connect";
+} from '@shared/connect'
 import type {
   TActionExecutionJson,
   TExecutionCheats,
-} from "@shared/missions/actions/ActionExecution";
-import type { TExecutionOutcomeJson } from "@shared/missions/actions/ExecutionOutcome";
-import type { TChatChannelJson } from "@shared/sessions/chat/ChatChannel";
-import type { TMemberRoleId } from "@shared/sessions/members/MemberRole";
-import { MemberRole } from "@shared/sessions/members/MemberRole";
-import type { TSessionMemberJson } from "@shared/sessions/members/SessionMember";
+} from '@shared/missions/actions/ActionExecution'
+import type { TExecutionOutcomeJson } from '@shared/missions/actions/ExecutionOutcome'
+import type { TChatChannelJson } from '@shared/sessions/chat/ChatChannel'
+import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
+import { MemberRole } from '@shared/sessions/members/MemberRole'
+import type { TSessionMemberJson } from '@shared/sessions/members/SessionMember'
 import type {
   TSessionBasicJson,
   TSessionConfig,
   TSessionJson,
-} from "@shared/sessions/MissionSession";
-import { MissionSession } from "@shared/sessions/MissionSession";
-import { EnvScriptResults } from "@shared/target-environments/EnvScriptResults";
-import type { TInstanceOrArray } from "@shared/toolbox/arrays/ArrayToolbox";
-import { ArrayToolbox } from "@shared/toolbox/arrays/ArrayToolbox";
-import axios from "axios";
-import type { TMetisClientComponents } from "..";
-import { ClientChatChannel } from "./chat/ClientChatChannel";
-import { ClientChatMessage } from "./chat/ClientChatMessage";
-import { ClientSessionMember } from "./ClientSessionMember";
-import { SessionBasic } from "./SessionBasic";
+} from '@shared/sessions/MissionSession'
+import { MissionSession } from '@shared/sessions/MissionSession'
+import { EnvScriptResults } from '@shared/target-environments/EnvScriptResults'
+import type { TInstanceOrArray } from '@shared/toolbox/arrays/ArrayToolbox'
+import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
+import axios from 'axios'
+import type { TMetisClientComponents } from '..'
+import { ClientChatChannel } from './chat/ClientChatChannel'
+import { ClientChatMessage } from './chat/ClientChatMessage'
+import { ClientSessionMember } from './ClientSessionMember'
+import { SessionBasic } from './SessionBasic'
 
 /**
  * Client instance for sessions. Handles client-side logic for sessions. Communicates with server to conduct a session.
@@ -52,83 +53,83 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   /**
    * The server connection used to communicate with the server.
    */
-  protected server: ServerConnection;
+  protected server: ServerConnection
 
   /**
    * The ID of the member for this client connection.
    */
-  private memberId: ClientSessionMember["_id"];
+  private memberId: ClientSessionMember['_id']
 
   /**
    * The session member for this client connection.
    */
   public get member(): ClientSessionMember {
     // Find the member associated with this client connection.
-    let member = this.getMember(this.memberId);
+    let member = this.getMember(this.memberId)
 
     // Throw an error if the member could not
     // be found in the members JSON passed.
     if (!member) {
-      throw new Error("Member not found in session.");
+      throw new Error('Member not found in session.')
     }
 
     // Return the member.
-    return member;
+    return member
   }
 
   /**
    * The role of the member associated with this client connection.
    */
   public get role(): MemberRole {
-    return this.member.role;
+    return this.member.role
   }
 
   /**
    * The role ID of the member associated with this client connection.
    */
   public get roleId(): TMemberRoleId {
-    return this.member.roleId;
+    return this.member.roleId
   }
 
   /**
    * Unread chat message count per chat channel.
    */
-  private _unreadChatMessageCount: Map<string, number>;
+  private _unreadChatMessageCount: Map<string, number>
 
   /**
    * Pending session panel alerts at the time the session was joined or fetched.
    */
-  private _initialPendingSessionPanelAlerts: TSessionPanelAlert[];
+  private _initialPendingSessionPanelAlerts: TSessionPanelAlert[]
   /**
    * The session panel alerts that had unacknowledged activity when this
    * session was joined or fetched.
    */
   public get pendingSessionPanelAlerts(): TSessionPanelAlert[] {
-    return this._initialPendingSessionPanelAlerts;
+    return this._initialPendingSessionPanelAlerts
   }
 
   /**
    * @see {@link activeExecutions}
    */
-  private _activeExecutions: ClientActionExecution[];
+  private _activeExecutions: ClientActionExecution[]
 
   /**
    * Executions that are currently active in this session.
    */
   public get activeExecutions(): ClientActionExecution[] {
-    return [...this._activeExecutions];
+    return [...this._activeExecutions]
   }
 
   /**
    * Returns all chat channels that the member can see.
    */
   public get memberChatChannels(): ClientChatChannel[] {
-    let { forceId, role } = this.member;
-    let hasCompleteVisibility = role.isAuthorized("completeVisibility");
+    let { forceId, role } = this.member
+    let hasCompleteVisibility = role.isAuthorized('completeVisibility')
 
     return this._chatChannels.filter((c) =>
       c.canSee(forceId, hasCompleteVisibility),
-    );
+    )
   }
 
   /**
@@ -137,13 +138,13 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   public get memberHasUnreadChatMessages(): boolean {
     return this.memberChatChannels.some(
       (c) => this.getUnreadChatMessageCount(c._id) > 0,
-    );
+    )
   }
 
   /**
    * Tracks the timeout which ticks active executions.
    */
-  private activeExecutionTimeout: number | null = null;
+  private activeExecutionTimeout: number | null = null
 
   /**
    * @param data Core data used to build the session object.
@@ -159,8 +160,8 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   ) {
     // Gather details.
     let mission: ClientMission = ClientMission.fromExistingJson(data.mission, {
-      nonRevealedDisplayMode: "blur",
-    });
+      nonRevealedDisplayMode: 'blur',
+    })
     let {
       _id,
       state,
@@ -175,18 +176,22 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       config,
       setupResults: setupResultData,
       teardownResults: teardownResultData,
+      liveResults: liveResultData,
       chatChannels,
       unreadChatChannelMessages,
       pendingSessionPanelAlerts,
-    } = data;
+    } = data
 
-    // Parse setup and teardown results.
+    // Parse setup, teardown, and live results.
     let setupResults = setupResultData.map((datum) =>
       EnvScriptResults.fromJson(datum, ClientTargetEnvironment.REGISTRY),
-    );
+    )
     let teardownResults = teardownResultData.map((datum) =>
       EnvScriptResults.fromJson(datum, ClientTargetEnvironment.REGISTRY),
-    );
+    )
+    let liveResults = liveResultData.map((datum) =>
+      EnvScriptResults.fromJson(datum, ClientTargetEnvironment.REGISTRY),
+    )
 
     // Call super constructor with base data.
     super(
@@ -203,56 +208,58 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       banList,
       setupResults,
       teardownResults,
+      liveResults,
       chatChannels,
-    );
+    )
 
     // Set the rest of the data.
-    this.server = server;
-    this.memberId = memberId;
-    this._state = state;
-    this._activeExecutions = [];
+    this.server = server
+    this.memberId = memberId
+    this._state = state
+    this._activeExecutions = []
     this._unreadChatMessageCount = new Map(
       Object.entries(unreadChatChannelMessages),
-    );
-    this._initialPendingSessionPanelAlerts = pendingSessionPanelAlerts;
+    )
+    this._initialPendingSessionPanelAlerts = pendingSessionPanelAlerts
 
     this.listeners = [
-      ["session-starting", this.onStarting],
-      ["session-started", this.onStart],
-      ["session-ending", this.onEnding],
-      ["session-ended", this.onEnd],
-      ["session-reset", this.onReset],
-      ["session-config-updated", this.onConfigUpdate],
-      ["session-members-updated", this.onMembersUpdate],
-      ["session-setup-update", this.onSetupUpdate],
-      ["session-teardown-update", this.onTeardownUpdate],
-      ["force-assigned", this.onForceAssigned],
-      ["role-assigned", this.onRoleAssigned],
-      ["node-opened", this.onNodeOpenedResponse],
-      ["action-execution-initiated", this.onActionExecutionInitiated],
-      ["action-execution-completed", this.onActionExecutionCompleted],
-      ["node-open-state-updated", this.onNodeOpenStateUpdated],
-      ["node-block-status-updated", this.onNodeBlockStatusUpdated],
-      ["file-access-updated", this.onFileAccessUpdated],
-      ["resource-pool-updated", this.onResourcePoolUpdated],
-      ["send-output", this.onSendOutput],
-      ["output-sent", this.onOutputSent],
-      ["node-alert-acknowledged", this.onNodeAlertAcknowledged],
-      ["node-alert-added", this.onNodeAlertAdded],
-      ["action-process-time-updated", this.onActionModifierUpdated],
-      ["action-success-chance-updated", this.onActionModifierUpdated],
-      ["action-resource-cost-updated", this.onActionModifierUpdated],
-      ["kicked", this.onKicked],
-      ["banned", this.onBanned],
-      ["dismissed", this.onDismissed],
-      ["session-destroyed", this.onDestroyed],
-      ["session-quit", this.onQuit],
-      ["chat-message-received", this.onChatMessageReceived],
-    ];
+      ['session-starting', this.onStarting],
+      ['session-started', this.onStart],
+      ['session-ending', this.onEnding],
+      ['session-ended', this.onEnd],
+      ['session-reset', this.onReset],
+      ['session-config-updated', this.onConfigUpdate],
+      ['session-members-updated', this.onMembersUpdate],
+      ['session-setup-update', this.onSetupUpdate],
+      ['session-teardown-update', this.onTeardownUpdate],
+      ['session-live-update', this.onLiveUpdate],
+      ['force-assigned', this.onForceAssigned],
+      ['role-assigned', this.onRoleAssigned],
+      ['node-opened', this.onNodeOpenedResponse],
+      ['action-execution-initiated', this.onActionExecutionInitiated],
+      ['action-execution-completed', this.onActionExecutionCompleted],
+      ['node-open-state-updated', this.onNodeOpenStateUpdated],
+      ['node-block-status-updated', this.onNodeBlockStatusUpdated],
+      ['file-access-updated', this.onFileAccessUpdated],
+      ['resource-pool-updated', this.onResourcePoolUpdated],
+      ['send-output', this.onSendOutput],
+      ['output-sent', this.onOutputSent],
+      ['node-alert-acknowledged', this.onNodeAlertAcknowledged],
+      ['node-alert-added', this.onNodeAlertAdded],
+      ['action-process-time-updated', this.onActionModifierUpdated],
+      ['action-success-chance-updated', this.onActionModifierUpdated],
+      ['action-resource-cost-updated', this.onActionModifierUpdated],
+      ['kicked', this.onKicked],
+      ['banned', this.onBanned],
+      ['dismissed', this.onDismissed],
+      ['session-destroyed', this.onDestroyed],
+      ['session-quit', this.onQuit],
+      ['chat-message-received', this.onChatMessageReceived],
+    ]
 
     // Add listeners to detect events that are
     // emitted to the client.
-    this.addListeners();
+    this.addListeners()
   }
 
   // Implemented
@@ -266,41 +273,41 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
           forceId,
           this,
         ),
-    );
+    )
   }
 
   // Implemented
   protected parseChatChannelData(
     data: TChatChannelJson[],
   ): ClientChatChannel[] {
-    return data.map((d) => ClientChatChannel.fromJson(d, this));
+    return data.map((d) => ClientChatChannel.fromJson(d, this))
   }
 
   // Implemented
   protected mapActions(): void {
     // Initialize the actions map.
-    this.actions = new Map<string, ClientMissionAction>();
+    this.actions = new Map<string, ClientMissionAction>()
 
     // Loops through and add each action found.
     this.mission.forces.forEach((force) =>
       force.nodes.forEach((node) =>
         node.actions.forEach((action) => this.actions.set(action._id, action)),
       ),
-    );
+    )
   }
 
   /**
    * Cache for event listeners added by this SessionClient instance.
    */
-  private listeners: [TServerMethod, TServerHandler<any>][];
+  private listeners: [TServerMethod, TServerHandler<any>][]
 
   /**
    * Creates session-specific listeners.
    */
   private addListeners(): void {
     this.listeners.forEach(([event, handler]) => {
-      this.server.addEventListener(event, handler);
-    });
+      this.server.addEventListener(event, handler)
+    })
   }
 
   /**
@@ -308,8 +315,8 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    */
   private removeListeners(): void {
     this.listeners.forEach(([event, handler]) => {
-      this.server.removeEventListener(event, handler);
-    });
+      this.server.removeEventListener(event, handler)
+    })
   }
 
   // Implemented
@@ -324,23 +331,24 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       ownerLastName: this.ownerLastName,
       launchedAt: this.launchedAt.toISOString(),
       mission: this.mission.toExistingJson({
-        forceExposure: { expose: "none" },
-        fileExposure: { expose: "none" },
+        forceExposure: { expose: 'none' },
+        fileExposure: { expose: 'none' },
         sessionDataExposure: {
-          expose: "member-specific",
+          expose: 'member-specific',
           memberId: this.member._id,
         },
-        rootEffectsExposure: { expose: "none" },
+        rootEffectsExposure: { expose: 'none' },
       }),
       members: this.members.map((member) => member.toJson()),
       banList: this.banList,
-      setupResults: this.setupResults.map((result) => result.toJson()),
-      teardownResults: this.teardownResults.map((result) => result.toJson()),
+      setupResults: this._setupResults.map((result) => result.toJson()),
+      teardownResults: this._teardownResults.map((result) => result.toJson()),
+      liveResults: this._liveResults.map((result) => result.toJson()),
       config: this.config,
       chatChannels: this._chatChannels.map((c) => c.toJson()),
       unreadChatChannelMessages: {},
       pendingSessionPanelAlerts: [],
-    };
+    }
   }
 
   // Implemented
@@ -362,7 +370,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       managerIds: this.managers.map(({ _id: memberId }) => memberId),
       setupFailed: this.setupFailed,
       teardownFailed: this.teardownFailed,
-    };
+    }
   }
 
   /**
@@ -371,35 +379,35 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    */
   public openNode(nodeId: string, options: TSessionRequestOptions = {}): void {
     // Gather details.
-    let server: ServerConnection = this.server;
-    let node: ClientMissionNode | undefined = this.mission.getNodeById(nodeId);
+    let server: ServerConnection = this.server
+    let node: ClientMissionNode | undefined = this.mission.getNodeById(nodeId)
 
     // Callback for errors.
     const onError = (message: string) => {
-      console.error(message);
-      if (options.onError) options.onError(message);
-    };
+      console.error(message)
+      if (options.onError) options.onError(message)
+    }
 
     // If the member is not authorized to open nodes,
     // callback an error.
-    if (!this.member.isAuthorized("manipulateNodes")) {
-      return onError("You do not have the correct permissions to open nodes.");
+    if (!this.member.isAuthorized('manipulateNodes')) {
+      return onError('You do not have the correct permissions to open nodes.')
     }
     // Callback error if the node is not in
     // the mission associated with this
     // session.
     if (node === undefined) {
-      return onError("Node was not found in the mission.");
+      return onError('Node was not found in the mission.')
     }
     // If the node is not openable, callback
     // an error.
     if (!node.openable) {
-      return onError("Node is not openable.");
+      return onError('Node is not openable.')
     }
 
     // Emit a request to open the node.
     server.request(
-      "request-open-node",
+      'request-open-node',
       {
         nodeId,
       },
@@ -408,20 +416,20 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         // Handle error emitted by server concerning the
         // request.
         onResponse: (event) => {
-          if (event.method === "node-opened") {
-            this.mission.emitEvent("autopan");
+          if (event.method === 'node-opened') {
+            this.mission.emitEvent('autopan')
           }
 
-          if (event.method === "error") {
-            onError(event.message);
-            node!.handleRequestFailed("request-open-node");
+          if (event.method === 'error') {
+            onError(event.message)
+            node!.handleRequestFailed('request-open-node')
           }
         },
       },
-    );
+    )
 
     // Handle request within node.
-    node.handleRequestMade("request-open-node");
+    node.handleRequestMade('request-open-node')
   }
 
   /**
@@ -432,47 +440,47 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     actionId: string,
     options: TExecuteActionOptions = {},
   ): void {
-    let server: ServerConnection = this.server;
-    let action: ClientMissionAction | undefined = this.actions.get(actionId);
-    const { cheats } = options;
+    let server: ServerConnection = this.server
+    let action: ClientMissionAction | undefined = this.actions.get(actionId)
+    const { cheats } = options
 
     // Callback for errors.
     const onError = (message: string) => {
-      console.error(message);
-      if (options.onError) options.onError(message);
-    };
+      console.error(message)
+      if (options.onError) options.onError(message)
+    }
 
     // If the member is not authorized to execute actions,
     // callback an error.
-    if (!this.member.isAuthorized("manipulateNodes")) {
+    if (!this.member.isAuthorized('manipulateNodes')) {
       return onError(
-        "You do not have the correct permissions to execute actions.",
-      );
+        'You do not have the correct permissions to execute actions.',
+      )
     }
     // Callback error if the action is not in
     // the mission associated with this
     // session.
     if (action === undefined) {
-      return onError("Action was not found in the mission.");
+      return onError('Action was not found in the mission.')
     }
     // If the action is not executable, callback
     // an error.
     if (!action.node.executable) {
-      return onError("Node is not executable.");
+      return onError('Node is not executable.')
     }
     // If the action is not ready to execute, callback
     // with the reasons why.
-    let unreadyReasons = this.unreadyToExecuteReasons(action, cheats);
+    let unreadyReasons = this.unreadyToExecuteReasons(action, cheats)
     if (unreadyReasons.length) {
       return onError(
         `Action cannot be executed due to the following reasons:\n` +
-          unreadyReasons.map((reason) => `*- ${reason}*`).join("\n"),
-      );
+          unreadyReasons.map((reason) => `*- ${reason}*`).join('\n'),
+      )
     }
 
     // Emit a request to execute the action.
     server.request(
-      "request-execute-action",
+      'request-execute-action',
       {
         actionId,
         cheats,
@@ -482,16 +490,16 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         onResponse: (event) => {
           // Handle error emitted by server concerning the
           // request.
-          if (event.method === "error") {
-            onError(event.message);
-            action!.node.handleRequestFailed("request-execute-action");
+          if (event.method === 'error') {
+            onError(event.message)
+            action!.node.handleRequestFailed('request-execute-action')
           }
         },
       },
-    );
+    )
 
     // Handle request within node.
-    action.node.handleRequestMade("request-execute-action");
+    action.node.handleRequestMade('request-execute-action')
   }
 
   /**
@@ -500,36 +508,36 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @param options The options for sending the pre-execution message.
    */
   public sendPreExecutionMessage(
-    nodeId: ClientMissionNode["_id"],
+    nodeId: ClientMissionNode['_id'],
     options: TSessionRequestOptions = {},
   ) {
     // Gather details.
-    let server: ServerConnection = this.server;
-    let node: ClientMissionNode | undefined = this.mission.getNodeById(nodeId);
-    let { onError = () => {} } = options;
+    let server: ServerConnection = this.server
+    let node: ClientMissionNode | undefined = this.mission.getNodeById(nodeId)
+    let { onError = () => {} } = options
 
     // If the node doesn't have a pre-execution message,
     // or is currently executing, don't send the message.
-    if (!node?.preExecutionText || node.executing) return;
+    if (!node?.preExecutionText || node.executing) return
 
     // If the member does not have the correct permissions,
     // callback an error.
-    if (!this.member.isAuthorized("manipulateNodes")) {
-      return onError("You are not authorized to send pre-execution messages.");
+    if (!this.member.isAuthorized('manipulateNodes')) {
+      return onError('You are not authorized to send pre-execution messages.')
     }
 
     // Callback error if the node is not in
     // the mission associated with this
     // session.
     if (node === undefined) {
-      return onError("Node was not found in the mission.");
+      return onError('Node was not found in the mission.')
     }
 
     // Emit a request to send the pre-execution message.
     server.request(
-      "request-send-output",
+      'request-send-output',
       {
-        key: "pre-execution",
+        key: 'pre-execution',
         nodeId,
       },
       `Sending pre-execution message for "${node.name}".`,
@@ -537,16 +545,16 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         // Handle error emitted by server concerning the
         // request.
         onResponse: (event) => {
-          if (event.method === "error") {
-            onError(event.message);
-            node?.handleRequestFailed("request-send-output");
+          if (event.method === 'error') {
+            onError(event.message)
+            node?.handleRequestFailed('request-send-output')
           }
         },
       },
-    );
+    )
 
     // Handle request within node.
-    node.handleRequestMade("request-send-output");
+    node.handleRequestMade('request-send-output')
   }
 
   /**
@@ -556,13 +564,13 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    */
   private tickActiveExecutions = (): void => {
     // If there is already an active timeout, return.
-    if (this.activeExecutionTimeout !== null) return;
+    if (this.activeExecutionTimeout !== null) return
 
     // Internal recursive algorithm to isolate
     // firstCall parameter.
     const algorithm = (firstCall: boolean = true) => {
       // Emit a 'tick' event.
-      if (!firstCall) this.mission.emitEvent("execution-tick");
+      if (!firstCall) this.mission.emitEvent('execution-tick')
 
       // Set a timeout to call recursively until
       // the time runs out on all active executions.
@@ -572,21 +580,21 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         if (
           this.activeExecutions.some(({ timeRemaining }) => timeRemaining > 0)
         ) {
-          algorithm(false);
+          algorithm(false)
         } else {
           // Else, clear the timeout cache.
-          this.activeExecutionTimeout = null;
+          this.activeExecutionTimeout = null
           // Emit a final tick event, assuming
           // this isn't the first call.
           if (!firstCall) {
-            this.mission.emitEvent("execution-tick");
+            this.mission.emitEvent('execution-tick')
           }
         }
-      }, 50) as any as number | null; // Type casting for browser compatibility.
-    };
+      }, 50) as any as number | null // Type casting for browser compatibility.
+    }
 
-    algorithm();
-  };
+    algorithm()
+  }
 
   /**
    * Request to quit the session.
@@ -594,26 +602,26 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    */
   public async $quit(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      this.server.request("request-quit-session", {}, "Quitting session.", {
+      this.server.request('request-quit-session', {}, 'Quitting session.', {
         onResponse: (event) => {
           switch (event.method) {
-            case "session-quit":
-              resolve();
-              break;
-            case "error":
-              reject(new Error(event.message));
-              break;
+            case 'session-quit':
+              resolve()
+              break
+            case 'error':
+              reject(new Error(event.message))
+              break
             default:
               let error: Error = new Error(
                 `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
-              );
-              console.log(error);
-              console.log(event);
-              reject(error);
+              )
+              console.log(error)
+              console.log(event)
+              reject(error)
           }
         },
-      });
-    });
+      })
+    })
   }
 
   /**
@@ -624,46 +632,46 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    */
   public async $start(options: TSessionLifecycleOptions = {}): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      const { onInit = () => {} } = options;
+      const { onInit = () => {} } = options
 
       // Callback for errors.
       const onError = (message: string) => {
-        let error: Error = new Error(message);
-        console.error(message);
-        console.error(error);
-        reject(error);
-      };
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
 
       // If the session has already started, throw an error.
-      if (this.state === "started") {
-        return onError("Session has already started.");
+      if (this.state === 'started') {
+        return onError('Session has already started.')
       }
       // If the session has already ended, throw an error.
-      if (this.state === "ended") {
-        return onError("Session has already ended.");
+      if (this.state === 'ended') {
+        return onError('Session has already ended.')
       }
 
       // Emit a request to start the session.
-      this.server.request("request-start-session", {}, "Starting session.", {
+      this.server.request('request-start-session', {}, 'Starting session.', {
         onResponse: (event) => {
           switch (event.method) {
-            case "session-starting":
-              this._state = "starting";
-              onInit();
-              break;
-            case "session-started":
-              this._state = "started";
-              return resolve();
-            case "error":
-              return onError(event.message);
+            case 'session-starting':
+              this._state = 'starting'
+              onInit()
+              break
+            case 'session-started':
+              this._state = 'started'
+              return resolve()
+            case 'error':
+              return onError(event.message)
             default:
               return onError(
                 `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
-              );
+              )
           }
         },
-      });
-    });
+      })
+    })
   }
 
   /**
@@ -674,46 +682,46 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    */
   public async $end(options: TSessionLifecycleOptions = {}): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      const { onInit = () => {} } = options;
+      const { onInit = () => {} } = options
 
       // Callback for errors.
       const onError = (message: string) => {
-        let error: Error = new Error(message);
-        console.error(message);
-        console.error(error);
-        reject(error);
-      };
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
 
       // If the session is unstarted, throw an error.
-      if (this.state === "unstarted") {
-        return onError("Session has not yet started.");
+      if (this.state === 'unstarted') {
+        return onError('Session has not yet started.')
       }
       // If the session has already ended, throw an error.
-      if (this.state === "ended") {
-        return onError("Session has already ended.");
+      if (this.state === 'ended') {
+        return onError('Session has already ended.')
       }
 
       // Emit a request to end the session.
-      this.server.request("request-end-session", {}, "Ending session.", {
+      this.server.request('request-end-session', {}, 'Ending session.', {
         onResponse: (event) => {
           switch (event.method) {
-            case "session-ending":
-              this._state = "ending";
-              onInit();
-              break;
-            case "session-ended":
-              this._state = "ended";
-              return resolve();
-            case "error":
-              return onError(event.message);
+            case 'session-ending':
+              this._state = 'ending'
+              onInit()
+              break
+            case 'session-ended':
+              this._state = 'ended'
+              return resolve()
+            case 'error':
+              return onError(event.message)
             default:
               return onError(
                 `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
-              );
+              )
           }
         },
-      });
-    });
+      })
+    })
   }
 
   /**
@@ -724,42 +732,42 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    */
   public async $reset(options: TSessionLifecycleOptions = {}): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      const { onInit = () => {} } = options;
+      const { onInit = () => {} } = options
 
       // Callback for errors.
       const onError = (message: string) => {
-        let error: Error = new Error(message);
-        console.error(message);
-        console.error(error);
-        reject(error);
-      };
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
 
       // If the session has not started, throw an error.
-      if (this.state === "unstarted") {
-        return onError("Session has not yet started.");
+      if (this.state === 'unstarted') {
+        return onError('Session has not yet started.')
       }
 
       // Emit a request to reset the session.
-      this.server.request("request-reset-session", {}, "Resetting session.", {
+      this.server.request('request-reset-session', {}, 'Resetting session.', {
         onResponse: (event) => {
           switch (event.method) {
-            case "session-resetting":
-              this._state = "resetting";
-              onInit();
-              break;
-            case "session-reset":
-              this._state = "started";
-              return resolve();
-            case "error":
-              return onError(event.message);
+            case 'session-resetting':
+              this._state = 'resetting'
+              onInit()
+              break
+            case 'session-reset':
+              this._state = 'started'
+              return resolve()
+            case 'error':
+              return onError(event.message)
             default:
               return onError(
                 `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
-              );
+              )
           }
         },
-      });
-    });
+      })
+    })
   }
 
   /**
@@ -775,48 +783,48 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     return new Promise<void>((resolve, reject) => {
       // Callback for errors.
       const onError = (message: string) => {
-        let error: Error = new Error(message);
-        console.error(message);
-        console.error(error);
-        reject(error);
-      };
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
 
       // If the session has already started, throw an error.
-      if (this.state === "started") {
-        return onError("Session has already started.");
+      if (this.state === 'started') {
+        return onError('Session has already started.')
       }
       // If the session has already ended, throw an error.
-      if (this.state === "ended") {
-        return onError("Session has already ended.");
+      if (this.state === 'ended') {
+        return onError('Session has already ended.')
       }
 
       // Emit a request to end the session.
       this.server.request(
-        "request-config-update",
+        'request-config-update',
         { config: configUpdates },
-        "Updating config.",
+        'Updating config.',
         {
           onResponse: (event) => {
             switch (event.method) {
-              case "session-config-updated":
+              case 'session-config-updated':
                 // Update the session config.
-                Object.assign(this._config, configUpdates);
+                Object.assign(this._config, configUpdates)
                 // Update the session name if it has changed.
                 if (this.name !== configUpdates.name && configUpdates.name) {
-                  this.name = configUpdates.name;
+                  this.name = configUpdates.name
                 }
-                return resolve();
-              case "error":
-                return onError(event.message);
+                return resolve()
+              case 'error':
+                return onError(event.message)
               default:
                 return onError(
                   `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
-                );
+                )
             }
           },
         },
-      );
-    });
+      )
+    })
   }
 
   /**
@@ -829,42 +837,42 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     return new Promise<void>((resolve, reject) => {
       // Callback for errors.
       const onError = (message: string) => {
-        let error: Error = new Error(message);
-        console.error(message);
-        console.error(error);
-        reject(error);
-      };
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
 
       // Get the member.
-      let member = this.getMember(memberId);
+      let member = this.getMember(memberId)
 
       // If the member is not found,
       // callback an error.
       if (member === undefined) {
-        return onError("Member not found.");
+        return onError('Member not found.')
       }
 
       // Emit a request to kick the user.
       this.server.request(
-        "request-kick",
+        'request-kick',
         { memberId },
         `Kicking "${member.user.username}".`,
         {
           onResponse: (event) => {
             switch (event.method) {
-              case "kicked":
-                return resolve();
-              case "error":
-                return onError(event.message);
+              case 'kicked':
+                return resolve()
+              case 'error':
+                return onError(event.message)
               default:
                 return onError(
                   `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
-                );
+                )
             }
           },
         },
-      );
-    });
+      )
+    })
   }
 
   /**
@@ -877,42 +885,42 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     return new Promise<void>((resolve, reject) => {
       // Callback for errors.
       const onError = (message: string) => {
-        let error: Error = new Error(message);
-        console.error(message);
-        console.error(error);
-        reject(error);
-      };
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
 
       // Get the member.
-      let member = this.getMember(memberId);
+      let member = this.getMember(memberId)
 
       // If the member is not found,
       // callback an error.
       if (member === undefined) {
-        return onError("Member not found.");
+        return onError('Member not found.')
       }
 
       // Emit a request to ban the user.
       this.server.request(
-        "request-ban",
+        'request-ban',
         { memberId },
         `Banning "${member.user.username}".`,
         {
           onResponse: (event) => {
             switch (event.method) {
-              case "banned":
-                return resolve();
-              case "error":
-                return onError(event.message);
+              case 'banned':
+                return resolve()
+              case 'error':
+                return onError(event.message)
               default:
                 return onError(
                   `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
-                );
+                )
             }
           },
         },
-      );
-    });
+      )
+    })
   }
 
   /**
@@ -929,42 +937,42 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     return new Promise<void>((resolve, reject) => {
       // Callback for errors.
       const onError = (message: string) => {
-        let error: Error = new Error(message);
-        console.error(message);
-        console.error(error);
-        reject(error);
-      };
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
 
       // Get the member.
-      let member = this.getMember(memberId);
+      let member = this.getMember(memberId)
 
       // If the member is not found,
       // callback an error.
       if (member === undefined) {
-        return onError("Member not found.");
+        return onError('Member not found.')
       }
 
       // Emit a request to assign the force.
       this.server.request(
-        "request-assign-force",
+        'request-assign-force',
         { memberId, forceId },
         `Assigning force to "${member.user.username}".`,
         {
           onResponse: (event) => {
             switch (event.method) {
-              case "force-assigned":
-                return resolve();
-              case "error":
-                return onError(event.message);
+              case 'force-assigned':
+                return resolve()
+              case 'error':
+                return onError(event.message)
               default:
                 return onError(
                   `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
-                );
+                )
             }
           },
         },
-      );
-    });
+      )
+    })
   }
 
   /**
@@ -978,42 +986,42 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     return new Promise<void>((resolve, reject) => {
       // Callback for errors.
       const onError = (message: string) => {
-        let error: Error = new Error(message);
-        console.error(message);
-        console.error(error);
-        reject(error);
-      };
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
 
       // Get the member.
-      let member = this.getMember(memberId);
+      let member = this.getMember(memberId)
 
       // If the member is not found,
       // callback an error.
       if (member === undefined) {
-        return onError("Member not found.");
+        return onError('Member not found.')
       }
 
       // Emit a request to assign the role.
       this.server.request(
-        "request-assign-role",
+        'request-assign-role',
         { memberId, roleId },
         `Assigning role to "${member.user.username}".`,
         {
           onResponse: (event) => {
             switch (event.method) {
-              case "role-assigned":
-                return resolve();
-              case "error":
-                return onError(event.message);
+              case 'role-assigned':
+                return resolve()
+              case 'error':
+                return onError(event.message)
               default:
                 return onError(
                   `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
-                );
+                )
             }
           },
         },
-      );
-    });
+      )
+    })
   }
 
   /**
@@ -1028,33 +1036,33 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     return new Promise<void>((resolve, reject) => {
       // Callback for errors.
       const onError = (message: string) => {
-        let error: Error = new Error(message);
-        console.error(message);
-        console.error(error);
-        reject(error);
-      };
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
 
       // Emit a request to acknowledge the node alert.
       this.server.request(
-        "request-acknowledge-node-alert",
+        'request-acknowledge-node-alert',
         { alertId, nodeId },
         `Acknowledging node alert "${alertId}" on node "${nodeId}".`,
         {
           onResponse: (event) => {
             switch (event.method) {
-              case "node-alert-acknowledged":
-                return resolve();
-              case "error":
-                return onError(event.message);
+              case 'node-alert-acknowledged':
+                return resolve()
+              case 'error':
+                return onError(event.message)
               default:
                 return onError(
                   `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
-                );
+                )
             }
           },
         },
-      );
-    });
+      )
+    })
   }
 
   /**
@@ -1063,19 +1071,19 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @param event The event emitted by the server.
    */
   private importStartData(
-    event: TResponseEvents["session-started" | "session-reset"],
+    event: TResponseEvents['session-started' | 'session-reset'],
   ): void {
     // Gather details.
-    let { structure, forces, prototypes, files, chatChannels } = event.data;
+    let { structure, forces, prototypes, files, chatChannels } = event.data
     // Mark the session as started.
-    this._state = "started";
+    this._state = 'started'
     // Import start data, revealing forces to user.
-    this.mission.importStartData(structure, forces, prototypes, files);
+    this.mission.importStartData(structure, forces, prototypes, files)
     // Remap actions.
-    this.mapActions();
+    this.mapActions()
     // Reset chat state.
-    this._chatChannels = this.parseChatChannelData(chatChannels);
-    this._unreadChatMessageCount = new Map();
+    this._chatChannels = this.parseChatChannelData(chatChannels)
+    this._unreadChatMessageCount = new Map()
   }
 
   /**
@@ -1089,17 +1097,17 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     action: ClientMissionAction,
     cheats: Partial<TExecutionCheats> = {},
   ): string[] {
-    let reasons: string[] = [];
-    let nodeReady = action.node.readyToExecute;
-    let unmetCosts = this.getUnmetCosts(action, cheats);
-    let unmetCostNames = unmetCosts.map((cost) => cost.name.toLowerCase());
+    let reasons: string[] = []
+    let nodeReady = action.node.readyToExecute
+    let unmetCosts = this.getUnmetCosts(action, cheats)
+    let unmetCostNames = unmetCosts.map((cost) => cost.name.toLowerCase())
     let unmetCostAmounts = unmetCosts.map((cost) =>
       ClientActionCost.formatAmount(cost.amount, {
         amountHidden: cost.hidden,
         includeMinusSign: false,
       }),
-    );
-    let executionLimitReached = action.executionLimitReached;
+    )
+    let executionLimitReached = action.executionLimitReached
 
     // Handle case when there are not enough resources.
     // Build a message which specifies which resources
@@ -1107,30 +1115,30 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     if (unmetCosts.length === 1) {
       reasons.push(
         `Not enough ${unmetCostNames[0]} (costs ${unmetCostAmounts[0]}) to execute.`,
-      );
+      )
     } else if (unmetCosts.length === 2) {
       reasons.push(
         `Not enough ${unmetCostNames[0]} (costs ${unmetCostAmounts[0]}) or ${unmetCostNames[1]} (costs ${unmetCostAmounts[1]}) to execute.`,
-      );
+      )
     } else if (unmetCosts.length > 2) {
-      let lastResourceName = unmetCostNames[unmetCostNames.length - 1];
-      let lastResourceAmount = unmetCostAmounts[unmetCostAmounts.length - 1];
+      let lastResourceName = unmetCostNames[unmetCostNames.length - 1]
+      let lastResourceAmount = unmetCostAmounts[unmetCostAmounts.length - 1]
       let otherResourcesMessages = unmetCostNames
         .slice(0, unmetCostNames.length - 1)
         .map((name, index) => `${name} (costs ${unmetCostAmounts[index]})`)
-        .join(", ");
+        .join(', ')
       reasons.push(
         `Not enough ${otherResourcesMessages}, or ${lastResourceName} (costs ${lastResourceAmount}) to execute.`,
-      );
+      )
     }
     if (!nodeReady) {
-      reasons.push("Node is not ready to execute.");
+      reasons.push('Node is not ready to execute.')
     }
     if (executionLimitReached) {
-      reasons.push("Execution limit for this action has been reached.");
+      reasons.push('Execution limit for this action has been reached.')
     }
 
-    return reasons;
+    return reasons
   }
 
   /**
@@ -1138,8 +1146,8 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * or destroyed.
    */
   private cleanUp(): void {
-    this.removeListeners();
-    this.server.clearUnfulfilledRequests();
+    this.removeListeners()
+    this.server.clearUnfulfilledRequests()
   }
 
   /**
@@ -1147,21 +1155,21 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @param event The event emitted by the server.
    */
   private onChatMessageReceived = (
-    event: TServerEvents["chat-message-received"],
+    event: TServerEvents['chat-message-received'],
   ): void => {
-    let msgData = event.data.message;
+    let msgData = event.data.message
 
-    let channel = this.getChatChannel(msgData.channelId);
-    if (!channel) return;
+    let channel = this.getChatChannel(msgData.channelId)
+    if (!channel) return
 
-    let message = ClientChatMessage.fromJson(channel, msgData);
-    channel.messages.push(message);
+    let message = ClientChatMessage.fromJson(channel, msgData)
+    channel.messages.push(message)
 
     if (message.senderId !== this.memberId) {
-      let count = this._unreadChatMessageCount.get(message.channelId) ?? 0;
-      this._unreadChatMessageCount.set(message.channelId, count + 1);
+      let count = this._unreadChatMessageCount.get(message.channelId) ?? 0
+      this._unreadChatMessageCount.set(message.channelId, count + 1)
     }
-  };
+  }
 
   /**
    * Sends a chat message to a channel.
@@ -1170,10 +1178,10 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    */
   public sendChatMessage(channelId: string, message: string): void {
     this.server.request(
-      "request-send-chat-message",
+      'request-send-chat-message',
       { channelId, message },
-      "Sending chat message.",
-    );
+      'Sending chat message.',
+    )
   }
 
   /**
@@ -1181,7 +1189,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @param channelId The ID of the chat channel.
    */
   public getUnreadChatMessageCount(channelId: string): number {
-    return this._unreadChatMessageCount.get(channelId) ?? 0;
+    return this._unreadChatMessageCount.get(channelId) ?? 0
   }
 
   /**
@@ -1190,8 +1198,8 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @param channelId The ID of the chat channel.
    */
   public markAllMessagesInChannelAsRead(channelId: string): void {
-    this._unreadChatMessageCount.set(channelId, 0);
-    this.acknowledgeSessionPanelAlert("Messenger", channelId);
+    this._unreadChatMessageCount.set(channelId, 0)
+    this.acknowledgeSessionPanelAlert('Messenger', channelId)
   }
 
   /**
@@ -1202,21 +1210,21 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @note For the Messenger panel, the channel ID is required so the
    * server can also clear that channel's unread count.
    */
-  public acknowledgeSessionPanelAlert(panel: "Output" | "Files"): void;
+  public acknowledgeSessionPanelAlert(panel: 'Output' | 'Files'): void
   public acknowledgeSessionPanelAlert(
-    panel: "Messenger",
+    panel: 'Messenger',
     channelId: string,
-  ): void;
+  ): void
   public acknowledgeSessionPanelAlert(
     panel: TSessionPanelAlert,
     channelId?: string,
   ): void {
-    if (panel === "Messenger" && channelId !== undefined) {
-      this.server.emit("acknowledge-session-panel-alert", { panel, channelId });
+    if (panel === 'Messenger' && channelId !== undefined) {
+      this.server.emit('acknowledge-session-panel-alert', { panel, channelId })
     } else {
-      this.server.emit("acknowledge-session-panel-alert", {
-        panel: panel as "Output" | "Files",
-      });
+      this.server.emit('acknowledge-session-panel-alert', {
+        panel: panel as 'Output' | 'Files',
+      })
     }
   }
 
@@ -1224,99 +1232,99 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * Fetches the current session panel alerts for a member.
    */
   public fetchSessionPanelAlerts(): void {
-    this.server.emit("fetch-session-panel-alerts", {});
+    this.server.emit('fetch-session-panel-alerts', {})
   }
 
   /**
    * Handles when the session is starting.
    * @param event The event emitted by the server.
    */
-  private onStarting = (event: TResponseEvents["session-starting"]): void => {
-    this._state = "starting";
-  };
+  private onStarting = (event: TResponseEvents['session-starting']): void => {
+    this._state = 'starting'
+  }
 
   /**
    * Handles when the session is started.
    * @param event The event emitted by the server.
    */
-  private onStart = (event: TResponseEvents["session-started"]): void => {
-    this.importStartData(event);
-  };
+  private onStart = (event: TResponseEvents['session-started']): void => {
+    this.importStartData(event)
+  }
 
   /**
    * Handles when the session is ending.
    * @param event The event emitted by the server.
    */
-  private onEnding = (event: TResponseEvents["session-ending"]): void => {
-    this._state = "ending";
-  };
+  private onEnding = (event: TResponseEvents['session-ending']): void => {
+    this._state = 'ending'
+  }
 
   /**
    * Handles when the session is ended.
    * @param event The event emitted by the server.
    */
   private onEnd = (): void => {
-    this._state = "ended";
-    this.cleanUp();
-  };
+    this._state = 'ended'
+    this.cleanUp()
+  }
 
   /**
    * Handles when the session is reset.
    * @param event The event emitted by the server.
    */
-  private onReset = (event: TResponseEvents["session-reset"]): void => {
-    this.importStartData(event);
-  };
+  private onReset = (event: TResponseEvents['session-reset']): void => {
+    this.importStartData(event)
+  }
 
   /**
    * Handles when the member is kicked from the session.
    */
-  private onKicked = (event: TServerEvents["kicked"]): void => {
+  private onKicked = (event: TServerEvents['kicked']): void => {
     if (event.data.memberId === this.memberId) {
-      this.cleanUp();
+      this.cleanUp()
     }
-  };
+  }
 
   /**
    * Handles when the member is banned from the session.
    */
-  private onBanned = (event: TServerEvents["banned"]): void => {
+  private onBanned = (event: TServerEvents['banned']): void => {
     if (event.data.memberId === this.memberId) {
-      this.cleanUp();
+      this.cleanUp()
     }
-  };
+  }
 
   /**
    * Handles when the member is dismissed from the session.
    */
-  private onDismissed = (event: TServerEvents["dismissed"]): void => {
-    this.cleanUp();
-  };
+  private onDismissed = (event: TServerEvents['dismissed']): void => {
+    this.cleanUp()
+  }
 
   /**
    * Handles when the session is destroyed.
    */
-  private onDestroyed = (event: TServerEvents["session-destroyed"]): void => {
-    this._state = "ended";
-    this.cleanUp();
-  };
+  private onDestroyed = (event: TServerEvents['session-destroyed']): void => {
+    this._state = 'ended'
+    this.cleanUp()
+  }
 
   /**
    * Handles when the member quits the session.
    */
-  private onQuit = (event: TServerEvents["session-quit"]): void => {
-    this.cleanUp();
-  };
+  private onQuit = (event: TServerEvents['session-quit']): void => {
+    this.cleanUp()
+  }
 
   /**
    * Handles when the session configuration is updated.
    * @param event The event emitted by the server.
    */
   private onConfigUpdate = (
-    event: TServerEvents["session-config-updated"],
+    event: TServerEvents['session-config-updated'],
   ): void => {
-    this._config = event.data.config;
-  };
+    this._config = event.data.config
+  }
 
   /**
    * Handles when the lists of members joined in the session
@@ -1324,9 +1332,9 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @param event The event emitted by the server.
    */
   private onMembersUpdate = (
-    event: TGenericServerEvents["session-members-updated"],
+    event: TGenericServerEvents['session-members-updated'],
   ): void => {
-    let { members } = event.data;
+    let { members } = event.data
     this._members = members.map(
       ({ _id, user: userData, roleId, forceId }) =>
         new ClientSessionMember(
@@ -1336,8 +1344,8 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
           forceId,
           this,
         ),
-    );
-  };
+    )
+  }
 
   /**
    * Handles when new results from the session setup
@@ -1345,13 +1353,14 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @param event The event emitted by the server.
    */
   private onSetupUpdate = (
-    event: TServerEvents["session-setup-update"],
+    event: TServerEvents['session-setup-update'],
   ): void => {
     let newResults = event.data.results.map((data) =>
       EnvScriptResults.fromJson(data, ClientTargetEnvironment.REGISTRY),
-    );
-    this.setupResults.push(...newResults);
-  };
+    )
+    this._setupResults.push(...newResults)
+    this.logScriptResults(newResults)
+  }
 
   /**
    * Handles when new results from the session teardown
@@ -1359,55 +1368,145 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @param event The event emitted by the server.
    */
   private onTeardownUpdate = (
-    event: TServerEvents["session-teardown-update"],
+    event: TServerEvents['session-teardown-update'],
   ): void => {
     let newResults = event.data.results.map((data) =>
       EnvScriptResults.fromJson(data, ClientTargetEnvironment.REGISTRY),
-    );
-    this.teardownResults.push(...newResults);
-  };
+    )
+    this._teardownResults.push(...newResults)
+    this.logScriptResults(newResults)
+  }
+
+  /**
+   * Handles when new target script results (effects) occur
+   * live, while the session is in the `started` state.
+   * @param event The event emitted by the server.
+   */
+  private onLiveUpdate = (
+    event: TServerEvents['session-live-update'],
+  ): void => {
+    let newResults = event.data.results.map((data) =>
+      EnvScriptResults.fromJson(data, ClientTargetEnvironment.REGISTRY),
+    )
+    this._liveResults.push(...newResults)
+    this.logScriptResults(newResults)
+  }
+
+  /**
+   * Logs target script results (hooks and effects) to the
+   * console at the session level, so managers can monitor and diagnose
+   * them as they occur.
+   * @param results The newly realized results to log.
+   */
+  private logScriptResults(results: EnvScriptResults[]): void {
+    let context = 'TE'
+
+    for (let result of results) {
+      let { source, status, environment, error } = result
+      let errorMessage =
+        error?.message || error?.code || error?.name || 'Unknown error'
+
+      switch (source.kind) {
+        case 'hook': {
+          let label =
+            source.method === 'environment-setup' ? 'setup' : 'teardown'
+          let properties = [environment.name, source.method]
+          let message = undefined
+
+          if (status === 'success') {
+            message = `${environment.name} ${label} hook succeeded.`
+            Logging.info(message, { context, properties })
+          } else if (status === 'skipped') {
+            message = `${environment.name} ${label} hook was skipped (a prior hook in this environment failed).`
+            Logging.warning(message, { context, properties })
+          } else {
+            message = `${environment.name} ${label} hook failed: ${errorMessage}`
+            Logging.error(message, { context, properties })
+          }
+
+          continue
+        }
+
+        case 'effect': {
+          let properties = [environment.name, source.trigger]
+          let message = undefined
+
+          if (status === 'success') {
+            message = `Effect "${source.effectName}" on "${source.targetName}" succeeded.`
+            Logging.info(message, { context, properties })
+          } else if (status === 'skipped') {
+            message = `Effect "${source.effectName}" on "${source.targetName}" was skipped (has unresolved issues).`
+            Logging.warning(message, { context, properties })
+          } else {
+            message = `Effect "${source.effectName}" on "${source.targetName}" failed: ${errorMessage}`
+            Logging.error(message, { context, properties })
+          }
+
+          continue
+        }
+
+        default: {
+          let properties = [environment.name, status]
+          let message = undefined
+
+          if (status === 'failure') {
+            message = `Target script failed: ${errorMessage}`
+            Logging.error(message, { context, properties })
+          } else if (status === 'skipped') {
+            message = `Target script was skipped.`
+            Logging.warning(message, { context, properties })
+          } else {
+            message = `Target script ${status}.`
+            Logging.info(message, { context, properties })
+          }
+
+          continue
+        }
+      }
+    }
+  }
 
   /**
    * Handles when a force is assigned to a member.
    * @param event The event emitted by the server.
    */
-  private onForceAssigned = (event: TServerEvents["force-assigned"]): void => {
-    let { memberId, forceId } = event.data;
-    let member = this.getMember(memberId);
+  private onForceAssigned = (event: TServerEvents['force-assigned']): void => {
+    let { memberId, forceId } = event.data
+    let member = this.getMember(memberId)
     if (member === undefined) {
       return console.warn(
         `Event "force-assigned" was triggered, but the member with the given memberId ("${memberId}") could not be found.`,
-      );
+      )
     }
-    member.forceId = forceId;
-  };
+    member.forceId = forceId
+  }
 
   /**
    * Handles when a role is assigned to a member.
    * @param event The event emitted by the server.
    */
-  private onRoleAssigned = (event: TServerEvents["role-assigned"]): void => {
-    let { memberId, roleId } = event.data;
-    let member = this.getMember(memberId);
-    let role = MemberRole.get(roleId);
+  private onRoleAssigned = (event: TServerEvents['role-assigned']): void => {
+    let { memberId, roleId } = event.data
+    let member = this.getMember(memberId)
+    let role = MemberRole.get(roleId)
     if (member === undefined) {
       return console.warn(
         `Event "role-assigned" was triggered, but the member with the given memberId ("${memberId}") could not be found.`,
-      );
+      )
     }
-    member.role = role;
-  };
+    member.role = role
+  }
 
   /**
    * Handles when the open state of one or more nodes is updated.
    * @param event The event emitted by the server.
    */
   private onNodeOpenStateUpdated = (
-    event: TServerEvents["node-open-state-updated"],
+    event: TServerEvents['node-open-state-updated'],
   ): void => {
-    let { nodes, opened } = event.data;
-    this.onChangeNodeOpenState(nodes, opened);
-  };
+    let { nodes, opened } = event.data
+    this.onChangeNodeOpenState(nodes, opened)
+  }
 
   /**
    * Handles when an action modifier is applied to one or more actions.
@@ -1415,77 +1514,77 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    */
   private onActionModifierUpdated = (
     event:
-      | TServerEvents["action-process-time-updated"]
-      | TServerEvents["action-resource-cost-updated"]
-      | TServerEvents["action-success-chance-updated"],
+      | TServerEvents['action-process-time-updated']
+      | TServerEvents['action-resource-cost-updated']
+      | TServerEvents['action-success-chance-updated'],
   ): void => {
-    let { lookUpData, modifier } = event.data;
+    let { lookUpData, modifier } = event.data
 
     for (let lookUpDatum of lookUpData) {
-      let action = this.mission.lookUpAction(lookUpDatum);
-      action?.onModify(modifier);
+      let action = this.mission.lookUpAction(lookUpDatum)
+      action?.onModify(modifier)
     }
-  };
+  }
 
   /**
    * Handles the blocking and unblocking of nodes.
    * @param event The event emitted by the server.
    */
   private onNodeBlockStatusUpdated = (
-    event: TServerEvents["node-block-status-updated"],
+    event: TServerEvents['node-block-status-updated'],
   ): void => {
-    const { lookUpData, blocked } = event.data;
+    const { lookUpData, blocked } = event.data
     for (let lookUpDatum of lookUpData) {
-      let node = this.mission.lookUpNode(lookUpDatum);
-      if (node) node.blocked = blocked;
+      let node = this.mission.lookUpNode(lookUpDatum)
+      if (node) node.blocked = blocked
     }
-  };
+  }
 
   /**
    * Handles when a resource pool is modified.
    * @param event The event emitted by the server.
    */
   private onResourcePoolUpdated = (
-    event: TServerEvents["resource-pool-updated"],
+    event: TServerEvents['resource-pool-updated'],
   ): void => {
-    let { lookUpData, operand } = event.data;
+    let { lookUpData, operand } = event.data
     for (let lookUpDatum of lookUpData) {
-      let pool = this.mission.lookUpPool(lookUpDatum);
-      pool?.onModify(operand);
+      let pool = this.mission.lookUpPool(lookUpDatum)
+      pool?.onModify(operand)
     }
-  };
+  }
 
   /**
    * Handles the granting/revoking of access to a file.
    * @param event The event emitted by the server.
    */
   private onFileAccessUpdated = (
-    event: TServerEvents["file-access-updated"],
+    event: TServerEvents['file-access-updated'],
   ): void => {
-    let { data } = event;
+    let { data } = event
     let files = data.files
       .map((fileJson) => {
-        let file = this.mission.getFileById(fileJson._id);
+        let file = this.mission.getFileById(fileJson._id)
         // Create a new file instance from the JSON,
         // only if access is being granted. Otherwise,
         // there is no need.
         if (!file && data.granted) {
-          file = ClientMissionFile.fromJson(fileJson, this.mission);
-          this.mission.files.push(file);
+          file = ClientMissionFile.fromJson(fileJson, this.mission)
+          this.mission.files.push(file)
         }
-        return file;
+        return file
       })
-      .filter((file) => file !== undefined);
+      .filter((file) => file !== undefined)
 
     // Update access per force.
     for (let forceId of data.forceIds) {
-      let force = this.mission.getForceById(forceId);
+      let force = this.mission.getForceById(forceId)
 
       if (!force) {
         console.warn(
           `Event "file-access-updated" was triggered with granted=true, but the force with the given forceId ("${forceId}") could not be found.`,
-        );
-        continue;
+        )
+        continue
       }
 
       // If the following conditions are met, remove
@@ -1497,153 +1596,153 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       if (
         !data.granted &&
         this.member.forceId === forceId &&
-        !this.member.isAuthorized("completeVisibility")
+        !this.member.isAuthorized('completeVisibility')
       ) {
-        let revokedIds = new Set(data.files.map((fileJson) => fileJson._id));
+        let revokedIds = new Set(data.files.map((fileJson) => fileJson._id))
         this.mission.files = this.mission.files.filter(
           (file) => !revokedIds.has(file._id),
-        );
+        )
       }
 
-      force.updateFileAccess(files, data.granted);
+      force.updateFileAccess(files, data.granted)
     }
-  };
+  }
 
   /**
    * Handles when an output has been sent.
    * @param event The event emitted by the server.
    */
-  private onSendOutput = (event: TServerEvents["send-output"]): void => {
-    let { outputData } = event.data;
-    let { forceId } = outputData;
-    let force = this.mission.getForceById(forceId);
+  private onSendOutput = (event: TServerEvents['send-output']): void => {
+    let { outputData } = event.data
+    let { forceId } = outputData
+    let force = this.mission.getForceById(forceId)
     if (force) {
-      let output = new ClientOutput(force, outputData);
-      force.storeOutput(output);
+      let output = new ClientOutput(force, outputData)
+      force.storeOutput(output)
     }
-  };
+  }
 
   /**
    * Handles when an output has been sent.
    * @param event The event emitted by the server.
    */
-  private onOutputSent = (event: TServerEvents["output-sent"]): void => {
+  private onOutputSent = (event: TServerEvents['output-sent']): void => {
     // Extract data.
-    let { key } = event.data;
+    let { key } = event.data
 
     switch (key) {
-      case "pre-execution":
-        let { nodeId } = event.data;
-        let node = this.mission.getNodeById(nodeId);
-        node?.onOutput();
+      case 'pre-execution':
+        let { nodeId } = event.data
+        let node = this.mission.getNodeById(nodeId)
+        node?.onOutput()
     }
-  };
+  }
 
   /**
    * Handles when a node-opened response is received from the server.
    * @param event The event emitted by the server.
    */
   private onNodeOpenedResponse = (
-    event: TServerEvents["node-opened"],
+    event: TServerEvents['node-opened'],
   ): void => {
-    return this.onChangeNodeOpenState(event.data, event.data.opened);
-  };
+    return this.onChangeNodeOpenState(event.data, event.data.opened)
+  }
 
   /**
    * Handles when action execution has been initiated.
    * @param event The event emitted by the server.'
    */
   private onActionExecutionInitiated = (
-    event: TServerEvents["action-execution-initiated"],
+    event: TServerEvents['action-execution-initiated'],
   ): void => {
     // Extract data.
-    const { resourcePools } = event.data;
+    const { resourcePools } = event.data
     // Type is defined here below because for some reason
     // there are type issues when I extract it using
     // the destructuring syntax above.
-    const executionData: TActionExecutionJson = event.data.execution;
-    const { actionId } = executionData;
+    const executionData: TActionExecutionJson = event.data.execution
+    const { actionId } = executionData
 
     // Find the action and node, given the action ID.
-    let action: ClientMissionAction | undefined = this.actions.get(actionId);
-    let node: ClientMissionNode;
+    let action: ClientMissionAction | undefined = this.actions.get(actionId)
+    let node: ClientMissionNode
 
     // Handle action not found.
     if (action === undefined) {
       return console.error(
         `Event "action-execution-initiated" was triggered, but the action with the given actionId ("${actionId}") could not be found.`,
-      );
+      )
     }
 
     // Handle action found.
-    node = action.node;
+    node = action.node
     // Create a new execution object.
     let execution = new ClientActionExecution(
       executionData._id,
       action,
       executionData.start,
       executionData.end,
-    );
+    )
 
     // Handle execution on the node.
-    node.onExecution(execution);
+    node.onExecution(execution)
 
     // Update the resource pools for the force.
     for (let updatedPool of resourcePools) {
-      let pool = action.force.getPoolByResourceId(updatedPool.resourceId);
+      let pool = action.force.getPoolByResourceId(updatedPool.resourceId)
       if (pool && updatedPool.balance !== undefined) {
-        pool.balance = updatedPool.balance;
+        pool.balance = updatedPool.balance
       }
     }
-    action.force.emitEvent("modify-forces");
+    action.force.emitEvent('modify-forces')
 
     // Add execution to active executions.
-    this._activeExecutions.push(execution);
-    this.tickActiveExecutions();
-  };
+    this._activeExecutions.push(execution)
+    this.tickActiveExecutions()
+  }
 
   /**
    * Handles when action execution has been completed.
    * @param event The event emitted by the server.
    */
   private onActionExecutionCompleted = (
-    event: TServerEvents["action-execution-completed"],
+    event: TServerEvents['action-execution-completed'],
   ): void => {
     // Gather data.
     const { structure, revealedDescendants, revealedDescendantPrototypes } =
-      event.data;
+      event.data
 
-    const outcomeData: TExecutionOutcomeJson = event.data.outcome;
-    const { executionId } = outcomeData;
-    const execution = this.mission.getExecution(executionId);
+    const outcomeData: TExecutionOutcomeJson = event.data.outcome
+    const { executionId } = outcomeData
+    const execution = this.mission.getExecution(executionId)
     if (!execution) {
-      return console.error(`Execution "${executionId}" could not be found.`);
+      return console.error(`Execution "${executionId}" could not be found.`)
     }
-    const { node } = execution;
-    const { prototype } = node;
+    const { node } = execution
+    const { prototype } = node
 
     const outcome = new ClientExecutionOutcome(
       outcomeData._id,
       outcomeData.state,
       execution,
-    );
+    )
 
     // Handle outcome on different levels.
-    execution.onOutcome(outcome);
-    prototype.onOpen(revealedDescendantPrototypes, structure);
-    node.onOpen(revealedDescendants);
+    execution.onOutcome(outcome)
+    prototype.onOpen(revealedDescendantPrototypes, structure)
+    node.onOpen(revealedDescendants)
 
-    node.emitEvent("exec-state-change");
+    node.emitEvent('exec-state-change')
 
     // Remap actions if there are revealed nodes, since
     // those revealed nodes may contain new actions.
-    if (revealedDescendants) this.mapActions();
+    if (revealedDescendants) this.mapActions()
 
     // Remove execution from active executions.
     this._activeExecutions = this._activeExecutions.filter(
       ({ _id }) => executionId !== _id,
-    );
-  };
+    )
+  }
 
   /**
    * Handles an event from the server indicating that a
@@ -1651,15 +1750,15 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @param data The event data containing the alert details.
    */
   private onNodeAlertAcknowledged = (
-    event: TServerEvents["node-alert-acknowledged"],
+    event: TServerEvents['node-alert-acknowledged'],
   ): void => {
-    const { nodeId, alertId } = event.data;
-    const node = this.mission.getNodeById(nodeId);
+    const { nodeId, alertId } = event.data
+    const node = this.mission.getNodeById(nodeId)
     if (!node) {
-      return console.warn(`Node "${nodeId}" was not found.`);
+      return console.warn(`Node "${nodeId}" was not found.`)
     }
-    node.onAlertAcknowledgement(alertId);
-  };
+    node.onAlertAcknowledgement(alertId)
+  }
 
   /**
    * Handles node open/close state change events from the server.
@@ -1668,43 +1767,43 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @note If the node hasn't been revealed to this member yet, the event is ignored with a warning.
    */
   private onChangeNodeOpenState = (
-    nodes: TInstanceOrArray<Omit<TNodeOpenStateData, "opened">>,
+    nodes: TInstanceOrArray<Omit<TNodeOpenStateData, 'opened'>>,
     opened: boolean,
   ): void => {
-    let hasRevealedDescendants = false;
+    let hasRevealedDescendants = false
 
     for (let data of ArrayToolbox.toArray(nodes)) {
       // Extract the event data.
       let { structure, revealedDescendants, revealedDescendantPrototypes } =
-        data;
+        data
 
       // Find the target node in the mission using lookup data.
-      let node = this.mission.lookUpNode(data);
+      let node = this.mission.lookUpNode(data)
       if (!node) {
         console.warn(
           `Node "${data._id}" was not found. This is likely due to an effect being applied to a node that has not yet been revealed to the user.`,
-        );
-        continue;
+        )
+        continue
       }
-      let { prototype } = node;
+      let { prototype } = node
 
       // Update both the prototype (template level) and node (instance level).
       if (opened) {
         // Opening: Reveal descendants and establish structure relationships.
-        prototype.onOpen(revealedDescendantPrototypes, structure);
-        node.onOpen(revealedDescendants);
+        prototype.onOpen(revealedDescendantPrototypes, structure)
+        node.onOpen(revealedDescendants)
       } else {
         // Closing: Hide descendants (unless member has complete visibility).
-        prototype.onClose(this.member);
-        node.onClose(this.member);
+        prototype.onClose(this.member)
+        node.onClose(this.member)
       }
 
-      if (revealedDescendants) hasRevealedDescendants = true;
+      if (revealedDescendants) hasRevealedDescendants = true
     }
 
     // Rebuild the action map once if any node revealed new descendants.
-    if (hasRevealedDescendants) this.mapActions();
-  };
+    if (hasRevealedDescendants) this.mapActions()
+  }
 
   /**
    * Handles an event from the server indicating a new alert
@@ -1712,16 +1811,16 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @param event The event emitted by the server.
    */
   private onNodeAlertAdded = (
-    event: TServerEvents["node-alert-added"],
+    event: TServerEvents['node-alert-added'],
   ): void => {
-    const { message, severityLevel, ids: alerts } = event.data;
+    const { message, severityLevel, ids: alerts } = event.data
     for (const { nodeId, alertId } of alerts) {
-      let node = this.mission.getNodeById(nodeId);
+      let node = this.mission.getNodeById(nodeId)
       if (!node) {
         console.warn(
           `Node "${nodeId}" was not found. This is likely due to an effect being applied to a node that has not yet been revealed to the user.`,
-        );
-        continue;
+        )
+        continue
       }
       node.onAlert({
         _id: alertId,
@@ -1729,9 +1828,9 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         message,
         severityLevel,
         acknowledged: false,
-      });
+      })
     }
-  };
+  }
 
   /**
    * Fetches all sessions publicly available.
@@ -1750,15 +1849,15 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
             await axios.get<TSessionBasicJson[]>(MissionSession.API_ENDPOINT, {
               params: { timeStamp: Date.now().toString() },
             })
-          ).data;
-          return resolve(sessionData.map((datum) => new SessionBasic(datum)));
+          ).data
+          return resolve(sessionData.map((datum) => new SessionBasic(datum)))
         } catch (error) {
-          console.error("Failed to fetch sessions.");
-          console.error(error);
-          return reject(error);
+          console.error('Failed to fetch sessions.')
+          console.error(error)
+          return reject(error)
         }
       },
-    );
+    )
   }
 
   /**
@@ -1783,12 +1882,12 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
             ...sessionConfig,
           },
         )
-      ).data;
-      return sessionId;
+      ).data
+      return sessionId
     } catch (error) {
-      console.error("Failed to launch session.");
-      console.error(error);
-      throw error;
+      console.error('Failed to launch session.')
+      console.error(error)
+      throw error
     }
   }
 
@@ -1806,15 +1905,15 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       ): Promise<void> => {
         try {
           // Call API to delete session.
-          await axios.delete(`${MissionSession.API_ENDPOINT}/${_id}`);
-          return resolve();
+          await axios.delete(`${MissionSession.API_ENDPOINT}/${_id}`)
+          return resolve()
         } catch (error) {
-          console.error("Failed to delete session.");
-          console.error(error);
-          return reject(error);
+          console.error('Failed to delete session.')
+          console.error(error)
+          return reject(error)
         }
       },
-    );
+    )
   }
 }
 
@@ -1829,8 +1928,8 @@ type TSessionRequestOptions = {
    * Callback for errors.
    * @param message The error message.
    */
-  onError?: (message: string) => void;
-};
+  onError?: (message: string) => void
+}
 
 /**
  * Options to pass to {@link SessionClient.$start},
@@ -1843,8 +1942,8 @@ type TSessionLifecycleOptions = {
    * the request to start the session and has
    * marked the session as 'starting'.
    */
-  onInit?: () => void;
-};
+  onInit?: () => void
+}
 
 /**
  * Options for `executeAction` method.
@@ -1856,5 +1955,5 @@ interface TExecuteActionOptions extends TSessionRequestOptions {
    * will be ignored.
    * @note Any ommitted cheats will be considered `false`.
    */
-  cheats?: Partial<TExecutionCheats>;
+  cheats?: Partial<TExecutionCheats>
 }

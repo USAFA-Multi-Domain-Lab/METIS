@@ -14,8 +14,7 @@ export class Logging {
   /**
    * Logs information to the console.
    * @param message The message to log, if any.
-   * @param context The context of the message. Defaults to `Logging.CONTEXT_METIS`.
-   * @param properties Extra properties to log, other than the time and type. Defaults to `[]`.
+   * @param options The options for logging. Defaults to `Logging.DEFAULT_OPTIONS`.
    * @example
    * ```typescript
    * // Log a message to the console regarding a request
@@ -23,8 +22,11 @@ export class Logging {
    * // session.
    * Logging.info(
    *     "Requesting to open 'Initial Access'...",
-   *     Logging.CONTEXT_WS,
-   *     ['request-open-node']
+   *     {
+   *       context: Logging.CONTEXT_WS,
+   *       properties: ['request-open-node'],
+   *       verboseAppendix: 'Additional verbose information'
+   *     }
    * )
    *
    * // Output:
@@ -54,18 +56,64 @@ export class Logging {
   }
 
   /**
+   * Logs a warning to the console.
+   * @param message The message to log, if any.
+   * @param options The options for logging. Defaults to `Logging.DEFAULT_OPTIONS`.
+   * @example
+   * ```typescript
+   * // Log a warning to the console regarding a request
+   * // in the WebSocket system to open a node within a
+   * // session.
+   * Logging.warning(
+   *     "Requesting to open 'Initial Access'...",
+   *     {
+   *       context: Logging.CONTEXT_WS,
+   *       properties: ['request-open-node'],
+   *       verboseAppendix: 'Additional verbose information'
+   *     },
+   * )
+   *
+   * // Output:
+   * // [07:54:10][WS]['request-open-node'] Requesting to open 'Initial Access'...
+   * ```
+   */
+  public static warning(message: string, options: TLoggingOptions = {}): void {
+    // Parse the options.
+    let { context, properties, verboseAppendix } = {
+      ...Logging.DEFAULT_OPTIONS,
+      ...options,
+    }
+    // Combine all properties.
+    properties = [DateToolbox.nowFormatted, context, ...properties]
+    // Format all properties.
+    let allPropertiesFormatted = properties
+      .map((value) => `[${value}]`)
+      .join('')
+    // Generate an output string.
+    let output = `${allPropertiesFormatted} ${message}`
+
+    // Log the output to the console.
+    console.warn(output)
+    // Include the verbose appendix if the debug
+    // mode is enabled, and the appendix is not empty.
+    if (this.debugMode && verboseAppendix) console.warn(verboseAppendix)
+  }
+
+  /**
    * Logs an error to the console.
    * @param message The message to log, if any.
-   * @param context The context of the message. Defaults to `this.CONTEXT_METIS`.
-   * @param properties Extra properties to log, other than the time and type. Defaults to `[]`.
+   * @param options The options for logging. Defaults to `Logging.DEFAULT_OPTIONS`.
    * @example
    * ```typescript
    * // Log an error to the console regarding a failed
    * // request to open a node within a session.
    * Logging.error(
    *     "Failed to open 'Initial Access'...",
-   *     Logging.CONTEXT_WS,
-   *     ['request-open-node']
+   *     {
+   *       context: Logging.CONTEXT_WS,
+   *       properties: ['request-open-node'],
+   *       verboseAppendix: 'Additional verbose information'
+   *     }
    * )
    *
    * // Output:
@@ -96,7 +144,7 @@ export class Logging {
     console.error(output)
     // Include the verbose appendix if the debug
     // mode is enabled, and the appendix is not empty.
-    if (this.debugMode && verboseAppendix) console.log(verboseAppendix)
+    if (this.debugMode && verboseAppendix) console.error(verboseAppendix)
 
     // If the error is an instance of `Error`, log the stack trace.
     if (error instanceof Error) {

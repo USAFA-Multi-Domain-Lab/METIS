@@ -2,6 +2,7 @@ import { TargetEnvSchema } from '@server/target-environments/schema/TargetEnvSch
 import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
 import {
   EnvScriptResults,
+  type TEnvScriptSource,
   type TTargetEnvMethods,
 } from '@shared/target-environments/EnvScriptResults'
 import { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
@@ -132,24 +133,29 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
     let results: EnvScriptResults[] = []
     let errorOccurred = false
 
+    // Describes the source of these results so managers can review
+    // and diagnose hook executions.
+    let source: TEnvScriptSource = { kind: 'hook', method }
+
     for (let hook of this.hooks) {
       if (hook.method === method) {
         // Skip remaining hooks if an error
         // has already occurred.
         if (errorOccurred) {
-          results.push(EnvScriptResults.skipped(hook.environment))
+          results.push(EnvScriptResults.skipped(hook.environment, source))
           continue
         }
 
         try {
           let context = new EnvHookContext(session, this)
           await context.execute((context) => hook.invoke(context))
-          results.push(EnvScriptResults.success(hook.environment))
+          results.push(EnvScriptResults.success(hook.environment, source))
         } catch (error: any) {
           if (!(error instanceof Error)) {
             error = new Error(StringToolbox.limit(`${error}`, 128))
           }
-          results.push(EnvScriptResults.failure(hook.environment, error))
+          results.push(EnvScriptResults.failure(hook.environment, error, source))
+          errorOccurred = true
         }
       }
     }

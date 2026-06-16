@@ -53,7 +53,10 @@ import type {
   TSessionState,
 } from '@shared/sessions/MissionSession'
 import { MissionSession } from '@shared/sessions/MissionSession'
-import type { TEnvScriptResultJson } from '@shared/target-environments/EnvScriptResults'
+import type {
+  TEnvScriptResultJson,
+  TEnvScriptSource,
+} from '@shared/target-environments/EnvScriptResults'
 import { EnvScriptResults } from '@shared/target-environments/EnvScriptResults'
 import type { TInstanceOrArray } from '@shared/toolbox/arrays/ArrayToolbox'
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
@@ -190,6 +193,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       new Date(),
       config,
       mission,
+      [],
       [],
       [],
       [],
@@ -332,6 +336,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let banList: string[] = []
     let setupResults: TEnvScriptResultJson[] = []
     let teardownResults: TEnvScriptResultJson[] = []
+    let liveResults: TEnvScriptResultJson[] = []
     let chatChannels: TChatChannelJson[] = []
     let pendingSessionPanelAlerts: TSessionPanelAlert[] = []
     let unreadChatChannelMessages: Record<string, number> = {}
@@ -377,8 +382,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       // If the requester is authorized to start/end sessions,
       // then include the setup and teardown results.
       if (requester.isAuthorized('startEndSessions')) {
-        setupResults = this.setupResults.map((result) => result.toJson())
-        teardownResults = this.teardownResults.map((result) => result.toJson())
+        setupResults = this._setupResults.map((result) => result.toJson())
+        teardownResults = this._teardownResults.map((result) => result.toJson())
+        liveResults = this._liveResults.map((result) => result.toJson())
       }
 
       // Grab the chat channels visible to the requester.
@@ -411,6 +417,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       config: this.config,
       setupResults,
       teardownResults,
+      liveResults,
       chatChannels,
       unreadChatChannelMessages,
       pendingSessionPanelAlerts,
@@ -1125,7 +1132,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     this._state = 'started'
     this.emitStartResponses(event, member, 'session-started')
     // Perform any effect triggered by session start.
-    this.applyMissionEffects('session-start')
+    let results = await this.applyMissionEffects('session-start')
+    this.onLiveScriptResolution(...results)
   }
 
   /**
@@ -1245,10 +1253,11 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     this._mission = ServerMission.fromSaveJson(this.mission.toSaveJson())
     this.initializeMission()
     this.mapActions()
-    // Reset setup and teardown results for the
-    // new instance.
-    this.setupResults = []
-    this.teardownResults = []
+    // Reset setup, teardown, and live results for
+    // the new instance.
+    this._setupResults = []
+    this._teardownResults = []
+    this._liveResults = []
 
     // Perform setup.
     await this.setUp()
@@ -1261,7 +1270,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     this.emitStartResponses(event, member, 'session-reset')
 
     // Perform any effect triggered by session start.
-    this.applyMissionEffects('session-start')
+    let results = await this.applyMissionEffects('session-start')
+    this.onLiveScriptResolution(...results)
   }
 
   /**
@@ -2289,7 +2299,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    */
   private onScriptResolution = (
     destination: EnvScriptResults[],
-    eventMethod: 'session-setup-update' | 'session-teardown-update',
+    eventMethod:
+      | 'session-setup-update'
+      | 'session-teardown-update'
+      | 'session-live-update',
     ...newResults: EnvScriptResults[]
   ): void => {
     // Filter out non-erroneous results.
@@ -2300,11 +2313,11 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // If there are erroneous results...
     if (erroneousResults.length > 0) {
       for (let result of erroneousResults) {
-        // Log each erroneous result.
-        targetEnvLogger.error(
-          `Environment hook "${result.environment.name}" failed with error:`,
-          result.error,
-        )
+        let label =
+          result.source.kind === 'effect'
+            ? `Effect "${result.source.effectName}" on "${result.source.targetName}"`
+            : `Environment hook "${result.environment.name}"`
+        targetEnvLogger.error(`${label} failed with error:`, result.error)
       }
     }
 
@@ -2325,7 +2338,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    */
   private onSetupScriptResolution = (...results: EnvScriptResults[]): void => {
     this.onScriptResolution(
-      this.setupResults,
+      this._setupResults,
       'session-setup-update',
       ...results,
     )
@@ -2340,8 +2353,21 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     ...results: EnvScriptResults[]
   ): void => {
     this.onScriptResolution(
-      this.teardownResults,
+      this._teardownResults,
       'session-teardown-update',
+      ...results,
+    )
+  }
+
+  /**
+   * Handler for when a target script tied to an effect has completed
+   * its execution while the session is in the `started` state.
+   * @param results The results of the live script executions.
+   */
+  private onLiveScriptResolution = (...results: EnvScriptResults[]): void => {
+    this.onScriptResolution(
+      this._liveResults,
+      'session-live-update',
       ...results,
     )
   }
@@ -2373,15 +2399,24 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       )
     }
 
+    // Describe the source of these results so managers can review
+    // and diagnose the effect application.
+    let source: TEnvScriptSource = {
+      kind: 'effect',
+      effectName: effect.name,
+      targetName: effect.target.name,
+      trigger: effect.trigger,
+    }
+
     // Apply the effect to the target.
     try {
       if (!effect.hasIssues) {
         let promise = context.execute(effect.target.script)
         this.effectHistory.push(promise)
         await promise
-        return EnvScriptResults.success(effect.environment)
+        return EnvScriptResults.success(effect.environment, source)
       } else {
-        return EnvScriptResults.skipped(effect.environment)
+        return EnvScriptResults.skipped(effect.environment, source)
       }
     } catch (error: any) {
       if (!(error instanceof OutdatedContextError)) {
@@ -2395,7 +2430,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         // Log the error.
         targetEnvLogger.error(message, error)
       }
-      return EnvScriptResults.failure(effect.environment, error)
+      return EnvScriptResults.failure(effect.environment, error, source)
     }
   }
 
@@ -2492,11 +2527,14 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         member,
         execution,
       )
-      await this.applyEffect(
+      let result = await this.applyEffect(
         effect,
         context,
         `force - "${effect.sourceForce.name}" - node - "${effect.sourceNode.name}" - action - "${effect.sourceAction.name}" - effect - "${effect.name}".`,
       )
+      // Capture the result live so authorized users can review it in real time,
+      // if necessary.
+      this.onLiveScriptResolution(result)
     }
   }
 
