@@ -126,7 +126,7 @@ export type TLocalContextData<
 export interface TLocalContextProvider_P<
   TProps extends {},
   TComputed extends {},
-  TState extends {},
+  TState extends Record<string, TReactState>,
   TElements extends {},
 > {
   /**

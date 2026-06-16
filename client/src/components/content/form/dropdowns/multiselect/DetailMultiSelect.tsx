@@ -2,7 +2,7 @@ import { LocalContext, LocalContextProvider } from '@client/context/local'
 import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import type { ReactNode } from 'react'
-import { useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { useImperativeHandle, useRef, useState } from 'react'
 import type { TDetailBase_P } from '../..'
 import DetailTitleRow from '../../DetailTitleRow'
 import { useDetailClassNames } from '../../hooks/useDetailClassNames'
@@ -118,22 +118,6 @@ export default function DetailMultiSelect<TOption>(
     collapse: () => setExpanded(false),
     toggleExpansion: () => setExpanded((previous) => !previous),
   }))
-
-  // Close multiselect when clicking outside.
-  useEffect(() => {
-    if (!expanded) return
-
-    const handleClickOutside = (event: MouseEvent) => {
-      let target = event.target as HTMLElement
-      if (!document.contains(target)) return
-      if (!rootRef.current?.contains(target)) {
-        setExpanded(false)
-      }
-    }
-
-    document.addEventListener('click', handleClickOutside)
-    return () => document.removeEventListener('click', handleClickOutside)
-  }, [expanded])
 
   /* -- FUNCTIONS -- */
 

@@ -171,6 +171,10 @@
               .Name {
                 height: 1.8em;
                 line-height: 1.733em;
+
+                .SearchHighlight {
+                  color: $color-neutral-light;
+                }
               }
             }
           }

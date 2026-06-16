@@ -395,6 +395,9 @@ export default function MissionPage(
     if (selection instanceof ClientMissionFile) {
       selectPrimaryView.current('Files')
     }
+    // Auto-switch to the inspector tab whenever
+    // the selection changes.
+    selectSecondaryView.current(inspectorTabTitle)
   }, [selection])
 
   // Guards against refreshing or navigating away
@@ -604,6 +607,13 @@ export default function MissionPage(
   const selectPrimaryView = useRef((title: string) => {})
 
   /**
+   * Selects the view for the secondary panel in
+   * the panel layout.
+   * @param title The title of the view to select.
+   */
+  const selectSecondaryView = useRef((title: string) => {})
+
+  /**
    * Handles when a change is made that would require saving.
    * @param components The components that have been changed.
    */
@@ -750,7 +760,7 @@ export default function MissionPage(
                 />
               </PanelView> */}
             </Panel>
-            <Panel>
+            <Panel selectView={selectSecondaryView}>
               <PanelView title={inspectorTabTitle}>
                 {renderInspector()}
               </PanelView>

@@ -17,7 +17,7 @@
       user-select: none;
       display: grid;
       align-items: center;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: minmax(0, 1fr) auto;
       padding: $detail-field-padding;
       min-height: 2.5em;
 
@@ -37,9 +37,16 @@
           border-radius: 0.25em;
           padding: 0.25em 0.5em;
           font-size: 0.8em;
+          min-width: 0;
+          max-width: 16em;
 
           .PillText {
             color: $detail-field-text-color;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
           }
 
           .RemoveButton {

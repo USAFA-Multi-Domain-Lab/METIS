@@ -52,13 +52,16 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
 
     /* -- STATE -- */
 
+    const state: TMissionOutline_S = {
+      searchText: useState<string>(''),
+    }
     const [value, setValue] = defaultedProps.selectionState
     const { isSelectable: originalIsSelectable, isIndirectlySelectable } =
       defaultedProps
     const [expansionMap, setExpansionMap] = useState<Map<string, boolean>>(
       new Map(),
     )
-    const [searchText, setSearchText] = useState<string>('')
+    const [searchText, setSearchText] = state.searchText
     const clearEngine = useButtonSvgEngine({
       elements: [
         {
@@ -260,6 +263,7 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
 
     /* -- COMPUTED -- */
 
+    // Perform filter logic.
     let originalFilter = defaultedProps.filter
     let matchingIds = useMemo((): Set<string> | null => {
       if (!searchText) return null
@@ -267,7 +271,10 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
       let result = new Set<string>()
       const visit = (item: TMissionOutlineItem): boolean => {
         let nameMatches = item.name.toLowerCase().includes(query)
-        let anyChildMatches = item.outlineChildren.some((child) => visit(child))
+        let visibleChildren = item.outlineChildren.filter(originalFilter)
+        let anyChildMatches = visibleChildren
+          .map((child) => visit(child))
+          .includes(true)
         if (nameMatches || anyChildMatches) result.add(item._id)
         return nameMatches || anyChildMatches
       }
@@ -294,6 +301,8 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
       return true
     }, [expansionMap])
 
+    // Determine where to render badges showing counts
+    // in the outline tree.
     let badgeCounts = useMemo(() => {
       let map = new Map<TMissionOutlineItem, number>()
       for (let item of value) {
@@ -357,9 +366,14 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
     }, [allCollapsed])
 
     // Hide clear button for search text when
-    // there is no search text.
+    // there is no search text. Also, disable
+    // expand/collapse all buttons when there is
+    // search text, since expansion is forced in
+    // that case.
     useEffect(() => {
       clearEngine.setHidden('clear', !searchText)
+      headerEngine.setDisabled('expand-all', Boolean(searchText))
+      headerEngine.setDisabled('collapse-all', Boolean(searchText))
     }, [searchText])
 
     useImperativeHandle(ref, () => ({ revealItem }))
@@ -383,7 +397,7 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
         context={missionOutlineContext}
         defaultedProps={defaultedProps}
         computed={computed}
-        state={{}}
+        state={state}
         elements={elements}
       >
         <div className='MissionOutline SidePanel'>
@@ -538,7 +552,9 @@ export type TMissionOutline_C = {
 /**
  * Consolidated state for {@link MissionOutline}.
  */
-export type TMissionOutline_S = {}
+export type TMissionOutline_S = {
+  searchText: TReactState<string>
+}
 
 /**
  * Element refs shared across the {@link MissionOutline} tree.

@@ -28,8 +28,10 @@ export default function MissionOutlineItem({
     selectionState,
     getDescendantSelectionCount,
     revealSelectedDescendants,
+    state,
   } = useMissionOutlineContext()
   const [value] = selectionState
+  const [searchText] = state.searchText
 
   let children = item.outlineChildren.filter(filter)
   let hasChildren = children.length > 0
@@ -74,7 +76,7 @@ export default function MissionOutlineItem({
           }}
         >
           <div className='Icon' style={computeOutlineIconStyling(item)}></div>
-          <div className='Name'>{item.name}</div>
+          <div className='Name'>{highlightName(item.name, searchText)}</div>
           <Tooltip description={tooltipDescription} />
         </div>
         {showBadge && (
@@ -94,6 +96,30 @@ export default function MissionOutlineItem({
       </div>
       <MissionOutlineChildren parent={item} />
     </div>
+  )
+}
+
+/* -- UTILITY FUNCTIONS -- */
+
+/**
+ * Renders `name` with the first case-insensitive match of `query` wrapped in a `SearchHighlight` span.
+ * @param name The display name to render.
+ * @param query The current search query to highlight within the name.
+ * @returns A React element with the matching substring highlighted, or the name unstyled if there is no match.
+ */
+function highlightName(name: string, query: string): TReactElement {
+  if (!query) return <>{name}</>
+  let lowerName = name.toLowerCase()
+  let index = lowerName.indexOf(query.toLowerCase())
+  if (index === -1) return <>{name}</>
+  return (
+    <>
+      {name.slice(0, index)}
+      <span className='SearchHighlight'>
+        {name.slice(index, index + query.length)}
+      </span>
+      {name.slice(index + query.length)}
+    </>
   )
 }
 

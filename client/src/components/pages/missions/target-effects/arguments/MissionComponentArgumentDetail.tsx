@@ -1,3 +1,4 @@
+import Tooltip from '@client/components/content/communication/Tooltip'
 import type { TDetailMultiSelectHandle } from '@client/components/content/form/dropdowns/multiselect/DetailMultiSelect'
 import DetailMultiSelect from '@client/components/content/form/dropdowns/multiselect/DetailMultiSelect'
 import { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
@@ -152,7 +153,12 @@ export default function MissionComponentTargetDetail({
         return (
           <div className='ComponentItemContent'>
             <div className='Icon' style={computeOutlineIconStyling(item)}></div>
-            <div className='Name'>{item.name}</div>
+            <div className='Name'>
+              {item.name}
+              <Tooltip
+                description={`${item.name}\n\t\n**Click to reveal in outline**`}
+              />
+            </div>
           </div>
         )
       }}
