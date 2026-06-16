@@ -2467,10 +2467,15 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Get the effects for the given trigger.
     let effects = action.effects
       .filter((effect) => effect.trigger === trigger)
+      .filter((effect) => effect.environment)
       .sort((a, b) => a.order - b.order)
 
     // Iterate through each effect and apply it.
     for (let effect of effects) {
+      // Environment is guaranteed to be non-null
+      // due to the filtering above.
+      let environment: ServerTargetEnvironment = effect.environment!
+
       // These effects should only be applied while the
       // session is in the 'started' state.
       if (this.state !== 'started') {
@@ -2479,7 +2484,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       // Skip if the target environment is disabled
       if (
         effect.environment &&
-        this.config.disabledTargetEnvs.includes(effect.environmentId)
+        this.config.disabledTargetEnvs.includes(environment._id)
       ) {
         continue
       }
