@@ -2,7 +2,7 @@ import { LocalContext, LocalContextProvider } from '@client/context/local'
 import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import type { ReactNode } from 'react'
-import { useEffect, useImperativeHandle, useState } from 'react'
+import { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { TDetailBase_P } from '../..'
 import DetailTitleRow from '../../DetailTitleRow'
 import { useDetailClassNames } from '../../hooks/useDetailClassNames'
@@ -64,7 +64,6 @@ export default function DetailMultiSelect<TOption>(
   const {
     ref,
     label,
-    options,
     value,
     setValue,
     render,
@@ -86,6 +85,7 @@ export default function DetailMultiSelect<TOption>(
     expanded: useState<boolean>(isExpanded),
   }
   const [expanded, setExpanded] = state.expanded
+  const rootRef = useRef<HTMLDivElement>(null)
 
   /* -- COMPUTED -- */
 
@@ -125,7 +125,8 @@ export default function DetailMultiSelect<TOption>(
 
     const handleClickOutside = (event: MouseEvent) => {
       let target = event.target as HTMLElement
-      if (!target.closest('.DetailMultiSelect')) {
+      if (!document.contains(target)) return
+      if (!rootRef.current?.contains(target)) {
         setExpanded(false)
       }
     }
@@ -204,7 +205,7 @@ export default function DetailMultiSelect<TOption>(
       state={state}
       elements={{}}
     >
-      <div className={rootClasses.value}>
+      <div ref={rootRef} className={rootClasses.value}>
         <DetailTitleRow
           label={label}
           labelClassName={labelClasses.value}

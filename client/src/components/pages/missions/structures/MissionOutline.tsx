@@ -4,6 +4,7 @@ import { LocalContext, LocalContextProvider } from '@client/context/local'
 import { compute } from '@client/toolbox'
 import { useDefaultProps } from '@client/toolbox/hooks'
 import { getIconPath } from '@client/toolbox/icons'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import {
   forwardRef,
   useEffect,
@@ -57,6 +58,20 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
     const [expansionMap, setExpansionMap] = useState<Map<string, boolean>>(
       new Map(),
     )
+    const [searchText, setSearchText] = useState<string>('')
+    const clearEngine = useButtonSvgEngine({
+      elements: [
+        {
+          key: 'clear',
+          type: 'button',
+          icon: 'close',
+          cursor: 'pointer',
+          label: 'Clear search',
+          hidden: true,
+          onClick: () => setSearchText(''),
+        },
+      ],
+    })
     const headerEngine = useButtonSvgEngine({
       elements: [
         {
@@ -86,6 +101,7 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
      * expansion map first and falling back to the item's own property.
      */
     const isExpanded = (item: TMissionOutlineItem): boolean => {
+      if (searchText) return true
       return expansionMap.has(item._id)
         ? expansionMap.get(item._id)!
         : item.expandedInOutline
@@ -244,6 +260,27 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
 
     /* -- COMPUTED -- */
 
+    let originalFilter = defaultedProps.filter
+    let matchingIds = useMemo((): Set<string> | null => {
+      if (!searchText) return null
+      let query = searchText.toLowerCase()
+      let result = new Set<string>()
+      const visit = (item: TMissionOutlineItem): boolean => {
+        let nameMatches = item.name.toLowerCase().includes(query)
+        let anyChildMatches = item.outlineChildren.some((child) => visit(child))
+        if (nameMatches || anyChildMatches) result.add(item._id)
+        return nameMatches || anyChildMatches
+      }
+      visit(defaultedProps.root)
+      return result
+    }, [searchText])
+    defaultedProps.filter = (item: TMissionOutlineItem): boolean => {
+      if (!originalFilter(item)) return false
+      if (matchingIds === null) return true
+      return matchingIds.has(item._id)
+    }
+    let hasResults = matchingIds === null || matchingIds.size > 0
+
     let allCollapsed = useMemo(() => {
       let stack = [defaultedProps.root]
       while (stack.length > 0) {
@@ -274,6 +311,11 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
       }
       return map
     }, [value, expansionMap])
+
+    let outlineTreeClasses = new ClassList('OutlineTree').set(
+      'IsFiltered',
+      searchText,
+    )
 
     /* -- EFFECTS -- */
 
@@ -314,6 +356,12 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
       headerEngine.setHidden('collapse-all', allCollapsed)
     }, [allCollapsed])
 
+    // Hide clear button for search text when
+    // there is no search text.
+    useEffect(() => {
+      clearEngine.setHidden('clear', !searchText)
+    }, [searchText])
+
     useImperativeHandle(ref, () => ({ revealItem }))
 
     /* -- CONTEXT COMPILATION -- */
@@ -341,10 +389,24 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
         <div className='MissionOutline SidePanel'>
           <div className='BorderBox'>
             <div className='OutlineHeader'>
+              <div className='SearchBox'>
+                <input
+                  type='text'
+                  className='OutlineSearch'
+                  placeholder='Filter components'
+                  value={searchText}
+                  onChange={(event) => setSearchText(event.target.value)}
+                />
+                {searchText && <ButtonSvgPanel engine={clearEngine} />}
+              </div>
               <ButtonSvgPanel engine={headerEngine} />
             </div>
-            <div className='OutlineTree'>
-              <MissionOutlineItem item={defaultedProps.root} />
+            <div className={outlineTreeClasses.value}>
+              {hasResults ? (
+                <MissionOutlineItem item={defaultedProps.root} />
+              ) : (
+                <div className='NoResults'>No results.</div>
+              )}
             </div>
             <MissionOutlineSelectionCount />
           </div>

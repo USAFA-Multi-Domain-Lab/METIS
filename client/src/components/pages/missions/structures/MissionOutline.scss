@@ -9,10 +9,43 @@
       overflow-y: hidden;
 
       .OutlineHeader {
-        display: flex;
-        justify-content: flex-end;
-        padding: 0.25em 0.5em 0;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        column-gap: 0.5em;
+        align-items: center;
+        padding: 0 1em;
         flex-shrink: 0;
+
+        .SearchBox {
+          display: flex;
+          align-items: center;
+          background-color: $color-secondary;
+          border-radius: 4px;
+
+          .OutlineSearch {
+            flex: 1;
+            padding: 0.5em;
+            border: unset;
+            background: unset;
+            font-size: 0.9em;
+
+            &:focus {
+              outline: none;
+            }
+
+            &::placeholder {
+              color: $color-faded;
+            }
+          }
+
+          .ButtonSvgPanel {
+            padding: 0 0.5em 0 0;
+
+            .ButtonSvg {
+              font-size: 16px;
+            }
+          }
+        }
       }
 
       .OutlineTree {
@@ -22,6 +55,20 @@
         padding: 1em;
         font-size: 0.75rem;
         white-space: nowrap;
+
+        .NoResults {
+          text-align: center;
+          padding: 2em;
+          font-style: italic;
+          color: $color-faded;
+        }
+
+        &.IsFiltered {
+          .OutlineItem:not(.Childless) .Indicator {
+            opacity: 0.25;
+            pointer-events: none;
+          }
+        }
 
         // -- Row patterns --
 

@@ -1,4 +1,5 @@
 @use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
 
 .TargetArgumentDetail {
   &:last-child {
@@ -24,9 +25,22 @@
     }
   }
 
-  .TargetArgumentDetail_missionComponent {
+  &.TargetArgumentDetail_missionComponent {
+    .Field:has(.OutlineSearch:focus) {
+      border-bottom: none;
+    }
+
     .MissionOutline {
       padding-bottom: 1em;
+
+      .OutlineHeader {
+        .SearchBox {
+          @include background-mask(
+            $opacity: 0.075,
+            $color: $color-primary-light
+          );
+        }
+      }
     }
 
     .ComponentItemContent {
