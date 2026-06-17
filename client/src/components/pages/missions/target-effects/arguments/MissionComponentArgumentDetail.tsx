@@ -65,7 +65,6 @@ export default function MissionComponentTargetDetail({
 
   const { mission } = argument.effect
 
-  /* -- COMPUTED -- */
   // A list of JS classes. If an outline item is an instance
   // of any of these classes, then it is selectable in the outline.
   let selectableOutlineItemTypes = useMemo(() => {
@@ -135,6 +134,50 @@ export default function MissionComponentTargetDetail({
     return Array.from(result)
   }, [selectableOutlineItemTypes])
 
+  /* -- FUNCTIONS -- */
+
+  const getPillStyle = (item: (typeof value)[number]): React.CSSProperties => {
+    let style: React.CSSProperties = {}
+    let force = item.getAssociatedComponentWithType(ClientMissionForce)
+    let node = item.getAssociatedComponentWithType(ClientMissionNode)
+    if (force) style.boxShadow = `inset 0 0 0 1000px ${force.color}19`
+    if (node) style.borderColor = `${node.color}aa`
+    return style
+  }
+  const renderPill = (item: (typeof value)[number]) => {
+    return (
+      <div className='ComponentItemContent'>
+        <div className='Icon' style={computeOutlineIconStyling(item)}></div>
+        <div className='Name'>{item.name}</div>
+        <Tooltip
+          description={`${item.name}\n\t\n**Click to reveal in outline**`}
+        />
+      </div>
+    )
+  }
+  const renderOptions = () => (
+    <MissionOutline
+      ref={outlineRef}
+      root={mission}
+      selectionState={[value, setValue]}
+      isSelectable={(item) =>
+        selectableOutlineItemTypes.some((ComponentClass) => {
+          return item instanceof ComponentClass
+        })
+      }
+      filter={(item) => {
+        return displayableOutlineItemTypes.some((ComponentClass) => {
+          return item instanceof ComponentClass
+        })
+      }}
+      isIndirectlySelectable={(item, parent) => {
+        let isNode = item instanceof ClientMissionNode
+        let parentIsNode = parent instanceof ClientMissionNode
+        return !isNode || !parentIsNode
+      }}
+    />
+  )
+
   /* -- RENDER -- */
 
   return (
@@ -149,48 +192,10 @@ export default function MissionComponentTargetDetail({
         multiSelectRef.current?.expand()
         outlineRef.current?.revealItem(item)
       }}
-      getPillStyle={(item) => {
-        let style: React.CSSProperties = {}
-        let force = item.getFirstSuperComponentOfType(ClientMissionForce)
-        let node = item.getFirstSuperComponentOfType(ClientMissionNode)
-        if (force) style.boxShadow = `inset 0 0 0 1000px ${force.color}19`
-        if (node) style.borderColor = `${node.color}aa`
-        return style
-      }}
-      render={(item) => {
-        return (
-          <div className='ComponentItemContent'>
-            <div className='Icon' style={computeOutlineIconStyling(item)}></div>
-            <div className='Name'>{item.name}</div>
-            <Tooltip
-              description={`${item.name}\n\t\n**Click to reveal in outline**`}
-            />
-          </div>
-        )
-      }}
+      getPillStyle={getPillStyle}
+      render={renderPill}
       options={[]}
-      renderOptions={() => (
-        <MissionOutline
-          ref={outlineRef}
-          root={mission}
-          selectionState={[value, setValue]}
-          isSelectable={(item) =>
-            selectableOutlineItemTypes.some((ComponentClass) => {
-              return item instanceof ComponentClass
-            })
-          }
-          filter={(item) => {
-            return displayableOutlineItemTypes.some((ComponentClass) => {
-              return item instanceof ComponentClass
-            })
-          }}
-          isIndirectlySelectable={(item, parent) => {
-            let isNode = item instanceof ClientMissionNode
-            let parentIsNode = parent instanceof ClientMissionNode
-            return !isNode || !parentIsNode
-          }}
-        />
-      )}
+      renderOptions={renderOptions}
     />
   )
 }

@@ -127,14 +127,17 @@ export abstract class MissionComponent<
 
   /**
    * @param componentType A subclass of {@link MissionComponent} to
-   * check for in the component's ancestry.
-   * @returns The first component that precedes this component in
-   * the mission hierarchy that is an instance of the provided type.
+   * check for in the component's hierarchy.
+   * @returns Traverses up the component's hierarchy, starting at this
+   * component, and returns the first component that is an instance of
+   * the provided type.
    * @note This will return `undefined` if there is no such component.
    * @note This essentially travels up via {@link superComponent} until
    * it finds a component that is an instance of the provided type.
+   * @note If `this` is an instance of the provided type, the method
+   * will return `this`.
    */
-  public getFirstSuperComponentOfType<T extends MissionComponent>(
+  public getAssociatedComponentWithType<T extends MissionComponent>(
     componentType: Function & { prototype: T },
   ): T | undefined {
     let current: MissionComponent | null = this
