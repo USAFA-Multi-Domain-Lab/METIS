@@ -43,9 +43,7 @@ const NodeOpenState = TargetSchema.create({
   name: 'Node Open State',
   description: 'Opens or closes a node(s), revealing or hiding its descendants',
   script: async (context, applyTo, openState) => {
-    if (openState !== 'no-change') {
-      context.updateNodeOpenState(applyTo, openState === 'open')
-    }
+    context.updateNodeOpenState(applyTo, openState === 'open')
   },
   parameters: [
     {
@@ -69,13 +67,7 @@ const NodeOpenState = TargetSchema.create({
       name: openStateArg.name,
       required: true,
       groupingId: groupingId,
-      dependencies: [TargetDependency.NOT_EMPTY(applyToArg._id)],
       options: [
-        {
-          _id: 'no-change',
-          name: 'No Change',
-          value: 'no-change',
-        },
         {
           _id: 'open',
           name: 'Open',
@@ -87,11 +79,7 @@ const NodeOpenState = TargetSchema.create({
           value: 'close',
         },
       ],
-      default: {
-        _id: 'no-change',
-        name: 'No Change',
-        value: 'no-change',
-      },
+      default: 'open',
     },
   ],
   migrations,

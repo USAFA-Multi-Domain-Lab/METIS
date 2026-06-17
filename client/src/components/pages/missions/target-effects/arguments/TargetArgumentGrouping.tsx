@@ -31,10 +31,7 @@ export default function TargetArgumentGrouping({
       // If all of the argument's dependencies are met
       // then at least one argument in the grouping
       // is displayed.
-      if (
-        argument.parameter &&
-        argument.effect.allDependenciesMet(argument.parameter.dependencies)
-      ) {
+      if (argument.dependenciesMet) {
         result = false
         break
       }

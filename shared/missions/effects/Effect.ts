@@ -1,8 +1,6 @@
 import type { TTargetArgumentJson } from '@shared/target-environments/arguments/TargetArgument'
 import type { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import { BooleanToolbox } from '@shared/toolbox/booleans/BooleanToolbox'
-import type { TTargetParameter } from '../../target-environments/parameters/TargetParameter'
-import type { TargetDependency } from '../../target-environments/targets/TargetDependency'
 import { StringToolbox } from '../../toolbox/strings/StringToolbox'
 import { VersionToolbox } from '../../toolbox/strings/VersionToolbox'
 import { MissionComponent } from '../MissionComponent'
@@ -390,69 +388,7 @@ export abstract class Effect<
     return executionTriggeredJson
   }
 
-  /**
-   * Determines if all the dependencies passed are met based on the
-   * the provided target arguments.
-   * @param dependencies The dependencies to check if all are met.
-   * @param targetArguments The arguments to check the dependencies against.
-   * @returns If all the dependencies are met.
-   */
-  public allDependenciesMet(
-    dependencies: TargetDependency[] = [],
-    targetArguments: T['targetArgument'][] = this.arguments,
-  ): boolean {
-    // If the argument has no dependencies, then the argument is always displayed.
-    if (!dependencies || dependencies.length === 0) {
-      return true
-    }
 
-    // Stores the status of all the argument's dependencies.
-    let areDependenciesMet: boolean[] = []
-    // Create a variable to determine if all the dependencies
-    // have been met.
-    let allDependenciesMet: boolean
-
-    // Iterate through the dependencies.
-    dependencies.forEach((dependency) => {
-      // Grab the dependency argument.
-      let dependencyArg: TTargetParameter | undefined =
-        this.target?.parameters.find(
-          (arg: TTargetParameter) => arg._id === dependency.dependentId,
-        )
-
-      // If the dependency argument is found then check if
-      // the dependency is met.
-      if (dependencyArg) {
-        // Initialize a variable to determine if the dependency
-        // is met.
-        let dependencyMet: boolean
-
-        // Otherwise, check if the condition is met.
-        dependencyMet = dependency.condition(
-          targetArguments.find(
-            (arg) => arg.parameterId === dependency.dependentId,
-          )?.value,
-        )
-
-        // If the dependency is met then push true to the
-        // dependencies met array, otherwise push false.
-        dependencyMet
-          ? areDependenciesMet.push(true)
-          : areDependenciesMet.push(false)
-      }
-      // Otherwise, the dependency argument doesn't exist.
-      else {
-        areDependenciesMet.push(false)
-      }
-    })
-
-    // If all the dependencies have been met then set the
-    // variable to true, otherwise set it to false.
-    allDependenciesMet = !areDependenciesMet.includes(false)
-
-    // Return the status of all the dependencies.
-    return allDependenciesMet
-  }
 
   /**
    * Gets the argument associated with a specific parameter ID.

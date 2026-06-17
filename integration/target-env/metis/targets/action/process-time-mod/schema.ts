@@ -57,7 +57,6 @@ const ProcessTimeMod = TargetSchema.create({
       min: -1,
       max: 1,
       groupingId,
-      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
       default: 0,
       integersOnly: true,
       tooltipDescription:
@@ -75,7 +74,6 @@ const ProcessTimeMod = TargetSchema.create({
       min: -59,
       max: 59,
       groupingId,
-      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
       default: 0,
       integersOnly: true,
       tooltipDescription:
@@ -93,7 +91,6 @@ const ProcessTimeMod = TargetSchema.create({
       min: -59,
       max: 59,
       groupingId,
-      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
       default: 0,
       integersOnly: true,
       tooltipDescription:

@@ -86,7 +86,9 @@ export class ServerEffect<
         return self.environment ? self.environment.toTargetEnvContext() : null
       },
       get arguments() {
-        return self.arguments.map((arg) => arg.toTargetEnvContext())
+        return self.arguments
+          .filter((argument) => argument.dependenciesMet)
+          .map((argument) => argument.toTargetEnvContext())
       },
     }
   }

@@ -24,9 +24,7 @@ export default function TargetArgumentDetail({
    * Determines if all the argument's dependencies have been met.
    */
   const allDependenciesMet = compute<boolean>(
-    () =>
-      argument.parameter !== undefined &&
-      argument.effect.allDependenciesMet(argument.parameter.dependencies),
+    () => argument.dependenciesMet,
   )
 
   /**

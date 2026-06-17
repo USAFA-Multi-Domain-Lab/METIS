@@ -9,7 +9,6 @@ const BlockStatus = TargetSchema.create({
   name: 'Block Status',
   description: '',
   script: async (context, applyTo, blockStatus) => {
-    if (!blockStatus) return
     context.updateNodeBlockStatus(applyTo, blockStatus === 'block')
   },
   parameters: [
@@ -34,7 +33,6 @@ const BlockStatus = TargetSchema.create({
       name: 'Block Status',
       required: true,
       groupingId: 'node',
-      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
       options: [
         {
           _id: 'block',

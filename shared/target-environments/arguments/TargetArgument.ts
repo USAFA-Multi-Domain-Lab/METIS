@@ -192,8 +192,17 @@ export abstract class TargetArgument<
    * Whether the dependencies in the corresponding parameter
    * are met for this argument.
    */
-  public get dependenciesMet() {
-    return this.effect.allDependenciesMet(this.parameter?.dependencies ?? [])
+  public get dependenciesMet(): boolean {
+    let dependencies = this.parameter?.dependencies ?? []
+    if (!dependencies.length) return true
+
+    return dependencies.every((dependency) => {
+      let dependentArgument = this.effect.arguments.find(
+        (argument) => argument.parameterId === dependency.dependentId,
+      )
+      if (!dependentArgument?.dependenciesMet) return false
+      return dependency.condition(dependentArgument.value)
+    })
   }
 
   /**

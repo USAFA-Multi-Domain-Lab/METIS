@@ -26,7 +26,6 @@ const ResourceCostMod = TargetSchema.create({
       name: 'Resources to Modify',
       groupingId: 'main',
       validComponentTypes: ['resource'],
-      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
     },
     {
       type: 'number',
@@ -41,10 +40,6 @@ const ResourceCostMod = TargetSchema.create({
         `For example, if the resource cost is 100 and you set the resource cost to +10, then the resource cost will be 110.\n` +
         `\t\n` +
         `*Note: If the result is less than 0, then the resource cost will be 0.*`,
-      dependencies: [
-        TargetDependency.NOT_EMPTY('applyTo'),
-        TargetDependency.NOT_EMPTY('resources'),
-      ],
     },
   ],
   migrations,

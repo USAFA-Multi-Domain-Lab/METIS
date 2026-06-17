@@ -42,7 +42,6 @@ const ResourcePool = TargetSchema.create({
           value: 'award',
         },
       ],
-      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
     },
     {
       type: 'number',
@@ -51,7 +50,6 @@ const ResourcePool = TargetSchema.create({
       required: true,
       default: 0,
       min: 0,
-      dependencies: [TargetDependency.EQUALS('operation', 'award')],
       tooltipDescription: 'The amount to award to the resource pool.',
     },
   ],

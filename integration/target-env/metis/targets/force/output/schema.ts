@@ -25,7 +25,6 @@ const Output = TargetSchema.create({
       name: 'Message',
       required: false,
       groupingId: 'output',
-      dependencies: [TargetDependency.NOT_EMPTY('to')],
       tooltipDescription:
         `This is the message that will be displayed in the output panel for the force selected above.\n` +
         `\t\n` +
