@@ -189,6 +189,14 @@ export abstract class TargetArgument<
   }
 
   /**
+   * Whether the dependencies in the corresponding parameter
+   * are met for this argument.
+   */
+  public get dependenciesMet() {
+    return this.effect.allDependenciesMet(this.parameter?.dependencies ?? [])
+  }
+
+  /**
    * @param effect The effect that uses this argument when calling
    * the target script.
    * @param _id The unique identifier for this argument entry.
@@ -355,8 +363,10 @@ export abstract class TargetArgument<
           'initialization',
           'effect-updated',
           'dropdown-mismatch-resolved',
+          'dependency-met-update',
         ],
         if: (argument) =>
+          argument.dependenciesMet &&
           BooleanToolbox.onlyLast(
             argument.effect.targetArgumentsLocked,
             argument.valueIsInvalidOption,
@@ -371,8 +381,10 @@ export abstract class TargetArgument<
           'initialization',
           'effect-updated',
           'string-argument-pattern-check',
+          'dependency-met-update',
         ],
         if: (argument) =>
+          argument.dependenciesMet &&
           BooleanToolbox.onlyLast(
             argument.effect.targetArgumentsLocked,
             argument.hasPatternMismatch,

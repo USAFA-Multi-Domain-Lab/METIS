@@ -9,9 +9,8 @@ const BlockStatus = TargetSchema.create({
   name: 'Block Status',
   description: '',
   script: async (context, applyTo, blockStatus) => {
-    if (blockStatus !== 'no-change') {
-      context.updateNodeBlockStatus(applyTo, blockStatus === 'block')
-    }
+    if (!blockStatus) return
+    context.updateNodeBlockStatus(applyTo, blockStatus === 'block')
   },
   parameters: [
     {
@@ -37,11 +36,6 @@ const BlockStatus = TargetSchema.create({
       groupingId: 'node',
       dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
       options: [
-        {
-          _id: 'no-change',
-          name: 'No Change',
-          value: 'no-change',
-        },
         {
           _id: 'block',
           name: 'Block',

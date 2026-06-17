@@ -77,6 +77,7 @@ export class BooleanToolbox {
   }
 
   /**
+   * @param values A list of boolean values.
    * @returns `true` if every value is false except the last one
    * which must be true.
    * @example [false, false, true] => true ✅

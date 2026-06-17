@@ -2,6 +2,7 @@ import type { ClientTargetArgument } from '@client/target-environments/arguments
 import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import { useEffect } from 'react'
 import BooleanArgumentDetail from './BooleanArgumentDetail'
 import DropdownArgumentDetail from './DropdownArgumentDetail'
 import LargeStringArgumentDetail from './LargeStringArgumentDetail'
@@ -35,6 +36,14 @@ export default function TargetArgumentDetail({
     'TargetArgumentDetail',
     `TargetArgumentDetail_${StringToolbox.toCamelCase(argument.type)}`,
   )
+
+  /* -- EFFECTS -- */
+
+  // Trigger an update in the issue checkers whenever
+  // the value of allDependenciesMet changes.
+  useEffect(() => {
+    argument.triggerIssueCheck('dependency-met-update')
+  }, [allDependenciesMet])
 
   /* -- RENDER -- */
 
