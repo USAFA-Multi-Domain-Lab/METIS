@@ -6,90 +6,90 @@ import { TargetParameter } from './TargetParameter'
  */
 export class NumberTargetParameter {
   /**
-   * Converts TNumberArg to TNumberArgJson.
-   * @param arg The number argument to convert.
-   * @returns The number argument as JSON.
+   * Converts TNumberTargetParameter to TNumberTargetParameterJson.
+   * @param parameter The number parameter to convert.
+   * @returns The number parameter as JSON.
    */
   public static toJson = (
-    arg: TNumberTargetParameter,
+    parameter: TNumberTargetParameter,
   ): TNumberTargetParameterJson => {
     // Return the appropriate properties based on
-    // whether the argument is required or not.
-    return arg.required
+    // whether the parameter is required or not.
+    return parameter.required
       ? {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.encodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.encodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          default: arg.default,
-          min: arg.min,
-          max: arg.max,
-          unit: arg.unit,
-          integersOnly: arg.integersOnly,
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
+          default: parameter.default,
+          min: parameter.min,
+          max: parameter.max,
+          unit: parameter.unit,
+          integersOnly: parameter.integersOnly,
         }
       : {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.encodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.encodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          min: arg.min,
-          max: arg.max,
-          unit: arg.unit,
-          integersOnly: arg.integersOnly,
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
+          min: parameter.min,
+          max: parameter.max,
+          unit: parameter.unit,
+          integersOnly: parameter.integersOnly,
         }
   }
 
   /**
-   * Converts TNumberArgJson to TNumberArg.
-   * @param arg The number argument as JSON to convert.
-   * @returns The number argument.
+   * Converts TNumberTargetParameterJson to TNumberTargetParameter.
+   * @param parameter The number parameter as JSON to convert.
+   * @returns The number parameter.
    */
   public static fromJson = (
-    arg: TNumberTargetParameterJson,
+    parameter: TNumberTargetParameterJson,
   ): TNumberTargetParameter => {
     // Return the appropriate properties based on
-    // whether the argument is required or not.
-    return arg.required
+    // whether the parameter is required or not.
+    return parameter.required
       ? {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.decodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.decodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          default: arg.default,
-          min: arg.min,
-          max: arg.max,
-          unit: arg.unit,
-          integersOnly: arg.integersOnly,
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
+          default: parameter.default,
+          min: parameter.min,
+          max: parameter.max,
+          unit: parameter.unit,
+          integersOnly: parameter.integersOnly,
         }
       : {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.decodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.decodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          min: arg.min,
-          max: arg.max,
-          unit: arg.unit,
-          integersOnly: arg.integersOnly,
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
+          min: parameter.min,
+          max: parameter.max,
+          unit: parameter.unit,
+          integersOnly: parameter.integersOnly,
         }
   }
 }
@@ -102,24 +102,24 @@ export class NumberTargetParameter {
 export type TNumberTargetParameter = TBaseTargetParameter &
   (TNumberTargetParameterOptional | TNumberTargetParameterRequired) & {
     /**
-     * The argument's input type.
+     * The parameter's input type.
      * @note This will render as an input that only accepts numbers.
      */
     type: 'number'
     /**
-     * The minimum allowed value for the argument.
+     * The minimum allowed value for the parameter.
      */
     min?: number
     /**
-     * The maximum allowed value for the argument.
+     * The maximum allowed value for the parameter.
      */
     max?: number
     /**
-     * The unit of measurement for the argument.
+     * The unit of measurement for the parameter.
      */
     unit?: string
     /**
-     * Determines if only integers are allowed for the argument's value.
+     * Determines if only integers are allowed for the parameter's value.
      */
     integersOnly?: boolean
   }
@@ -151,24 +151,24 @@ type TNumberTargetParameterRequired = {
 export type TNumberTargetParameterJson = TBaseTargetParameterJson &
   (TNumberTargetParameterOptionalJson | TNumberTargetParameterRequiredJson) & {
     /**
-     * The argument's input type.
+     * The parameter's input type.
      * @note This will render as an input that only accepts numbers.
      */
     type: 'number'
     /**
-     * The minimum allowed value for the argument.
+     * The minimum allowed value for the parameter.
      */
     min?: number
     /**
-     * The maximum allowed value for the argument.
+     * The maximum allowed value for the parameter.
      */
     max?: number
     /**
-     * The unit of measurement for the argument.
+     * The unit of measurement for the parameter.
      */
     unit?: string
     /**
-     * Determines if only integers are allowed for the argument's value.
+     * Determines if only integers are allowed for the parameter's value.
      */
     integersOnly?: boolean
   }

@@ -6,7 +6,7 @@ import { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { MissionComponentIssueRegistry } from '@shared/missions/MissionComponentIssueRegistry'
 import { MissionResource } from '@shared/missions/MissionResource'
 import { MissionNode } from '@shared/missions/nodes/MissionNode'
-import type { TMissionComponentSerializedSelection } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter2'
+import type { TMissionComponentSerializedSelection } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import { BooleanToolbox } from '@shared/toolbox/booleans/BooleanToolbox'
 import {

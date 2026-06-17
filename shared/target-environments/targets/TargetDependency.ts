@@ -45,7 +45,8 @@ export const AVAILABLE_DEPENDENCIES_RAW = [
 ] as const
 
 /**
- * Represents a dependency that can be found within a target's arguments.
+ * Represents a dependency between target parameters — controls whether
+ * a parameter is displayed based on another parameter's argument value.
  */
 export class TargetDependency implements TDependency {
   // Inherited
@@ -73,7 +74,7 @@ export class TargetDependency implements TDependency {
   /**
    * Creates a new dependency.
    * @param name The name of the dependency.
-   * @param dependentId The ID of the dependent argument.
+   * @param dependentId The ID of the parameter whose argument value this dependency evaluates.
    * @param condition The condition function.
    * @param args The arguments for the condition.
    */
@@ -99,50 +100,50 @@ export class TargetDependency implements TDependency {
   }
 
   /**
-   * Checks if the value of the argument (*referenced by the argument's ID*) is truthy
+   * Checks if the argument value for the parameter identified by `dependentId` is truthy
    * (e.g. 1, 'a', true, etc.).
-   * @param dependentId The ID of the dependent argument.
-   * @returns A new dependency that checks if the value is truthy.
+   * @param dependentId The ID of the parameter to evaluate.
+   * @returns A new dependency that checks if the argument value is truthy.
    * @example TargetDependency.TRUTHY('dependentId')
    */
   public static TRUTHY = (dependentId: string) =>
     TargetDependency.SELECT('truthy', dependentId)
 
   /**
-   * Checks if the value of the argument (*referenced by the argument's ID*) is falsey
+   * Checks if the argument value for the parameter identified by `dependentId` is falsey
    * (e.g. null, undefined, 0, false, '', etc.).
-   * @param dependentId The ID of the dependent argument.
-   * @returns A new dependency that checks if the value is falsey.
+   * @param dependentId The ID of the parameter to evaluate.
+   * @returns A new dependency that checks if the argument value is falsey.
    * @example TargetDependency.FALSEY('dependentId')
    */
   public static FALSEY = (dependentId: string) =>
     TargetDependency.SELECT('falsey', dependentId)
 
   /**
-   * Checks if the value of the argument (*referenced by the argument's ID*) matches the provided regular expression.
-   * @param dependentId The ID of the dependent argument.
-   * @param regex The regular expression to match the argument's value against.
-   * @returns A new dependency that checks if the argument's value matches the provided regular expression.
+   * Checks if the argument value for the parameter identified by `dependentId` matches the provided regular expression.
+   * @param dependentId The ID of the parameter to evaluate.
+   * @param regex The regular expression to match the argument value against.
+   * @returns A new dependency that checks if the argument value matches the provided regular expression.
    * @example TargetDependency.REGEX('dependentId', /^[a-z]+$/)
    */
   public static REGEX = (dependentId: string, regex: RegExp) =>
     TargetDependency.SELECT('regex', dependentId, regex)
 
   /**
-   * Ensures the argument's (*referenced by the argument's ID*) value matches the expected value.
-   * @param dependentId The ID of the dependent argument.
+   * Ensures the argument value for the parameter identified by `dependentId` matches the expected value.
+   * @param dependentId The ID of the parameter to evaluate.
    * @param expected The expected value.
-   * @returns A new dependency that ensures the argument's value matches the expected value.
+   * @returns A new dependency that ensures the argument value matches the expected value.
    * @example TargetDependency.EQUALS('fruit', 'apple')
    */
   public static EQUALS = (dependentId: string, expected: TDependencyArg) =>
     TargetDependency.SELECT('equals', dependentId, expected)
 
   /**
-   * Ensures the argument's (*referenced by the argument's ID*) value(s) match at least one of the expected values.
-   * @param dependentId The ID of the dependent argument.
+   * Ensures the argument value for the parameter identified by `dependentId` matches at least one of the expected values.
+   * @param dependentId The ID of the parameter to evaluate.
    * @param expected The expected values.
-   * @returns A new dependency that ensures the argument's value(s) match at least one of the expected values.
+   * @returns A new dependency that ensures the argument value matches at least one of the expected values.
    * @example TargetDependency.EQUALS_SOME('fruit', ['apple', 'grape', 'banana', 'orange'])
    */
   public static EQUALS_SOME = (
@@ -151,10 +152,10 @@ export class TargetDependency implements TDependency {
   ) => TargetDependency.SELECT('equals-some', dependentId, expected)
 
   /**
-   * Ensures the argument's (*referenced by the argument's ID*) value doesn't match the unexpected value.
-   * @param dependentId The ID of the dependent argument.
+   * Ensures the argument value for the parameter identified by `dependentId` does not match the unexpected value.
+   * @param dependentId The ID of the parameter to evaluate.
    * @param unexpected The unexpected value.
-   * @returns A new dependency that ensures the argument's value doesn't match the unexpected value.
+   * @returns A new dependency that ensures the argument value does not match the unexpected value.
    * @example TargetDependency.NOT_EQUALS('fruit', ['apple', 'grape', 'banana', 'orange'])
    */
   public static NOT_EQUALS = (
@@ -163,10 +164,10 @@ export class TargetDependency implements TDependency {
   ) => TargetDependency.SELECT('not-equals', dependentId, unexpected)
 
   /**
-   * Ensures the argument's (*referenced by the argument's ID*) value(s) don't match at least one of the unexpected values.
-   * @param dependentId The ID of the dependent argument.
+   * Ensures the argument value for the parameter identified by `dependentId` does not match any of the unexpected values.
+   * @param dependentId The ID of the parameter to evaluate.
    * @param unexpected The unexpected values.
-   * @returns A new dependency that ensures the argument's value(s) don't match at least one of the unexpected values.
+   * @returns A new dependency that ensures the argument value does not match any of the unexpected values.
    * @example TargetDependency.NOT_EQUALS_SOME('fruit', ['apple', 'grape', 'banana', 'orange'])
    */
   public static NOT_EQUALS_SOME = (
@@ -175,11 +176,11 @@ export class TargetDependency implements TDependency {
   ) => TargetDependency.SELECT('not-equals-some', dependentId, unexpected)
 
   /**
-   * Checks if the value of the argument (*referenced by the argument's ID*) is
+   * Checks if the argument value for the parameter identified by `dependentId` is
    * an array with at least one element or a string with at least one non-whitespace
    * character.
-   * @param dependentId The ID of the dependent argument.
-   * @returns A new dependency that checks if the value is an array with at least one element.
+   * @param dependentId The ID of the parameter to evaluate.
+   * @returns A new dependency that checks if the argument value is non-empty.
    * @example TargetDependency.NOT_EMPTY('dependentId')
    */
   public static NOT_EMPTY = (dependentId: string) =>
@@ -242,7 +243,7 @@ export class TargetDependency implements TDependency {
   /**
    * Selects a dependency.
    * @param name The name of the dependency.
-   * @param dependentId The ID of the dependent argument.
+   * @param dependentId The ID of the parameter to evaluate.
    * @param args The arguments for the condition.
    * @returns The encoded dependency.
    */
@@ -302,7 +303,8 @@ export class TargetDependency implements TDependency {
 /* -- TYPES -- */
 
 /**
- * A dependency's argument.
+ * A value passed as an input to a dependency's condition function
+ * (e.g. the expected value in `EQUALS`, or a `RegExp` in `REGEX`).
  */
 export type TDependencyArg = string | number | boolean | RegExp
 
@@ -336,11 +338,12 @@ export type TDependencyBase = {
 }
 
 /**
- * Represents a dependency that can be found within a target's arguments.
+ * Represents a dependency between target parameters — controls whether
+ * a parameter is displayed based on another parameter's argument value.
  */
 export type TDependency = TDependencyBase & {
   /**
-   * The ID of the dependent argument.
+   * The ID of the parameter whose argument value this dependency evaluates.
    */
   dependentId: string
   /**

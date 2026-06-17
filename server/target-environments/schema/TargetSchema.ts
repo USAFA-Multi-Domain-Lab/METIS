@@ -1,4 +1,4 @@
-import type { TMissionComponentType } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter2'
+import type { TMissionComponentType } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
 import type { TTargetParameterJson } from '@shared/target-environments/parameters/TargetParameter'
 import type { TTargetJson } from '@shared/target-environments/targets/Target'
 import type {

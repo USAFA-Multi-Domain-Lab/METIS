@@ -15,10 +15,10 @@ import type {
 } from './LargeStringTargetParameter'
 import { LargeStringTargetParameter } from './LargeStringTargetParameter'
 import {
-  MissionComponentTargetParameter2,
-  type TMissionComponentTargetParameter2,
-  type TMissionComponentTargetParameterJson2,
-} from './mission-component/MissionComponentTargetParameter2'
+  MissionComponentTargetParameter,
+  type TMissionComponentTargetParameter,
+  type TMissionComponentTargetParameterJson,
+} from './mission-component/MissionComponentTargetParameter'
 import type {
   TNumberTargetParameter,
   TNumberTargetParameterJson,
@@ -48,7 +48,7 @@ export class TargetParameter {
   }
 
   /**
-   * Encodes the argument dependencies.
+   * Encodes the parameter dependencies.
    * @param dependencies The dependencies to encode.
    * @returns The encoded dependencies.
    */
@@ -68,20 +68,20 @@ export class TargetParameter {
   public static toJson = (
     parameters: TTargetParameter[],
   ): TTargetParameterJson[] => {
-    return parameters.map((arg: TTargetParameter) => {
-      switch (arg.type) {
+    return parameters.map((parameter: TTargetParameter) => {
+      switch (parameter.type) {
         case 'number':
-          return NumberTargetParameter.toJson(arg)
+          return NumberTargetParameter.toJson(parameter)
         case 'string':
-          return StringTargetParameter.toJson(arg)
+          return StringTargetParameter.toJson(parameter)
         case 'large-string':
-          return LargeStringTargetParameter.toJson(arg)
+          return LargeStringTargetParameter.toJson(parameter)
         case 'dropdown':
-          return DropdownTargetParameter.toJson(arg)
+          return DropdownTargetParameter.toJson(parameter)
         case 'boolean':
-          return BooleanTargetParameter.toJson(arg)
+          return BooleanTargetParameter.toJson(parameter)
         case 'mission-component':
-          return MissionComponentTargetParameter2.toJson(arg)
+          return MissionComponentTargetParameter.toJson(parameter)
       }
     })
   }
@@ -107,7 +107,7 @@ export class TargetParameter {
         case 'boolean':
           return BooleanTargetParameter.fromJson(parameter)
         case 'mission-component':
-          return MissionComponentTargetParameter2.fromJson(parameter)
+          return MissionComponentTargetParameter.fromJson(parameter)
       }
     })
   }
@@ -121,7 +121,7 @@ export type TSelectTargetParameter = {
   'large-string': TLargeStringTargetParameter
   'dropdown': TDropdownTargetParameter
   'boolean': TBooleanTargetParameter
-  'mission-component': TMissionComponentTargetParameter2
+  'mission-component': TMissionComponentTargetParameter
   'unknown': TTargetParameter
 }
 
@@ -136,7 +136,7 @@ export type TTargetParameter =
   | TLargeStringTargetParameter
   | TDropdownTargetParameter
   | TBooleanTargetParameter
-  | TMissionComponentTargetParameter2
+  | TMissionComponentTargetParameter
 
 /**
  * The parameters used for the target-effect interface and the target-effect API.
@@ -147,4 +147,4 @@ export type TTargetParameterJson =
   | TLargeStringTargetParameterJson
   | TDropdownTargetParameterJson
   | TBooleanTargetParameterJson
-  | TMissionComponentTargetParameterJson2
+  | TMissionComponentTargetParameterJson

@@ -2,49 +2,51 @@ import type { TBaseTargetParameter, TBaseTargetParameterJson } from '../types'
 import { TargetParameter } from './TargetParameter'
 
 /**
- * The dropdown argument type for a target.
+ * The dropdown parameter type for a target.
  */
 export class DropdownTargetParameter {
   /**
-   * Converts TDropdownArg to TDropdownArgJson.
-   * @param arg The dropdown argument to convert.
-   * @returns The dropdown argument as JSON.
+   * Converts TDropdownTargetParameter to TDropdownTargetParameterJson.
+   * @param parameter The dropdown parameter to convert.
+   * @returns The dropdown parameter as JSON.
    */
-  public static toJson = (arg: TDropdownTargetParameter): TDropdownTargetParameterJson => {
+  public static toJson = (
+    parameter: TDropdownTargetParameter,
+  ): TDropdownTargetParameterJson => {
     // Return the appropriate properties based on
-    // whether the argument is required or not.
-    return arg.required
+    // whether the parameter is required or not.
+    return parameter.required
       ? {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.encodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.encodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          default: DropdownTargetParameter.OPTION_TO_JSON(arg.default),
-          options: DropdownTargetParameter.OPTIONS_TO_JSON(arg.options),
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
+          default: DropdownTargetParameter.OPTION_TO_JSON(parameter.default),
+          options: DropdownTargetParameter.OPTIONS_TO_JSON(parameter.options),
         }
       : {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.encodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.encodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          options: DropdownTargetParameter.OPTIONS_TO_JSON(arg.options),
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
+          options: DropdownTargetParameter.OPTIONS_TO_JSON(parameter.options),
         }
   }
 
   /**
-   * Converts TDropdownArg options to TDropdownArgJson options.
-   * @param options The dropdown argument options to convert.
-   * @returns The dropdown argument options as JSON.
+   * Converts TDropdownTargetParameter options to TDropdownTargetParameterJson options.
+   * @param options The dropdown parameter options to convert.
+   * @returns The dropdown parameter options as JSON.
    */
   public static OPTIONS_TO_JSON<T extends TDropdownTargetParameterOptionVal>(
     options: TDropdownTargetParameterOption<T>[],
@@ -58,9 +60,9 @@ export class DropdownTargetParameter {
     })
   }
   /**
-   * Converts TDropdownArgOption to TDropdownTargetParameterOptionJson.
-   * @param option The dropdown argument option to convert.
-   * @returns The dropdown argument option as JSON.
+   * Converts TDropdownTargetParameterOption to TDropdownTargetParameterOptionJson.
+   * @param option The dropdown parameter option to convert.
+   * @returns The dropdown parameter option as JSON.
    */
   public static OPTION_TO_JSON<T extends TDropdownTargetParameterOptionVal>(
     option: TDropdownTargetParameterOption<T>,
@@ -73,44 +75,46 @@ export class DropdownTargetParameter {
   }
 
   /**
-   * Converts TDropdownArgJson to TDropdownTargetParameter.
-   * @param arg The dropdown argument as JSON to convert.
-   * @returns The dropdown argument.
+   * Converts TDropdownTargetParameterJson to TDropdownTargetParameter.
+   * @param parameter The dropdown parameter as JSON to convert.
+   * @returns The dropdown parameter.
    */
-  public static fromJson = (arg: TDropdownTargetParameterJson): TDropdownTargetParameter => {
+  public static fromJson = (
+    parameter: TDropdownTargetParameterJson,
+  ): TDropdownTargetParameter => {
     // Return the appropriate properties based on
-    // whether the argument is required or not.
-    return arg.required
+    // whether the parameter is required or not.
+    return parameter.required
       ? {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.decodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.decodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          default: DropdownTargetParameter.OPTION_FROM_JSON(arg.default),
-          options: DropdownTargetParameter.OPTIONS_FROM_JSON(arg.options),
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
+          default: DropdownTargetParameter.OPTION_FROM_JSON(parameter.default),
+          options: DropdownTargetParameter.OPTIONS_FROM_JSON(parameter.options),
         }
       : {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.decodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.decodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          options: DropdownTargetParameter.OPTIONS_FROM_JSON(arg.options),
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
+          options: DropdownTargetParameter.OPTIONS_FROM_JSON(parameter.options),
         }
   }
   /**
-   * Converts TDropdownArgJson options to TDropdownArg options.
-   * @param options The dropdown argument options as JSON to convert.
-   * @returns The dropdown argument options.
+   * Converts TDropdownTargetParameterJson options to TDropdownTargetParameter options.
+   * @param options The dropdown parameter options as JSON to convert.
+   * @returns The dropdown parameter options.
    */
   public static OPTIONS_FROM_JSON<T extends TDropdownTargetParameterOptionVal>(
     options: TDropdownTargetParameterOptionJson<T>[],
@@ -124,9 +128,9 @@ export class DropdownTargetParameter {
     })
   }
   /**
-   * Converts TDropdownTargetParameterOptionJson to TDropdownArgOption.
-   * @param option The dropdown argument option as JSON to convert.
-   * @returns The dropdown argument option.
+   * Converts TDropdownTargetParameterOptionJson to TDropdownTargetParameterOption.
+   * @param option The dropdown parameter option as JSON to convert.
+   * @returns The dropdown parameter option.
    */
   public static OPTION_FROM_JSON<T extends TDropdownTargetParameterOptionVal>(
     option: TDropdownTargetParameterOptionJson<T>,
@@ -138,7 +142,7 @@ export class DropdownTargetParameter {
     }
   }
   /**
-   * The dropdown argument option value types.
+   * The dropdown parameter option value types.
    */
   public static readonly OPTION_VALUE_TYPES = [
     'string',
@@ -152,12 +156,12 @@ export class DropdownTargetParameter {
 /* -- TYPES -- */
 
 /**
- * The dropdown argument type for a target.
+ * The dropdown parameter type for a target.
  */
 export type TDropdownTargetParameter = TBaseTargetParameter &
   (TDropdownTargetParameterOptional | TDropdownTargetParameterRequired) & {
     /**
-     * The argument's input type.
+     * The parameter's input type.
      * @note This will render as a dropdown box with
      * predefined options for the user to select from.
      * @note See example below as to how the data is built
@@ -169,10 +173,10 @@ export type TDropdownTargetParameter = TBaseTargetParameter &
      * // See below for how the data will be built for the target's script.
      *
      * {
-     *   _id: 'argument1',
-     *   name: 'Argument 1',
+     *   _id: 'parameter1',
+     *   name: 'Parameter 1',
      *   required: false,
-     *   groupingId: 'argument',
+     *   groupingId: 'parameter',
      *   type: 'dropdown',
      *   options: [
      *     {
@@ -192,53 +196,54 @@ export type TDropdownTargetParameter = TBaseTargetParameter &
      * // either 'Option 1' or 'Option 2'. If the user selects 'Option 1',
      * // the value in the effect's arguments will look like this:
      * {
-     *   argument1: 1,
+     *   parameter1: 1,
      * }
      *
      * // If the user selects 'Option 2', the value in the effect's arguments
      * // will look like this:
      * {
-     *   argument1: 2,
+     *   parameter1: 2,
      * }
      * ```
      */
     type: 'dropdown'
   }
 /**
- * The optional dropdown argument type for a target.
+ * The optional dropdown parameter type for a target.
  */
 type TDropdownTargetParameterOptional = {
   /**
-   * Determines whether the argument is required or not.
+   * Determines whether the parameter is required or not.
    */
   required: false
   /**
-   * The options for the argument.
+   * The options for the parameter.
    */
   options: TDropdownTargetParameterOption<TOptDropdownTargetParameterOptionVal>[]
 }
 /**
- * The required dropdown argument type for a target.
+ * The required dropdown parameter type for a target.
  */
 type TDropdownTargetParameterRequired = {
   /**
-   * Determines whether the argument is required or not.
+   * Determines whether the parameter is required or not.
    */
   required: true
   /**
-   * The options for the argument.
+   * The options for the parameter.
    */
   options: TDropdownTargetParameterOption<TReqDropdownTargetParameterOptionVal>[]
   /**
-   * The default value for the argument.
+   * The default value for the parameter.
    */
   default: TDropdownTargetParameterOption<TReqDropdownTargetParameterOptionVal>
 }
 /**
- * The dropdown argument option type for a target.
+ * The dropdown parameter option type for a target.
  */
 export type TDropdownTargetParameterOption<
-  Value extends TDropdownTargetParameterOptionVal = TDropdownTargetParameterOptionVal,
+  Value extends TDropdownTargetParameterOptionVal =
+    TDropdownTargetParameterOptionVal,
 > = {
   /**
    * The ID of the option.
@@ -262,10 +267,10 @@ export type TDropdownTargetParameterOption<
    * // See below for how the data will be built for the target's script.
    *
    * {
-   *   _id: 'argument1',
-   *   name: 'Argument 1',
+   *   _id: 'parameter1',
+   *   name: 'Parameter 1',
    *   required: false,
-   *   groupingId: 'argument',
+   *   groupingId: 'parameter',
    *   type: 'dropdown',
    *   options: [
    *     {
@@ -285,25 +290,28 @@ export type TDropdownTargetParameterOption<
    * // either 'Option 1' or 'Option 2'. If the user selects 'Option 1',
    * // the value in the effect's arguments will look like this:
    * {
-   *   argument1: 1,
+   *   parameter1: 1,
    * }
    *
    * // If the user selects 'Option 2', the value in the effect's arguments
    * // will look like this:
    * {
-   *   argument1: 2,
+   *   parameter1: 2,
    * }
    * ```
    */
   value: Value
 }
 /**
- * The dropdown argument type for a target.
+ * The dropdown parameter type for a target.
  */
 export type TDropdownTargetParameterJson = TBaseTargetParameterJson &
-  (TDropdownTargetParameterOptionalJson | TDropdownTargetParameterRequiredJson) & {
+  (
+    | TDropdownTargetParameterOptionalJson
+    | TDropdownTargetParameterRequiredJson
+  ) & {
     /**
-     * The argument's input type.
+     * The parameter's input type.
      * @note This will render as a dropdown box with
      * predefined options for the user to select from.
      * @note See example below as to how the data is built
@@ -315,10 +323,10 @@ export type TDropdownTargetParameterJson = TBaseTargetParameterJson &
      * // See below for how the data will be built for the target's script.
      *
      * {
-     *   _id: 'argument1',
-     *   name: 'Argument 1',
+     *   _id: 'parameter1',
+     *   name: 'Parameter 1',
      *   required: false,
-     *   groupingId: 'argument',
+     *   groupingId: 'parameter',
      *   type: 'dropdown',
      *   options: [
      *     {
@@ -338,53 +346,54 @@ export type TDropdownTargetParameterJson = TBaseTargetParameterJson &
      * // either 'Option 1' or 'Option 2'. If the user selects 'Option 1',
      * // the value in the effect's arguments will look like this:
      * {
-     *   argument1: 1,
+     *   parameter1: 1,
      * }
      *
      * // If the user selects 'Option 2', the value in the effect's arguments
      * // will look like this:
      * {
-     *   argument1: 2,
+     *   parameter1: 2,
      * }
      * ```
      */
     type: 'dropdown'
   }
 /**
- * The optional dropdown argument type for a target.
+ * The optional dropdown parameter type for a target.
  */
 type TDropdownTargetParameterOptionalJson = {
   /**
-   * Determines whether the argument is required or not.
+   * Determines whether the parameter is required or not.
    */
   required: false
   /**
-   * The options for the argument.
+   * The options for the parameter.
    */
   options: TDropdownTargetParameterOptionJson<TOptDropdownTargetParameterOptionVal>[]
 }
 /**
- * The required dropdown argument type for a target as JSON.
+ * The required dropdown parameter type for a target as JSON.
  */
 type TDropdownTargetParameterRequiredJson = {
   /**
-   * Determines whether the argument is required or not.
+   * Determines whether the parameter is required or not.
    */
   required: true
   /**
-   * The default value for the argument.
+   * The default value for the parameter.
    */
   default: TDropdownTargetParameterOptionJson<TReqDropdownTargetParameterOptionVal>
   /**
-   * The options for the argument.
+   * The options for the parameter.
    */
   options: TDropdownTargetParameterOptionJson<TReqDropdownTargetParameterOptionVal>[]
 }
 /**
- * The dropdown argument option type for a target.
+ * The dropdown parameter option type for a target.
  */
 export type TDropdownTargetParameterOptionJson<
-  Value extends TDropdownTargetParameterOptionVal = TDropdownTargetParameterOptionVal,
+  Value extends TDropdownTargetParameterOptionVal =
+    TDropdownTargetParameterOptionVal,
 > = {
   /**
    * The ID of the option.
@@ -408,10 +417,10 @@ export type TDropdownTargetParameterOptionJson<
    * // See below for how the data will be built for the target's script.
    *
    * {
-   *   _id: 'argument1',
-   *   name: 'Argument 1',
+   *   _id: 'parameter1',
+   *   name: 'Parameter 1',
    *   required: false,
-   *   groupingId: 'argument',
+   *   groupingId: 'parameter',
    *   type: 'dropdown',
    *   options: [
    *     {
@@ -431,13 +440,13 @@ export type TDropdownTargetParameterOptionJson<
    * // either 'Option 1' or 'Option 2'. If the user selects 'Option 1',
    * // the value in the effect's arguments will look like this:
    * {
-   *   argument1: 1,
+   *   parameter1: 1,
    * }
    *
    * // If the user selects 'Option 2', the value in the effect's arguments
    * // will look like this:
    * {
-   *   argument1: 2,
+   *   parameter1: 2,
    * }
    * ```
    */
@@ -445,12 +454,16 @@ export type TDropdownTargetParameterOptionJson<
 }
 
 /**
- * The option value types for a required dropdown argument.
+ * The option value types for a required dropdown parameter.
  */
-export type TReqDropdownTargetParameterOptionVal = string | number | boolean | object
+export type TReqDropdownTargetParameterOptionVal =
+  | string
+  | number
+  | boolean
+  | object
 
 /**
- * The option value types for an optional dropdown argument.
+ * The option value types for an optional dropdown parameter.
  */
 export type TOptDropdownTargetParameterOptionVal =
   | string
@@ -461,7 +474,7 @@ export type TOptDropdownTargetParameterOptionVal =
   | undefined
 
 /**
- * The option value types for a dropdown argument.
+ * The option value types for a dropdown parameter.
  */
 export type TDropdownTargetParameterOptionVal =
   | TReqDropdownTargetParameterOptionVal
