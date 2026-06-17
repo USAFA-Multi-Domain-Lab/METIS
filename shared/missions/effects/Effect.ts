@@ -131,6 +131,11 @@ export abstract class Effect<
   }
 
   // Implemented
+  public get source(): TSelectEffectContext<T>[TType]['host'] {
+    return this.host
+  }
+
+  // Implemented
   public get subComponents(): T['targetArgument'][] {
     return [...this.arguments]
   }

@@ -60,6 +60,11 @@ export abstract class MissionNode<
   }
 
   // Implemented
+  public get source(): TForce<T> {
+    return this.force
+  }
+
+  // Implemented
   public get subComponents(): Array<TNode<T> | T['action']> {
     return [...this.children, ...this.actions]
   }

@@ -41,6 +41,11 @@ export abstract class MissionPrototype<
   }
 
   // Implemented
+  public get source(): TMission<T> {
+    return this.mission
+  }
+
+  // Implemented
   public get subComponents(): TPrototype<T>[] {
     return this.children
   }

@@ -57,6 +57,7 @@ export default function DetailMultiSelect<TOption>(
     errorType: props.errorType ?? 'default',
     isExpanded: props.isExpanded ?? false,
     onPillClick: props.onPillClick ?? (() => {}),
+    getPillStyle: props.getPillStyle ?? (() => ({})),
     ref: props.ref ?? null,
   }
 
@@ -77,6 +78,7 @@ export default function DetailMultiSelect<TOption>(
     tooltipDescription,
     emptyText,
     onPillClick,
+    getPillStyle,
   } = defaultedProps
 
   /* -- STATE -- */
@@ -159,6 +161,7 @@ export default function DetailMultiSelect<TOption>(
         <div
           key={key}
           className='SelectedPill'
+          style={getPillStyle(selectedOption)}
           onClick={(event) => {
             event.stopPropagation()
             onPillClick(selectedOption)
@@ -167,7 +170,8 @@ export default function DetailMultiSelect<TOption>(
           <span className='PillText'>{displayText}</span>
           <button
             className='RemoveButton'
-            onClick={() => {
+            onClick={(event) => {
+              event.stopPropagation()
               onRemoveOption(selectedOption)
             }}
             disabled={disabled}
@@ -299,6 +303,11 @@ export type TDetailMultiSelect_P<TOption> = TDetailMultiSelectBase_P & {
    * @param option The option whose pill was clicked.
    */
   onPillClick?: (option: TOption) => void
+  /**
+   * @param option The option whose pill to style.
+   * @returns inline styles to apply to the pill element for a given option.
+   */
+  getPillStyle?: (option: TOption) => React.CSSProperties
   /**
    * An optional ref that exposes imperative controls for the multiselect,
    * such as programmatically expanding or collapsing the dropdown.

@@ -35,6 +35,11 @@ export abstract class MissionResource<
   }
 
   // Implemented
+  public get source(): TMission<T> {
+    return this.mission
+  }
+
+  // Implemented
   public get subComponents(): [] {
     return []
   }

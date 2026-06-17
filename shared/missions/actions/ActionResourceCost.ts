@@ -62,6 +62,11 @@ export abstract class ActionResourceCost<
   }
 
   // Implemented
+  public get source(): TAction<T> {
+    return this.action
+  }
+
+  // Implemented
   public get subComponents(): [] {
     return []
   }

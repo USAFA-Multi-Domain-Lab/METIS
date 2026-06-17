@@ -5,6 +5,10 @@
   .Field {
     padding: 0;
 
+    &:not(.Error):focus-within {
+      border-bottom: none;
+    }
+
     &.IsExpanded {
       .SelectedContainer .ExpandIndicator .Indicator {
         transform: scale(1, -0.75);

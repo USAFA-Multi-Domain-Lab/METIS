@@ -81,6 +81,11 @@ export abstract class MissionAction<
   }
 
   // Implemented
+  public get source(): TNode<T> {
+    return this.node
+  }
+
+  // Implemented
   public get subComponents(): T['executionTriggeredEffect'][] {
     return this.effects
   }

@@ -43,25 +43,42 @@
       }
     }
 
-    .ComponentItemContent {
-      display: grid;
-      grid-template-columns: 1em 1fr;
-      column-gap: 0.5em;
-      // padding-left: 0.333em;
+    .SelectedPill {
+      .PillText {
+        white-space: normal;
 
-      .Icon {
-        width: 1em;
-        background-size: contain;
-        background-position: center;
-        background-repeat: no-repeat;
-        opacity: 0.4;
-      }
+        .ComponentItemContent {
+          display: grid;
+          grid-template-columns: 1em 1fr;
+          grid-template-rows: auto auto;
+          column-gap: 0.75em;
 
-      .Name {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        min-width: 0;
+          .Icon {
+            grid-row: 1 / -1;
+            width: 1em;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.75;
+          }
+
+          .Name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
+          }
+
+          .SourceName {
+            font-size: 0.8em;
+            opacity: 0.5;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
+            line-height: 1.3;
+          }
+        }
       }
     }
   }

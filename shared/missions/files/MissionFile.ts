@@ -67,6 +67,11 @@ export abstract class MissionFile<
   }
 
   // Implemented
+  public get source(): T['mission'] {
+    return this.mission
+  }
+
+  // Implemented
   public get subComponents(): [] {
     return []
   }

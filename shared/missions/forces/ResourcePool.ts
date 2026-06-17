@@ -30,6 +30,11 @@ export abstract class ResourcePool<
   }
 
   // Implemented
+  public get source(): T['force'] {
+    return this.force
+  }
+
+  // Implemented
   public get subComponents(): [] {
     return []
   }

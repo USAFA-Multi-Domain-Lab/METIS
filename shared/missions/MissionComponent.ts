@@ -49,6 +49,16 @@ export abstract class MissionComponent<
   public abstract get subComponents(): MissionComponent<any, any>[]
 
   /**
+   * The source of the component, which is the component that directly
+   * contains it within its definition.
+   * @note This is different from  {@link superComponent} in that the source
+   * is the component that directly stores this component within its definition,
+   * while the super component is the component above this component in the
+   * mission hierarchy.
+   */
+  public abstract get source(): MissionComponent<any, any> | null
+
+  /**
    * The exact list where this component is stored within
    * the mission. This list must be the actual list, not a
    * copy. Otherwise, operations such as {@link delete} won't
@@ -113,6 +123,26 @@ export abstract class MissionComponent<
    */
   public delete(): void {
     this.deleted = true
+  }
+
+  /**
+   * @param componentType A subclass of {@link MissionComponent} to
+   * check for in the component's ancestry.
+   * @returns The first component that precedes this component in
+   * the mission hierarchy that is an instance of the provided type.
+   * @note This will return `undefined` if there is no such component.
+   * @note This essentially travels up via {@link superComponent} until
+   * it finds a component that is an instance of the provided type.
+   */
+  public getFirstSuperComponentOfType<T extends MissionComponent>(
+    componentType: Function & { prototype: T },
+  ): T | undefined {
+    let current: MissionComponent | null = this
+    while (current !== null) {
+      if (current instanceof componentType) return current as T
+      current = current.superComponent
+    }
+    return undefined
   }
 
   /**

@@ -138,7 +138,7 @@ export default function MissionComponentTargetDetail({
   /* -- RENDER -- */
 
   return (
-    <DetailMultiSelect<TMissionOutlineItem>
+    <DetailMultiSelect<(typeof value)[number]>
       ref={multiSelectRef}
       label={parameter.name}
       tooltipDescription={parameter.tooltipDescription}
@@ -149,16 +149,22 @@ export default function MissionComponentTargetDetail({
         multiSelectRef.current?.expand()
         outlineRef.current?.revealItem(item)
       }}
+      getPillStyle={(item) => {
+        let style: React.CSSProperties = {}
+        let force = item.getFirstSuperComponentOfType(ClientMissionForce)
+        let node = item.getFirstSuperComponentOfType(ClientMissionNode)
+        if (force) style.boxShadow = `inset 0 0 0 1000px ${force.color}19`
+        if (node) style.borderColor = `${node.color}aa`
+        return style
+      }}
       render={(item) => {
         return (
           <div className='ComponentItemContent'>
             <div className='Icon' style={computeOutlineIconStyling(item)}></div>
-            <div className='Name'>
-              {item.name}
-              <Tooltip
-                description={`${item.name}\n\t\n**Click to reveal in outline**`}
-              />
-            </div>
+            <div className='Name'>{item.name}</div>
+            <Tooltip
+              description={`${item.name}\n\t\n**Click to reveal in outline**`}
+            />
           </div>
         )
       }}

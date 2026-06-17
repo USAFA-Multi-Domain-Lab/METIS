@@ -119,6 +119,11 @@ export abstract class Mission<
   }
 
   // Implemented
+  public get source(): null {
+    return null
+  }
+
+  // Implemented
   public get subComponents(): Array<
     | T['prototype']
     | T['force']
