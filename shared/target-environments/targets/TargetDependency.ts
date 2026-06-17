@@ -264,11 +264,10 @@ export class TargetDependency implements TDependency {
 
   /**
    * JSON replacer for serializing dependencies, including `RegExp` values.
-   * @param key The JSON key being serialized.
    * @param value The value being serialized.
    * @returns The serialized value.
    */
-  private static JSON_REPLACER = (key: string, value: unknown) => {
+  private static JSON_REPLACER = (value: unknown) => {
     if (value instanceof RegExp) {
       return {
         type: 'regex',
@@ -282,11 +281,10 @@ export class TargetDependency implements TDependency {
 
   /**
    * JSON reviver for deserializing dependencies, including `RegExp` values.
-   * @param key The JSON key being deserialized.
    * @param value The value being deserialized.
    * @returns The deserialized value.
    */
-  private static JSON_REVIVER = (key: string, value: any) => {
+  private static JSON_REVIVER = (value: any) => {
     if (
       value &&
       typeof value === 'object' &&

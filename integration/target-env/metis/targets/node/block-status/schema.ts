@@ -53,7 +53,7 @@ const BlockStatus = TargetSchema.create({
           value: 'unblock',
         },
       ],
-      default: { _id: 'no-change', name: 'No Change', value: 'no-change' },
+      default: 'block',
     },
   ],
   migrations,

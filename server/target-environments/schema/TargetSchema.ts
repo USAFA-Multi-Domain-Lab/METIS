@@ -137,7 +137,9 @@ export class TargetSchema {
    * ```
    */
   public static create<const Params extends readonly TTargetParameterJson[]>(
-    options: TTypedTargetSchemaOptions<Params>,
+    options: TTypedTargetSchemaOptions<Params> & {
+      parameters: TValidateDropdownDefaults<NoInfer<Params>>
+    },
   ): TargetSchema {
     const { script: typedScript, parameters } = options
 
@@ -268,6 +270,30 @@ export type TTypedTargetScript<Params extends readonly TParamLike[]> = (
   context: TTargetScriptExposedContext,
   ...args: InferArgumentsTuple<Params>
 ) => Promise<void>
+
+/**
+ * For a required dropdown parameter, resolves to `{ default: Options[number]['_id'] }`
+ * so that intersecting it with the parameter type constrains `default` to only the
+ * `_id` values present in `options`. For all other parameter types resolves to
+ * `unknown`, which is the intersection identity and leaves the parameter type unchanged.
+ */
+type TDropdownDefaultConstraint<P> = P extends {
+  type: 'dropdown'
+  required: true
+  options: infer Options extends readonly { _id: string }[]
+}
+  ? { default: Options[number]['_id'] }
+  : unknown
+
+/**
+ * Maps over a parameter tuple and intersects each required-dropdown entry with
+ * {@link TDropdownDefaultConstraint}, producing a compile-time error when
+ * `default` is not one of the `_id` values declared in `options`.
+ * All other parameter types pass through unchanged.
+ */
+type TValidateDropdownDefaults<Params extends readonly unknown[]> = {
+  [K in keyof Params]: Params[K] & TDropdownDefaultConstraint<Params[K]>
+}
 
 /**
  * Options for {@link TargetSchema.create}.

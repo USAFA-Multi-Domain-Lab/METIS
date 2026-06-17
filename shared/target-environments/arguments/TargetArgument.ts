@@ -116,6 +116,13 @@ export abstract class TargetArgument<
     return this.effect.arguments
   }
 
+  // Implemented
+  public get source():
+    | T['executionTriggeredEffect']
+    | T['sessionTriggeredEffect'] {
+    return this.effect
+  }
+
   /**
    * The value supplied for the parameter.
    * The type of this field is determined by `P` — when `P` is a
@@ -244,7 +251,7 @@ export abstract class TargetArgument<
    * @param parameter The resolved target parameter for this argument, if found.
    */
   protected static applyDefault(
-    json: TTargetArgumentJson,
+    json: TTargetArgumentJson | TTargetArgumentContext<any>,
     parameter: TTargetParameter | undefined,
   ): void {
     if (!parameter || json.type !== parameter.type) return
@@ -273,12 +280,25 @@ export abstract class TargetArgument<
       }
       case 'dropdown': {
         parameter = parameter as TDropdownTargetParameter // Cast is safe due to type check at the top of the method.
+
+        // Abort if no default is needed.
         if (
-          parameter.required &&
-          (json.value === null || json.value === undefined)
+          !parameter.required ||
+          (json.value !== null && json.value !== undefined)
         ) {
-          json.value = parameter.default.value
+          return
         }
+
+        let defaultOptionId = parameter.default
+        let defaultOption = parameter.options.find(
+          (option) => option._id === defaultOptionId,
+        )
+
+        // Abort if no default is found.
+        if (!defaultOption) return
+
+        // Apply default.
+        json.value = defaultOption.value
         break
       }
     }

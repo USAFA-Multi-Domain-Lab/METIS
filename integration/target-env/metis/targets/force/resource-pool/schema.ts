@@ -34,7 +34,7 @@ const ResourcePool = TargetSchema.create({
       _id: 'operation',
       name: 'Operation',
       required: true,
-      default: { _id: 'award', name: 'Award', value: 'award' },
+      default: 'award',
       options: [
         {
           _id: 'award',

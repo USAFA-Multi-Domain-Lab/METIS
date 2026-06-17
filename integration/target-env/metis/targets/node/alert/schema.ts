@@ -85,7 +85,7 @@ const NodeAlert = TargetSchema.create({
         warningOption,
         dangerOption,
       ] as const,
-      default: warningOption,
+      default: 'warning',
       dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
     },
     {
