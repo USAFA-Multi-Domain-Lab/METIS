@@ -185,6 +185,12 @@ export default function DetailMultiSelect<TOption>(
 
   /* -- RENDER -- */
 
+  // Render the options as a JSX element rather than invoking `renderOptions()`
+  // directly, so it mounts as a child fiber of the provider below and can read
+  // the multiselect's local context. A direct call would execute its hooks in
+  // this component's fiber, above the provider, and fail to find the context.
+  const RenderOptions = renderOptions
+
   return (
     <LocalContextProvider
       context={multiselectContext}
@@ -213,7 +219,9 @@ export default function DetailMultiSelect<TOption>(
               <span className='Indicator'>▼</span>
             </div>
           </div>
-          <div className={allOptionsClasses.value}>{renderOptions()}</div>
+          <div className={allOptionsClasses.value}>
+            <RenderOptions />
+          </div>
         </div>
       </div>
     </LocalContextProvider>

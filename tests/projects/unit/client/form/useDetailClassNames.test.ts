@@ -1,4 +1,4 @@
-import { useDetailClassNames } from '@client/components/content/form/useDetailClassNames'
+import { useDetailClassNames } from '@client/components/content/form/hooks/useDetailClassNames'
 import { describe, expect, test } from '@jest/globals'
 
 describe('useDetailClassNames', () => {

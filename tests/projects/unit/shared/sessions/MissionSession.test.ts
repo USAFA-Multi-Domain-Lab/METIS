@@ -95,6 +95,10 @@ class TestMissionSession extends MissionSession {
     return []
   }
 
+  protected parseChatChannelData(): any[] {
+    return []
+  }
+
   protected mapActions(): void {}
 
   public toJson(): any {

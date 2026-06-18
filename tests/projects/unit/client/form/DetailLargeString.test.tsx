@@ -21,7 +21,7 @@ jest.mock(
   () => ({
     __esModule: true,
     default: ({ options }: { options?: any }) => {
-      const { className, content, onUpdate, onBlur } = options ?? {}
+      const { className, content, onUpdate, onFocus, onBlur } = options ?? {}
 
       const buildEditor = (value: string) => ({
         getHTML: () => value,
@@ -35,6 +35,11 @@ jest.mock(
           onChange={(event) => {
             if (onUpdate) {
               onUpdate({ editor: buildEditor(event.target.value) })
+            }
+          }}
+          onFocus={(event) => {
+            if (onFocus) {
+              onFocus({ editor: buildEditor(event.target.value) })
             }
           }}
           onBlur={(event) => {
@@ -57,7 +62,6 @@ describe('DetailLargeString', () => {
       let { container } = render(
         <DetailLargeString
           fieldType='required'
-          handleOnBlur='none'
           label='Test Label'
           value=''
           setValue={setValue}
@@ -73,7 +77,6 @@ describe('DetailLargeString', () => {
       let { container } = render(
         <DetailLargeString
           fieldType='required'
-          handleOnBlur='none'
           label='Test Label'
           value='<p>Existing content</p>'
           setValue={setValue}
@@ -92,7 +95,6 @@ describe('DetailLargeString', () => {
       let { container } = render(
         <DetailLargeString
           fieldType='required'
-          handleOnBlur='deliverError'
           label='Test Label'
           value=''
           setValue={() => {}}
@@ -104,17 +106,19 @@ describe('DetailLargeString', () => {
       expect(errorMessage).toHaveClass('Hidden')
     })
 
-    test('FieldErrorMessage is visible after blur on a required empty field with deliverError', () => {
+    test('FieldErrorMessage is visible after focusing then blurring a required empty field', () => {
       let { container } = render(
         <DetailLargeString
           fieldType='required'
-          handleOnBlur='deliverError'
           label='Test Label'
           value=''
           setValue={() => {}}
         />,
       )
       let textarea = container.querySelector('textarea') as HTMLTextAreaElement
+      // The blank-field error is only surfaced after the user has visited and
+      // left the field.
+      fireEvent.focus(textarea)
       fireEvent.blur(textarea)
       let errorMessage = container.querySelector(
         '.FieldErrorMessage',
@@ -122,11 +126,10 @@ describe('DetailLargeString', () => {
       expect(errorMessage).not.toHaveClass('Hidden')
     })
 
-    test('FieldErrorMessage remains hidden after blur when handleOnBlur is "none"', () => {
+    test('FieldErrorMessage remains hidden when the field is blurred without first being focused', () => {
       let { container } = render(
         <DetailLargeString
           fieldType='required'
-          handleOnBlur='none'
           label='Test Label'
           value=''
           setValue={() => {}}
@@ -140,11 +143,10 @@ describe('DetailLargeString', () => {
       expect(errorMessage).toHaveClass('Hidden')
     })
 
-    test('FieldErrorMessage is visible after blur when a custom errorMessage is provided with deliverError', () => {
+    test('FieldErrorMessage is visible when a custom errorMessage is provided', () => {
       let { container } = render(
         <DetailLargeString
           fieldType='required'
-          handleOnBlur='deliverError'
           label='Test Label'
           value='<p>Hello</p>'
           setValue={() => {}}
@@ -164,54 +166,45 @@ describe('DetailLargeString', () => {
   /* -- ON BLUR REPOPULATE -- */
 
   describe('onBlur repopulate behavior', () => {
-    test('Blurring an empty required field with repopulateValue calls setValue with the defaultValue', () => {
+    test('An empty required field repopulates with the defaultValue', () => {
       let setValue = jest.fn()
-      let { container } = render(
+      render(
         <DetailLargeString
           fieldType='required'
-          handleOnBlur='repopulateValue'
           label='Test Label'
           value=''
           setValue={setValue}
           defaultValue='<p>Default content</p>'
         />,
       )
-      let textarea = container.querySelector('textarea') as HTMLTextAreaElement
-      fireEvent.blur(textarea)
       expect(setValue).toHaveBeenCalledWith('<p>Default content</p>')
     })
 
-    test('Blurring an empty required field with repopulateValue and no defaultValue calls setValue with the placeholder', () => {
+    test('An empty required field with no defaultValue will get set to an empty string and will not repopulate with anything', () => {
       let setValue = jest.fn()
-      let { container } = render(
+      render(
         <DetailLargeString
           fieldType='required'
-          handleOnBlur='repopulateValue'
           label='Test Label'
           value=''
           setValue={setValue}
           placeholder='Enter your text here...'
         />,
       )
-      let textarea = container.querySelector('textarea') as HTMLTextAreaElement
-      fireEvent.blur(textarea)
-      expect(setValue).toHaveBeenCalledWith('Enter your text here...')
+      expect(setValue).toHaveBeenCalledWith('')
     })
 
-    test('Blurring a non-empty required field with repopulateValue does not repopulate', () => {
+    test('A non-empty required field does not repopulate', () => {
       let setValue = jest.fn()
-      let { container } = render(
+      render(
         <DetailLargeString
           fieldType='required'
-          handleOnBlur='repopulateValue'
           label='Test Label'
           value='<p>Existing value</p>'
           setValue={setValue}
           defaultValue='<p>Default content</p>'
         />,
       )
-      let textarea = container.querySelector('textarea') as HTMLTextAreaElement
-      fireEvent.blur(textarea)
       expect(setValue).not.toHaveBeenCalled()
     })
   })

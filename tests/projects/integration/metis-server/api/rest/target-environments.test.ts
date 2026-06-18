@@ -96,11 +96,13 @@ describe('/api/v1/target-environments', () => {
     expect(migrateResponse.data.result.version).toBe(
       effect.targetEnvironmentVersion,
     )
-    expect(migrateResponse.data.result.data).toMatchObject({
-      delayTimeHours: 0,
-      delayTimeMinutes: 0,
-      delayTimeSeconds: 1,
-    })
+    expect(migrateResponse.data.result.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ parameterId: 'delayTimeHours', value: 0 }),
+        expect.objectContaining({ parameterId: 'delayTimeMinutes', value: 0 }),
+        expect.objectContaining({ parameterId: 'delayTimeSeconds', value: 1 }),
+      ]),
+    )
   })
 
   test('Migrate effect args requires auth and validates payload', async () => {

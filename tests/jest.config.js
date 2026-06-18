@@ -361,6 +361,12 @@ export default {
           },
         ],
       },
+      // `@tiptap/markdown` pulls in `marked`, which ships only as ESM. By
+      // default Jest skips transforming anything under `node_modules`, so these
+      // packages must be explicitly allowed through the transform.
+      transformIgnorePatterns: [
+        'node_modules/(?!(.*/)?(marked|@tiptap|lowlight|devlop|fault|highlight\\.js)/)',
+      ],
     },
     {
       displayName: 'unit:integration',

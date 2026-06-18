@@ -654,16 +654,32 @@ describe('Action execution resource socket networking', () => {
                 order: 0,
                 name: 'Award Fuel Pool',
                 description: 'Awards fuel to the owning force.',
-                args: {
-                  operation: 'award',
-                  amount: RESOURCE_POOL_AWARD_AMOUNT,
-                  poolMetadata: {
-                    forceKey: force.localKey,
-                    forceName: force.name,
-                    poolKey: fuelResourcePool.localKey,
-                    poolName: targetResource.name,
+                arguments: [
+                  {
+                    _id: TestToolbox.generateRandomId(),
+                    parameterId: 'applyTo',
+                    type: 'mission-component',
+                    value: [
+                      {
+                        componentType: 'resourcePool',
+                        lastKnownName: targetResource.name,
+                        ids: [force._id, fuelResourcePool._id],
+                      },
+                    ],
                   },
-                },
+                  {
+                    _id: TestToolbox.generateRandomId(),
+                    parameterId: 'operation',
+                    type: 'dropdown',
+                    value: 'award',
+                  },
+                  {
+                    _id: TestToolbox.generateRandomId(),
+                    parameterId: 'amount',
+                    type: 'number',
+                    value: RESOURCE_POOL_AWARD_AMOUNT,
+                  },
+                ],
                 localKey: '1',
               },
             ],

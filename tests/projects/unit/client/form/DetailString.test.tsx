@@ -11,7 +11,6 @@ describe('DetailString', () => {
       let { container } = render(
         <DetailString
           fieldType='required'
-          handleOnBlur='none'
           label='Test Label'
           value=''
           setValue={setValue}
@@ -23,20 +22,22 @@ describe('DetailString', () => {
     })
   })
 
-  /* -- HANDLE ON BLUR BEHAVIOR -- */
+  /* -- BLUR, ERROR, AND DEFAULT-VALUE BEHAVIOR -- */
 
-  describe('handleOnBlur behavior', () => {
-    test('Blurring an empty required field with "deliverError" shows the error message', () => {
+  describe('Blur, error, and default-value behavior', () => {
+    test('Focusing then blurring an empty required field shows the error message', () => {
       let { container } = render(
         <DetailString
           fieldType='required'
-          handleOnBlur='deliverError'
           label='Test Label'
           value=''
           setValue={() => {}}
         />,
       )
       let input = container.querySelector('input') as HTMLElement
+      // The error is only surfaced after the user has visited and left the
+      // field, so it must be focused before being blurred.
+      fireEvent.focus(input)
       fireEvent.blur(input)
       let fieldError = container.querySelector(
         '.FieldErrorMessage',
@@ -44,17 +45,17 @@ describe('DetailString', () => {
       expect(fieldError).not.toHaveClass('Hidden')
     })
 
-    test('Blurring a non-empty required field with "deliverError" does not show the error message', () => {
+    test('Focusing then blurring a non-empty required field does not show the error message', () => {
       let { container } = render(
         <DetailString
           fieldType='required'
-          handleOnBlur='deliverError'
           label='Test Label'
           value='Some value'
           setValue={() => {}}
         />,
       )
       let input = container.querySelector('input') as HTMLElement
+      fireEvent.focus(input)
       fireEvent.blur(input)
       let fieldError = container.querySelector(
         '.FieldErrorMessage',
@@ -62,12 +63,25 @@ describe('DetailString', () => {
       expect(fieldError).toHaveClass('Hidden')
     })
 
-    test('Blurring an empty required field with "repopulateValue" calls setValue with the defaultValue', () => {
+    test('An empty required field repopulates with the defaultValue', () => {
+      let setValue = jest.fn()
+      render(
+        <DetailString
+          fieldType='required'
+          label='Test Label'
+          value=''
+          setValue={setValue}
+          defaultValue='fallback'
+        />,
+      )
+      expect(setValue).toHaveBeenCalledWith('fallback')
+    })
+
+    test('An empty optional field is not repopulated', () => {
       let setValue = jest.fn()
       let { container } = render(
         <DetailString
-          fieldType='required'
-          handleOnBlur='repopulateValue'
+          fieldType='optional'
           label='Test Label'
           value=''
           setValue={setValue}
@@ -75,22 +89,7 @@ describe('DetailString', () => {
         />,
       )
       let input = container.querySelector('input') as HTMLElement
-      fireEvent.blur(input)
-      expect(setValue).toHaveBeenCalledWith('fallback')
-    })
-
-    test('Blurring a field with "none" does not call setValue', () => {
-      let setValue = jest.fn()
-      let { container } = render(
-        <DetailString
-          fieldType='required'
-          handleOnBlur='none'
-          label='Test Label'
-          value=''
-          setValue={setValue}
-        />,
-      )
-      let input = container.querySelector('input') as HTMLElement
+      fireEvent.focus(input)
       fireEvent.blur(input)
       expect(setValue).not.toHaveBeenCalled()
     })
@@ -103,7 +102,6 @@ describe('DetailString', () => {
       let { container } = render(
         <DetailString
           fieldType='required'
-          handleOnBlur='none'
           label='Test Label'
           value=''
           setValue={() => {}}
@@ -125,7 +123,6 @@ describe('DetailString', () => {
       let { container } = render(
         <DetailString
           fieldType='required'
-          handleOnBlur='none'
           label='Test Label'
           value=''
           setValue={() => {}}
@@ -147,7 +144,6 @@ describe('DetailString', () => {
       let { container } = render(
         <DetailString
           fieldType='required'
-          handleOnBlur='none'
           label='Test Label'
           value=''
           setValue={() => {}}
@@ -170,7 +166,6 @@ describe('DetailString', () => {
       let { getByText } = render(
         <DetailString
           fieldType='required'
-          handleOnBlur='none'
           label='Test Label'
           value='Hello'
           setValue={() => {}}
@@ -184,7 +179,6 @@ describe('DetailString', () => {
       let { queryByText } = render(
         <DetailString
           fieldType='required'
-          handleOnBlur='none'
           label='Test Label'
           value='Hello'
           setValue={() => {}}

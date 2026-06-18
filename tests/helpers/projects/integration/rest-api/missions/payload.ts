@@ -149,11 +149,26 @@ function createMissionEffect(
     order: Number(localKey) - 1,
     name: `Session Effect ${localKey}`,
     description: `Session effect ${localKey}`,
-    args: {
-      delayTimeHours: 0,
-      delayTimeMinutes: 0,
-      delayTimeSeconds: 1,
-    },
+    arguments: [
+      {
+        _id: TestToolbox.generateRandomId(),
+        parameterId: 'delayTimeHours',
+        type: 'number',
+        value: 0,
+      },
+      {
+        _id: TestToolbox.generateRandomId(),
+        parameterId: 'delayTimeMinutes',
+        type: 'number',
+        value: 0,
+      },
+      {
+        _id: TestToolbox.generateRandomId(),
+        parameterId: 'delayTimeSeconds',
+        type: 'number',
+        value: 1,
+      },
+    ],
     localKey,
   }
 }
@@ -282,11 +297,26 @@ function createActionEffect(
     order: Number(localKey) - 1,
     name: `Execution Effect ${localKey}`,
     description: `Execution effect ${localKey}`,
-    args: {
-      delayTimeHours: 0,
-      delayTimeMinutes: 0,
-      delayTimeSeconds: 1,
-    },
+    arguments: [
+      {
+        _id: TestToolbox.generateRandomId(),
+        parameterId: 'delayTimeHours',
+        type: 'number',
+        value: 0,
+      },
+      {
+        _id: TestToolbox.generateRandomId(),
+        parameterId: 'delayTimeMinutes',
+        type: 'number',
+        value: 0,
+      },
+      {
+        _id: TestToolbox.generateRandomId(),
+        parameterId: 'delayTimeSeconds',
+        type: 'number',
+        value: 1,
+      },
+    ],
     localKey,
   }
 }
