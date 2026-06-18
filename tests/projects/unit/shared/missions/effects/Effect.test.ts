@@ -73,6 +73,42 @@ describe('Effect issues', () => {
     )
   })
 
+  test('reports a legacy-infer issue when the effect relies on legacy environment inference', async () => {
+    // The effect predates environment-id tracking: its environment id is the
+    // legacy sentinel, but its target is still inferable from the registry.
+    let environment = new TestTargetEnvironment(
+      'env-1',
+      'Env 1',
+      'Test env',
+      '1.0.0',
+      [],
+    )
+    let target = new TestTarget(
+      'target-1',
+      'Target 1',
+      'Test target',
+      [],
+      environment,
+      [],
+    )
+    environment.targets = [target]
+
+    let effect = new TestEffect(new TestMission(), {
+      _id: 'effect-1',
+      name: 'Effect 1',
+      targetId: 'target-1',
+      environmentId: Effect.LEGACY_INFER_ENV_ID,
+      targetEnvironmentVersion: '1.0.0',
+      arguments: [],
+    })
+
+    await flushIssues()
+
+    expect(effect.issues.map((issue) => issue.key)).toContain(
+      Effect.ISSUE_KEY_LEGACY_INFER,
+    )
+  })
+
   test('flags an outdated effect when its version precedes the latest migratable version', async () => {
     let environment = new TestTargetEnvironment(
       'env-1',
