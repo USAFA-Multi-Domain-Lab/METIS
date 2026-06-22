@@ -66,6 +66,7 @@ export default function RichText(props: TRichText_P): TReactElement | null {
     className,
     editorRef,
     onUpdate,
+    onFocus,
     onBlur,
     bubbleMenuAnchor,
   } = options ?? {}
@@ -544,11 +545,16 @@ export default function RichText(props: TRichText_P): TReactElement | null {
    * Handles all keyboard shortcuts for the editor and toolbar.
    */
   const handleKeyDownCapture = (event: React.KeyboardEvent) => {
-    const mod = event.metaKey || event.ctrlKey
+    const modified = event.metaKey || event.ctrlKey
 
     // Enter triggers the bubble menu to appear automatically.
     // @see - Editor.onUpdate()
-    if (event.key === 'Enter' && !mod && !event.shiftKey && !event.altKey) {
+    if (
+      event.key === 'Enter' &&
+      !modified &&
+      !event.shiftKey &&
+      !event.altKey
+    ) {
       isCursorOnNewLine.current = true
     }
 
@@ -579,44 +585,44 @@ export default function RichText(props: TRichText_P): TReactElement | null {
     }
 
     // Cmd/Ctrl+K — toggle link.
-    if (mod && !event.shiftKey && event.key === 'k') {
+    if (modified && !event.shiftKey && event.key === 'k') {
       event.preventDefault()
       toggleLink(editor)
     }
 
     // Cmd/Ctrl+Shift+0 — clear all formatting.
-    if (mod && event.shiftKey && event.key === '0') {
+    if (modified && event.shiftKey && event.key === '0') {
       event.preventDefault()
       editor.commands.unsetAllMarks()
       editor.commands.clearNodes()
     }
 
     // Cmd/Ctrl+Shift+C — cycle font color and open the bubble menu + color picker.
-    if (mod && event.shiftKey && event.key === 'c') {
+    if (modified && event.shiftKey && event.key === 'c') {
       event.preventDefault()
       cycleColor()
     }
 
     // Cmd/Ctrl+Shift+H — cycle heading level and open the bubble menu + heading picker.
-    if (mod && event.shiftKey && event.key === 'h') {
+    if (modified && event.shiftKey && event.key === 'h') {
       event.preventDefault()
       cycleHeading()
     }
 
     // Cmd/Ctrl+Shift+A — cycle text alignment and open the bubble menu + align picker.
-    if (mod && event.shiftKey && event.key === 'a') {
+    if (modified && event.shiftKey && event.key === 'a') {
       event.preventDefault()
       cycleAlign()
     }
 
     // Cmd/Ctrl+Shift+P — cycle line spacing and open the bubble menu + line spacing picker.
-    if (mod && event.shiftKey && event.key === 'p') {
+    if (modified && event.shiftKey && event.key === 'p') {
       event.preventDefault()
       cycleLineSpacing()
     }
 
     // Cmd/Ctrl+Shift+M — toggle the bubble menu pinned open at the cursor.
-    if (mod && event.shiftKey && event.key === 'm') {
+    if (modified && event.shiftKey && event.key === 'm') {
       event.preventDefault()
       if (isBubbleMenuForcedOpen) closeAllSubPanels()
       setIsBubbleMenuForcedOpen((prev) => !prev)
@@ -663,11 +669,14 @@ export default function RichText(props: TRichText_P): TReactElement | null {
     // the native DOM range rect. This gives a bounding box that spans the full
     // highlighted text so Floating UI can center the menu over the selection.
     if (from !== to) {
-      const sel = window.getSelection()
-      const rect = sel && sel.rangeCount > 0 ? sel.getRangeAt(0).getBoundingClientRect() : null
-      if (rect && rect.width > 0) {
-        left = rect.left
-        width = rect.width
+      const selection = window.getSelection()
+      const boundingBox =
+        selection && selection.rangeCount > 0
+          ? selection.getRangeAt(0).getBoundingClientRect()
+          : null
+      if (boundingBox && boundingBox.width > 0) {
+        left = boundingBox.left
+        width = boundingBox.width
       }
     }
 
@@ -695,8 +704,8 @@ export default function RichText(props: TRichText_P): TReactElement | null {
     {
       content,
       editable,
-      onCreate: ({ editor: e }) => {
-        if (editorRef) editorRef.current = e
+      onCreate: ({ editor: newEditor }) => {
+        if (editorRef) editorRef.current = newEditor
       },
       onUpdate: (updateProps) => {
         // When the user presses Enter, force the bubble menu open on the
@@ -707,6 +716,9 @@ export default function RichText(props: TRichText_P): TReactElement | null {
         }
         updateButtonClassNames()
         onUpdate?.(updateProps)
+      },
+      onFocus: (editorFocusProps) => {
+        onFocus?.(editorFocusProps)
       },
       onBlur: (editorBlurProps) => {
         closeAllSubPanels()
@@ -911,6 +923,11 @@ type TRichTextOptions = {
    * @note Equivalent to the `onChange` event for a text input.
    */
   onUpdate?: (props: EditorEvents['update']) => void
+  /**
+   * The event handler for the focus event.
+   * @note Equivalent to the `onFocus` event for a text input.
+   */
+  onFocus?: (props: EditorEvents['focus']) => void
   /**
    * The event handler for the blur event.
    * @note Equivalent to the `onBlur` event for a text input.

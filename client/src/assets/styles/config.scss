@@ -26,6 +26,7 @@ $color-neutral-light: color.adjust($color-neutral, $lightness: 26%);
 $color-neutral-dark: color.adjust($color-neutral, $lightness: -47%);
 
 $color-warning: #ffa200;
+$color-warning-light: color.adjust($color-warning, $lightness: 26%);
 
 $color-faded: rgba($color-primary-light, 0.5);
 
@@ -36,14 +37,15 @@ $font-family-primary: monospace, sans-serif;
 /* -- POSITIONING -- */
 
 // z-index | mission map
-$z-map-tab-bar-controls: 1;
-$z-map-pan-ctrl-inactive: 2;
-$z-map-scene: 3;
-$z-map-toasts: 4;
-$z-map-hud: 5;
-$z-map-pan-ctrl-active: 6;
-$z-map-overlay: 7;
-$z-map-modals: 8;
+$z-index-update-component: 1;
+$z-map-tab-bar-controls: 2;
+$z-map-pan-ctrl-inactive: 3;
+$z-map-scene: 4;
+$z-map-toasts: 5;
+$z-map-hud: 6;
+$z-map-pan-ctrl-active: 7;
+$z-map-overlay: 8;
+$z-map-modals: 9;
 
 $z-index-pending-modal: 45;
 $z-index-navigation: 50;

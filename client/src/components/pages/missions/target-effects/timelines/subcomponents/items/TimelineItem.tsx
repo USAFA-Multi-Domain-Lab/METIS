@@ -49,8 +49,7 @@ export function TimelineItem<TType extends TEffectType>({
   const { isAuthorized } = useRequireLogin()
   const globalContext = useGlobalContext()
   const pageContext = useMissionPageContext()
-  const { state: pageState, viewMode } = pageContext
-  const [missionIssues] = pageState.issues
+  const { viewMode } = pageContext
   const { showButtonMenu } = globalContext.actions
   const timelineContext = useTimelineContext<TType>()
   const { host, state, elements } = timelineContext
@@ -126,16 +125,8 @@ export function TimelineItem<TType extends TEffectType>({
 
   /**
    * The issues applicable to the given item.
-   * @note This could be easily accessed via item.issues.
-   * However, that has performance implications as it
-   * creates a new array each time it is accessed via
-   * a potentially expensive algorithm.
    */
-  const issues = compute(() => {
-    return missionIssues.filter((issue) => {
-      return issue.component._id === item._id
-    })
-  })
+  const issues = item.issues
 
   /**
    * Whether or not this item has issues.

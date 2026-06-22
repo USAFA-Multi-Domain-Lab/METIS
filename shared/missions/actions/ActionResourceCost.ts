@@ -4,10 +4,7 @@ import {
 } from '@shared/toolbox/serialization/json'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { Mission, type TMission } from '../Mission'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from '../MissionComponent'
+import { MissionComponent } from '../MissionComponent'
 import type {
   TAction,
   TActionJsonOptions,
@@ -29,6 +26,11 @@ export abstract class ActionResourceCost<
    * cost is charged to a pool.
    */
   public readonly action: TAction<T>
+
+  // Overridden
+  public override get usesSubentry(): boolean {
+    return true
+  }
 
   // Implemented
   public get mission(): TMission<T> {
@@ -55,13 +57,28 @@ export abstract class ActionResourceCost<
   }
 
   // Implemented
-  public get name(): string {
-    return this.resource.name
+  public get superComponent(): TAction<T> {
+    return this.action
   }
 
   // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
+  public get source(): TAction<T> {
+    return this.action
+  }
+
+  // Implemented
+  public get subComponents(): [] {
     return []
+  }
+
+  // Implemented
+  public get sourceList(): T['resourceCost'][] {
+    return this.action.resourceCosts
+  }
+
+  // Implemented
+  public get name(): string {
+    return this.resource.name
   }
 
   /**

@@ -154,7 +154,9 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
           if (!(error instanceof Error)) {
             error = new Error(StringToolbox.limit(`${error}`, 128))
           }
-          results.push(EnvScriptResults.failure(hook.environment, error, source))
+          results.push(
+            EnvScriptResults.failure(hook.environment, error, source),
+          )
           errorOccurred = true
         }
       }

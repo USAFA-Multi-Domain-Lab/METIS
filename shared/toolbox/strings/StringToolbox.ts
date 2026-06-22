@@ -155,4 +155,52 @@ export class StringToolbox {
     if (value > 0) return `+${value}`
     else return `${value}`
   }
+
+  /**
+   * Returns the singular or plural form of a word based on a count.
+   * @param count The number determining which form to use.
+   * @param singular The singular form of the word.
+   * @param plural The plural form. Defaults to `singular + "s"`.
+   * @example
+   * StringToolbox.pluralize(1, 'item')           // 'item'
+   * StringToolbox.pluralize(2, 'item')           // 'items'
+   * StringToolbox.pluralize(2, 'child', 'children') // 'children'
+   */
+  public static pluralize(
+    count: number,
+    singular: string,
+    plural = `${singular}s`,
+  ): string {
+    return count === 1 ? singular : plural
+  }
+
+  /** Returns `"s"` or `""` based on count — for inline template literals.
+   * @example `${count} item${StringToolbox.s(count)}`
+   */
+  public static s(count: number): string {
+    return count === 1 ? '' : 's'
+  }
+
+  /**
+   * @param value The value to check.
+   * @returns If the value is either `null`, `undefined`, or `''` after trimming.
+   */
+  public static isEmpty(value: string | null | undefined): boolean {
+    return value === null || value === undefined || value.trim() === ''
+  }
+
+  /**
+   * @param value The value to check.
+   * @returns True if the value is not `null`, `undefined`, or `''` after trimming.
+   */
+  public static isFilled(value: string | null | undefined): boolean {
+    return !StringToolbox.isEmpty(value)
+  }
+}
+
+/** Returns `"s"` or `""` based on count — for inline template literals.
+ * @example `${count} item${s(count)}`
+ */
+export function s(count: number): string {
+  return StringToolbox.s(count)
 }

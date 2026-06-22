@@ -2,8 +2,10 @@ import { DetailDropdown } from '@client/components/content/form/dropdowns/standa
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import useEffectItemButtonCallbacks from '@client/components/pages/missions/hooks/mission-components/effects'
+import EffectUpdateControl from '@client/components/pages/missions/issues/EffectUpdateControl'
 import type { TMetisClientComponents } from '@client/index'
 import { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { compute } from '@client/toolbox'
 import { useObjectFormSync } from '@client/toolbox/hooks'
 import type {
   TEffectType,
@@ -13,7 +15,7 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { DetailLocked } from '../../../../content/form/DetailLocked'
 import { DetailString } from '../../../../content/form/DetailString'
-import TargetArgumentsEntry from '../../target-effects/arguments/TargetArgumentsSubentry'
+import TargetArgumentsEntry from '../../target-effects/arguments/TargetArgumentsSubentries'
 import Entry from '../Entry'
 
 /**
@@ -24,6 +26,7 @@ export default function EffectEntry<TType extends TEffectType>({
   effect: { target, environment },
 }: TEffectEntry_P<TType>): TReactElement | null {
   /* -- STATE -- */
+
   const { onChange, viewMode } = useMissionPageContext()
   const { onDuplicateRequest, onDeleteRequest } = useEffectItemButtonCallbacks(
     effect.host,
@@ -58,13 +61,43 @@ export default function EffectEntry<TType extends TEffectType>({
     ],
   })
 
+  /* -- COMPUTED -- */
+
+  let missingTargetIssueMessage = effect.getIssueMessage(
+    ClientEffect.ISSUE_KEY_MISSING_TARGET,
+  )
+  let legacyInferIssueMessage = effect.getIssueMessage(
+    ClientEffect.ISSUE_KEY_LEGACY_INFER,
+  )
+  let hasMissingTargetIssue = Boolean(missingTargetIssueMessage)
+  let hasLegacyInferIssue = Boolean(legacyInferIssueMessage)
+  let targetEnvironmentErrorMessage =
+    missingTargetIssueMessage || legacyInferIssueMessage
+  let targetEnvironmentName = compute<string>(() => {
+    if (hasMissingTargetIssue || hasLegacyInferIssue) {
+      return 'Environment not found.'
+    } else if (environment) {
+      return environment.name
+    } else {
+      return 'No target environment selected.'
+    }
+  })
+  let targetName = compute<string>(() => {
+    if (hasMissingTargetIssue || hasLegacyInferIssue) {
+      return 'Target not found.'
+    } else if (target) {
+      return target.name
+    } else {
+      return 'No target selected.'
+    }
+  })
   /* -- RENDER -- */
 
   return (
     <Entry missionComponent={effect} svgEngines={[svgEngine]}>
+      <EffectUpdateControl scope={'focused'} effect={effect} />
       <DetailString
         fieldType='required'
-        handleOnBlur='repopulateValue'
         label='Name'
         value={name}
         setValue={setName}
@@ -90,7 +123,6 @@ export default function EffectEntry<TType extends TEffectType>({
       />
       <DetailLargeString
         fieldType='optional'
-        handleOnBlur='none'
         label='Description'
         value={description}
         setValue={setDescription}
@@ -99,13 +131,17 @@ export default function EffectEntry<TType extends TEffectType>({
       />
       <DetailLocked
         label='Target Environment'
-        value={environment?.name ?? 'No target environment selected.'}
+        value={targetEnvironmentName}
         disabled={viewMode === 'preview'}
+        errorType={'warning'}
+        errorMessage={targetEnvironmentErrorMessage}
       />
       <DetailLocked
         label='Target'
-        value={target?.name ?? 'No target selected.'}
+        value={targetName}
         disabled={viewMode === 'preview'}
+        errorType={'warning'}
+        errorMessage={targetEnvironmentErrorMessage}
       />
       <TargetArgumentsEntry
         effect={effect}

@@ -1,4 +1,5 @@
 @use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
 
 .Issues {
   display: flex;
@@ -13,6 +14,9 @@
     overflow: hidden;
 
     .IssueListHeader {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      column-gap: 0.5em;
       padding: 1em;
 
       h3 {
@@ -42,6 +46,11 @@
           }
         }
       }
+
+      .UpdateComponent {
+        grid-column: span 2;
+        margin: 1em 0 0;
+      }
     }
 
     .IssueListItems {
@@ -49,14 +58,81 @@
       overflow-y: auto;
       padding: 0.5em;
 
+      .IssueGroup {
+        .IssueGroupHeader {
+          display: flex;
+          align-items: center;
+          gap: 0.333em;
+          padding: 0.5em;
+          border-radius: 4px;
+          cursor: pointer;
+          user-select: none;
+          font-size: 0.75rem;
+
+          &:hover {
+            @include background-mask($opacity: 0.05);
+          }
+
+          .Indicator {
+            flex-shrink: 0;
+            width: 1.8em;
+            height: 1.8em;
+            background-image: url('../../../../assets/images/icons/indicator.svg');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: transform 0.15s ease;
+
+            &.isCollapsed {
+              transform: rotate(-90deg);
+            }
+          }
+
+          .IssueGroupIcon {
+            flex-shrink: 0;
+            width: 1em;
+            height: 1.8em;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.4;
+          }
+
+          .IssueGroupName {
+            font-weight: 600;
+            line-height: 1.8em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .IssueGroupBadge {
+            margin-left: auto;
+            background-color: rgba($color-neutral, 0.5);
+            color: $color-primary;
+            border-radius: 10px;
+            padding: 0.1em 0.45em;
+            font-size: 0.75em;
+            font-weight: 700;
+            min-width: 1.4em;
+            text-align: center;
+            line-height: 1.4;
+          }
+        }
+
+        .IssueGroupItems {
+          padding-left: 1em;
+        }
+      }
+
       .IssueItem {
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 0.5em;
-        margin-bottom: 0.5em;
+        gap: 0.333em;
         border-radius: 4px;
-        padding: 0.75em;
+        padding: 0.25em 0.85em;
+        font-size: 0.75rem;
         transition: all 0.15s ease;
 
         &:last-child {
@@ -69,15 +145,22 @@
           opacity: 0.5;
         }
 
+        .ButtonSvg {
+          pointer-events: none;
+          font-size: 1.6em;
+        }
+
         .IssueMessage {
           flex: 1;
-          font-size: 0.9em;
-          line-height: 1.4;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
           position: relative;
+          font-style: italic;
+        }
 
-          &:hover {
-            color: $color-accent;
-          }
+        &:hover {
+          @include background-mask($opacity: 0.05);
         }
       }
 

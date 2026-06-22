@@ -1,9 +1,6 @@
 import { StringToolbox } from '../../toolbox/strings/StringToolbox'
 import type { TMission } from '../Mission'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from '../MissionComponent'
+import { MissionComponent } from '../MissionComponent'
 
 /**
  * This represents a prototype for a mission node displayed
@@ -35,8 +32,27 @@ export abstract class MissionPrototype<
   }
 
   // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
-    return []
+  public get superComponent(): TMission<T> | TPrototype<T> {
+    let parent = this.parent
+    if (parent === null || parent === this.mission.root) {
+      return this.mission
+    }
+    return parent
+  }
+
+  // Implemented
+  public get source(): TMission<T> {
+    return this.mission
+  }
+
+  // Implemented
+  public get subComponents(): TPrototype<T>[] {
+    return this.children
+  }
+
+  // Implemented
+  public get sourceList(): T['prototype'][] {
+    return this.mission.prototypes
   }
 
   /**

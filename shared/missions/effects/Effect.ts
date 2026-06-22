@@ -1,13 +1,10 @@
 import type { TTargetArgumentJson } from '@shared/target-environments/arguments/TargetArgument'
 import type { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
-import type { TTargetParameter } from '../../target-environments/parameters/TargetParameter'
-import type { TargetDependency } from '../../target-environments/targets/TargetDependency'
+import { BooleanToolbox } from '@shared/toolbox/booleans/BooleanToolbox'
 import { StringToolbox } from '../../toolbox/strings/StringToolbox'
 import { VersionToolbox } from '../../toolbox/strings/VersionToolbox'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from '../MissionComponent'
+import { MissionComponent } from '../MissionComponent'
+import type { MissionComponentIssueRegistry } from '../MissionComponentIssueRegistry'
 
 /**
  * An effect that can be applied to a target.
@@ -127,6 +124,26 @@ export abstract class Effect<
   public targetEnvironmentVersion: string
 
   // Implemented
+  public get superComponent(): TSelectEffectContext<T>[TType]['host'] {
+    return this.host
+  }
+
+  // Implemented
+  public get source(): TSelectEffectContext<T>[TType]['host'] {
+    return this.host
+  }
+
+  // Implemented
+  public get subComponents(): T['targetArgument'][] {
+    return [...this.arguments]
+  }
+
+  // Implemented
+  public get sourceList(): T[TType][] {
+    return this.host.effects as T[TType][]
+  }
+
+  // Implemented
   public get path(): [...MissionComponent<any, any>[], this] {
     // Dynamically construct the path based on
     // the trigger data.
@@ -147,18 +164,6 @@ export abstract class Effect<
           this,
         ]
     }
-  }
-
-  /**
-   * Cache for {@link additionalIssues} to avoid unnecessary recalculations.
-   */
-  private _additionalIssues: TMissionComponentIssue[]
-  // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
-    return MissionComponent.consolidateIssues(
-      ...this._additionalIssues,
-      ...this.arguments,
-    )
   }
 
   /**
@@ -195,14 +200,29 @@ export abstract class Effect<
   public localKey: string
 
   /**
+   * Whether the effect is missing its target, which is
+   * necessary for the effect to be enacted.
+   */
+  public get missingTarget(): boolean {
+    return !this.target
+  }
+
+  /**
+   * `true` if the effect predates the tracking of `environmentId`
+   * within effects and the effect target-environment cannot be
+   * inferred.
+   */
+  public get failedEnvironmentInference(): boolean {
+    return this.environmentId === Effect.LEGACY_INFER_ENV_ID
+  }
+
+  /**
    * Whether the given is outdated given the current
    * version of the target environment.
    */
   public get outdated(): boolean {
-    let target = this.target
+    let { target } = this
 
-    // If the target is not set, then assume
-    // the effect is not outdated.
     if (!target) return false
 
     let latestMigratableVersion = target.latestMigratableVersion
@@ -219,6 +239,18 @@ export abstract class Effect<
       latestMigratableVersion,
     )
     return result === 'earlier'
+  }
+
+  /**
+   * Marks the target arguments of this effect as locked
+   * if the effect is incompatible with the current version
+   * of the target environment or if the environment cannot
+   * be resolved.
+   */
+  public get targetArgumentsLocked(): boolean {
+    return (
+      this.missingTarget || this.failedEnvironmentInference || this.outdated
+    )
   }
 
   /**
@@ -248,11 +280,9 @@ export abstract class Effect<
     this.context = context
     this.order = order
     this.description = description
-    this.arguments = this.parseArguments(args)
     this.localKey = localKey
-
-    this._additionalIssues = []
-    this.scanForIssues()
+    this.arguments = this.parseArguments(args)
+    this.sortArguments()
   }
 
   /**
@@ -274,6 +304,21 @@ export abstract class Effect<
   protected abstract parseArguments(
     data: TTargetArgumentJson[],
   ): JsonSerializableArray<T['targetArgument']>
+
+  /**
+   * Re-orders {@link arguments} to match the declaration order of parameters
+   * on the current target. Arguments whose `parameterId` is not found in the
+   * target are sorted to the end. A no-op if {@link target} is absent.
+   */
+  public sortArguments(): void {
+    if (!this.target) return
+    let parameterIds = this.target.parameters.map((param) => param._id)
+    this.arguments.sort(
+      (a, b) =>
+        parameterIds.indexOf(a.parameterId) -
+        parameterIds.indexOf(b.parameterId),
+    )
+  }
 
   /**
    * @returns A JSON representation of the Effect.
@@ -343,109 +388,7 @@ export abstract class Effect<
     return executionTriggeredJson
   }
 
-  /**
-   * Scans the argument for issues and caches them in
-   * {@link _additionalIssues}.
-   */
-  private scanForIssues() {
-    this._additionalIssues = []
 
-    let { environment, target } = this
-
-    // If the effect could not find the corresponding target
-    // or target environment, then this effect cannot work
-    // properly.
-    if (!environment || !target) {
-      this._additionalIssues.push(
-        this.createIssue(
-          `The effect, "${this.name}", has a target or a target environment that couldn't be found. ` +
-            `Please contact an administrator on how to resolve this conflict, or delete the effect and create a new one.`,
-        ),
-      )
-    }
-    // If the effect's target environment version doesn't match
-    // the current version, then the effect must be updated.
-    else if (this.outdated) {
-      this._additionalIssues.push(
-        this.createIssue(
-          `The effect, "${this.name}", is incompatible with the current version of the target environment, "${environment.name}". ` +
-            `This effect must be updated to be made compatible. ` +
-            `Please click to resolve this.`,
-          { type: 'outdated' },
-        ),
-      )
-    } else if (this.environmentId === Effect.LEGACY_INFER_ENV_ID) {
-      this._additionalIssues.push(
-        this.createIssue(
-          `The effect, "${this.name}" has a reference to a target, but not to a target environment.`,
-        ),
-      )
-    }
-  }
-
-  /**
-   * Determines if all the dependencies passed are met based on the
-   * the provided target arguments.
-   * @param dependencies The dependencies to check if all are met.
-   * @param targetArguments The arguments to check the dependencies against.
-   * @returns If all the dependencies are met.
-   */
-  public allDependenciesMet(
-    dependencies: TargetDependency[] = [],
-    targetArguments: T['targetArgument'][] = this.arguments,
-  ): boolean {
-    // If the argument has no dependencies, then the argument is always displayed.
-    if (!dependencies || dependencies.length === 0) {
-      return true
-    }
-
-    // Stores the status of all the argument's dependencies.
-    let areDependenciesMet: boolean[] = []
-    // Create a variable to determine if all the dependencies
-    // have been met.
-    let allDependenciesMet: boolean
-
-    // Iterate through the dependencies.
-    dependencies.forEach((dependency) => {
-      // Grab the dependency argument.
-      let dependencyArg: TTargetParameter | undefined =
-        this.target?.parameters.find(
-          (arg: TTargetParameter) => arg._id === dependency.dependentId,
-        )
-
-      // If the dependency argument is found then check if
-      // the dependency is met.
-      if (dependencyArg) {
-        // Initialize a variable to determine if the dependency
-        // is met.
-        let dependencyMet: boolean
-
-        // Otherwise, check if the condition is met.
-        dependencyMet = dependency.condition(
-          targetArguments.find(
-            (arg) => arg.parameterId === dependency.dependentId,
-          )?.value,
-        )
-
-        // If the dependency is met then push true to the
-        // dependencies met array, otherwise push false.
-        dependencyMet
-          ? areDependenciesMet.push(true)
-          : areDependenciesMet.push(false)
-      }
-      // Otherwise, the dependency argument doesn't exist.
-      else {
-        areDependenciesMet.push(false)
-      }
-    })
-
-    // If all the dependencies have been met then set the
-    // variable to true, otherwise set it to false.
-    allDependenciesMet = !areDependenciesMet.includes(false)
-
-    // Return the status of all the dependencies.
-    return allDependenciesMet
-  }
 
   /**
    * Gets the argument associated with a specific parameter ID.
@@ -456,6 +399,47 @@ export abstract class Effect<
     parameterId: string,
   ): T['targetArgument'] | undefined => {
     return this.arguments.find((arg) => arg.parameterId === parameterId)
+  }
+
+  /**
+   * Registers issue checkers for all {@link Effect} instances
+   * with the provided registry.
+   * @param registry The registry to register checkers with.
+   */
+  public static registerIssueCheckers(
+    registry: MissionComponentIssueRegistry,
+  ): void {
+    registry.check({
+      key: Effect.ISSUE_KEY_MISSING_TARGET,
+      message: () =>
+        `The corresponding target environment could not be found. Please reinstall/repair the corresponding target environment or delete this effect.`,
+      what: [Effect],
+      if: (effect) => effect.missingTarget,
+    })
+    registry.check({
+      key: Effect.ISSUE_KEY_LEGACY_INFER,
+      message: () =>
+        `The corresponding target environment could not be found. Please reinstall/repair the corresponding target environment or delete this effect.`,
+      what: [Effect],
+      if: (effect) =>
+        BooleanToolbox.onlyLast(
+          effect.missingTarget,
+          effect.failedEnvironmentInference,
+        ),
+    })
+    registry.check({
+      key: Effect.ISSUE_KEY_OUTDATED,
+      message: () =>
+        'Update required to be made compatible with the current version of the target environment.',
+      what: [Effect],
+      when: ['initialization', 'effect-updated'],
+      if: (effect) =>
+        BooleanToolbox.onlyLast(
+          effect.missingTarget,
+          effect.failedEnvironmentInference,
+          effect.outdated,
+        ),
+    })
   }
 
   /**
@@ -475,6 +459,24 @@ export abstract class Effect<
    * indicates missing target environment reference.
    */
   public static readonly LEGACY_INFER_ENV_ID: string = 'infer-for-build_000038'
+
+  /**
+   * Key used to index an issue when an effect is missing
+   * its target.
+   */
+  public static readonly ISSUE_KEY_MISSING_TARGET = 'missing-target'
+
+  /**
+   * Key used to index an issue when an effect predates the
+   * tracking of `environmentId` and the target environment cannot
+   * be inferred.
+   */
+  public static readonly ISSUE_KEY_LEGACY_INFER = 'legacy-infer-env'
+
+  /**
+   * Key used to index an issue when an effect is outdated.
+   */
+  public static readonly ISSUE_KEY_OUTDATED = 'outdated'
 
   /**
    * Default properties set when creating a new

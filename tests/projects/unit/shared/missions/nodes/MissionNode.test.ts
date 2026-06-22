@@ -49,6 +49,17 @@ function createNode(alerts: TNodeAlertJson[] = []): TestMissionNode {
         }
         return undefined
       },
+      // MissionComponent defers an issue check to the issue registry on
+      // construction; these tests do not exercise issues, so a no-op stub is
+      // sufficient.
+      issueRegistry: {
+        trigger: () => {},
+        onDelete: () => {},
+        onInsert: () => {},
+        getComponentIssues: () => [],
+        componentHasIssue: () => false,
+        getMessage: () => '',
+      },
     },
     generateNodeKey: () => '1',
     revealAllNodes: false,

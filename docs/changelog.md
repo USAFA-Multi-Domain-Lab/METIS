@@ -1,5 +1,13 @@
 # changelog
 
+# version-2.4.5 | 6-1-2026
+
+- An issue was fixed where missions wouldn't save after an action was duplicated.
+- An issue was fixed where a scroll bar wouldn't appear when content overflowed in the structure view on the mission page.
+- An issue was fixed where the action-execution modal wouldn't properly display its close button when the panel was at its minimum size.
+- An issue was fixed which prevented paste/undo/redo keyboard shortcuts while working within a number field.
+- An issues was fixed where issues wouldn't properly refresh after deleting or duplicating certain mission components.
+
 # version-2.4.4 | 5-16-2026
 
 - Before, when a resource was excluded from a force, details such as the initial amount could still be updated. Now they are hidden from the force entry.

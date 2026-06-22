@@ -41,12 +41,12 @@ export class ClientMissionFile
 
   // Implemented
   public get outlineChildren(): TMissionOutlineItem[] {
-    return []
+    return this.subComponents
   }
 
   // Implemented
   public get outlineParent(): TMissionOutlineItem | null {
-    return this.mission
+    return this.superComponent
   }
 
   /**

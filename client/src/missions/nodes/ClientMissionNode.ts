@@ -349,16 +349,12 @@ export class ClientMissionNode
 
   // Implemented
   public get outlineChildren(): TMissionOutlineItem[] {
-    return [...this.children, ...this.actions.values()]
+    return this.subComponents
   }
 
   // Implemented
   public get outlineParent(): TMissionOutlineItem | null {
-    let parent = this.parent
-    if (parent === null || parent === this.force.root) {
-      return this.force
-    }
-    return parent
+    return this.superComponent
   }
 
   /**
@@ -384,7 +380,7 @@ export class ClientMissionNode
   protected importActions(data: TMissionActionJson[]): void {
     data.forEach((datum) => {
       let action = ClientMissionAction.fromJson(this, datum)
-      this.actions.set(action._id, action)
+      this.actions.push(action)
     })
   }
 
@@ -392,7 +388,7 @@ export class ClientMissionNode
   protected importExecutions(data: TActionExecutionJson[]): void {
     this._executions = data.map(
       ({ _id, actionId, outcome: outcomeData, start, end }) => {
-        let action: ClientMissionAction | undefined = this.actions.get(actionId)
+        let action = this.getAction(actionId)
         if (!action) throw new Error(`Action "${actionId}" not found.`)
         return new ClientActionExecution(_id, action, start, end, {
           outcomeData,
@@ -634,7 +630,7 @@ export class ClientMissionNode
     // Duplicate the actions.
     this.actions.forEach((action) => {
       let duplicatedAction = action.duplicate({ node: duplicatedNode })
-      duplicatedNode.actions.set(duplicatedAction._id, duplicatedAction)
+      duplicatedNode.actions.push(duplicatedAction)
     })
 
     return duplicatedNode
@@ -648,7 +644,7 @@ export class ClientMissionNode
    */
   public createAction(): ClientMissionAction {
     let newAction = ClientMissionAction.fromJson(this)
-    this.actions.set(newAction._id, newAction)
+    this.actions.push(newAction)
     newAction.onResourceListUpdate()
     return newAction
   }

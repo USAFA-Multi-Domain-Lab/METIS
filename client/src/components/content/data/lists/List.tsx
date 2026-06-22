@@ -101,7 +101,6 @@ export function createDefaultListProps<
     getItemButtonPermissions: () => [],
     getItemButtonDisabled: () => false,
     getColumnWidth: () => '10em',
-    getCustomWarningText: () => '',
     onSelect: () => {},
     onItemDblClick: () => {},
     onListButtonClick: () => {},
@@ -460,19 +459,7 @@ export default function List<TItem extends MetisComponent>(
    * @see {@link TListContextData.getWarningText}
    */
   const getWarningText: TListContextData<TItem>['getWarningText'] = (item) => {
-    let warningText = defaultedProps.getCustomWarningText(item)
-
-    // Add deleted warning if applicable.
-    if (item.deleted) {
-      // Add a new line before the deleted warning if there
-      // is already existing warning text.
-      if (warningText) {
-        warningText += '\n'
-      }
-      warningText += 'This item has been marked as deleted.'
-    }
-
-    return warningText
+    return item.warningText
   }
 
   /* -- COMPUTED (CONTINUED) -- */
@@ -795,20 +782,6 @@ export type TList_P<TItem extends MetisComponent> = {
    * @default () => '10em'
    */
   getColumnWidth?: (column: TListColumnType<TItem>) => string
-  /**
-   * Displays custom warning text for the given item,
-   * marking it as an item with issues. By default,
-   * no warning text is displayed, unless the item is
-   * marked as deleted.
-   * @param item The item for which to get the warning text.
-   * @returns The warning text.
-   * @default () => ''
-   * @note If an item is marked as deleted, the warning
-   * text will concatenate with the custom warning text.
-   * @note Empty string should be returned for any items
-   * without issues.
-   */
-  getCustomWarningText?: (item: TItem) => string
   /**
    * Callback for when an item in the list is selected
    * or deselected.

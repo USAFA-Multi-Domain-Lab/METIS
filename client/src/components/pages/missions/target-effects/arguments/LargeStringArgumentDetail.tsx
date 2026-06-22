@@ -1,5 +1,4 @@
 import type { ClientTargetArgument } from '@client/target-environments/arguments/ClientTargetArgument'
-import { compute } from '@client/toolbox'
 import { useObjectFormSync } from '@client/toolbox/hooks'
 import { DetailLargeString } from '../../../../content/form/DetailLargeString'
 import { useMissionPageContext } from '../../context'
@@ -43,27 +42,17 @@ export default function LargeStringArgumentDetail({
     })
   }
 
-  /* -- COMPUTED -- */
-
-  let handleOnBlur = compute<'repopulateValue' | 'none'>(() =>
-    parameter.required ? 'repopulateValue' : 'none',
-  )
-
   /* -- RENDER -- */
 
   return (
     <DetailLargeString
       fieldType={parameter.required ? 'required' : 'optional'}
-      handleOnBlur={handleOnBlur}
       label={parameter.name}
       value={value}
       setValue={setValue}
       defaultValue={parameter.required ? parameter.default : undefined}
-      errorDisplay={'immediate'}
       tooltipDescription={parameter.tooltipDescription}
-      key={`arg-${argument._id}_name-${parameter.name}_type-${parameter.type}_${
-        parameter.required ? 'required' : 'optional'
-      }`}
+      key={`arg-${argument._id}_name-${parameter.name}_type-${parameter.type}`}
     />
   )
 }

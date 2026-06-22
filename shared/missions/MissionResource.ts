@@ -4,7 +4,6 @@ import {
 } from '@shared/toolbox/serialization/json'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { TMission } from './Mission'
-import type { TMissionComponentIssue } from './MissionComponent'
 import { MissionComponent } from './MissionComponent'
 
 /**
@@ -31,8 +30,23 @@ export abstract class MissionResource<
   }
 
   // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
+  public get superComponent(): TMission<T> {
+    return this.mission
+  }
+
+  // Implemented
+  public get source(): TMission<T> {
+    return this.mission
+  }
+
+  // Implemented
+  public get subComponents(): [] {
     return []
+  }
+
+  // Implemented
+  public get sourceList(): T['resource'][] {
+    return this.mission.resources
   }
 
   /**
@@ -49,6 +63,11 @@ export abstract class MissionResource<
   // Implemented
   public get json(): TMissionResourceJson {
     return this.serialize()
+  }
+
+  // Overridden
+  public override get usesSubentry(): boolean {
+    return true
   }
 
   /**

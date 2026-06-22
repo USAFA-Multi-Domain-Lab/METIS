@@ -6,74 +6,74 @@ import { TargetParameter } from './TargetParameter'
  */
 export class LargeStringTargetParameter {
   /**
-   * Converts TLargeStringArg to TLargeStringArgJson.
-   * @param arg The large string argument to convert.
-   * @returns The large string argument as JSON.
+   * Converts TLargeStringTargetParameter to TLargeStringTargetParameterJson.
+   * @param parameter The large string parameter to convert.
+   * @returns The large string parameter as JSON.
    */
   public static toJson = (
-    arg: TLargeStringTargetParameter,
+    parameter: TLargeStringTargetParameter,
   ): TLargeStringTargetParameterJson => {
     // Return the appropriate properties based on
-    // whether the argument is required or not.
-    return arg.required
+    // whether the parameter is required or not.
+    return parameter.required
       ? {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.encodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.encodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          default: arg.default,
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
+          default: parameter.default,
         }
       : {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.encodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.encodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
         }
   }
 
   /**
-   * Converts TLargeStringArgJson to TLargeStringArg.
-   * @param arg The large string argument as JSON to convert.
-   * @returns The large string argument.
+   * Converts TLargeStringTargetParameterJson to TLargeStringTargetParameter.
+   * @param parameter The large string parameter as JSON to convert.
+   * @returns The large string parameter.
    */
   public static fromJson = (
-    arg: TLargeStringTargetParameterJson,
+    parameter: TLargeStringTargetParameterJson,
   ): TLargeStringTargetParameter => {
     // Return the appropriate properties based on
-    // whether the argument is required or not.
-    return arg.required
+    // whether the parameter is required or not.
+    return parameter.required
       ? {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.decodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.decodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          default: arg.default,
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
+          default: parameter.default,
         }
       : {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.decodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.decodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
         }
   }
 }
@@ -89,9 +89,9 @@ export type TLargeStringTargetParameter = TBaseTargetParameter &
     | TLargeStringTargetParameterRequired
   ) & {
     /**
-     * The argument's input type.
+     * The parameter's input type.
      * @note This will render as an input that accepts any string.
-     * If the argument is required, empty strings are not allowed.
+     * If the parameter is required, empty strings are not allowed.
      */
     type: 'large-string'
   }
@@ -100,7 +100,7 @@ export type TLargeStringTargetParameter = TBaseTargetParameter &
  */
 type TLargeStringTargetParameterOptional = {
   /**
-   * Determines whether the argument is required or not.
+   * Determines whether the parameter is required or not.
    */
   required: false
 }
@@ -109,11 +109,11 @@ type TLargeStringTargetParameterOptional = {
  */
 type TLargeStringTargetParameterRequired = {
   /**
-   * Determines whether the argument is required or not.
+   * Determines whether the parameter is required or not.
    */
   required: true
   /**
-   * The default value for the argument.
+   * The default value for the parameter.
    */
   default: string
 }
@@ -126,9 +126,9 @@ export type TLargeStringTargetParameterJson = TBaseTargetParameterJson &
     | TLargeStringTargetParameterRequiredJson
   ) & {
     /**
-     * The argument's input type.
+     * The parameter's input type.
      * @note This will render as an input that accepts any string.
-     * If the argument is required, empty strings are not allowed.
+     * If the parameter is required, empty strings are not allowed.
      */
     type: 'large-string'
   }
@@ -137,7 +137,7 @@ export type TLargeStringTargetParameterJson = TBaseTargetParameterJson &
  */
 type TLargeStringTargetParameterOptionalJson = {
   /**
-   * Determines whether the argument is required or not.
+   * Determines whether the parameter is required or not.
    */
   required: false
 }
@@ -146,11 +146,11 @@ type TLargeStringTargetParameterOptionalJson = {
  */
 type TLargeStringTargetParameterRequiredJson = {
   /**
-   * Determines whether the argument is required or not.
+   * Determines whether the parameter is required or not.
    */
   required: true
   /**
-   * The default value for the argument.
+   * The default value for the parameter.
    */
   default: string
 }

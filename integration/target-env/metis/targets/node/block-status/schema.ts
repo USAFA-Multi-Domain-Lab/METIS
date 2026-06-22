@@ -9,9 +9,7 @@ const BlockStatus = TargetSchema.create({
   name: 'Block Status',
   description: '',
   script: async (context, applyTo, blockStatus) => {
-    if (blockStatus !== 'no-change') {
-      context.updateNodeBlockStatus(applyTo, blockStatus === 'block')
-    }
+    context.updateNodeBlockStatus(applyTo, blockStatus === 'block')
   },
   parameters: [
     {
@@ -35,13 +33,7 @@ const BlockStatus = TargetSchema.create({
       name: 'Block Status',
       required: true,
       groupingId: 'node',
-      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
       options: [
-        {
-          _id: 'no-change',
-          name: 'No Change',
-          value: 'no-change',
-        },
         {
           _id: 'block',
           name: 'Block',
@@ -53,7 +45,7 @@ const BlockStatus = TargetSchema.create({
           value: 'unblock',
         },
       ],
-      default: { _id: 'no-change', name: 'No Change', value: 'no-change' },
+      default: 'block',
     },
   ],
   migrations,

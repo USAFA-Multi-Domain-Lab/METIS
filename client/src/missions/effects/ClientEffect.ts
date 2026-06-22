@@ -16,6 +16,7 @@ import type {
 } from '@shared/missions/effects/Effect'
 import { Effect } from '@shared/missions/effects/Effect'
 import type { TTargetArgumentJson } from '@shared/target-environments/arguments/TargetArgument'
+
 import { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import type { ClientMission } from '../ClientMission'
 import type { ClientMissionAction } from '../actions/ClientMissionAction'
@@ -41,7 +42,23 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
 
   // Implemented
   public get outlineParent(): TMissionOutlineItem | null {
-    return this.context.host
+    return this.superComponent
+  }
+
+  /**
+   * A promise that resolves when the current migration in progress
+   * is complete. A current migration will only be present if
+   * {@link $migrateArguments} has been called and has not yet completed.
+   */
+  public migrationPromise: Promise<void> | null = null
+
+  /**
+   * Tracks whether a migration is currently in progress for this
+   * effect, preventing multiple simultaneous migrations and allowing
+   * the UI to respond accordingly.
+   */
+  public get migrationInProgress(): boolean {
+    return this.migrationPromise !== null
   }
 
   // Implemented
@@ -54,13 +71,19 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
         ClientTargetArgument.fromJson(datum, this),
     )
 
-    // Extra step on the client, which ensures any
-    // missing arguments are auto-generated and included
-    // in the effect. Skip if the effect is outdated, since
-    // a migration will supply the missing arguments instead.
+    // Extra step on the client to keep arguments in sync with the target's
+    // current parameters. Skip if the effect is outdated or the target cannot
+    // be resolved, since a migration will supply the correct arguments instead.
     if (this.target && !this.outdated) {
       for (let parameter of this.target.parameters) {
-        if (!targetArguments.find((arg) => arg.parameterId === parameter._id)) {
+        // Add a new default argument if there is no argument corresponding
+        // to the parameter in type. This could cause duplicate arguments. However,
+        // arguments with mismatching types will be filtered out in the UI.
+        let foundWithMatchingType = targetArguments.find(
+          (arg) =>
+            arg.parameterId === parameter._id && arg.type === parameter.type,
+        )
+        if (!foundWithMatchingType) {
           targetArguments.push(
             ClientTargetArgument.createDefault(parameter, this),
           )
@@ -132,11 +155,27 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
    * @resolves After the migration is complete and the effect's arguments have been updated.
    * @rejects If there was an error during the migration process.
    */
-  public async $migrateArguments(): Promise<void> {
-    let results = await ClientTargetEnvironment.$migrateTargetArguments(this)
-    // Store the migrated data in the component.
-    this.targetEnvironmentVersion = results.version
-    this.arguments = this.parseArguments(results.data)
+  public $migrateArguments(): Promise<void> {
+    this.migrationPromise = new Promise(async (resolve, reject) => {
+      try {
+        let results =
+          await ClientTargetEnvironment.$migrateTargetArguments(this)
+        // Store the migrated data in the component.
+        this.targetEnvironmentVersion = results.version
+        this.arguments = this.parseArguments(results.data)
+        this.sortArguments()
+        this.mission.issueRegistry.trigger('effect-updated', this)
+        for (let argument of this.arguments) {
+          argument.mission.issueRegistry.trigger('effect-updated', argument)
+        }
+        resolve()
+      } catch (error) {
+        reject(error)
+      } finally {
+        this.migrationPromise = null
+      }
+    })
+    return this.migrationPromise
   }
 
   /**

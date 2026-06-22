@@ -1,39 +1,94 @@
-import { usePanelContext } from '@client/components/content/general-layout/panels/Panel'
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
-import { useGlobalContext } from '@client/context/global'
-import { useRequireLogin } from '@client/toolbox/hooks'
-import { useState } from 'react'
-import IssueItem from './IssueItem'
+import { useEventListener } from '@client/toolbox/hooks'
+import { useEffect, useState } from 'react'
+import EffectUpdateControl from './EffectUpdateControl'
+import IssueGroup from './IssueGroup'
 import './Issues.scss'
 
 /**
- * Displays a list of unresolved issues within the mission.
+ * Displays a list of unresolved issues within the mission, grouped by component.
  */
 export default function Issues({
   switchToPanel = undefined,
 }: TIssues_P): TReactElement | null {
   /* -- STATE -- */
 
-  const globalContext = useGlobalContext()
-  const { prompt } = globalContext.actions
-  const { login } = useRequireLogin()
-  const { user } = login
-  const { state, onChange } = useMissionPageContext()
-  const { state: panelState } = usePanelContext()
+  const { state } = useMissionPageContext()
   const [mission] = state.mission
-  const [issues] = state.issues
-  const [, setCheckForIssues] = state.checkForIssues
-  const [, selectView] = panelState.selectedView
   const [searchQuery, setSearchQuery] = useState<string>('')
+  const [issues, setIssues] = useState(
+    mission.issueRegistry.groupedIssueEntries,
+  )
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
 
   /* -- COMPUTED -- */
 
-  /**
-   * Filtered issues based on search query.
-   */
-  const filteredIssues = issues.filter((issue) =>
-    issue.message.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  // Computed before headerEngine so onClick closures reference current groups.
+  let query = searchQuery.toLowerCase()
+  let groups = issues
+    .map(([component, issues]) => ({
+      component,
+      issues: issues.filter((issue) =>
+        issue.message.toLowerCase().includes(query),
+      ),
+    }))
+    .filter(({ issues }) => issues.length > 0)
+  let allCollapsed =
+    groups.length > 0 &&
+    groups.every(({ component }) => collapsedGroups.has(component._id))
+
+  /* -- ENGINES -- */
+
+  const headerEngine = useButtonSvgEngine({
+    elements: [
+      {
+        key: 'expand-all',
+        type: 'button',
+        icon: 'expand-list',
+        cursor: 'pointer',
+        label: 'Expand all',
+        hidden: !allCollapsed,
+        onClick: () => setCollapsedGroups(new Set()),
+      },
+      {
+        key: 'collapse-all',
+        type: 'button',
+        icon: 'collapse-list',
+        cursor: 'pointer',
+        label: 'Collapse all',
+        hidden: allCollapsed,
+        onClick: () =>
+          setCollapsedGroups(
+            new Set(groups.map(({ component }) => component._id)),
+          ),
+      },
+    ],
+  })
+
+  /* -- EFFECTS -- */
+
+  // Recalculate issues on registry change.
+  useEventListener(mission.issueRegistry, 'change', () => {
+    setIssues(mission.issueRegistry.groupedIssueEntries)
+  })
+
+  useEffect(() => {
+    headerEngine.setHidden('collapse-all', allCollapsed)
+    headerEngine.setHidden('expand-all', !allCollapsed)
+  }, [allCollapsed])
+
+  /* -- FUNCTIONS -- */
+
+  const onToggleGroup = (id: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   /* -- RENDER -- */
 
@@ -41,7 +96,6 @@ export default function Issues({
     <div className='Issues'>
       <div className='IssueList'>
         <div className='IssueListHeader'>
-          <h3>Issues</h3>
           <div className='SearchBox'>
             <input
               type='text'
@@ -51,19 +105,21 @@ export default function Issues({
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+          <ButtonSvgPanel engine={headerEngine} />
+          <EffectUpdateControl scope={'mission-wide'} mission={mission} />
         </div>
         <div className='IssueListItems'>
-          {filteredIssues.length > 0 ? (
-            filteredIssues.map((issue) => {
-              const { component, message } = issue
-              return (
-                <IssueItem
-                  key={issue.component._id + ' ' + issue.message}
-                  issue={issue}
-                  switchToPanel={switchToPanel}
-                />
-              )
-            })
+          {groups.length > 0 ? (
+            groups.map(({ component, issues }) => (
+              <IssueGroup
+                key={component._id}
+                component={component}
+                issues={issues}
+                switchToPanel={switchToPanel}
+                expanded={!collapsedGroups.has(component._id)}
+                onToggle={() => onToggleGroup(component._id)}
+              />
+            ))
           ) : (
             <div className='NoResults'>No issues found.</div>
           )}

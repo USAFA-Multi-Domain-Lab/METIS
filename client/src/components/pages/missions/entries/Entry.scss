@@ -20,6 +20,22 @@
       height: max-content;
       padding-bottom: 3.5em;
 
+      .UpdateComponent {
+        position: sticky;
+        top: 0;
+        z-index: $z-index-update-component;
+        padding-bottom: $form-row-gap;
+        background: linear-gradient(
+          to bottom,
+          $color-primary 0 calc(100% - $form-row-gap),
+          transparent 100%
+        );
+
+        & + .Detail {
+          margin-top: -$form-row-gap;
+        }
+      }
+
       .ButtonContainer {
         display: flex;
         justify-content: flex-end;

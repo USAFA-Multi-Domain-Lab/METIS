@@ -1,25 +1,25 @@
-import type { FileReference } from "./files/FileReference";
-import type { ActionExecution } from "./missions/actions/ActionExecution";
-import type { ActionResourceCost } from "./missions/actions/ActionResourceCost";
-import type { ExecutionOutcome } from "./missions/actions/ExecutionOutcome";
-import type { MissionAction } from "./missions/actions/MissionAction";
-import type { Effect, TEffectType } from "./missions/effects/Effect";
-import type { MissionFile } from "./missions/files/MissionFile";
-import type { MissionForce } from "./missions/forces/MissionForce";
-import type { MissionOutput } from "./missions/forces/MissionOutput";
-import type { ResourcePool } from "./missions/forces/ResourcePool";
-import type { Mission } from "./missions/Mission";
-import type { MissionResource } from "./missions/MissionResource";
-import type { MissionNode } from "./missions/nodes/MissionNode";
-import type { MissionPrototype } from "./missions/nodes/MissionPrototype";
-import type { ChatChannel } from "./sessions/chat/ChatChannel";
-import type { ChatMessage } from "./sessions/chat/ChatMessage";
-import type { SessionMember } from "./sessions/members/SessionMember";
-import type { MissionSession } from "./sessions/MissionSession";
-import type { TargetArgument } from "./target-environments/arguments/TargetArgument";
-import type { TargetEnvironment } from "./target-environments/TargetEnvironment";
-import type { Target } from "./target-environments/targets/Target";
-import type { User } from "./users/User";
+import type { FileReference } from './files/FileReference'
+import type { ActionExecution } from './missions/actions/ActionExecution'
+import type { ActionResourceCost } from './missions/actions/ActionResourceCost'
+import type { ExecutionOutcome } from './missions/actions/ExecutionOutcome'
+import type { MissionAction } from './missions/actions/MissionAction'
+import type { Effect, TEffectType } from './missions/effects/Effect'
+import type { MissionFile } from './missions/files/MissionFile'
+import type { MissionForce } from './missions/forces/MissionForce'
+import type { MissionOutput } from './missions/forces/MissionOutput'
+import type { ResourcePool } from './missions/forces/ResourcePool'
+import type { Mission } from './missions/Mission'
+import type { MissionResource } from './missions/MissionResource'
+import type { MissionNode } from './missions/nodes/MissionNode'
+import type { MissionPrototype } from './missions/nodes/MissionPrototype'
+import type { ChatChannel } from './sessions/chat/ChatChannel'
+import type { ChatMessage } from './sessions/chat/ChatMessage'
+import type { SessionMember } from './sessions/members/SessionMember'
+import type { MissionSession } from './sessions/MissionSession'
+import type { TargetArgument } from './target-environments/arguments/TargetArgument'
+import type { TargetEnvironment } from './target-environments/TargetEnvironment'
+import type { Target } from './target-environments/targets/Target'
+import type { User } from './users/User'
 
 /**
  * A fundamental concept used in the application.
@@ -29,30 +29,45 @@ export abstract class MetisComponent {
   /**
    * A human-readable title for the component.
    */
-  protected _name: string;
+  protected _name: string
   /**
    * A human-readable title for the component.
    * @note This can be overridden in any subclass
    * to customize this property.
    */
   public get name(): string {
-    return this._name;
+    return this._name
   }
   public set name(name: string) {
-    this._name = name;
+    this._name = name
+  }
+
+  /**
+   * Cache for {@link deleted} field.
+   */
+  protected _deleted: boolean
+  /**
+   * Whether the component is considered deleted in the
+   * system.
+   */
+  public get deleted(): boolean {
+    return this._deleted
+  }
+  public set deleted(value: boolean) {
+    this._deleted = value
   }
 
   /**
    * @see {@link MetisComponent.disabled}
    */
-  private _disabled: boolean;
+  private _disabled: boolean
   /**
    * Whether the component is considered enabled for use.
    * This will make the component interactive in various
    * UI contexts.
    */
   public get enabled(): boolean {
-    return !this._disabled;
+    return !this._disabled
   }
   /**
    * Whether the component is considered disabled from use.
@@ -60,13 +75,13 @@ export abstract class MetisComponent {
    * UI contexts.
    */
   public get disabled(): boolean {
-    return this._disabled;
+    return this._disabled
   }
 
   /**
    * Array of callbacks that get triggered when disabled state changes.
    */
-  private _disabledChangeCallbacks: Array<(isDisabled: boolean) => void> = [];
+  private _disabledChangeCallbacks: Array<(isDisabled: boolean) => void> = []
 
   /**
    * Registers a callback for disabled state changes.
@@ -74,26 +89,35 @@ export abstract class MetisComponent {
    * @returns Function to unregister the callback.
    */
   public onDisabledChange(callback: (isDisabled: boolean) => void): () => void {
-    this._disabledChangeCallbacks.push(callback);
+    this._disabledChangeCallbacks.push(callback)
 
     // Return a function that removes this specific callback
     return () => {
       this._disabledChangeCallbacks = this._disabledChangeCallbacks.filter(
         (cb) => cb !== callback,
-      );
-    };
+      )
+    }
   }
 
   /**
    * @see {@link MetisComponent.disabled}
    */
-  private _disabledReason: string;
+  private _disabledReason: string
   /**
    * Text that can be displayed to the user to explain
    * why the component is disabled.
    */
   public get disabledReason(): string {
-    return this._disabledReason;
+    return this._disabledReason
+  }
+
+  /**
+   * A warning message to display in UI contexts that support
+   * inline warnings, such as list items.
+   */
+  public get warningText(): string {
+    if (this.deleted) return 'This item has been marked as deleted.'
+    return ''
   }
 
   public constructor(
@@ -106,27 +130,27 @@ export abstract class MetisComponent {
      */
     name: string,
     /**
-     * Whether the component is considered deleted in the
-     * system.
+     * Whether the component is considered deleted in the system.
      */
-    public deleted: boolean,
+    deleted: boolean,
   ) {
-    this._name = name;
-    this._disabled = false;
-    this._disabledReason = "";
+    this._name = name
+    this._deleted = deleted
+    this._disabled = false
+    this._disabledReason = ''
   }
 
   /**
    * Enables the previously disabled component.
    */
   public enable(): void {
-    const wasDisabled = this._disabled;
-    this._disabled = false;
-    this._disabledReason = "";
+    const wasDisabled = this._disabled
+    this._disabled = false
+    this._disabledReason = ''
 
     // Notify all registered callbacks.
     if (wasDisabled && this._disabledChangeCallbacks.length > 0) {
-      this._disabledChangeCallbacks.forEach((callback) => callback(false));
+      this._disabledChangeCallbacks.forEach((callback) => callback(false))
     }
   }
 
@@ -136,14 +160,14 @@ export abstract class MetisComponent {
    * being disabled. This can be left blank if no
    * explanation is needed.
    */
-  public disable(reason: string = ""): void {
-    const wasEnabled = !this._disabled;
-    this._disabled = true;
-    this._disabledReason = reason;
+  public disable(reason: string = ''): void {
+    const wasEnabled = !this._disabled
+    this._disabled = true
+    this._disabledReason = reason
 
     // Notify all registered callbacks.
     if (wasEnabled && this._disabledChangeCallbacks.length > 0) {
-      this._disabledChangeCallbacks.forEach((callback) => callback(true));
+      this._disabledChangeCallbacks.forEach((callback) => callback(true))
     }
   }
 
@@ -155,11 +179,11 @@ export abstract class MetisComponent {
    * this will only be used if the component is being disabled,
    * not enabled.
    */
-  public setDisabled(disabled: boolean, reason: string = ""): void {
+  public setDisabled(disabled: boolean, reason: string = ''): void {
     if (disabled) {
-      this.disable(reason);
+      this.disable(reason)
     } else {
-      this.enable();
+      this.enable()
     }
   }
 }
@@ -172,30 +196,30 @@ export abstract class MetisComponent {
  * METIS component classes.
  */
 export type TMetisBaseComponents = {
-  session: MissionSession;
-  member: SessionMember;
-  user: User;
-  targetEnv: TargetEnvironment;
-  target: Target;
-  fileReference: FileReference;
-  mission: Mission;
-  resource: MissionResource;
-  prototype: MissionPrototype;
-  missionFile: MissionFile;
-  force: MissionForce;
-  output: MissionOutput;
-  resourcePool: ResourcePool;
-  resourceCost: ActionResourceCost;
-  node: MissionNode;
-  action: MissionAction;
-  execution: ActionExecution;
-  outcome: ExecutionOutcome;
-  targetArgument: TargetArgument;
-  chatChannel: ChatChannel;
-  chatMessage: ChatMessage;
+  session: MissionSession
+  member: SessionMember
+  user: User
+  targetEnv: TargetEnvironment
+  target: Target
+  fileReference: FileReference
+  mission: Mission
+  resource: MissionResource
+  prototype: MissionPrototype
+  missionFile: MissionFile
+  force: MissionForce
+  output: MissionOutput
+  resourcePool: ResourcePool
+  resourceCost: ActionResourceCost
+  node: MissionNode
+  action: MissionAction
+  execution: ActionExecution
+  outcome: ExecutionOutcome
+  targetArgument: TargetArgument
+  chatChannel: ChatChannel
+  chatMessage: ChatMessage
 } & {
-  [TType in TEffectType]: Effect<TMetisBaseComponents, TType>;
-};
+  [TType in TEffectType]: Effect<TMetisBaseComponents, TType>
+}
 
 /**
  * JSON representation of {@link MetisComponent}.
@@ -204,15 +228,15 @@ export interface TMetisComponentJson {
   /**
    * @see {@link MetisComponent._id}
    */
-  _id: string;
+  _id: string
   /**
    * @see {@link MetisComponent.name}
    */
-  name: string;
+  name: string
   /**
    * @see {@link MetisComponent.deleted}
    */
-  deleted: boolean;
+  deleted: boolean
 }
 
 /**
@@ -227,7 +251,7 @@ export type TCreateJsonType<
   TDirect extends keyof T,
   TIndirect extends { [k in keyof T]?: any } = {},
 > = {
-  -readonly [k in TDirect]: T[k];
+  -readonly [k in TDirect]: T[k]
 } & {
-  [k in keyof TIndirect]: TIndirect[k];
-};
+  [k in keyof TIndirect]: TIndirect[k]
+}

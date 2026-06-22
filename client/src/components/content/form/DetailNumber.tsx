@@ -1,10 +1,10 @@
-import { compute } from '@client/toolbox'
 import inputs from '@client/toolbox/inputs'
 import { useEffect, useState } from 'react'
 import type { TDetail_P } from '.'
 import './DetailNumber.scss'
 import DetailTitleRow from './DetailTitleRow'
-import { useDetailClassNames } from './useDetailClassNames'
+import { useDetailClassNames } from './hooks/useDetailClassNames'
+import { useErrorMessages } from './hooks/useErrorMessages'
 
 /**
  * This will render a detail for
@@ -24,22 +24,26 @@ export function DetailNumber({
   placeholder = 'Enter a number here...',
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
-  errorMessage = undefined,
+  errorMessage = '',
   errorType = 'default',
   disabled = false,
   tooltipDescription = '',
 }: TDetailNumber_P): TReactElement | null {
   /* -- STATE -- */
+
   const [inputValue, setInputValue] = useState<string>(
     stateValue?.toString() ?? '',
   )
+  const [focused, setFocused] = useState<boolean>(false)
 
   /* -- COMPUTED -- */
-  /**
-   * The boolean that determines if the
-   * error message should be displayed.
-   */
-  const displayError: boolean = compute(() => errorMessage !== undefined)
+
+  const { displayError, activeErrorMessage } = useErrorMessages({
+    errorMessage,
+    fieldType,
+    inputValue,
+    focused,
+  })
   const { rootClasses, labelClasses, fieldClasses, fieldErrorClasses } =
     useDetailClassNames({
       componentName: 'DetailNumber',
@@ -49,7 +53,9 @@ export function DetailNumber({
       uniqueLabelClassName,
       uniqueFieldClassName,
     })
+
   /* -- EFFECTS -- */
+
   // Set the input value to the state value.
   useEffect(() => {
     const stateAsString = stateValue?.toString() ?? ''
@@ -132,6 +138,7 @@ export function DetailNumber({
           }
         }}
         onFocus={(event: React.FocusEvent<HTMLInputElement>) => {
+          setFocused(true)
           event.target.select()
         }}
         onBlur={(event: React.FocusEvent<HTMLInputElement>) => {
@@ -207,6 +214,8 @@ export function DetailNumber({
           } else if (fieldType === 'optional') {
             setState(null)
           }
+
+          setFocused(false)
         }}
         onMouseDown={(event: React.MouseEvent<HTMLInputElement>) => {
           if (document.activeElement !== event.currentTarget) {
@@ -216,7 +225,7 @@ export function DetailNumber({
         }}
       />
       {unit && <div className='Unit'>{unit}</div>}
-      <div className={fieldErrorClasses.value}>{errorMessage}</div>
+      <div className={fieldErrorClasses.value}>{activeErrorMessage}</div>
     </div>
   )
 }

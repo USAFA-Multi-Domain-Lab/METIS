@@ -1,9 +1,7 @@
 import type { TFileReferenceJson } from '@shared/files/FileReference'
 import { MissionForce } from '../forces/MissionForce'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from '../MissionComponent'
+import { MissionComponent } from '../MissionComponent'
+import type { MissionComponentIssueRegistry } from '../MissionComponentIssueRegistry'
 
 /**
  * A file that is attached to a mission as a part
@@ -64,8 +62,23 @@ export abstract class MissionFile<
   }
 
   // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
+  public get superComponent(): T['mission'] {
+    return this.mission
+  }
+
+  // Implemented
+  public get source(): T['mission'] {
+    return this.mission
+  }
+
+  // Implemented
+  public get subComponents(): [] {
     return []
+  }
+
+  // Implemented
+  public get sourceList(): T['missionFile'][] {
+    return this.mission.files
   }
 
   /**
@@ -80,6 +93,15 @@ export abstract class MissionFile<
    */
   public get size(): number {
     return this.reference.size
+  }
+
+  /**
+   * Whether the file's reference has been deleted, meaning the file
+   * is still part of the mission hierarchy but points to a resource
+   * that no longer exists.
+   */
+  public get orphaned(): boolean {
+    return this.reference.deleted
   }
 
   public constructor(
@@ -114,11 +136,9 @@ export abstract class MissionFile<
      */
     protected readonly _mission: T['mission'],
   ) {
-    super(_id, '', reference.deleted)
+    super(_id, '', false)
 
-    // Update the last-known name if the reference
-    // is not deleted.
-    if (!reference.deleted) this.lastKnownName = reference.name
+    if (!this.orphaned) this.lastKnownName = reference.name
     else reference.name = lastKnownName
     this.access = [...initialAccess]
   }
@@ -180,6 +200,24 @@ export abstract class MissionFile<
     alias: '',
     lastKnownName: '',
     initialAccess: [],
+  }
+
+  /**
+   * Registers issue checkers for all {@link MissionFile} instances
+   * with the provided registry.
+   * @param registry The registry to register checkers with.
+   */
+  public static registerIssueCheckers(
+    registry: MissionComponentIssueRegistry,
+  ): void {
+    registry.check({
+      key: 'orphaned-file',
+      message: (file) =>
+        `"${file.lastKnownName}" is referencing a file that has been deleted.`,
+      what: [MissionFile],
+      when: ['initialization', 'file-orphaned'],
+      if: (file) => file.orphaned,
+    })
   }
 }
 

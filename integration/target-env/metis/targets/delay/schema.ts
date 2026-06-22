@@ -7,7 +7,7 @@ const groupingId = 'delayTime'
 const Delay = TargetSchema.create({
   _id: 'delay',
   name: 'Delay',
-  description: '',
+  description: 'Adds a delay in a series of effects being processed.',
   script: async (
     context,
     delayTimeHours,

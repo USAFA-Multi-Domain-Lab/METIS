@@ -6,6 +6,7 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { TCreatedByJson, User } from '@shared/users/User'
 import { context } from '../context'
 import type { MetisComponent } from '../MetisComponent'
+import { TargetArgument } from '../target-environments/arguments/TargetArgument'
 import type { TExecution } from './actions/ActionExecution'
 import {
   MissionAction,
@@ -18,17 +19,16 @@ import {
   type TEffectSessionTriggered,
   type TEffectSessionTriggeredJson,
 } from './effects/Effect'
-import type { TMissionFileJson } from './files/MissionFile'
+import { MissionFile, type TMissionFileJson } from './files/MissionFile'
 import type {
   TForce,
   TMissionForceJson,
   TMissionForceSaveJson,
 } from './forces/MissionForce'
 import { MissionForce } from './forces/MissionForce'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from './MissionComponent'
+import { MissionComponent } from './MissionComponent'
+import type { MissionComponentIssue } from './MissionComponentIssue'
+import { MissionComponentIssueRegistry } from './MissionComponentIssueRegistry'
 import { MissionResource, type TMissionResourceJson } from './MissionResource'
 import type { TNode } from './nodes/MissionNode'
 import type {
@@ -57,6 +57,11 @@ export abstract class Mission<
   }
 
   /**
+   * The centralized registry of issues for all components within the mission.
+   */
+  public readonly issueRegistry: MissionComponentIssueRegistry
+
+  /**
    * All nodes that exist in the mission across
    * every force.
    */
@@ -69,7 +74,7 @@ export abstract class Mission<
    * every node in every force.
    */
   public get allActions(): T['action'][] {
-    return this.allNodes.flatMap((node) => Array.from(node.actions.values()))
+    return this.allNodes.flatMap((node) => node.actions)
   }
 
   /**
@@ -109,13 +114,35 @@ export abstract class Mission<
   }
 
   // Implemented
-  public get additionalIssues(): TMissionComponentIssue[] {
-    return Mission.consolidateIssues(
-      ...this.prototypes,
+  public get superComponent(): null {
+    return null
+  }
+
+  // Implemented
+  public get source(): null {
+    return null
+  }
+
+  // Implemented
+  public get subComponents(): Array<
+    | T['prototype']
+    | T['force']
+    | T['resource']
+    | T['missionFile']
+    | T['sessionTriggeredEffect']
+  > {
+    return [
+      ...this.root.children,
       ...this.forces,
+      ...this.resources,
       ...this.files,
       ...this.effects,
-    )
+    ]
+  }
+
+  // Implemented
+  public get sourceList(): [] {
+    return []
   }
 
   /**
@@ -171,16 +198,10 @@ export abstract class Mission<
   public forces: T['force'][]
 
   /**
-   * @see {@link resources}
-   */
-  protected _resources: JsonSerializableArray<T['resource']>
-  /**
    * A collection of resource definitions which define the currencies
    * used within the mission.
    */
-  public get resources(): JsonSerializableArray<T['resource']> {
-    return new JsonSerializableArray(...this._resources)
-  }
+  public resources: JsonSerializableArray<T['resource']>
 
   /**
    * Files attached to the mission that will be used
@@ -238,7 +259,7 @@ export abstract class Mission<
     this.createdByUsername = createdByUsername
 
     this.prototypes = []
-    this._resources = new JsonSerializableArray()
+    this.resources = new JsonSerializableArray()
     this.forces = []
     this.files = []
     this.effects = []
@@ -249,6 +270,20 @@ export abstract class Mission<
     this.importForces(forceData)
     this.importFiles(fileData)
     this.importEffects(effectData)
+
+    this.issueRegistry = new MissionComponentIssueRegistry()
+    this.initializeIssueRegistry()
+  }
+
+  /**
+   * Registers all issue checkers with the {@link issueRegistry}.
+   * Subclasses can override this to register additional checkers.
+   * Called once during construction before components are imported.
+   */
+  protected initializeIssueRegistry(): void {
+    Effect.registerIssueCheckers(this.issueRegistry)
+    MissionFile.registerIssueCheckers(this.issueRegistry)
+    TargetArgument.registerIssueCheckers(this.issueRegistry)
   }
 
   /**
@@ -786,14 +821,25 @@ export abstract class Mission<
   }
 
   /**
+   * All issues across every component in the mission tree, collected
+   * by walking forces → nodes → actions → effects → arguments and
+   * the mission's own prototypes, resources, files, and effects.
+   */
+  public get allIssues(): MissionComponentIssue[] {
+    return this.issueRegistry.allIssues
+  }
+
+  /**
    * @param config The session config for which to get relevant issues.
    * @returns All issues in the mission relevant the session
    * configuration passed. All issues related to target-environments
    * which are disabled by this config will be filtered out.
    */
-  public getIssuesForConfig(config: TSessionConfig): TMissionComponentIssue[] {
+  public getIssuesForConfig(
+    config: TSessionConfig,
+  ): MissionComponentIssue<MissionComponent<any, any>>[] {
     let { disabledTargetEnvs } = config
-    return this.issues.filter(({ component }) => {
+    return this.allIssues.filter(({ component }) => {
       if (
         component instanceof Effect &&
         disabledTargetEnvs.includes(component.environmentId)
@@ -1226,9 +1272,7 @@ export abstract class Mission<
       if (forceId && force._id !== forceId) continue
       for (let node of force.nodes) {
         if (nodeId && node._id !== nodeId) continue
-        let action = Array.isArray(node.actions)
-          ? node.actions.find((action) => action._id === actionId)
-          : node.actions.get(actionId)
+        let action = node.actions.find((action) => action._id === actionId)
         if (action) return action as TAction | TMissionActionJson
         else if (nodeId) return undefined
         continue
@@ -1263,15 +1307,7 @@ export abstract class Mission<
     let node = force.nodes.find((node) => node.localKey === nodeKey)
     if (!node) return undefined
 
-    const { actions } = node
-    let action = undefined
-
-    if (Array.isArray(actions)) {
-      action = actions.find((a) => a.localKey === actionKey)
-    } else if (actions instanceof Map) {
-      let actionsArray = Array.from(actions.values())
-      action = actionsArray.find((a) => a.localKey === actionKey)
-    }
+    let action = node.actions.find((action) => action.localKey === actionKey)
 
     return action as TAction | TMissionActionJson
   }

@@ -3,6 +3,17 @@ import { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import React from 'react'
 
+// These tests exercise the mission map and node-alert surface only. The
+// messenger pulls in the chat-channel, rich-text editor, and button-engine
+// subtrees, none of which are relevant here, so it is stubbed out.
+jest.mock(
+  '@client/components/content/session/messenger/MessengerPanel',
+  () => ({
+    __esModule: true,
+    default: () => null,
+  }),
+)
+
 class FakeEventTarget {
   public listeners = new Map<string, Set<(...args: any[]) => void>>()
 
@@ -332,6 +343,11 @@ function createSessionPageHarness(alerts: NodeAlert[] = []) {
     setupFailed: false,
     teardownFailed: false,
     name: 'Test Session',
+    pendingSessionPanelAlerts: [],
+    memberChatChannels: [],
+    getUnreadChatMessageCount: () => 0,
+    markAllMessagesInChannelAsRead: () => {},
+    sendChatMessage: () => {},
     config: {
       accessibility: 'default',
       infiniteResources: false,

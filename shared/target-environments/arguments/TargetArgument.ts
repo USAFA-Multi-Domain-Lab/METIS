@@ -3,10 +3,12 @@ import type { Effect, TEffectType } from '@shared/missions/effects/Effect'
 import { MissionFile } from '@shared/missions/files/MissionFile'
 import { MissionForce } from '@shared/missions/forces/MissionForce'
 import { ResourcePool } from '@shared/missions/forces/ResourcePool'
+import type { MissionComponentIssueRegistry } from '@shared/missions/MissionComponentIssueRegistry'
 import { MissionResource } from '@shared/missions/MissionResource'
 import { MissionNode } from '@shared/missions/nodes/MissionNode'
-import type { TMissionComponentSerializedSelection } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter2'
+import type { TMissionComponentSerializedSelection } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
+import { BooleanToolbox } from '@shared/toolbox/booleans/BooleanToolbox'
 import {
   ObjectToolbox,
   type TSatisfies,
@@ -15,10 +17,7 @@ import { type TJsonSerializable } from '@shared/toolbox/serialization/json'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import zod from 'zod'
 import { Mission, type TMission } from '../../missions/Mission'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from '../../missions/MissionComponent'
+import { MissionComponent } from '../../missions/MissionComponent'
 import type {
   TDropdownTargetParameter,
   TDropdownTargetParameterOptionVal,
@@ -64,7 +63,7 @@ export abstract class TargetArgument<
    * it satisfies and the value assigned to that parameter. The type of
    * `value` is determined by the `type` field.
    */
-  public readonly context: Readonly<TTargetArgumentContext<T>>
+  public readonly context: TTargetArgumentContext<T>
 
   /**
    * The type of the parameter this argument satisfies. This is a
@@ -100,13 +99,28 @@ export abstract class TargetArgument<
     return [...this.effect.path, this]
   }
 
-  /**
-   * Cache for {@link additionalIssues} to avoid recomputing on every access.
-   */
-  protected _additionalIssues: TMissionComponentIssue[]
   // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
-    return this._additionalIssues
+  public get superComponent():
+    | T['executionTriggeredEffect']
+    | T['sessionTriggeredEffect'] {
+    return this.effect
+  }
+
+  // Implemented
+  public get subComponents(): [] {
+    return []
+  }
+
+  // Implemented
+  public get sourceList(): T['targetArgument'][] {
+    return this.effect.arguments
+  }
+
+  // Implemented
+  public get source():
+    | T['executionTriggeredEffect']
+    | T['sessionTriggeredEffect'] {
+    return this.effect
   }
 
   /**
@@ -118,10 +132,77 @@ export abstract class TargetArgument<
   public get value(): TTargetArgumentValue<T> {
     return this.context.value
   }
+  public set value(newValue: TTargetArgumentValue<T>) {
+    this.context.value = newValue
+  }
 
   // Implemented
   public get json(): TTargetArgumentJson {
     return this.serialize()
+  }
+
+  /**
+   * Whether the corresponding parameter could
+   * not be found for the given target.
+   */
+  public get parameterIsMissing(): boolean {
+    return !this.parameter
+  }
+
+  /**
+   * Whether the type of this argument's value conflicts with the type of the
+   * corresponding parameter on the target. If `parameter` is `undefined, `false`
+   * is returned.
+   */
+  public get hasTypeMismatch(): boolean {
+    return this.parameter?.type !== this.type
+  }
+
+  /**
+   * Whether this argument has a dropdown parameter whose options do not include
+   * the assigned value. If `parameter` is `undefined` or not a dropdown type, `false`
+   * is returned.
+   */
+  public get valueIsInvalidOption(): boolean {
+    return (
+      this.parameter?.type === 'dropdown' &&
+      this.parameter.options.every((option) => option.value !== this.value)
+    )
+  }
+
+  /**
+   * Whether this argument has a string parameter with a pattern that does not match
+   * the assigned value.
+   * @note If `parameter` is `undefined` or not a string type, `false` is returned.
+   */
+  public get hasPatternMismatch(): boolean {
+    return (
+      this.parameter?.type === 'string' &&
+      !!this.parameter.pattern &&
+      !this.parameter.pattern.test(`${this.value}`)
+    )
+  }
+
+  // Overridden
+  public override get usesSubentry(): boolean {
+    return true
+  }
+
+  /**
+   * Whether the dependencies in the corresponding parameter
+   * are met for this argument.
+   */
+  public get dependenciesMet(): boolean {
+    let dependencies = this.parameter?.dependencies ?? []
+    if (!dependencies.length) return true
+
+    return dependencies.every((dependency) => {
+      let dependentArgument = this.effect.arguments.find(
+        (argument) => argument.parameterId === dependency.dependentId,
+      )
+      if (!dependentArgument?.dependenciesMet) return false
+      return dependency.condition(dependentArgument.value)
+    })
   }
 
   /**
@@ -142,8 +223,6 @@ export abstract class TargetArgument<
     this.parameterId = parameterId
     this.context = context
     this.effect = effect.normalize()
-    this._additionalIssues = []
-    this.scanForIssues()
   }
 
   // Implemented
@@ -161,63 +240,6 @@ export abstract class TargetArgument<
         parameterId: this.parameterId,
         ...this.context,
       }
-    }
-  }
-
-  /**
-   * Scans the argument for issues and caches them in
-   * {@link _additionalIssues}.
-   */
-  private scanForIssues() {
-    this._additionalIssues = []
-
-    // Do not push issues if the target is missing or the effect is outdated.
-    // These issues should be handled at the effect level.
-    if (!this.effect.target || this.effect.outdated) return
-
-    let { parameter } = this
-
-    // Push an issue if the parameter cannot be found on the target.
-    if (!parameter) {
-      this._additionalIssues.push({
-        component: this,
-        type: 'general',
-        message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that could not be found on the target "${this.effect.target.name}".`,
-      })
-    }
-    // Push an issue if the parameter type does not match the expected type.
-    else if (parameter.type !== this.type) {
-      this._additionalIssues.push({
-        component: this,
-        type: 'general',
-        message: `Effect "${this.effect.name}" has a type mismatch for parameter "${parameter.name}": expected "${parameter.type}", got "${this.type}".`,
-      })
-    }
-    // Push an issue if the parameter is a dropdown and the value does not
-    // match any of the options in the dropdown.
-    else if (
-      parameter.type === 'dropdown' &&
-      parameter.options.every((option) => option.value !== this.value)
-    ) {
-      this._additionalIssues.push({
-        component: this,
-        type: 'general',
-        message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that has a value "${this.context.value}" that does not match any of the dropdown options.`,
-      })
-    }
-    // Push an issue if the parameter is a string with a pattern and
-    // the value does not match the specified pattern.
-    else if (
-      parameter.type === 'string' &&
-      this.context.type === 'string' &&
-      parameter.pattern &&
-      !parameter.pattern.test(this.context.value)
-    ) {
-      this._additionalIssues.push({
-        component: this,
-        type: 'general',
-        message: `Effect "${this.effect.name}" has an argument with parameter ID "${this.parameterId}" that does not match the required pattern.`,
-      })
     }
   }
 
@@ -246,7 +268,7 @@ export abstract class TargetArgument<
    * @param parameter The resolved target parameter for this argument, if found.
    */
   protected static applyDefault(
-    json: TTargetArgumentJson,
+    json: TTargetArgumentJson | TTargetArgumentContext<any>,
     parameter: TTargetParameter | undefined,
   ): void {
     if (!parameter || json.type !== parameter.type) return
@@ -275,12 +297,25 @@ export abstract class TargetArgument<
       }
       case 'dropdown': {
         parameter = parameter as TDropdownTargetParameter // Cast is safe due to type check at the top of the method.
+
+        // Abort if no default is needed.
         if (
-          parameter.required &&
-          (json.value === null || json.value === undefined)
+          !parameter.required ||
+          (json.value !== null && json.value !== undefined)
         ) {
-          json.value = parameter.default.value
+          return
         }
+
+        let defaultOptionId = parameter.default
+        let defaultOption = parameter.options.find(
+          (option) => option._id === defaultOptionId,
+        )
+
+        // Abort if no default is found.
+        if (!defaultOption) return
+
+        // Apply default.
+        json.value = defaultOption.value
         break
       }
     }
@@ -320,6 +355,53 @@ export abstract class TargetArgument<
   }
 
   /**
+   * Registers issue checkers for all {@link TargetArgument} instances
+   * with the provided registry.
+   * @param registry The registry to register checkers with.
+   */
+  public static registerIssueCheckers(
+    registry: MissionComponentIssueRegistry,
+  ): void {
+    registry
+      .check({
+        key: TargetArgument.ISSUE_KEY_DROPDOWN_VALUE_MISMATCH,
+        message: (argument) =>
+          `Parameter "${argument.parameterId}" has a value "${argument.context.value}" that does not match any of the dropdown options.`,
+        what: [TargetArgument],
+        when: [
+          'initialization',
+          'effect-updated',
+          'dropdown-mismatch-resolved',
+          'dependency-met-update',
+        ],
+        if: (argument) =>
+          argument.dependenciesMet &&
+          BooleanToolbox.onlyLast(
+            argument.effect.targetArgumentsLocked,
+            argument.valueIsInvalidOption,
+          ),
+      })
+      .check({
+        key: TargetArgument.ISSUE_KEY_PATTERN_MISMATCH,
+        message: (argument) =>
+          `Parameter "${argument.parameterId}" does not match the required pattern.`,
+        what: [TargetArgument],
+        when: [
+          'initialization',
+          'effect-updated',
+          'string-argument-pattern-check',
+          'dependency-met-update',
+        ],
+        if: (argument) =>
+          argument.dependenciesMet &&
+          BooleanToolbox.onlyLast(
+            argument.effect.targetArgumentsLocked,
+            argument.hasPatternMismatch,
+          ),
+      })
+  }
+
+  /**
    * The default properties for a {@link TargetArgument} object.
    */
   public static get DEFAULT_PROPERTIES(): Omit<
@@ -331,6 +413,19 @@ export abstract class TargetArgument<
       type: 'string',
     }
   }
+
+  /**
+   * Key used to index an issue when a target argument has a dropdown value that
+   * does not match any of the parameter's options.
+   */
+  public static readonly ISSUE_KEY_DROPDOWN_VALUE_MISMATCH =
+    'dropdown-value-mismatch'
+
+  /**
+   * Key used to index an issue when a target argument has a pattern mismatch
+   * with its parameter.
+   */
+  public static readonly ISSUE_KEY_PATTERN_MISMATCH = 'pattern-mismatch'
 
   /**
    * Deserializes a selection of serialized mission components back into

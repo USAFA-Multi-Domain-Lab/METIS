@@ -1,105 +1,98 @@
 import { migrations } from '@integration/metis/targets/force/resource-pool/migrations'
 import { describe, expect, test } from '@jest/globals'
 import type { TMigratableEffect } from '@server/target-environments/TargetMigration'
+import type { TTargetArgumentJson } from '@shared/target-environments/arguments/TargetArgument'
 
-type TPool = { localKey: string; name: string; resource: { order: number } }
-type TForce = { localKey: string; resourcePools: TPool[] }
-type TSourceForce = { resourcePools: TPool[] } | null
+type TPool = { _id: string; name: string; resource: { order: number } }
+type TForce = { _id: string; name: string; resourcePools: TPool[] }
 
 function buildEffect(
-  args: Record<string, unknown>,
-  opts: {
-    sourceForce?: TSourceForce
-    forces?: TForce[]
-  } = {},
+  argumentList: TTargetArgumentJson[],
+  options: { forces?: TForce[] } = {},
 ): TMigratableEffect {
   return {
-    args,
+    arguments: argumentList,
     versionCursor: '2.3.0',
-    sourceForce: opts.sourceForce ?? null,
     mission: {
-      forces: opts.forces ?? [],
+      forces: options.forces ?? [],
     },
   } as unknown as TMigratableEffect
 }
 
-describe('resource-pool migration 2.4.0', () => {
-  test('Sets poolMetadata from sourceForce when forceKey is "self"', () => {
-    let effect = buildEffect(
-      { forceMetadata: { forceKey: 'self', forceName: 'Red Force' } },
-      {
-        sourceForce: {
-          resourcePools: [
-            { localKey: 'pool-1', name: 'Gold', resource: { order: 1 } },
-          ],
+function forceMetadataArgument(
+  forceId: string,
+  forceName: string,
+): TTargetArgumentJson {
+  return {
+    _id: 'argument-force',
+    parameterId: 'forceMetadata',
+    type: 'mission-component',
+    value: [{ componentType: 'force', lastKnownName: forceName, ids: [forceId] }],
+  }
+}
+
+describe('resource-pool migration', () => {
+  test('replaces the force selection with the lowest-order pool of the matching force', () => {
+    let effect = buildEffect([forceMetadataArgument('force-1', 'Red Force')], {
+      forces: [
+        {
+          _id: 'force-1',
+          name: 'Red Force',
+          resourcePools: [{ _id: 'pool-1', name: 'Gold', resource: { order: 1 } }],
         },
-      },
-    )
+      ],
+    })
 
     migrations.migrate(effect)
 
-    expect(effect.args.poolMetadata).toEqual({
-      forceKey: 'self',
-      forceName: 'Red Force',
-      poolKey: 'pool-1',
-      poolName: 'Gold',
+    // 2.4.0 swaps forceMetadata -> poolMetadata; 2.5.0 renames poolMetadata -> applyTo.
+    let argument = effect.arguments.find(
+      (candidate) => candidate.parameterId === 'applyTo',
+    )
+    expect(argument).toMatchObject({
+      type: 'mission-component',
+      value: [
+        {
+          componentType: 'resourcePool',
+          lastKnownName: 'Gold',
+          ids: ['force-1', 'pool-1'],
+        },
+      ],
     })
-    expect(effect.args.forceMetadata).toBeUndefined()
+    expect(
+      effect.arguments.find(
+        (candidate) => candidate.parameterId === 'forceMetadata',
+      ),
+    ).toBeUndefined()
   })
 
-  test('Sets poolMetadata from the matching force in mission.forces when forceKey is not "self"', () => {
-    let effect = buildEffect(
-      { forceMetadata: { forceKey: 'blue', forceName: 'Blue Force' } },
-      {
-        sourceForce: {
+  test('selects the pool with the lowest resource order when multiple pools exist', () => {
+    let effect = buildEffect([forceMetadataArgument('force-1', 'Red Force')], {
+      forces: [
+        {
+          _id: 'force-1',
+          name: 'Red Force',
           resourcePools: [
-            { localKey: 'pool-red', name: 'Red Gold', resource: { order: 1 } },
+            { _id: 'pool-b', name: 'Silver', resource: { order: 2 } },
+            { _id: 'pool-a', name: 'Gold', resource: { order: 1 } },
           ],
         },
-        forces: [
-          {
-            localKey: 'blue',
-            resourcePools: [
-              {
-                localKey: 'pool-blue',
-                name: 'Blue Gold',
-                resource: { order: 1 },
-              },
-            ],
-          },
-        ],
-      },
-    )
-
-    migrations.migrate(effect)
-
-    expect(effect.args.poolMetadata).toMatchObject({
-      forceKey: 'blue',
-      forceName: 'Blue Force',
-      poolKey: 'pool-blue',
-      poolName: 'Blue Gold',
+      ],
     })
-    expect(effect.args.forceMetadata).toBeUndefined()
-  })
-
-  test('Selects the pool with the lowest resource order when multiple pools exist', () => {
-    let effect = buildEffect(
-      { forceMetadata: { forceKey: 'self', forceName: 'Red Force' } },
-      {
-        sourceForce: {
-          resourcePools: [
-            { localKey: 'pool-b', name: 'Silver', resource: { order: 2 } },
-            { localKey: 'pool-a', name: 'Gold', resource: { order: 1 } },
-          ],
-        },
-      },
-    )
 
     migrations.migrate(effect)
 
-    expect(effect.args.poolMetadata).toMatchObject({
-      poolKey: 'pool-a',
-      poolName: 'Gold',
+    let argument = effect.arguments.find(
+      (candidate) => candidate.parameterId === 'applyTo',
+    )
+    expect(argument).toMatchObject({
+      value: [
+        {
+          componentType: 'resourcePool',
+          lastKnownName: 'Gold',
+          ids: ['force-1', 'pool-a'],
+        },
+      ],
     })
   })
 })

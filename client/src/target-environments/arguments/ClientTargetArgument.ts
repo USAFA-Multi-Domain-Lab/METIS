@@ -58,19 +58,19 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
       case 'number':
         context = {
           type: 'number',
-          value: parameter.required ? parameter.default : null,
+          value: null,
         }
         break
       case 'string':
         context = {
           type: 'string',
-          value: parameter.required ? parameter.default : '',
+          value: '',
         }
         break
       case 'large-string':
         context = {
           type: 'large-string',
-          value: parameter.required ? parameter.default : '',
+          value: '',
         }
         break
       case 'boolean':
@@ -82,7 +82,7 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
       case 'dropdown':
         context = {
           type: 'dropdown',
-          value: parameter.required ? parameter.default : null,
+          value: null,
         }
         break
       case 'mission-component':
@@ -92,6 +92,8 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
         }
         break
     }
+
+    TargetArgument.applyDefault(context, parameter)
 
     return new ClientTargetArgument(effect, _id, parameter._id, context)
   }

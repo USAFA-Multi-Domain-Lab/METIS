@@ -1,3 +1,5 @@
+import Tooltip from '@client/components/content/communication/Tooltip'
+import type { TDetailMultiSelectHandle } from '@client/components/content/form/dropdowns/multiselect/DetailMultiSelect'
 import DetailMultiSelect from '@client/components/content/form/dropdowns/multiselect/DetailMultiSelect'
 import { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
 import { ClientMission } from '@client/missions/ClientMission'
@@ -8,9 +10,12 @@ import { ClientResourcePool } from '@client/missions/forces/ClientResourcePool'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import type { ClientTargetArgument } from '@client/target-environments/arguments/ClientTargetArgument'
 import { useObjectFormSync } from '@client/toolbox/hooks'
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useMissionPageContext } from '../../context'
-import type { TMissionOutlineItem } from '../../structures/MissionOutline'
+import type {
+  TMissionOutlineHandle,
+  TMissionOutlineItem,
+} from '../../structures/MissionOutline'
 import MissionOutline, {
   computeOutlineIconStyling,
 } from '../../structures/MissionOutline'
@@ -31,6 +36,8 @@ export default function MissionComponentTargetDetail({
     onChange: () => onChange(argument),
   })
   const [context, setContext] = formState.context
+  const outlineRef = useRef<TMissionOutlineHandle>(null)
+  const multiSelectRef = useRef<TDetailMultiSelectHandle>(null)
 
   /* -- VALIDATION -- */
 
@@ -58,7 +65,6 @@ export default function MissionComponentTargetDetail({
 
   const { mission } = argument.effect
 
-  /* -- COMPUTED -- */
   // A list of JS classes. If an outline item is an instance
   // of any of these classes, then it is selectable in the outline.
   let selectableOutlineItemTypes = useMemo(() => {
@@ -128,45 +134,68 @@ export default function MissionComponentTargetDetail({
     return Array.from(result)
   }, [selectableOutlineItemTypes])
 
+  /* -- FUNCTIONS -- */
+
+  const getPillStyle = (item: (typeof value)[number]): React.CSSProperties => {
+    let style: React.CSSProperties = {}
+    let force = item.getAssociatedComponentWithType(ClientMissionForce)
+    let node = item.getAssociatedComponentWithType(ClientMissionNode)
+    if (force) style.boxShadow = `inset 0 0 0 1000px ${force.color}19`
+    if (node) style.borderColor = `${node.color}aa`
+    return style
+  }
+  const renderPill = (item: (typeof value)[number]) => {
+    return (
+      <div className='ComponentItemContent'>
+        <div className='Icon' style={computeOutlineIconStyling(item)}></div>
+        <div className='Name'>{item.name}</div>
+        <Tooltip
+          description={`${item.name}\n\t\n**Click to reveal in outline**`}
+        />
+      </div>
+    )
+  }
+  const renderOptions = () => (
+    <MissionOutline
+      ref={outlineRef}
+      root={mission}
+      selectionState={[value, setValue]}
+      isSelectable={(item) =>
+        selectableOutlineItemTypes.some((ComponentClass) => {
+          return item instanceof ComponentClass
+        })
+      }
+      filter={(item) => {
+        return displayableOutlineItemTypes.some((ComponentClass) => {
+          return item instanceof ComponentClass
+        })
+      }}
+      isIndirectlySelectable={(item, parent) => {
+        let isNode = item instanceof ClientMissionNode
+        let parentIsNode = parent instanceof ClientMissionNode
+        return !isNode || !parentIsNode
+      }}
+    />
+  )
+
   /* -- RENDER -- */
 
   return (
-    <DetailMultiSelect<TMissionOutlineItem>
+    <DetailMultiSelect<(typeof value)[number]>
+      ref={multiSelectRef}
       label={parameter.name}
       tooltipDescription={parameter.tooltipDescription}
       value={value}
       setValue={setValue}
       getKey={({ _id }) => _id}
-      render={(item) => {
-        return (
-          <div className='ComponentItemContent'>
-            <div className='Icon' style={computeOutlineIconStyling(item)}></div>
-            <div className='Name'>{item.name}</div>
-          </div>
-        )
+      onPillClick={(item) => {
+        multiSelectRef.current?.expand()
+        outlineRef.current?.revealItem(item)
       }}
+      getPillStyle={getPillStyle}
+      render={renderPill}
       options={[]}
-      renderOptions={() => (
-        <MissionOutline
-          root={mission}
-          selectionState={[value, setValue]}
-          isSelectable={(item) =>
-            selectableOutlineItemTypes.some((ComponentClass) => {
-              return item instanceof ComponentClass
-            })
-          }
-          filter={(item) => {
-            return displayableOutlineItemTypes.some((ComponentClass) => {
-              return item instanceof ComponentClass
-            })
-          }}
-          isIndirectlySelectable={(item, parent) => {
-            let isNode = item instanceof ClientMissionNode
-            let parentIsNode = parent instanceof ClientMissionNode
-            return !isNode || !parentIsNode
-          }}
-        />
-      )}
+      renderOptions={renderOptions}
     />
   )
 }

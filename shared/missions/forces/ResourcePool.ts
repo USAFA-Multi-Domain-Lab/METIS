@@ -4,10 +4,7 @@ import {
 } from '@shared/toolbox/serialization/json'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { Mission, type TMission } from '../Mission'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from '../MissionComponent'
+import { MissionComponent } from '../MissionComponent'
 import { MissionResource } from '../MissionResource'
 import type { TForce, TForceJsonOptions } from './MissionForce'
 
@@ -26,6 +23,26 @@ export abstract class ResourcePool<
    * The force that owns this resource pool.
    */
   public readonly force: T['force']
+
+  // Implemented
+  public get superComponent(): T['force'] {
+    return this.force
+  }
+
+  // Implemented
+  public get source(): T['force'] {
+    return this.force
+  }
+
+  // Implemented
+  public get subComponents(): [] {
+    return []
+  }
+
+  // Implemented
+  public get sourceList(): T['resourcePool'][] {
+    return this.force.resourcePools
+  }
 
   /**
    * The ID of the force that owns this resource pool.
@@ -52,15 +69,15 @@ export abstract class ResourcePool<
     return this.resource.name
   }
 
-  // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
-    return []
-  }
-
   /**
    * The {@link MissionResource} this pool tracks.
    */
   public readonly resource: T['resource']
+
+  // Overridden
+  public override get usesSubentry(): boolean {
+    return true
+  }
 
   /**
    * The ID of the {@link MissionResource} this pool tracks.

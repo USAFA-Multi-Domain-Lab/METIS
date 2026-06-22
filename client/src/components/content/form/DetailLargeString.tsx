@@ -1,15 +1,16 @@
-import { compute } from '@client/toolbox'
-import type { EditorEvents } from '@tiptap/react'
-import { useState } from 'react'
+import type { Editor, EditorEvents } from '@tiptap/react'
+import { useRef, useState } from 'react'
 import type { TDetailWithInput_P } from '.'
 import RichText from '../general-layout/rich-text/RichText'
 import ButtonSvgPanel from '../user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../user-controls/buttons/panels/hooks'
 import './DetailLargeString.scss'
 import DetailTitleRow from './DetailTitleRow'
-import { useDetailClassNames } from './useDetailClassNames'
+import { useDefaultValue } from './hooks/useDefaultValue'
+import { useDetailClassNames } from './hooks/useDetailClassNames'
+import { useErrorMessages } from './hooks/useErrorMessages'
 
-const DEFAULT_ERROR_MESSAGE: string = 'At least one character is required here.'
+const BLANK_ERROR_MESSAGE: string = 'At least one character is required here.'
 
 /**
  * This will render a detail for
@@ -18,15 +19,13 @@ const DEFAULT_ERROR_MESSAGE: string = 'At least one character is required here.'
  */
 export function DetailLargeString({
   fieldType,
-  handleOnBlur,
   label,
   value: stateValue,
   setValue: setState,
   // Optional Properties
-  defaultValue = undefined,
-  errorMessage = DEFAULT_ERROR_MESSAGE,
+  defaultValue = '',
+  errorMessage = '',
   errorType = 'default',
-  errorDisplay = 'on-blur',
   disabled = false,
   uniqueLabelClassName = undefined,
   uniqueFieldClassName = undefined,
@@ -34,7 +33,9 @@ export function DetailLargeString({
   tooltipDescription = '',
 }: TDetailLargeString_P): TReactElement | null {
   /* -- STATE -- */
-  const [leftField, setLeftField] = useState<boolean>(false)
+
+  const [focused, setFocused] = useState<boolean>(false)
+  const editorRef = useRef<Editor | null>(null)
   const buttonEngine = useButtonSvgEngine({
     elements: [
       {
@@ -47,45 +48,12 @@ export function DetailLargeString({
   })
 
   /* -- COMPUTED -- */
-  /**
-   * The boolean that determines if the
-   * error message should be displayed.
-   */
-  const displayError: boolean = compute(() => {
-    let display: boolean = false
-
-    // Whether the user has satisfied the interaction requirement.
-    // In 'immediate' mode this is always true; in 'on-blur' mode
-    // the user must have left the field at least once.
-    let interactionSatisfied: boolean =
-      errorDisplay === 'immediate' || leftField
-
-    // Show a non-default error message (covers both 'default' and 'warning'
-    // errorType) once the interaction requirement is satisfied.
-    if (
-      interactionSatisfied &&
-      handleOnBlur === 'deliverError' &&
-      errorMessage !== DEFAULT_ERROR_MESSAGE
-    ) {
-      display = true
-    }
-
-    // If the user has left the field and the
-    // field is required and the error message
-    // should be delivered and the field is empty,
-    // then display the default error message.
-    if (
-      interactionSatisfied &&
-      fieldType === 'required' &&
-      handleOnBlur === 'deliverError' &&
-      errorMessage === DEFAULT_ERROR_MESSAGE &&
-      !stateValue
-    ) {
-      display = true
-    }
-
-    // Return the boolean.
-    return display
+  let { displayError, activeErrorMessage } = useErrorMessages({
+    errorMessage,
+    fieldType,
+    inputValue: stateValue,
+    focused,
+    blankErrorMessage: BLANK_ERROR_MESSAGE,
   })
   const { rootClasses, labelClasses, fieldClasses, fieldErrorClasses } =
     useDetailClassNames({
@@ -96,16 +64,6 @@ export function DetailLargeString({
       uniqueLabelClassName,
       uniqueFieldClassName,
     })
-  /**
-   * The boolean that determines if the field
-   * should be repopulated with the default value.
-   */
-  const shouldRepopulate: boolean = compute(
-    () =>
-      !displayError &&
-      handleOnBlur === 'repopulateValue' &&
-      fieldType === 'required',
-  )
 
   /* -- FUNCTIONS -- */
 
@@ -137,28 +95,23 @@ export function DetailLargeString({
    * Handles the blur event for the editor.
    * @param editor The editor instance.
    */
-  const onBlur = ({ editor }: EditorEvents['blur']) => {
-    const value: string = editor.getHTML()
-    const isEmptyContent = checkForEmptyHtmlContent(value)
-    let { setContent } = editor.commands
-
-    // Indicate that the user has left the field.
-    // @note - This allows errors to be displayed.
-    setLeftField(true)
-
-    if (isEmptyContent && shouldRepopulate) {
-      // Update the parent component's state value
-      // and the editor's value (ensures both values
-      // are in sync without the need for a re-render).
-      if (!!defaultValue) {
-        setState(defaultValue)
-        setContent(defaultValue)
-      } else {
-        setState(placeholder)
-        setContent(placeholder)
-      }
-    }
+  const onBlur = () => {
+    setFocused(false)
   }
+
+  /* -- EFFECTS -- */
+
+  useDefaultValue({
+    fieldType,
+    stateValue,
+    setState,
+    defaultValue,
+    focused,
+    // When the default value is applied, we also need
+    // to refresh the content in the editor to reflect
+    // the new state value.
+    onApply: (value) => editorRef.current?.commands.setContent(value),
+  })
 
   /* -- RENDER -- */
 
@@ -179,12 +132,14 @@ export function DetailLargeString({
           content: stateValue,
           className: fieldClasses.value,
           placeholder,
+          editorRef,
           onUpdate,
+          onFocus: () => setFocused(true),
           onBlur,
           editable: !disabled,
         }}
       />
-      <div className={fieldErrorClasses.value}>{errorMessage}</div>
+      <div className={fieldErrorClasses.value}>{activeErrorMessage}</div>
     </div>
   )
 }

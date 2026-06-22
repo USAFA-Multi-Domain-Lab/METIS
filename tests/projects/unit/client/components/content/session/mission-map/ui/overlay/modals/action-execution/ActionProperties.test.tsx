@@ -101,6 +101,11 @@ function createMockAction(
       resourceLabel: 'Points',
       getResourceById: () => ({ name: 'Points' }),
     },
+    // ActionProperties subscribes to the action's `new-modifier` event via
+    // useEventListener, so the action must behave like an event target.
+    modifiers: [],
+    addEventListener: () => {},
+    removeEventListener: () => {},
     ...overrides,
   } as unknown as ClientMissionAction
 }

@@ -85,8 +85,7 @@ const NodeAlert = TargetSchema.create({
         warningOption,
         dangerOption,
       ] as const,
-      default: warningOption,
-      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
+      default: 'warning',
     },
     {
       type: 'large-string',
@@ -95,7 +94,6 @@ const NodeAlert = TargetSchema.create({
       required: true,
       groupingId: groupingId,
       default: 'Enter your message here.',
-      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
     },
   ],
   migrations,

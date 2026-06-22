@@ -29,10 +29,6 @@ export default function UserResetPage(): TReactElement | null {
   const [login] = globalContext.login
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [userEmptyStringArray, setUserEmptyStringArray] = useState<string[]>([])
-  const [handlePassword1Error, setHandlePassword1Error] =
-    useState<THandleOnBlur>('deliverError')
-  const [handlePassword2Error, setHandlePassword2Error] =
-    useState<THandleOnBlur>('deliverError')
   const [password1ErrorMessage, setPassword1ErrorMessage] = useState<string>()
   const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>()
   const [password1, setPassword1] = useState<string>('')
@@ -89,18 +85,16 @@ export default function UserResetPage(): TReactElement | null {
 
     if (user.hasValidPassword1 && password1 !== '') {
       removeUserEmptyString('password1')
-      setHandlePassword1Error('none')
+      setPassword1ErrorMessage('')
       setAreUnsavedChanges(true)
     }
 
     if (password1 === '') {
-      setHandlePassword1Error('deliverError')
       setPassword1ErrorMessage('At least one character is required here.')
       setUserEmptyStringArray([...userEmptyStringArray, `field=password1`])
     }
 
     if (!user.hasValidPassword1 && password1 !== '') {
-      setHandlePassword1Error('deliverError')
       setPassword1ErrorMessage(
         'Password must be between 8 and 50 characters and cannot contain spaces.',
       )
@@ -109,13 +103,12 @@ export default function UserResetPage(): TReactElement | null {
     // If the user has entered a password in the second password field,
     // check to see if the two passwords match.
     if (!user.passwordsMatch && user.password2) {
-      setHandlePassword2Error('deliverError')
       setPassword2ErrorMessage('Passwords must match.')
     }
     // If the user has entered a password in the second password field
     // and the two passwords match, remove the error.
     else if (user.passwordsMatch && user.password2) {
-      setHandlePassword2Error('none')
+      setPassword2ErrorMessage('')
     }
   }, [password1])
 
@@ -125,25 +118,22 @@ export default function UserResetPage(): TReactElement | null {
 
     if (user.hasValidPassword2 && password2 !== '') {
       removeUserEmptyString('password2')
-      setHandlePassword2Error('none')
+      setPassword2ErrorMessage('')
       setAreUnsavedChanges(true)
     }
 
     if (!user.hasValidPassword2 && password2 !== '') {
-      setHandlePassword2Error('deliverError')
       setPassword2ErrorMessage(
         'Password must be between 8 and 50 characters and cannot contain spaces.',
       )
     }
 
     if (password2 === '') {
-      setHandlePassword2Error('deliverError')
       setPassword2ErrorMessage('At least one character is required here.')
       setUserEmptyStringArray([...userEmptyStringArray, `field=password2`])
     }
 
     if (user.hasValidPassword2 && password2 !== '' && !user.passwordsMatch) {
-      setHandlePassword2Error('deliverError')
       setPassword2ErrorMessage('Passwords must match.')
     }
   }, [password2])
@@ -203,7 +193,6 @@ export default function UserResetPage(): TReactElement | null {
           <DetailLocked label='Username' value={user.username} />
           <DetailString
             fieldType='required'
-            handleOnBlur={handlePassword1Error}
             label='New Password'
             value={password1}
             setValue={setPassword1}
@@ -213,7 +202,6 @@ export default function UserResetPage(): TReactElement | null {
           />
           <DetailString
             fieldType='required'
-            handleOnBlur={handlePassword2Error}
             label='Confirm New Password'
             value={password2}
             setValue={setPassword2}
@@ -241,8 +229,3 @@ export default function UserResetPage(): TReactElement | null {
  * The props for the UserResetPage component.
  */
 export interface IUserResetPage extends TPage_P {}
-
-/**
- * The type of handleOnBlur.
- */
-type THandleOnBlur = 'deliverError' | 'none'

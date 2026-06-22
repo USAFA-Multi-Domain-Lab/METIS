@@ -24,90 +24,90 @@ export class StringTargetParameter {
     new RegExp(pattern.source, pattern.flags ?? '')
 
   /**
-   * Converts TStringArg to TStringArgJson.
-   * @param arg The string argument to convert.
-   * @returns The string argument as JSON.
+   * Converts TStringTargetParameter to TStringTargetParameterJson.
+   * @param parameter The string parameter to convert.
+   * @returns The string parameter as JSON.
    */
   public static toJson = (
-    arg: TStringTargetParameter,
+    parameter: TStringTargetParameter,
   ): TStringTargetParameterJson => {
     // Return the appropriate properties based on
-    // whether the argument is required or not.
-    return arg.required
+    // whether the parameter is required or not.
+    return parameter.required
       ? {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.encodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.encodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          default: arg.default,
-          pattern: arg.pattern
-            ? StringTargetParameter.encodePattern(arg.pattern)
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
+          default: parameter.default,
+          pattern: parameter.pattern
+            ? StringTargetParameter.encodePattern(parameter.pattern)
             : undefined,
-          title: arg.title,
+          title: parameter.title,
         }
       : {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.encodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.encodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          pattern: arg.pattern
-            ? StringTargetParameter.encodePattern(arg.pattern)
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
+          pattern: parameter.pattern
+            ? StringTargetParameter.encodePattern(parameter.pattern)
             : undefined,
-          title: arg.title,
+          title: parameter.title,
         }
   }
 
   /**
-   * Converts TStringArgJson to TStringArg.
-   * @param arg The string argument as JSON to convert.
-   * @returns The string argument.
+   * Converts TStringTargetParameterJson to TStringTargetParameter.
+   * @param parameter The string parameter as JSON to convert.
+   * @returns The string parameter.
    */
   public static fromJson = (
-    arg: TStringTargetParameterJson,
+    parameter: TStringTargetParameterJson,
   ): TStringTargetParameter => {
     // Return the appropriate properties based on
-    // whether the argument is required or not.
-    return arg.required
+    // whether the parameter is required or not.
+    return parameter.required
       ? {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.decodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.decodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          default: arg.default,
-          pattern: arg.pattern
-            ? StringTargetParameter.decodePattern(arg.pattern)
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
+          default: parameter.default,
+          pattern: parameter.pattern
+            ? StringTargetParameter.decodePattern(parameter.pattern)
             : undefined,
-          title: arg.title,
+          title: parameter.title,
         }
       : {
-          _id: arg._id,
-          name: arg.name,
-          groupingId: arg.groupingId,
-          dependencies: arg.dependencies
-            ? TargetParameter.decodeDependencies(arg.dependencies)
+          _id: parameter._id,
+          name: parameter.name,
+          groupingId: parameter.groupingId,
+          dependencies: parameter.dependencies
+            ? TargetParameter.decodeDependencies(parameter.dependencies)
             : undefined,
-          tooltipDescription: arg.tooltipDescription,
-          type: arg.type,
-          required: arg.required,
-          pattern: arg.pattern
-            ? StringTargetParameter.decodePattern(arg.pattern)
+          tooltipDescription: parameter.tooltipDescription,
+          type: parameter.type,
+          required: parameter.required,
+          pattern: parameter.pattern
+            ? StringTargetParameter.decodePattern(parameter.pattern)
             : undefined,
-          title: arg.title,
+          title: parameter.title,
         }
   }
 }
@@ -120,9 +120,9 @@ export class StringTargetParameter {
 export type TStringTargetParameter = TBaseTargetParameter &
   (TStringTargetParameterOptional | TStringTargetParameterRequired) & {
     /**
-     * The argument's input type.
+     * The parameter's input type.
      * @note This will render as an input that accepts any string.
-     * If the argument is required, empty strings are not allowed.
+     * If the parameter is required, empty strings are not allowed.
      */
     type: 'string'
     /**
@@ -135,7 +135,7 @@ export type TStringTargetParameter = TBaseTargetParameter &
     title?: string
   }
 /**
- * The optional string argument type for a target.
+ * The optional string parameter type for a target.
  */
 type TStringTargetParameterOptional = {
   /**
@@ -163,9 +163,9 @@ type TStringTargetParameterRequired = {
 export type TStringTargetParameterJson = TBaseTargetParameterJson &
   (TStringTargetParameterOptionalJson | TStringTargetParameterRequiredJson) & {
     /**
-     * The argument's input type.
+     * The parameter's input type.
      * @note This will render as an input that accepts any string.
-     * If the argument is required, empty strings are not allowed.
+     * If the parameter is required, empty strings are not allowed.
      */
     type: 'string'
     /**
@@ -192,7 +192,7 @@ export type TRegexJson = {
   flags?: string
 }
 /**
- * The optional string argument type for a target.
+ * The optional string parameter type for a target.
  */
 type TStringTargetParameterOptionalJson = {
   /**

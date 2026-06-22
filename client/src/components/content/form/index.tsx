@@ -1,15 +1,6 @@
 /* ---------------------------- TYPES FOR FORMS ---------------------------- */
 
 /**
- * Controls when a detail component shows its error or warning message.
- * @option `'on-blur'` errors appear after the user leaves the field (default behaviour).
- * @option `'immediate'` errors and warnings appear on mount or on change, without
- * requiring user interaction. Use this when embedding details in a context where
- * validation state should always be visible (e.g. the effect entry side panel).
- */
-export type TErrorDisplay = 'on-blur' | 'immediate'
-
-/**
  * The base properties for the details.
  */
 export type TDetailBase_P = {
@@ -30,8 +21,10 @@ export type TDetailBase_P = {
    */
   uniqueFieldClassName?: string
   /**
-   * The error message to display if the detail has an error.
-   * @default 'At least one character is required here.'
+   * An error or warning message sourced externally (e.g. from an issue checker).
+   * When non-empty, this error message is shown whenever the field is blurred,
+   * or when the field is being corrected due to an existing error.
+   * @default ''
    */
   errorMessage?: string
   /**
@@ -41,12 +34,6 @@ export type TDetailBase_P = {
    * @option 'warning' will display the error message in a yellow warning style.
    */
   errorType?: 'default' | 'warning'
-  /**
-   * Controls when the error or warning message is shown.
-   * Overrides the mode set by a surrounding {@link DetailContextProvider}.
-   * @default 'on-blur' (or whatever the nearest provider specifies)
-   */
-  errorDisplay?: TErrorDisplay
   /**
    * The tooltip description for the detail.
    */
@@ -107,17 +94,9 @@ export type TDetail_P<Type> = TDetailRequired_P<Type> | TDetailOptional_P<Type>
  */
 export type TDetailWithInput_P<Type> = TDetail_P<Type> & {
   /**
-   * **Determines what happens when the user leaves the field.**
-   * @type `'repopulateValue'` will repopulate the field with the default value
-   * if the field is empty or in a default state. (*The field type must be required
-   * and the default value must be correctly defined for this to work.*)
-   * @type `'deliverError'` will deliver an error message if the field is empty.
-   * (*The field type must be required for this to work.*)
-   * @type `'none'` will do nothing when the user leaves the field.
-   */
-  handleOnBlur: 'repopulateValue' | 'deliverError' | 'none'
-  /**
-   * The default value that is used if the field is empty.
+   * This value is applied to the field on mount and on every blur when
+   * the field is empty.
+   * @note This only applies to required details.
    */
   defaultValue?: Type
   /**

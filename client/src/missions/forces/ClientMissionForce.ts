@@ -13,7 +13,6 @@ import { Counter } from '@shared/toolbox/numbers/Counter'
 import type { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import type { TWithKey } from '@shared/toolbox/objects/ObjectToolbox'
 import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
-import type { ClientMissionAction } from '../actions/ClientMissionAction'
 import type { ClientMission } from '../ClientMission'
 import { ClientMissionNode } from '../nodes/ClientMissionNode'
 import { ClientOutput } from './ClientOutput'
@@ -34,21 +33,6 @@ export class ClientMissionForce
   public relationshipLines: TWithKey<TLine_P>[]
 
   /**
-   * All actions that exist in the force.
-   */
-  public get actions(): Map<string, ClientMissionAction> {
-    let actions = new Map<string, ClientMissionAction>()
-
-    for (let node of this.nodes) {
-      for (let action of node.actions.values()) {
-        actions.set(action._id, action)
-      }
-    }
-
-    return actions
-  }
-
-  /**
    * Manages the force's event listeners and events.
    */
   private eventManager: EventManager<TForceEventMethods, TForceEventArgs>
@@ -61,12 +45,12 @@ export class ClientMissionForce
 
   // Implemented
   public get outlineChildren(): TMissionOutlineItem[] {
-    return [...this.root.outlineChildren, ...this.resourcePools]
+    return this.subComponents
   }
 
   // Implemented
   public get outlineParent(): TMissionOutlineItem | null {
-    return this.mission as ClientMission
+    return this.superComponent
   }
 
   /**
@@ -103,6 +87,15 @@ export class ClientMissionForce
     return new ClientMissionNode(this, data)
   }
 
+  // Overridden
+  public delete(): void {
+    this.mission.files.forEach((file) => {
+      file.initialAccess = file.initialAccess.filter((id) => id !== this._id)
+    })
+    super.delete()
+    this.mission.handleStructureChange()
+  }
+
   /**
    * Handles a change in the mission's structure, anything that
    * would change the structure of the mission's node tree.
@@ -124,13 +117,12 @@ export class ClientMissionForce
       }
     }
 
-    // Remove any nodes that don't have a corresponding prototype.
+    // Remove any nodes whose prototype has been deleted.
     if (this.nodes.length > this.mission.prototypes.length) {
-      this.nodes = this.nodes.filter((node) =>
-        this.mission.prototypes.find(
-          (prototype) => prototype._id === node.prototype._id,
-        ),
-      )
+      // Spread required because `delete` method mutates the array.
+      for (let node of [...this.nodes]) {
+        if (node.prototype.deleted) node.delete()
+      }
     }
 
     // Reposition nodes and draw the lines between them.
@@ -530,6 +522,12 @@ export class ClientMissionForce
         return existingPool ?? ClientResourcePool.createNew(this, resource)
       },
     )
+
+    // Delete orphaned pools so the issue registry is notified.
+    for (let pool of [...this.resourcePools]) {
+      if (!updatedPools.includes(pool)) pool.delete()
+    }
+
     this.resourcePools = new JsonSerializableArray(...updatedPools)
   }
 

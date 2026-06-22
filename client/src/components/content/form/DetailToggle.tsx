@@ -4,7 +4,7 @@ import type { TToggleLockState } from '../user-controls/Toggle'
 import Toggle from '../user-controls/Toggle'
 import DetailTitleRow from './DetailTitleRow'
 import './DetailToggle.scss'
-import { useDetailClassNames } from './useDetailClassNames'
+import { useDetailClassNames } from './hooks/useDetailClassNames'
 
 /**
  * This will render a detail for a form,

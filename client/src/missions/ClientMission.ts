@@ -264,12 +264,12 @@ export class ClientMission
 
   // Implemented
   public get outlineChildren(): TMissionOutlineItem[] {
-    return [...this.root.outlineChildren, ...this.forces, ...this.resources, ...this.files, ...this.effects]
+    return this.subComponents
   }
 
   // Implemented
   public get outlineParent(): TMissionOutlineItem | null {
-    return null
+    return this.superComponent
   }
 
   protected constructor(
@@ -379,7 +379,7 @@ export class ClientMission
   // Implemented
   protected importResources(data: TMissionResourceJson[]): void {
     let resources = ClientMissionResource.fromJson(this, data)
-    this._resources.push(...resources)
+    this.resources.push(...resources)
   }
 
   // Implemented
@@ -431,28 +431,11 @@ export class ClientMission
         `Cannot have more than ${Mission.MAX_RESOURCE_TYPES} resource types in a mission.`,
       )
     }
-    this._resources.push(resource)
+    this.resources.push(resource)
     this.emitEvent('resource-list-change')
     return resource
   }
 
-  /**
-   * Removes the given resource from the mission.
-   * @param resource The resource or the ID of the resource
-   * to remove.
-   */
-  public removeResource(resource: string | ClientMissionResource): void {
-    let resourceId = typeof resource === 'string' ? resource : resource._id
-    let index = this._resources.findIndex(({ _id }) => _id === resourceId)
-    if (index !== -1) {
-      this._resources.splice(index, 1)
-      this.emitEvent('resource-list-change')
-    } else {
-      console.warn(
-        'Attempted to remove a resource that does not exist in the mission.',
-      )
-    }
-  }
   /**
    * Imports previously omitted force and structure data
    * into the mission on session start.
@@ -1095,8 +1078,9 @@ export class ClientMission
   public select(selection: MissionComponent<any, any>): void {
     // Throw an error if the selection is not
     // part of the mission.
-    if (selection.mission !== this)
+    if (selection.mission !== this) {
       throw new Error('The given selection is not part of the mission.')
+    }
 
     // If an action is selected when it's node is not
     // executable, select the mission instead.
@@ -1105,6 +1089,15 @@ export class ClientMission
       !selection.node.executable
     ) {
       selection = this
+    }
+
+    // Some components are rendered in subentries,
+    // meaning they are rendered as a part of the
+    // super component's entry. Therefore, a redirect
+    // to the super component is needed to ensure
+    // proper display of the desired selection.
+    if (selection.usesSubentry) {
+      selection = selection.superComponent ?? selection
     }
 
     this._selection = selection
@@ -1234,39 +1227,6 @@ export class ClientMission
     this.handleStructureChange()
 
     return duplicatedForces
-  }
-
-  /**
-   * Deletes the selected forces in the mission.
-   * @param forceIds The IDs of the forces to delete.
-   */
-  public deleteForces(
-    ...forceIds: TNonEmptyArray<ClientMissionForce['_id']>
-  ): ClientMissionForce[] {
-    let deletedForces: ClientMissionForce[] = []
-
-    // If the forces is not an array, make it an array.
-    if (!Array.isArray(forceIds)) forceIds = [forceIds]
-
-    // Remove the forces from the mission.
-    this.forces = this.forces.filter((force) => {
-      let deleteIt = forceIds.includes(force._id)
-      if (deleteIt) deletedForces.push(force)
-      return !deleteIt
-    })
-
-    // Remove forces from the inital access
-    // of any files that reference them.
-    this.files.forEach((file) => {
-      file.initialAccess = file.initialAccess.filter(
-        (forceId) => !forceIds.includes(forceId),
-      )
-    })
-
-    // Handle structure change.
-    this.handleStructureChange()
-
-    return deletedForces
   }
 
   /**

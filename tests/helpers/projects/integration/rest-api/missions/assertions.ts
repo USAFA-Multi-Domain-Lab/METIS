@@ -123,7 +123,7 @@ function normalizeEffect(
     trigger: effect.trigger,
     order: effect.order,
     description: effect.description,
-    args: cloneJson(effect.args),
+    arguments: cloneJson(effect.arguments),
     localKey: effect.localKey,
   }
 }

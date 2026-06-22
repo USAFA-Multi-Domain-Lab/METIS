@@ -1,4 +1,5 @@
 @use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
 
 .TargetArgumentDetail {
   &:last-child {
@@ -24,23 +25,60 @@
     }
   }
 
-  .TargetArgumentDetail_missionComponent {
-    .MissionOutline {
-      padding-bottom: 1em;
+  &.TargetArgumentDetail_missionComponent {
+    .Field:has(.OutlineSearch:focus) {
+      border-bottom: none;
     }
 
-    .ComponentItemContent {
-      display: grid;
-      grid-template-columns: 1em 1fr;
-      column-gap: 0.5em;
-      // padding-left: 0.333em;
+    .MissionOutline {
+      padding-bottom: 1em;
 
-      .Icon {
-        width: 1em;
-        background-size: contain;
-        background-position: center;
-        background-repeat: no-repeat;
-        opacity: 0.4;
+      .OutlineHeader {
+        .SearchBox {
+          @include background-mask(
+            $opacity: 0.075,
+            $color: $color-primary-light
+          );
+        }
+      }
+    }
+
+    .SelectedPill {
+      .PillText {
+        white-space: normal;
+
+        .ComponentItemContent {
+          display: grid;
+          grid-template-columns: 1em 1fr;
+          grid-template-rows: auto auto;
+          column-gap: 0.75em;
+
+          .Icon {
+            grid-row: 1 / -1;
+            width: 1em;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.75;
+          }
+
+          .Name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
+          }
+
+          .SourceName {
+            font-size: 0.8em;
+            opacity: 0.5;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
+            line-height: 1.3;
+          }
+        }
       }
     }
   }

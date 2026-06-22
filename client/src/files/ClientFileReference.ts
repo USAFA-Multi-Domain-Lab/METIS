@@ -77,6 +77,22 @@ export class ClientFileReference
   }
 
   /**
+   * Deletes this reference.
+   * @resolves The reference was successfully deleted.
+   * @rejects The error that occurred during the deletion.
+   */
+  public async $delete(): Promise<void> {
+    try {
+      await axios.delete(`${ClientFileReference.API_ENDPOINT}/${this._id}/`)
+      this.deleted = true
+    } catch (error) {
+      console.error('Failed to delete reference.')
+      console.error(error)
+      throw error
+    }
+  }
+
+  /**
    * The API endpoint for managing files.
    */
   public static readonly API_ENDPOINT: string = '/api/v1/files'
@@ -236,25 +252,6 @@ export class ClientFileReference
           console.error(error)
           reject(error)
         }
-      }
-    })
-  }
-
-  /**
-   * Deletes the reference with the given ID.
-   * @param _id The ID of the reference to delete.
-   * @resolves The reference was successfully deleted.
-   * @rejects The error that occurred during the deletion.
-   */
-  public static $delete(_id: ClientFileReference['_id']): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
-      try {
-        await axios.delete(`${ClientFileReference.API_ENDPOINT}/${_id}/`)
-        resolve()
-      } catch (error) {
-        console.error('Failed to delete reference.')
-        console.error(error)
-        reject(error)
       }
     })
   }

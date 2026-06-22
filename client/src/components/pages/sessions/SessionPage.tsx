@@ -37,7 +37,6 @@ import type { TTabBarTab } from '../../content/session/mission-map/ui/tabs/TabBa
 import NodeAlertBox from '../../content/session/mission-map/ui/toasts/NodeAlertBox'
 import { OutputPanel } from '../../content/session/output'
 import { useButtonSvgEngine } from '../../content/user-controls/buttons/panels/hooks'
-import If from '../../content/util/If'
 import { sessionPageContext } from './context'
 import './SessionPage.scss'
 import SessionTopBar from './subcomponents/SessionTopBar'
@@ -765,9 +764,9 @@ export default function SessionPage(
                   outputHasNew ? '**New output(s) available**' : undefined
                 }
               >
-                <If condition={!!selectedForce}>
+                {Boolean(selectedForce) && (
                   <OutputPanel force={selectedForce!} />
-                </If>
+                )}
               </PanelView>
               <PanelView
                 title={RIGHT_PANEL.MESSENGER}

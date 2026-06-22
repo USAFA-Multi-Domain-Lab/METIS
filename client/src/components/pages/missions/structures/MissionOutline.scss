@@ -8,13 +8,67 @@
       flex-direction: column;
       overflow-y: hidden;
 
+      .OutlineHeader {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        column-gap: 0.5em;
+        align-items: center;
+        padding: 0 1em;
+        flex-shrink: 0;
+
+        .SearchBox {
+          display: flex;
+          align-items: center;
+          background-color: $color-secondary;
+          border-radius: 4px;
+
+          .OutlineSearch {
+            flex: 1;
+            padding: 0.5em;
+            border: unset;
+            background: unset;
+            font-size: 0.9em;
+
+            &:focus {
+              outline: none;
+            }
+
+            &::placeholder {
+              color: $color-faded;
+            }
+          }
+
+          .ButtonSvgPanel {
+            padding: 0 0.5em 0 0;
+
+            .ButtonSvg {
+              font-size: 16px;
+            }
+          }
+        }
+      }
+
       .OutlineTree {
         overflow-x: auto;
         overflow-y: auto;
-        height: calc(100% - 70px);
+        flex: 1;
         padding: 1em;
         font-size: 0.75rem;
         white-space: nowrap;
+
+        .NoResults {
+          text-align: center;
+          padding: 2em;
+          font-style: italic;
+          color: $color-faded;
+        }
+
+        &.IsFiltered {
+          .OutlineItem:not(.Childless) .Indicator {
+            opacity: 0.25;
+            pointer-events: none;
+          }
+        }
 
         // -- Row patterns --
 
@@ -62,7 +116,7 @@
 
           .OutlineItemContent {
             display: grid;
-            grid-template-columns: 1.8em 1fr;
+            grid-template-columns: 1.8em 1fr auto;
             cursor: default;
             user-select: none;
 
@@ -85,6 +139,20 @@
               }
             }
 
+            .SelectionBadge {
+              cursor: pointer;
+              align-self: center;
+              background-color: rgba($color-accent, 0.25);
+              color: $color-accent;
+              border-radius: 10px;
+              padding: 0.1em 0.45em;
+              font-size: 0.75em;
+              font-weight: 700;
+              min-width: 1.4em;
+              text-align: center;
+              line-height: 1.4;
+            }
+
             .SelectionZone {
               display: grid;
               grid-template-columns: 1em 1fr;
@@ -103,6 +171,10 @@
               .Name {
                 height: 1.8em;
                 line-height: 1.733em;
+
+                .SearchHighlight {
+                  color: $color-neutral-light;
+                }
               }
             }
           }

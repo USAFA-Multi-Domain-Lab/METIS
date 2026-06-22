@@ -1,3 +1,4 @@
+import type { TJsonSerializable } from '@shared/toolbox/serialization/json'
 import type { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type {
@@ -7,10 +8,7 @@ import type {
 } from '../effects/Effect'
 import type { TForce } from '../forces/MissionForce'
 import { Mission, type TMission } from '../Mission'
-import {
-  MissionComponent,
-  type TMissionComponentIssue,
-} from '../MissionComponent'
+import { MissionComponent } from '../MissionComponent'
 import type { TNode, TNodeJsonOptions } from '../nodes/MissionNode'
 import type { ActionResourceCost } from './ActionResourceCost'
 import { type TActionResourceCostJson } from './ActionResourceCost'
@@ -58,7 +56,9 @@ export abstract class MissionAction<
   T extends TMetisBaseComponents = TMetisBaseComponents,
 >
   extends MissionComponent<T, MissionAction<T>>
-  implements TEffectHost<T, 'executionTriggeredEffect'>
+  implements
+    TEffectHost<T, 'executionTriggeredEffect'>,
+    TJsonSerializable<TMissionActionJson, TActionJsonOptions>
 {
   // Implemented
   public get mission(): TMission<T> {
@@ -76,8 +76,23 @@ export abstract class MissionAction<
   }
 
   // Implemented
-  protected get additionalIssues(): TMissionComponentIssue[] {
-    return MissionComponent.consolidateIssues(...this.effects)
+  public get superComponent(): TNode<T> {
+    return this.node
+  }
+
+  // Implemented
+  public get source(): TNode<T> {
+    return this.node
+  }
+
+  // Implemented
+  public get subComponents(): T['executionTriggeredEffect'][] {
+    return this.effects
+  }
+
+  // Implemented
+  public get sourceList(): T['action'][] {
+    return this.node.actions
   }
 
   /**
@@ -333,6 +348,11 @@ export abstract class MissionAction<
     }
   }
 
+  // Implemented
+  public get json(): TMissionActionJson {
+    return this.serialize()
+  }
+
   /**
    * @param node The node on which the action is being executed.
    * @param data The action data from which to create the action. Any ommitted values will be set to the default properties defined in MissionAction.DEFAULT_PROPERTIES.
@@ -408,7 +428,7 @@ export abstract class MissionAction<
    * @param options The options for converting the action to JSON.
    * @returns The JSON for the action.
    */
-  public toJson(options: TActionJsonOptions = {}): TMissionActionJson {
+  public serialize(options: TActionJsonOptions = {}): TMissionActionJson {
     const { sessionDataExposure = Mission.DEFAULT_SESSION_DATA_EXPOSURE } =
       options
 
@@ -678,7 +698,7 @@ export type TMissionActionJsonBase = TCreateJsonType<
  * Session-specific properties included when serializing a
  * {@link MissionAction} to JSON. Only relevant when
  * `sessionDataExposure` is set to 'all' or 'member-specific'
- * in the options of {@link MissionAction.toJson}.
+ * in the options of {@link MissionAction.serialize}.
  */
 export type TMissionActionSessionJson = {
   /**

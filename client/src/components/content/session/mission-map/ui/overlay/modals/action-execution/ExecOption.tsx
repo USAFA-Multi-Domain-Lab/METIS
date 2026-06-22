@@ -34,7 +34,7 @@ export default function ExecOption({ action, session, select }: TExecOption_P) {
   /* -- EFFECTS -- */
 
   // Update the formatted values when the action is modified.
-  useEventListener(action.node, 'modify-actions', () => {
+  useEventListener(action, 'new-modifier', () => {
     setSuccessChanceFormatted(action.successChanceFormatted)
     setProcessTimeFormatted(action.processTimeFormatted)
     setResourceCostFormatted(action.resourceCostFormatted)

@@ -59,7 +59,7 @@ export default function ActionExecModal(props: TActionExecModal_P) {
   // changes.
   useEffect(() => {
     if (node) {
-      let actions = Array.from(node.actions.values())
+      let actions = node.actions
       setNodeName(node.name)
       setActions(actions)
       setBlockStatus(node.blockStatus)

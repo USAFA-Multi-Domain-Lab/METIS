@@ -29,7 +29,6 @@ const SuccessChanceMod = TargetSchema.create({
       max: 100,
       unit: '%',
       groupingId: 'main',
-      dependencies: [TargetDependency.NOT_EMPTY('applyTo')],
       default: 0,
       tooltipDescription:
         `This allows you to positively or negatively affect the chance of success for all actions within the node. A positive value increases the chance of success, while a negative value decreases the chance of success.\n` +

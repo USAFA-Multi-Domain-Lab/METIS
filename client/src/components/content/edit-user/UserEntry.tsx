@@ -23,16 +23,6 @@ export default function UserEntry({
   const { isAuthorized } = useRequireLogin()
 
   /* -- STATE -- */
-  const [handleUsernameError, setHandleUsernameError] =
-    useState<THandleOnBlur>('deliverError')
-  const [handleFirstNameError, setHandleFirstNameError] =
-    useState<THandleOnBlur>('deliverError')
-  const [handleLastNameError, setHandleLastNameError] =
-    useState<THandleOnBlur>('deliverError')
-  const [handlePassword1Error, setHandlePassword1Error] =
-    useState<THandleOnBlur>('deliverError')
-  const [handlePassword2Error, setHandlePassword2Error] =
-    useState<THandleOnBlur>('deliverError')
   const [usernameErrorMessage, setUsernameErrorMessage] = useState<string>()
   const [firstNameErrorMessage, setFirstNameErrorMessage] = useState<string>()
   const [lastNameErrorMessage, setLastNameErrorMessage] = useState<string>()
@@ -107,18 +97,16 @@ export default function UserEntry({
 
     if (username !== '' && user.hasValidUsername) {
       removeUserEmptyString('username')
-      setHandleUsernameError('none')
+      setUsernameErrorMessage('')
       handleChange()
     }
 
     if (username === '' && !user.hasValidUsername) {
-      setHandleUsernameError('deliverError')
       setUserEmptyStringArray([...userEmptyStringArray, `field=username`])
       setUsernameErrorMessage('At least one character is required here.')
     }
 
     if (username !== '' && !user.hasValidUsername) {
-      setHandleUsernameError('deliverError')
       setUsernameErrorMessage(
         'Usernames must be between 5 and 50 characters long and can only contain letters, numbers, and the following special characters: - _ .',
       )
@@ -141,18 +129,16 @@ export default function UserEntry({
 
     if (firstName !== '' && user.hasValidFirstName) {
       removeUserEmptyString('firstName')
-      setHandleFirstNameError('none')
+      setFirstNameErrorMessage('')
       handleChange()
     }
 
     if (firstName === '') {
-      setHandleFirstNameError('deliverError')
       setFirstNameErrorMessage('At least one character is required here.')
       setUserEmptyStringArray([...userEmptyStringArray, `field=firstName`])
     }
 
     if (!user.hasValidFirstName && firstName !== '') {
-      setHandleFirstNameError('deliverError')
       setFirstNameErrorMessage(
         'First names must be between 1 and 50 characters long and can only contain letters and the following special characters: -',
       )
@@ -168,18 +154,16 @@ export default function UserEntry({
 
     if (lastName !== '' && user.hasValidLastName) {
       removeUserEmptyString('lastName')
-      setHandleLastNameError('none')
+      setLastNameErrorMessage('')
       handleChange()
     }
 
     if (lastName === '') {
-      setHandleLastNameError('deliverError')
       setLastNameErrorMessage('At least one character is required here.')
       setUserEmptyStringArray([...userEmptyStringArray, `field=lastName`])
     }
 
     if (!user.hasValidLastName && lastName !== '') {
-      setHandleLastNameError('deliverError')
       setLastNameErrorMessage(
         'Last names must be between 1 and 50 characters long and can only contain letters and the following special characters: -',
       )
@@ -195,18 +179,16 @@ export default function UserEntry({
 
     if (user.hasValidPassword1 && password1 !== '') {
       removeUserEmptyString('password1')
-      setHandlePassword1Error('none')
+      setPassword1ErrorMessage('')
       handleChange()
     }
 
     if (password1 === '') {
-      setHandlePassword1Error('deliverError')
       setPassword1ErrorMessage('At least one character is required here.')
       setUserEmptyStringArray([...userEmptyStringArray, `field=password1`])
     }
 
     if (!user.hasValidPassword1 && password1 !== '') {
-      setHandlePassword1Error('deliverError')
       setPassword1ErrorMessage(
         'Password must be between 8 and 50 characters and cannot contain spaces.',
       )
@@ -215,13 +197,12 @@ export default function UserEntry({
     // If the user has entered a password in the second password field,
     // check to see if the two passwords match.
     if (!user.passwordsMatch && user.password2) {
-      setHandlePassword2Error('deliverError')
       setPassword2ErrorMessage('Passwords must match.')
     }
     // If the user has entered a password in the second password field
     // and the two passwords match, remove the error.
     else if (user.passwordsMatch && user.password2) {
-      setHandlePassword2Error('none')
+      setPassword2ErrorMessage('')
     }
 
     forceUpdate()
@@ -233,25 +214,22 @@ export default function UserEntry({
 
     if (user.hasValidPassword2 && password2 !== '') {
       removeUserEmptyString('password2')
-      setHandlePassword2Error('none')
+      setPassword2ErrorMessage('')
       handleChange()
     }
 
     if (!user.hasValidPassword2 && password2 !== '') {
-      setHandlePassword2Error('deliverError')
       setPassword2ErrorMessage(
         'Password must be between 8 and 50 characters and cannot contain spaces.',
       )
     }
 
     if (password2 === '') {
-      setHandlePassword2Error('deliverError')
       setPassword2ErrorMessage('At least one character is required here.')
       setUserEmptyStringArray([...userEmptyStringArray, `field=password2`])
     }
 
     if (user.hasValidPassword2 && password2 !== '' && !user.passwordsMatch) {
-      setHandlePassword2Error('deliverError')
       setPassword2ErrorMessage('Passwords must match.')
     }
 
@@ -270,7 +248,6 @@ export default function UserEntry({
   useEffect(() => {
     if (usernameAlreadyExists) {
       setUsernameErrorMessage('Username already exists.')
-      setHandleUsernameError('deliverError')
     }
   }, [usernameAlreadyExists])
 
@@ -301,7 +278,6 @@ export default function UserEntry({
         setUsernameErrorMessage(
           'This username has been archived and is no longer available.',
         )
-        setHandleUsernameError('deliverError')
       }
     }
   }
@@ -316,13 +292,12 @@ export default function UserEntry({
     >
       <DetailString
         fieldType='required'
-        handleOnBlur={handleUsernameError}
         label='Username'
         value={username}
         setValue={setUsername}
         errorMessage={usernameErrorMessage}
         placeholder='Enter a username here...'
-        onBeforeBlur={handleUsernameOnBlur}
+        onBlur={handleUsernameOnBlur}
       />
       <DetailDropdown<UserAccess>
         fieldType='required'
@@ -340,7 +315,6 @@ export default function UserEntry({
       />
       <DetailString
         fieldType='required'
-        handleOnBlur={handleFirstNameError}
         label='First Name'
         value={firstName}
         setValue={setFirstName}
@@ -349,7 +323,6 @@ export default function UserEntry({
       />
       <DetailString
         fieldType='required'
-        handleOnBlur={handleLastNameError}
         label='Last Name'
         value={lastName}
         setValue={setLastName}
@@ -366,7 +339,6 @@ export default function UserEntry({
       </If>
       <DetailString
         fieldType='required'
-        handleOnBlur={handlePassword1Error}
         label={passwordLabel}
         value={password1}
         setValue={setPassword1}
@@ -377,7 +349,6 @@ export default function UserEntry({
       />
       <DetailString
         fieldType='required'
-        handleOnBlur={handlePassword2Error}
         label={confirmPasswordLabel}
         value={password2}
         setValue={setPassword2}
@@ -411,8 +382,3 @@ export type TUserEntry_P = {
    */
   handleChange: () => void
 }
-
-/**
- * The type of handleOnBlur.
- */
-type THandleOnBlur = 'deliverError' | 'none'

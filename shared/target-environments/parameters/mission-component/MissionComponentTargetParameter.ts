@@ -8,36 +8,36 @@ import { TargetParameter } from '../TargetParameter'
  * Allows the selection of mission components (forces, nodes, actions, etc.)
  * as a parameter for a target.
  */
-export class MissionComponentTargetParameter2 {
+export class MissionComponentTargetParameter {
   /**
-   * Converts `TMissionComponentArg` to `TMissionComponentArgJson`.
-   * @param arg The mission component argument to convert.
-   * @returns The mission component argument as JSON.
+   * Converts `TMissionComponentTargetParameter` to `TMissionComponentTargetParameterJson`.
+   * @param parameter The mission component parameter to convert.
+   * @returns The mission component parameter as JSON.
    */
   public static toJson = (
-    arg: TMissionComponentTargetParameter2,
-  ): TMissionComponentTargetParameterJson2 => {
+    parameter: TMissionComponentTargetParameter,
+  ): TMissionComponentTargetParameterJson => {
     return {
-      _id: arg._id,
-      name: arg.name,
-      groupingId: arg.groupingId,
-      dependencies: arg.dependencies
-        ? TargetParameter.encodeDependencies(arg.dependencies)
+      _id: parameter._id,
+      name: parameter.name,
+      groupingId: parameter.groupingId,
+      dependencies: parameter.dependencies
+        ? TargetParameter.encodeDependencies(parameter.dependencies)
         : undefined,
-      tooltipDescription: arg.tooltipDescription,
-      type: arg.type,
-      validComponentTypes: arg.validComponentTypes,
+      tooltipDescription: parameter.tooltipDescription,
+      type: parameter.type,
+      validComponentTypes: parameter.validComponentTypes,
     }
   }
 
   /**
-   * Converts `TMissionComponentArgJson` to `TMissionComponentArg`.
-   * @param arg The mission component argument as JSON to convert.
-   * @returns The mission component argument.
+   * Converts `TMissionComponentTargetParameterJson` to `TMissionComponentTargetParameter`.
+   * @param arg The mission component parameter as JSON to convert.
+   * @returns The mission component parameter.
    */
   public static fromJson = (
-    arg: TMissionComponentTargetParameterJson2,
-  ): TMissionComponentTargetParameter2 => {
+    arg: TMissionComponentTargetParameterJson,
+  ): TMissionComponentTargetParameter => {
     return {
       _id: arg._id,
       name: arg.name,
@@ -57,13 +57,13 @@ export class MissionComponentTargetParameter2 {
 /**
  * The mission component parameter type for a target.
  */
-export type TMissionComponentTargetParameter2 = TBaseTargetParameter & {
+export type TMissionComponentTargetParameter = TBaseTargetParameter & {
   /**
-   * The argument's input type.
+   * The parameter's input type.
    */
   type: 'mission-component'
   /**
-   * Mission component types that are valid for this argument.
+   * Mission component types that are valid for this parameter.
    * For example, perhaps only "nodes" and "actions" are wanted,
    * so this would be set to `['node', 'action']`.
    * @default ['any']
@@ -73,7 +73,7 @@ export type TMissionComponentTargetParameter2 = TBaseTargetParameter & {
 
 /**
  * A serialized selection of a mission component, which can
- * be saved with effect args to the database.
+ * be saved with effect arguments to the database.
  */
 export type TMissionComponentSerializedSelection = {
   /**
@@ -84,7 +84,7 @@ export type TMissionComponentSerializedSelection = {
   /**
    * The last known name of the component that was selected.
    * This is useful when, for whatever reason, the selection
-   * is present in the args, but the actual component cannot
+   * is present in the arguments, but the actual component cannot
    * be found in the mission.
    */
   lastKnownName: string
@@ -101,7 +101,7 @@ export type TMissionComponentSerializedSelection = {
 
 /**
  * Available options when defining
- * {@link TMissionComponentArg2.validComponentTypes}.
+ * {@link TMissionComponentTargetParameter.validComponentTypes}.
  */
 export type TMissionComponentType =
   | keyof Pick<
@@ -119,13 +119,13 @@ export type TMissionComponentType =
 /**
  * The mission component parameter type for a target.
  */
-export type TMissionComponentTargetParameterJson2 = TBaseTargetParameterJson & {
+export type TMissionComponentTargetParameterJson = TBaseTargetParameterJson & {
   /**
-   * @see {@link TMissionComponentTargetParameter2.type}
+   * @see {@link TMissionComponentTargetParameter.type}
    */
   type: 'mission-component'
   /**
-   * @see {@link TMissionComponentTargetParameter2.validComponentTypes}
+   * @see {@link TMissionComponentTargetParameter.validComponentTypes}
    */
   validComponentTypes?: TMissionComponentType[]
 }

@@ -8,7 +8,9 @@ import List, { createDefaultListProps } from '../List'
  * A component for displaying a list of mission files.
  * @note Uses the `List` component.
  */
-export default function (props: TMissionFileList_P): TReactElement | null {
+export default function MissionFileList(
+  props: TMissionFileList_P,
+): TReactElement | null {
   const defaultedProps = useDefaultProps(props, {
     ...createDefaultListProps<ClientMissionFile>(),
     itemsPerPageMin: 10,
@@ -89,7 +91,7 @@ export default function (props: TMissionFileList_P): TReactElement | null {
 }
 
 /**
- * Props for `FileList`.
+ * Props for {@link MissionFileList}.
  */
 export interface TMissionFileList_P extends TList_P<ClientMissionFile> {
   /**

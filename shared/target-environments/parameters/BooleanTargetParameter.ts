@@ -6,44 +6,44 @@ import { TargetParameter } from './TargetParameter'
  */
 export class BooleanTargetParameter {
   /**
-   * Converts TBooleanArg to TBooleanArgJson.
-   * @param arg The boolean argument to convert.
-   * @returns The boolean argument as JSON.
+   * Converts TBooleanTargetParameter to TBooleanTargetParameterJson.
+   * @param parameter The boolean parameter to convert.
+   * @returns The boolean parameter as JSON.
    */
   public static toJson = (
-    arg: TBooleanTargetParameter,
+    parameter: TBooleanTargetParameter,
   ): TBooleanTargetParameterJson => {
     return {
-      _id: arg._id,
-      name: arg.name,
-      groupingId: arg.groupingId,
-      dependencies: arg.dependencies
-        ? TargetParameter.encodeDependencies(arg.dependencies)
+      _id: parameter._id,
+      name: parameter.name,
+      groupingId: parameter.groupingId,
+      dependencies: parameter.dependencies
+        ? TargetParameter.encodeDependencies(parameter.dependencies)
         : undefined,
-      tooltipDescription: arg.tooltipDescription,
-      type: arg.type,
-      default: arg.default,
+      tooltipDescription: parameter.tooltipDescription,
+      type: parameter.type,
+      default: parameter.default,
     }
   }
 
   /**
-   * Converts TBooleanArgJson to TBooleanArg.
-   * @param arg The boolean argument as JSON to convert.
-   * @returns The boolean argument.
+   * Converts TBooleanTargetParameterJson to TBooleanTargetParameter.
+   * @param parameter The boolean parameter as JSON to convert.
+   * @returns The boolean parameter.
    */
   public static fromJson = (
-    arg: TBooleanTargetParameterJson,
+    parameter: TBooleanTargetParameterJson,
   ): TBooleanTargetParameter => {
     return {
-      _id: arg._id,
-      name: arg.name,
-      groupingId: arg.groupingId,
-      dependencies: arg.dependencies
-        ? TargetParameter.decodeDependencies(arg.dependencies)
+      _id: parameter._id,
+      name: parameter.name,
+      groupingId: parameter.groupingId,
+      dependencies: parameter.dependencies
+        ? TargetParameter.decodeDependencies(parameter.dependencies)
         : undefined,
-      tooltipDescription: arg.tooltipDescription,
-      type: arg.type,
-      default: arg.default,
+      tooltipDescription: parameter.tooltipDescription,
+      type: parameter.type,
+      default: parameter.default,
     }
   }
 }
@@ -55,12 +55,12 @@ export class BooleanTargetParameter {
  */
 export type TBooleanTargetParameter = TBaseTargetParameter & {
   /**
-   * The argument's input type.
+   * The parameter's input type.
    * @note This will render as a toggle switch.
    */
   type: 'boolean'
   /**
-   * The default value for the argument.
+   * The default value for the parameter.
    */
   default?: boolean
 }
@@ -69,12 +69,12 @@ export type TBooleanTargetParameter = TBaseTargetParameter & {
  */
 export type TBooleanTargetParameterJson = TBaseTargetParameterJson & {
   /**
-   * The argument's input type.
+   * The parameter's input type.
    * @note This will render as a toggle switch.
    */
   type: 'boolean'
   /**
-   * The default value for the argument.
+   * The default value for the parameter.
    */
   default?: boolean
 }

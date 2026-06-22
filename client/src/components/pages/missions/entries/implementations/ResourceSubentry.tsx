@@ -114,7 +114,6 @@ export default function ResourceSubentry({
     <div className={rootClasses.value}>
       <DetailString
         fieldType='required'
-        handleOnBlur='repopulateValue'
         label='Name'
         value={name}
         setValue={setName}

@@ -1,14 +1,15 @@
-import type { ClientEffect } from '@client/missions/effects/ClientEffect'
+import { ClientEffect } from '@client/missions/effects/ClientEffect'
 import type { ClientTargetArgument } from '@client/target-environments/arguments/ClientTargetArgument'
 import { compute } from '@client/toolbox'
 import Divider from '../../../../content/form/Divider'
 import TargetArgumentGrouping from './TargetArgumentGrouping'
-import './TargetArgumentsSubentry.scss'
+import './TargetArgumentsSubentries.scss'
 
 /**
- * Entry fields for the effect's arguments.
+ * Renders all respective subentries for the arguments of the
+ * given effect.
  */
-export default function TargetArgumentsEntry({
+export default function TargetArgumentsSubentries({
   effect,
 }: TTargetParameterEntry_P): TReactElement | null {
   /* -- COMPUTED -- */
@@ -49,23 +50,50 @@ export default function TargetArgumentsEntry({
     return Array.from(map)
   })
 
+  let { mission } = effect
+  let hasMissingTargetIssue = mission.issueRegistry.componentHasIssue(
+    effect,
+    ClientEffect.ISSUE_KEY_MISSING_TARGET,
+  )
+  let hasLegacyInferIssue = mission.issueRegistry.componentHasIssue(
+    effect,
+    ClientEffect.ISSUE_KEY_LEGACY_INFER,
+  )
+  let hasOutdatedIssue = mission.issueRegistry.componentHasIssue(
+    effect,
+    ClientEffect.ISSUE_KEY_OUTDATED,
+  )
+  let message = compute<string>(() => {
+    if (hasMissingTargetIssue || hasLegacyInferIssue) {
+      return `Arguments cannot be shown because the target cannot be found.`
+    } else if (hasOutdatedIssue) {
+      return `Arguments cannot be shown because the effect is outdated. Please update the effect to the latest version.`
+    } else {
+      return 'The effect has one or more issues that are preventing the arguments from being shown.'
+    }
+  })
+
   /* -- RENDER -- */
 
-  // If there are no groupings then return null.
-  if (groupings.length === 0) return null
+  // If there are no groupings and no issues then return null.
+  if (groupings.length === 0 && !effect.targetArgumentsLocked) return null
 
   return (
-    <div className='TargetArgumentsSubentry'>
+    <div className='TargetArgumentSubentry'>
       <div className='Title'>Arguments</div>
       <Divider />
-      {groupings.map(([groupingId, grouping]) => {
-        return (
-          <TargetArgumentGrouping
-            key={`grouping-${groupingId}`}
-            grouping={grouping}
-          />
-        )
-      })}
+      {effect.targetArgumentsLocked ? (
+        <div className='ArgumentIssueMessage'>{message}</div>
+      ) : (
+        groupings.map(([groupingId, grouping]) => {
+          return (
+            <TargetArgumentGrouping
+              key={`grouping-${groupingId}`}
+              grouping={grouping}
+            />
+          )
+        })
+      )}
     </div>
   )
 }

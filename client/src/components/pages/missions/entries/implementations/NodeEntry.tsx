@@ -147,7 +147,7 @@ export default function NodeEntry({
   const actionListItemButtons: TMetisIcon[] = compute(() => {
     let buttons: TMetisIcon[] = ['open', 'copy']
 
-    if (node.executable && node.actions.size > 1) {
+    if (node.executable && node.actions.length > 1) {
       buttons.push('remove')
     }
 
@@ -235,7 +235,7 @@ export default function NodeEntry({
    * and has no actions to execute.
    */
   const autoGenerateAction = () => {
-    if (node.executable && node.actions.size === 0) {
+    if (node.executable && node.actions.length === 0) {
       // Checks to make sure the selected node has
       // at least one action to choose from. If the
       // selected node does not have at least one
@@ -254,7 +254,6 @@ export default function NodeEntry({
     <Entry missionComponent={node} svgEngines={[svgEngine]}>
       <DetailString
         fieldType='required'
-        handleOnBlur='repopulateValue'
         label='Name'
         value={name}
         setValue={setName}
@@ -278,7 +277,6 @@ export default function NodeEntry({
       />
       <DetailLargeString
         fieldType='optional'
-        handleOnBlur='none'
         label='Description'
         value={description}
         setValue={setDescription}
@@ -289,7 +287,6 @@ export default function NodeEntry({
       />
       <DetailLargeString
         fieldType='optional'
-        handleOnBlur='none'
         label='Pre-Execution Text'
         value={preExecutionText}
         setValue={setPreExecutionText}
@@ -332,7 +329,7 @@ export default function NodeEntry({
       <If condition={node.executable}>
         <List<ClientMissionAction>
           name={'Actions'}
-          items={Array.from(node.actions.values())}
+          items={node.actions}
           itemsPerPageMin={5}
           listButtonIcons={['add']}
           itemButtonIcons={actionListItemButtons}
@@ -391,7 +388,7 @@ export default function NodeEntry({
                 break
             }
           }}
-          key={node.actions.size}
+          key={node.actions.length}
         />
       </If>
     </Entry>

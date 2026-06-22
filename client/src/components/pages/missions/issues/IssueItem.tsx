@@ -5,7 +5,7 @@ import { useButtonSvgEngine } from '@client/components/content/user-controls/but
 import { useGlobalContext } from '@client/context/global'
 import { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { useRequireLogin } from '@client/toolbox/hooks'
-import type { TMissionComponentIssue } from '@shared/missions/MissionComponent'
+import type { MissionComponentIssue } from '@shared/missions/MissionComponentIssue'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useState } from 'react'
 import { useMissionPageContext } from '../context'
@@ -27,7 +27,6 @@ export default function IssueItem({
   const { state, onChange } = useMissionPageContext()
   const { state: panelState } = usePanelContext()
   const [mission] = state.mission
-  const [, setCheckForIssues] = state.checkForIssues
   const [, selectView] = panelState.selectedView
   const [pendingFix, setPendingFix] = useState<boolean>(false)
 
@@ -38,8 +37,6 @@ export default function IssueItem({
         type: 'button',
         icon: 'warning-transparent',
         cursor: 'help',
-        description:
-          'If this conflict is not resolved, this mission can still be used to launch a session, but the session may not function as expected.',
       },
     ],
   })
@@ -47,6 +44,7 @@ export default function IssueItem({
   /* -- COMPUTED -- */
 
   let rootClasses = new ClassList('IssueItem')
+  let description = `${issue.message}\n\t\n**Click to view associated component**`
 
   /* -- FUNCTIONS -- */
 
@@ -54,7 +52,7 @@ export default function IssueItem({
    * Handles selection of an issue in the list.
    * @param issue The issue that was selected.
    */
-  const onIssueSelection = async (issue: TMissionComponentIssue) => {
+  const onIssueSelection = async (issue: MissionComponentIssue) => {
     const { type, component } = issue
 
     if (component instanceof ClientEffect && type === 'outdated') {
@@ -76,7 +74,6 @@ export default function IssueItem({
         await component.$migrateArguments()
 
         onChange(component)
-        setCheckForIssues(true)
       } catch (error) {
         setPendingFix(false)
         handleError({
@@ -104,10 +101,10 @@ export default function IssueItem({
 
   return (
     <div className={rootClasses.value} onClick={() => onIssueSelection(issue)}>
+      <Tooltip description={description} />
       <ButtonSvgPanel engine={buttonEngine} />
       <div className='IssueMessage'>
         {issue.message}
-        <Tooltip description='Click to resolve.' />
       </div>
     </div>
   )
@@ -122,5 +119,5 @@ export interface TIssueItem_P extends TIssues_P {
   /**
    * The issue to display.
    */
-  issue: TMissionComponentIssue
+  issue: MissionComponentIssue
 }

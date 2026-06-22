@@ -81,7 +81,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   // Implemented
   protected importResources(data: TMissionResourceJson[]): void {
     let resources = ServerMissionResource.fromJson(this, data)
-    this._resources.push(...resources)
+    this.resources.push(...resources)
   }
 
   // Implemented
@@ -201,7 +201,7 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   private static logIssues = (missionJson: TMissionSaveJson): void => {
     let mission = ServerMission.fromSaveJson(missionJson)
 
-    for (let issue of mission.issues) {
+    for (let issue of mission.allIssues) {
       databaseLogger.warn(issue.message)
     }
   }
