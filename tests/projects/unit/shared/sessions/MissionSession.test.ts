@@ -1,8 +1,6 @@
 import { describe, expect, test } from '@jest/globals'
-import {
-  MissionSession,
-  type TSessionConfig,
-} from '@shared/sessions/MissionSession'
+import { MissionSession } from '@shared/sessions/MissionSession'
+import type { TSessionConfig } from '@shared/sessions/MissionSession'
 
 describe('MissionSession.areEnoughResources', () => {
   test('Allows execution when zeroCost cheat is enabled', () => {
@@ -63,7 +61,7 @@ describe('MissionSession setup/teardown flags', () => {
  * Test-only MissionSession implementation.
  * @note This class exists only to unit-test MissionSession logic without server dependencies.
  */
-class TestMissionSession extends MissionSession {
+class TestMissionSession extends MissionSession<any> {
   public constructor(options: Partial<TSessionConfig> = {}) {
     super(
       'session-1',
@@ -75,6 +73,8 @@ class TestMissionSession extends MissionSession {
       new Date('2024-01-01T00:00:00.000Z'),
       options,
       { _id: 'mission-1' },
+      [],
+      [],
       [],
       [],
       [],

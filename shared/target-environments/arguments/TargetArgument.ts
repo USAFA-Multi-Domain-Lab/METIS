@@ -695,4 +695,3 @@ export type TTargetArgumentContext<T extends TMetisBaseComponents> = {
     value: TSelectArgumentValue<T>[K]
   }
 }[TTargetParameterType]
-5
