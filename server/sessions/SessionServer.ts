@@ -382,9 +382,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       // If the requester is authorized to start/end sessions,
       // then include the setup and teardown results.
       if (requester.isAuthorized('startEndSessions')) {
-        setupResults = this._setupResults.map((result) => result.toJson())
-        teardownResults = this._teardownResults.map((result) => result.toJson())
-        liveResults = this._liveResults.map((result) => result.toJson())
+        setupResults = this.setupResults.map((result) => result.toJson())
+        teardownResults = this.teardownResults.map((result) => result.toJson())
+        liveResults = this.liveResults.map((result) => result.toJson())
       }
 
       // Grab the chat channels visible to the requester.
@@ -1255,9 +1255,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     this.mapActions()
     // Reset setup, teardown, and live results for
     // the new instance.
-    this._setupResults = []
-    this._teardownResults = []
-    this._liveResults = []
+    this.setupResults = []
+    this.teardownResults = []
+    this.liveResults = []
 
     // Perform setup.
     await this.setUp()
@@ -2338,7 +2338,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    */
   private onSetupScriptResolution = (...results: EnvScriptResults[]): void => {
     this.onScriptResolution(
-      this._setupResults,
+      this.setupResults,
       'session-setup-update',
       ...results,
     )
@@ -2353,7 +2353,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     ...results: EnvScriptResults[]
   ): void => {
     this.onScriptResolution(
-      this._teardownResults,
+      this.teardownResults,
       'session-teardown-update',
       ...results,
     )
@@ -2365,11 +2365,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * @param results The results of the live script executions.
    */
   private onLiveScriptResolution = (...results: EnvScriptResults[]): void => {
-    this.onScriptResolution(
-      this._liveResults,
-      'session-live-update',
-      ...results,
-    )
+    this.onScriptResolution(this.liveResults, 'session-live-update', ...results)
   }
 
   /**

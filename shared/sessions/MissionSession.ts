@@ -161,7 +161,7 @@ export abstract class MissionSession<
    * this will be cleared during the reset process after teardown
    * and before setup.
    */
-  protected _setupResults: EnvScriptResults[]
+  protected setupResults: EnvScriptResults[]
 
   /**
    * Outcome of operations performed during the teardown process.
@@ -169,7 +169,7 @@ export abstract class MissionSession<
    * this will be cleared during the reset process after teardown
    * and before setup.
    */
-  protected _teardownResults: EnvScriptResults[]
+  protected teardownResults: EnvScriptResults[]
 
   /**
    * Outcome of target scripts tied to effects that run while the
@@ -178,7 +178,7 @@ export abstract class MissionSession<
    * this will be cleared during the reset process after teardown
    * and before setup.
    */
-  protected _liveResults: EnvScriptResults[]
+  protected liveResults: EnvScriptResults[]
 
   /**
    * Chat channels active in this session.
@@ -186,7 +186,7 @@ export abstract class MissionSession<
   protected _chatChannels: TChatChannel<T>[]
 
   /**
-   * Based upon {@link MissionSession._setupResults}, indicates
+   * Based upon {@link MissionSession.setupResults}, indicates
    * whether the setup process, if initiated, encountered any
    * failures.
    * @note This is per instance. Therefore, if the session is reset,
@@ -194,10 +194,10 @@ export abstract class MissionSession<
    * and before setup.
    */
   public get setupFailed(): boolean {
-    return this._setupResults.some((result) => result.status === 'failure')
+    return this.setupResults.some((result) => result.status === 'failure')
   }
   /**
-   * Based upon {@link MissionSession._teardownResults}, indicates
+   * Based upon {@link MissionSession.teardownResults}, indicates
    * whether the teardown process, if initiated, encountered any
    * failures.
    * @note This is per instance. Therefore, if the session is reset,
@@ -205,7 +205,7 @@ export abstract class MissionSession<
    * and before setup.
    */
   public get teardownFailed(): boolean {
-    return this._teardownResults.some((result) => result.status === 'failure')
+    return this.teardownResults.some((result) => result.status === 'failure')
   }
 
   /**
@@ -243,9 +243,9 @@ export abstract class MissionSession<
     this._state = 'unstarted'
     this._members = this.parseMemberData(memberData)
     this._banList = banList
-    this._setupResults = setupResults
-    this._teardownResults = teardownResults
-    this._liveResults = liveResults
+    this.setupResults = setupResults
+    this.teardownResults = teardownResults
+    this.liveResults = liveResults
     this._chatChannels = this.parseChatChannelData(chatChannelData)
     this.mapActions()
   }
@@ -548,15 +548,15 @@ export type TSessionJson = {
    */
   banList: string[]
   /**
-   * @see {@link MissionSession._setupResults}
+   * @see {@link MissionSession.setupResults}
    */
   setupResults: TEnvScriptResultJson[]
   /**
-   * @see {@link MissionSession._teardownResults}
+   * @see {@link MissionSession.teardownResults}
    */
   teardownResults: TEnvScriptResultJson[]
   /**
-   * @see {@link MissionSession._liveResults}
+   * @see {@link MissionSession.liveResults}
    */
   liveResults: TEnvScriptResultJson[]
   /**

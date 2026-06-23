@@ -341,9 +341,9 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       }),
       members: this.members.map((member) => member.toJson()),
       banList: this.banList,
-      setupResults: this._setupResults.map((result) => result.toJson()),
-      teardownResults: this._teardownResults.map((result) => result.toJson()),
-      liveResults: this._liveResults.map((result) => result.toJson()),
+      setupResults: this.setupResults.map((result) => result.toJson()),
+      teardownResults: this.teardownResults.map((result) => result.toJson()),
+      liveResults: this.liveResults.map((result) => result.toJson()),
       config: this.config,
       chatChannels: this._chatChannels.map((c) => c.toJson()),
       unreadChatChannelMessages: {},
@@ -1358,7 +1358,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     let newResults = event.data.results.map((data) =>
       EnvScriptResults.fromJson(data, ClientTargetEnvironment.REGISTRY),
     )
-    this._setupResults.push(...newResults)
+    this.setupResults.push(...newResults)
     this.logScriptResults(newResults)
   }
 
@@ -1373,7 +1373,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     let newResults = event.data.results.map((data) =>
       EnvScriptResults.fromJson(data, ClientTargetEnvironment.REGISTRY),
     )
-    this._teardownResults.push(...newResults)
+    this.teardownResults.push(...newResults)
     this.logScriptResults(newResults)
   }
 
@@ -1388,7 +1388,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     let newResults = event.data.results.map((data) =>
       EnvScriptResults.fromJson(data, ClientTargetEnvironment.REGISTRY),
     )
-    this._liveResults.push(...newResults)
+    this.liveResults.push(...newResults)
     this.logScriptResults(newResults)
   }
 
