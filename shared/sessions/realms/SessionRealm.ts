@@ -1,0 +1,155 @@
+import { MetisComponent } from '../../MetisComponent'
+import type { TAction } from '../../missions/actions/MissionAction'
+import type { TMission, TMissionExistingJson } from '../../missions/Mission'
+import type { TSession } from '../MissionSession'
+
+/**
+ * A parallel, isolated copy of a mission within a session.
+ *
+ * A realm owns its own copy of the mission and all of the
+ * mutable, mission-rooted session state derived from it. A
+ * multiplayer session has exactly one realm (a full copy of
+ * the launched mission), while a single-player session has one
+ * realm per participant, each containing only that participant's
+ * selected force.
+ *
+ * @note This is a sibling of {@link MissionSession} and
+ * {@link SessionMember}, not a `MissionComponent`, because it
+ * *owns* a mission rather than living inside a mission's
+ * component tree.
+ */
+export abstract class SessionRealm<
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> extends MetisComponent {
+  /**
+   * The session to which the realm belongs.
+   */
+  public session: TSession<T>
+
+  /**
+   * The realm's own copy of the mission.
+   * @note All gameplay resolution (`getForceById`, `getNodeById`,
+   * `getActionById`, resources, files) for a member in this realm
+   * is rooted at this mission, not the session's authoring template.
+   */
+  public mission: TMission<T>
+
+  /**
+   * A map of action IDs to actions compiled from those found
+   * in this realm's copy of the mission.
+   * @note Keyed within this realm's id-space, so the same action
+   * id in two realms resolves to two distinct objects.
+   */
+  public actions: Map<string, TAction<T>> = new Map<string, TAction<T>>()
+
+  /**
+   * Creates a new SessionRealm object.
+   * @param _id The unique ID of the realm.
+   * @param name A human-readable name for the realm.
+   * @param session The session to which the realm belongs.
+   * @param mission The realm's own copy of the mission.
+   */
+  protected constructor(
+    _id: string,
+    name: string,
+    session: TSession<T>,
+    mission: TMission<T>,
+  ) {
+    super(_id, name, false)
+
+    this.session = session
+    this.mission = mission
+
+    this.mapActions()
+  }
+
+  /**
+   * Loops through every action in this realm's copy of the
+   * mission and maps the action ID to the action in
+   * {@link SessionRealm.actions}.
+   */
+  public mapActions(): void {
+    this.actions = new Map<string, TAction<T>>()
+
+    this.mission.forces.forEach((force) =>
+      force.nodes.forEach((node) =>
+        node.actions.forEach((action) => this.actions.set(action._id, action)),
+      ),
+    )
+  }
+
+  /**
+   * @param actionId The ID of the action to get.
+   * @returns The action with the given ID within this realm,
+   * or undefined if not found.
+   */
+  public getAction(
+    actionId: TAction<T>['_id'] | null | undefined,
+  ): TAction<T> | undefined {
+    if (actionId === null || actionId === undefined) return undefined
+    return this.actions.get(actionId)
+  }
+
+  /**
+   * Converts the SessionRealm object to JSON.
+   * @returns A JSON representation of the realm.
+   */
+  public toJson(): TSessionRealmJson {
+    return {
+      _id: this._id,
+      name: this.name,
+      mission: this.mission.toExistingJson(),
+    }
+  }
+}
+
+/* -- TYPES -- */
+
+/**
+ * Extracts the realm type from a registry of METIS components
+ * type that extends `TMetisBaseComponents`.
+ * @param T The type registry.
+ * @returns The realm type.
+ */
+export type TRealm<T extends TMetisBaseComponents> = T['realm']
+
+/**
+ * JSON representation of a {@link SessionRealm}.
+ */
+export interface TSessionRealmJson {
+  /**
+   * The ID of the realm.
+   */
+  _id: string
+  /**
+   * A human-readable name for the realm.
+   */
+  name: string
+  /**
+   * The realm's copy of the mission.
+   */
+  mission: TMissionExistingJson
+}
+
+/* -- TYPES -- */
+
+/**
+ * Options for creating a new {@link SessionRealm}
+ * via client and server `createNew` methods.
+ */
+export type TCreateNewOptions<
+  T extends TMetisBaseComponents = TMetisBaseComponents,
+> = {
+  /**
+   * A mission to use for the realm.
+   * @note If not provided,  a blank mission will
+   * be created.
+   */
+  mission?: TMission<T>
+  /**
+   * The `_id` of the realm.
+   * @note If not provided, a random ID  will be
+   * generated.
+   */
+  _id?: string
+}

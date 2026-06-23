@@ -25,7 +25,7 @@ export default function SessionMemberRow({
   const { handleError, prompt, beginLoading, finishLoading } =
     globalContext.actions
   const [assignedForce, setAssignedForce] = useState<ClientMissionForce | null>(
-    member.force,
+    member.assignedForce,
   )
   const [forceLock, setForceLock] = useState<boolean>(false)
   const [assignedRole, setAssignedRole] = useState<MemberRole>(member.role)
@@ -202,18 +202,18 @@ export default function SessionMemberRow({
     if (!currentMember.isAuthorized('manageSessionMembers')) return
 
     // Gather details.
-    let prevForce = member.force
-    let prevForceId = member.forceId
+    let previousForce = member.assignedForce
+    let previousForceId = member.assignedForceId
 
     // Request to assign the force if the state changes.
-    if (assignedForceId !== prevForceId) {
+    if (assignedForceId !== previousForceId) {
       // Lock changes to the dropdown.
       setForceLock(true)
       // Assign the force.
       session
         .$assignForce(member._id, assignedForceId)
         .catch(() => {
-          setAssignedForce(prevForce)
+          setAssignedForce(previousForce)
           handleError({
             message: 'Failed to assign force.',
             notifyMethod: 'bubble',
@@ -229,18 +229,18 @@ export default function SessionMemberRow({
     if (!currentMember.isAuthorized('manageSessionMembers')) return
 
     // Gather details.
-    let prevRole = member.role
-    let prevRoleId = member.roleId
+    let previousRole = member.role
+    let previousRoleId = member.roleId
 
     // Request to assign the role if the state changes.
-    if (assignedRoleId !== prevRoleId) {
+    if (assignedRoleId !== previousRoleId) {
       // Lock changes to the dropdown.
       setRoleLock(true)
       // Assign the role.
       session
         .$assignRole(member._id, assignedRoleId)
         .catch(() => {
-          setAssignedRole(prevRole)
+          setAssignedRole(previousRole)
           handleError({
             message: 'Failed to assign role.',
             notifyMethod: 'bubble',
@@ -256,7 +256,9 @@ export default function SessionMemberRow({
     // If the assigned force is not the same as the
     // force assigned to the member, update the assigned
     // force.
-    if (assignedForceId !== member.forceId) setAssignedForce(member.force)
+    if (assignedForceId !== member.assignedForceId) {
+      setAssignedForce(member.assignedForce)
+    }
     // If the assigned role is not the same as the
     // role assigned to the member, update the assigned
     // role.
@@ -278,9 +280,9 @@ export default function SessionMemberRow({
     if (targetCompleteVisibility) {
       text = targetManipulatesNodes ? 'Complete control' : 'Complete visibility'
     } else if (!currentCompleteVisibility && !currentLimitedVisibility) {
-      text = member.forceId ? 'Assigned' : 'Not assigned'
+      text = member.assignedForceId ? 'Assigned' : 'Not assigned'
     } else if (!currentCompleteVisibility && currentLimitedVisibility) {
-      text = member.forceId ? 'Assigned (view only)' : 'Not assigned'
+      text = member.assignedForceId ? 'Assigned (view only)' : 'Not assigned'
     } else if (assignedForce) {
       delete style.fontStyle
       style.color = assignedForce.color
@@ -305,7 +307,7 @@ export default function SessionMemberRow({
       innerJsx = (
         <DetailDropdown<ClientMissionForce>
           label='Force'
-          options={session.mission.forces}
+          options={session.subscribedMission.forces}
           value={assignedForce}
           setValue={setAssignedForce}
           isExpanded={false}

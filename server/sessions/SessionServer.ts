@@ -43,9 +43,14 @@ import type { MissionComponent } from '@shared/missions/MissionComponent'
 import { type TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
 import type { TChatChannelJson } from '@shared/sessions/chat/ChatChannel'
 import type { TSessionAuthParam } from '@shared/sessions/members/MemberPermission'
-import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
-import { MemberRole } from '@shared/sessions/members/MemberRole'
-import type { TSessionMemberJson } from '@shared/sessions/members/SessionMember'
+import type {
+  MemberRole,
+  TMemberRoleId,
+} from '@shared/sessions/members/MemberRole'
+import type {
+  TSessionMemberAssignment,
+  TSessionMemberJson,
+} from '@shared/sessions/members/SessionMember'
 import type {
   TSessionBasicJson,
   TSessionConfig,
@@ -61,10 +66,11 @@ import { type TSingleTypeObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { User } from '@shared/users/User'
 import { targetEnvLogger } from '../logging'
-import { ServerChatChannel } from './chat/ServerChatChannel'
+import type { ServerChatChannel } from './chat/ServerChatChannel'
 import { ServerChatMessage } from './chat/ServerChatMessage'
 import { ComponentModifierBatchMap } from './ComponentModifierBatchMap'
 import { ServerSessionMember } from './ServerSessionMember'
+import { ServerSessionRealm } from './ServerSessionRealm'
 import { TargetEnvStore } from './TargetEnvStore'
 
 /**
@@ -103,15 +109,28 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
+   * Private cache for {@link defaultRealm}.
+   */
+  private _defaultRealm?: ServerSessionRealm
+  // Implemented
+  public get defaultRealm(): ServerSessionRealm {
+    if (!this._defaultRealm) {
+      this._defaultRealm = ServerSessionRealm.createNew(
+        MissionSession.DEFAULT_REALM_NAME,
+        this,
+        { _id: MissionSession.DEFAULT_REALM_ID },
+      )
+    }
+    return this._defaultRealm
+  }
+
+  /**
    * Assignments of users to forces (userID to forceID).
    * @note Assignments are also stored in the `SessionMember` class,
    * but this will help with rejoining, since a new `SessionMember`
    * object is created each time a user joins.
    */
-  private assignments: TSingleTypeObject<{
-    forceId: string
-    roleId: TMemberRoleId
-  }>
+  private assignments: TSingleTypeObject<TSessionMemberAssignment>
 
   /**
    * Clean up functions created by the {@link TargetEnvContext.sleep} method.
@@ -200,6 +219,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     this._state = 'unstarted'
     this._destroyed = false
     this.initializeMission()
+    this.initializeRealms()
     this.register()
     this.assignments = {}
     this.sleepCleanUps = new Set<() => void>()
@@ -222,14 +242,18 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
-   * Gets the users that have access to the force with the given ID.
-   * @param forceId The ID of the force.
+   * @param forceId The ID of the force for which to retrieve members.
+   * @param realmId The ID of the realm to which returned members must
+   * be subscribed.
    * @param options Additional options to tailor the members returned based on
    * the callers needs.
-   * @returns The users.
+   * @returns the members of the session which have visibility of the force
+   * with the given ID. List will be further refined based on any additional
+   * options provided.
    */
   public getMembersForForce(
     forceId: string,
+    realmId: string,
     options: TMembersForForceOptions = {},
   ): ServerSessionMember[] {
     const { limitedVisibilityOnly = false } = options
@@ -238,12 +262,17 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // or are assigned to the force with the given ID.
     return this.members.filter((member) => {
       let hasCompleteVisibility = member.isAuthorized('completeVisibility')
-      let isAssignedToForce = member.forceId === forceId
+      let isAssignedToForce = member.assignedForceId === forceId
+      let isSubscribedToRealm = member.subscribedRealmId === realmId
 
       if (limitedVisibilityOnly) {
-        return !hasCompleteVisibility && isAssignedToForce
+        return (
+          isAssignedToForce && !hasCompleteVisibility && isSubscribedToRealm
+        )
       } else {
-        return hasCompleteVisibility || isAssignedToForce
+        return (
+          (isAssignedToForce || hasCompleteVisibility) && isSubscribedToRealm
+        )
       }
     })
   }
@@ -339,7 +368,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Handler a requester being passed.
     if (requester) {
       // Gather details.
-      let { forceId } = requester
+      let { assignedForceId: forceId } = requester
 
       // Update the session-data exposure to be user
       // specific to the requester.
@@ -463,19 +492,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    */
   public getRole(userId: User['_id']): MemberRole | undefined {
     return this.getMemberByUserId(userId)?.role
-  }
-
-  // Implemented
-  protected mapActions(): void {
-    // Initialize the actions map.
-    this.actions = new Map<string, ServerMissionAction>()
-
-    // Loops through and maps each action.
-    this.mission.forces.forEach((force) =>
-      force.nodes.forEach((node) =>
-        node.actions.forEach((action) => this.actions.set(action._id, action)),
-      ),
-    )
   }
 
   /**
@@ -667,9 +683,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    */
   public join(client: ClientConnection): ServerSessionMember {
     let userId = client.userId
-    let assignment = this.assignments[userId] ?? {}
-    let roleId: TMemberRoleId | null
-    let forceId: string | null = assignment.forceId ?? null
     let isUnstarted = this._state === 'unstarted'
 
     // Throw error if the user is in the ban list.
@@ -681,54 +694,29 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       throw ServerEmittedError.CODE_ALREADY_IN_SESSION
     }
 
-    // If the user already has an assigned role, then
-    // join with that role.
-    if (assignment.roleId) {
-      roleId = assignment.roleId
-    }
-    // If the user is authorized to join as a manager,
-    // then join as a manager.
-    else if (client.user.isAuthorized('sessions_join_manager')) {
-      roleId = MemberRole.AVAILABLE_ROLES.manager._id
-    }
-    // If the user is authorized to join as a manager
-    // of native forces, and the client is the owner of
-    // this session, then join as a manager.
-    else if (
-      client.user.isAuthorized('sessions_join_manager_native') &&
-      this.ownerId === userId
-    ) {
-      roleId = MemberRole.AVAILABLE_ROLES.manager._id
-    }
-    // If the user is authorized to join as an observer,
-    // then join as an observer.
-    else if (client.user.isAuthorized('sessions_join_observer')) {
-      roleId = MemberRole.AVAILABLE_ROLES.observer._id
-    }
-    // If the user is authorized to join as a participant,
-    // then join as a participant.
-    else if (client.user.isAuthorized('sessions_join_participant')) {
-      roleId = MemberRole.AVAILABLE_ROLES.participant._id
-    }
-    // If the user is not authorized to join the session,
-    // then throw an error.
-    else {
+    // Create a session member, providing a previous
+    // assignment if one is available in the session.
+    let member = this.assignments[userId]
+      ? ServerSessionMember.createPreviousJoin(
+          client,
+          this,
+          this.assignments[userId],
+        )
+      : ServerSessionMember.createNew(client, this)
+    let hasCompleteVisibility = member.isAuthorized('completeVisibility')
+    let isAssignedToForce = member.isAssignedToForce
+
+    // If the member has been assigned a role that denies
+    // access, throw an error.
+    if (member.roleId === 'access_denied') {
       throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
     }
-
-    // Gather more details.
-    let role = MemberRole.get(roleId)
-    let hasCompleteVisibility = role.isAuthorized('completeVisibility')
-    let isAssigned = forceId !== null
-
     // If the session is already starting/started, ensure that
     // the member has visibility to at least one force.
-    if (!isUnstarted && !hasCompleteVisibility && !isAssigned) {
+    if (!isUnstarted && !hasCompleteVisibility && !isAssignedToForce) {
       throw ServerEmittedError.CODE_SESSION_LATE_JOIN
     }
 
-    // Create a new session member.
-    let member = ServerSessionMember.create(client, role, this, forceId)
     // Add event listeners for the member.
     this.addListeners(member)
     // Push the member to the list of members.
@@ -906,12 +894,12 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     })
 
     // (Re-)derive chat channels from the mission's forces and reset messages.
-    this._chatChannels = [
-      ServerChatChannel.createAll(this),
-      ...this.mission.forces.map((force) =>
-        ServerChatChannel.fromForce(force, this),
-      ),
-    ]
+    // this._chatChannels = [
+    //   ServerChatChannel.createAll(this),
+    //   ...this.mission.forces.map((force) =>
+    //     ServerChatChannel.fromForce(force, this),
+    //   ),
+    // ]
     // Serialize all channels for members with complete visibility.
     let allChatChannelsJson = this._chatChannels.map((c) => c.toJson())
 
@@ -920,14 +908,14 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // their permissions.
     for (let member of this.members) {
       let hasCompleteVisibility = member.isAuthorized('completeVisibility')
-      let isAssigned = member.isAssigned
+      let isAssignedToForce = member.isAssignedToForce
 
       // If the member does not have complete visibility
       // and is assigned to a force, then export force-specific
       // data.
-      if (!hasCompleteVisibility && isAssigned) {
+      if (!hasCompleteVisibility && isAssignedToForce) {
         // Get the force ID for the member.
-        let forceId = member.forceId!
+        let forceId = member.assignedForceId!
 
         // If the force has not been cached, then cache it.
         if (!assignmentForceCache[forceId]) {
@@ -1073,7 +1061,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // mark them for dismissal.
     let toDismiss: ServerSessionMember[] = []
     for (let member of this.members) {
-      if (!member.isAssigned && !member.isAuthorized('completeVisibility')) {
+      if (
+        !member.isAssignedToForce &&
+        !member.isAuthorized('completeVisibility')
+      ) {
         toDismiss.push(member)
       }
     }
@@ -1244,7 +1235,13 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // the current mission.
     this._mission = ServerMission.fromSaveJson(this.mission.toSaveJson())
     this.initializeMission()
-    this.mapActions()
+    this.initializeRealms()
+    // In single-player, re-mint each participant's isolated realm
+    // (the placeholder default realm above is replaced).
+    if (this.config.mode === 'single-player') {
+      this.mintSinglePlayerRealms()
+      this.enforceSinglePlayerTargetEnvs()
+    }
     // Reset setup and teardown results for the
     // new instance.
     this.setupResults = []
@@ -1524,17 +1521,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       )
     }
 
-    // Assign the target member to the force.
-    targetMember.forceId = forceId
-
-    // Update the target member's force assignment.
-    if (forceId === null) {
-      delete this.assignments[targetMember.userId]
-    } else {
-      let assignment = this.assignments[targetMember.userId] ?? {}
-      assignment.forceId = forceId
-      this.assignments[targetMember.userId] = assignment
-    }
+    // Assign the target member to the force and
+    // update assignment in the registry.
+    targetMember.assignToForce(forceId)
+    this.assignments[targetMember.userId] = targetMember.assignment
 
     // Emit a response that the assignment has
     // been made.
@@ -1601,13 +1591,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       )
     }
 
-    // Assign the target member to the role.
-    targetMember.role = MemberRole.get(roleId)
-
-    // Update the target member's role assignment.
-    let assignment = this.assignments[targetMember.userId] ?? {}
-    assignment.roleId = roleId
-    this.assignments[targetMember.userId] = assignment
+    // Assign the target member to the role and
+    // update assignment in the registry.
+    targetMember.assignToRole(roleId)
+    this.assignments[targetMember.userId] = targetMember.assignment
 
     // Emit a response that the assignment has
     // been made.
@@ -1634,7 +1621,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     event: TClientEvents['request-open-node'],
   ): void => {
     // Organize data.
-    let mission: ServerMission = this.mission
+    let mission: ServerMission = member.subscribedRealm.mission
     let { connection } = member
     let { nodeId } = event.data
 
@@ -1679,7 +1666,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // have complete visibility, then emit an error.
     if (
       !member.isAuthorized('completeVisibility') &&
-      member.forceId !== node.forceId
+      member.assignedForceId !== node.forceId
     ) {
       return connection.emitError(
         new ServerEmittedError(
@@ -1739,7 +1726,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       }
 
       // Emit open event.
-      for (let { connection } of this.getMembersForForce(node.force._id)) {
+      for (let { connection } of this.getMembersForForce(
+        node.force._id,
+        member.subscribedRealmId,
+      )) {
         connection.emit('node-opened', payload)
       }
     } catch (error) {
@@ -1767,7 +1757,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let { config } = this
     let { connection } = member
     let { actionId, cheats = {} } = event.data
-    let action: ServerMissionAction | undefined = this.actions.get(actionId)
+    let action: ServerMissionAction | undefined =
+      member.subscribedRealm.getAction(actionId)
     let request = connection.buildResponseReqData(event)
 
     // Clear the cheats if the member is not authorized
@@ -1812,7 +1803,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // have complete visibility, then emit an error.
     if (
       !member.isAuthorized('completeVisibility') &&
-      member.forceId !== action.force._id
+      member.assignedForceId !== action.force._id
     ) {
       return connection.emitError(
         new ServerEmittedError(
@@ -1899,7 +1890,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       this.requireSessionState(member, event, 'started')
 
       let { nodeId, alertId } = event.data
-      let node = this.mission.getNodeById(nodeId)
+      let node = member.subscribedRealm.mission.getNodeById(nodeId)
       let alert = node?.getAlert(alertId)
       let request = this.buildFullfilledRequest(member, event)
 
@@ -1915,7 +1906,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       // visibility before allowing the acknowledgement.
       if (
         !member.isAuthorized('completeVisibility') &&
-        member.forceId !== node.forceId
+        member.assignedForceId !== node.forceId
       ) {
         return member.emitError(
           new ServerEmittedError(
@@ -1929,7 +1920,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
       // Communicate with all members of the force
       // that the alert has now been acknowledged.
-      for (let { connection } of this.getMembersForForce(node.forceId)) {
+      for (let { connection } of this.getMembersForForce(
+        node.forceId,
+        member.subscribedRealmId,
+      )) {
         connection.emit('node-alert-acknowledged', {
           method: 'node-alert-acknowledged',
           data: event.data,
@@ -1979,9 +1973,13 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     }
 
     // Emit action execution initiated event
-    // to each member.
-    for (let member of this.getMembersForForce(action!.force._id)) {
-      member.emit('action-execution-initiated', initiationPayload)
+    // to each member. Scope to the acting action's realm so the
+    // initiation only reaches members in that realm.
+    for (let recipient of this.getMembersForForce(
+      action!.force._id,
+      member.subscribedRealmId,
+    )) {
+      recipient.emit('action-execution-initiated', initiationPayload)
     }
 
     // Create a new output JSON object.
@@ -2064,7 +2062,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Emit the action execution completed
     // event to each member for the force.
-    for (let { connection } of this.getMembersForForce(outcome.forceId)) {
+    for (let { connection } of this.getMembersForForce(
+      outcome.forceId,
+      member.subscribedRealmId,
+    )) {
       connection.emit('action-execution-completed', completionPayload)
     }
 
@@ -2106,7 +2107,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
         // Find the node given the ID.
         let node: ServerMissionNode | undefined =
-          this.mission.getNodeById(nodeId)
+          member.subscribedRealm.mission.getNodeById(nodeId)
 
         // If the node is undefined, then emit
         // an error.
@@ -2122,7 +2123,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         // have complete visibility, then emit an error.
         if (
           !member.isAuthorized('completeVisibility') &&
-          member.forceId !== node.forceId
+          member.assignedForceId !== node.forceId
         ) {
           return member.emitError(
             new ServerEmittedError(
@@ -2415,36 +2416,43 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         'session-teardown': ['ending', 'resetting'],
       }
 
-    // Get the effects for the given trigger.
-    let effects = this.mission.effects
-      .filter((effect) => effect.trigger === trigger)
-      .filter((effect) => effect.environment)
-      .sort((a, b) => a.order - b.order)
     let results: EnvScriptResults[] = []
 
-    // Iterate through each effect and apply it.
-    for (let effect of effects) {
-      // Environment is guaranteed to be non-null
-      // due to the filtering above.
-      let environment: ServerTargetEnvironment = effect.environment!
+    // Each realm runs its own copy of the mission's effects on its
+    // own mission, so a single-player session triggers effects once
+    // per participant realm. In multiplayer there is a single realm
+    // whose mission is the template, so this runs exactly once.
+    for (let realm of this._realms) {
+      // Get the effects for the given trigger from this realm's mission.
+      let effects = realm.mission.effects
+        .filter((effect) => effect.trigger === trigger)
+        .filter((effect) => effect.environment)
+        .sort((a, b) => a.order - b.order)
 
-      // Break if the session is no longer in the
-      // correct state for the trigger.
-      if (!triggerToStateMap[effect.trigger].includes(this.state)) {
-        break
-      }
-      // Skip if the target environment is disabled
-      if (this.config.disabledTargetEnvs.includes(environment._id)) {
-        continue
-      }
+      // Iterate through each effect and apply it.
+      for (let effect of effects) {
+        // Environment is guaranteed to be non-null
+        // due to the filtering above.
+        let environment: ServerTargetEnvironment = effect.environment!
 
-      let context = TargetScriptContext.createSessionContext(effect, this)
-      let result = await this.applyEffect(
-        effect,
-        context,
-        `mission - "${this.mission.name}" - effect - "${effect.name}".`,
-      )
-      results.push(result)
+        // Break if the session is no longer in the
+        // correct state for the trigger.
+        if (!triggerToStateMap[effect.trigger].includes(this.state)) {
+          break
+        }
+        // Skip if the target environment is disabled
+        if (this.config.disabledTargetEnvs.includes(environment._id)) {
+          continue
+        }
+
+        let context = TargetScriptContext.createSessionContext(realm, effect)
+        let result = await this.applyEffect(
+          effect,
+          context,
+          `mission - "${realm.mission.name}" - effect - "${effect.name}".`,
+        )
+        results.push(result)
+      }
     }
 
     return results
@@ -2493,7 +2501,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       // environment.
       let context = TargetScriptContext.createExecutionContext(
         effect,
-        this,
         member,
         execution,
       )
@@ -2948,8 +2955,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     }
   }
 
-  // todo: Test this method to make sure complete-visibility
-  // todo: members don't receive duplicate outputs.
   /**
    * Sends an output to the force's output panel.
    * @param output The output to send to the force.

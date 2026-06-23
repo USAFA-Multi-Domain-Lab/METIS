@@ -16,6 +16,7 @@ import type { ChatChannel } from './sessions/chat/ChatChannel'
 import type { ChatMessage } from './sessions/chat/ChatMessage'
 import type { SessionMember } from './sessions/members/SessionMember'
 import type { MissionSession } from './sessions/MissionSession'
+import type { SessionRealm } from './sessions/realms/SessionRealm'
 import type { TargetArgument } from './target-environments/arguments/TargetArgument'
 import type { TargetEnvironment } from './target-environments/TargetEnvironment'
 import type { Target } from './target-environments/targets/Target'
@@ -198,6 +199,7 @@ export abstract class MetisComponent {
 export type TMetisBaseComponents = {
   session: MissionSession
   member: SessionMember
+  realm: SessionRealm
   user: User
   targetEnv: TargetEnvironment
   target: Target

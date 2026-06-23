@@ -73,7 +73,7 @@ export default function SessionPage(
 
   const defaultedProps = useDefaultProps(props, {})
   const { session, returnPage } = defaultedProps
-  const { mission } = session
+  const { subscribedMission } = session
 
   /* -- BUTTON ENGINE(S) -- */
   const navButtonEngine = useButtonSvgEngine({
@@ -107,7 +107,7 @@ export default function SessionPage(
   const [, setResourcePools] = state.resourcePools
   const {} = useRequireLogin()
   const [localFiles, setLocalFiles] = useState<ClientMissionFile[]>(
-    mission.files,
+    subscribedMission.files,
   )
   const { verifyNavigation, navigateToReturnPage } = useSessionRedirects(
     session,
@@ -511,7 +511,7 @@ export default function SessionPage(
    * Tabs for the mission map's tab bar.
    */
   const mapTabs: TTabBarTab[] = compute(() => {
-    let tabs: TTabBarTab[] = mission.forces.map((force) => {
+    let tabs: TTabBarTab[] = subscribedMission.forces.map((force) => {
       return {
         _id: force._id,
         text: force.name,
@@ -574,7 +574,9 @@ export default function SessionPage(
   // the mission, since a new force object
   // will be created.
   useEventListener(server, 'session-reset', () => {
-    selectForce(() => mission.getForceById(selectedForce?._id) ?? null)
+    selectForce(
+      () => subscribedMission.getForceById(selectedForce?._id) ?? null,
+    )
     notify('All progress has been reset by a manager.')
   })
 
@@ -636,12 +638,12 @@ export default function SessionPage(
   )
 
   // Update the list of local files when file access is granted or revoked.
-  useEventListener(mission, 'file-access-granted', () => {
-    setLocalFiles([...mission.files])
+  useEventListener(subscribedMission, 'file-access-granted', () => {
+    setLocalFiles([...subscribedMission.files])
   })
 
-  useEventListener(mission, 'file-access-revoked', () => {
-    setLocalFiles([...mission.files])
+  useEventListener(subscribedMission, 'file-access-revoked', () => {
+    setLocalFiles([...subscribedMission.files])
   })
 
   // Recheck whether there are pending alerts
@@ -717,7 +719,7 @@ export default function SessionPage(
             <Panel>
               <PanelView title='Map'>
                 <MissionMap
-                  mission={mission}
+                  mission={subscribedMission}
                   buttonEngine={mapButtonEngine}
                   tabs={mapTabs}
                   showMasterTab={false}

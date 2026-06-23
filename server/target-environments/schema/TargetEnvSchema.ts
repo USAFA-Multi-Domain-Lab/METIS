@@ -59,6 +59,16 @@ export class TargetEnvSchema {
   }
 
   /**
+   * Whether the environment supports a session running multiple
+   * realms (single-player) against it simultaneously.
+   * @note Absent in the manifest means `false`.
+   */
+  private _multiRealmSupport: boolean
+  public get multiRealmSupport(): boolean {
+    return this._multiRealmSupport
+  }
+
+  /**
    * @param options Options for creating the target environment.
    */
   public constructor(options: TTargetEnvOptions) {
@@ -66,6 +76,7 @@ export class TargetEnvSchema {
     this._name = options.name
     this._description = options.description
     this._version = options.version
+    this._multiRealmSupport = options.multiRealmSupport ?? false
     this._targets = []
     this._hooks = []
   }

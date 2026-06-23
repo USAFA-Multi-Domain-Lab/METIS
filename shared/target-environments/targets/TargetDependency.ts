@@ -1,3 +1,5 @@
+import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
+
 export const AVAILABLE_DEPENDENCIES_RAW = [
   {
     name: 'truthy',
@@ -255,7 +257,7 @@ export class TargetDependency implements TDependency {
     // Extract dependency details.
     let { condition } = TargetDependency.GET(name)!
     // If the args are not an array, convert them to an array.
-    if (!Array.isArray(args)) args = [args]
+    args = ArrayToolbox.toArray(args)
     // Create the dependency.
     let dependency = new TargetDependency(name, dependentId, condition, args)
     // Return the encoded dependency.

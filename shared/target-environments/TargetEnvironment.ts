@@ -31,7 +31,6 @@ export abstract class TargetEnvironment<
      * Describes what the target environment is.
      */
     public description: string,
-
     /**
      * The current version of the target environment.
      */
@@ -40,6 +39,14 @@ export abstract class TargetEnvironment<
      * The targets in the environment.
      */
     public targets: T['target'][] = [],
+    /**
+     * Whether the environment supports a session running multiple
+     * realms (such as single-player) against it simultaneously.
+     * @note Absent in a manifest means `false`. Environments that do
+     * not support this are automatically disabled in multi-realm
+     * sessions so they cannot collide across realms.
+     */
+    public readonly multiRealmSupport: boolean = false,
   ) {
     super(_id, name, false)
 
@@ -69,6 +76,7 @@ export abstract class TargetEnvironment<
       name: this.name,
       description: this.description,
       version: this.version,
+      multiRealmSupport: this.multiRealmSupport,
       targets: this.targets.map((target) => target.toJson()),
       configs: this.configs.map((config) => TargetEnvConfig.toJson(config)),
     }
@@ -105,11 +113,12 @@ export abstract class TargetEnvironment<
   /**
    * Default properties set when creating a new TargetEnvironment object.
    */
-  public static readonly DEFAULT_PROPERTIES: TTargetEnvJson = {
+  public static readonly DEFAULT_PROPERTIES: Required<TTargetEnvJson> = {
     _id: 'metis-target-env-default',
     name: 'Select a target environment',
     description: 'This is a default target environment.',
     version: '0.1',
+    multiRealmSupport: false,
     targets: [],
     configs: [],
   }
@@ -145,6 +154,12 @@ export interface TTargetEnvJson {
    * The current version of the target environment.
    */
   version: string
+  /**
+   * Whether the environment supports a session running multiple
+   * realms (single-player) against it simultaneously.
+   * @default false
+   */
+  multiRealmSupport?: boolean
   /**
    * The JSON representation of the targets in
    * the environment.

@@ -19,6 +19,7 @@ import type { ServerMissionResource } from "./missions/ServerMissionResource";
 import type { ServerChatChannel } from "./sessions/chat/ServerChatChannel";
 import type { ServerChatMessage } from "./sessions/chat/ServerChatMessage";
 import type { ServerSessionMember } from "./sessions/ServerSessionMember";
+import type { ServerSessionRealm } from "./sessions/ServerSessionRealm";
 import type { SessionServer } from "./sessions/SessionServer";
 import type { ServerTargetArgument } from "./target-environments/arguments/ServerTargetArgument";
 import type { ServerTarget } from "./target-environments/ServerTarget";
@@ -43,6 +44,7 @@ declare global {
   export type TMetisServerComponents = {
     session: SessionServer;
     member: ServerSessionMember;
+    realm: ServerSessionRealm;
     user: ServerUser;
     targetEnv: ServerTargetEnvironment;
     target: ServerTarget;

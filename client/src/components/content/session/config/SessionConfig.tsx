@@ -5,6 +5,7 @@ import { compute } from '@client/toolbox'
 import type {
   TSessionAccessibility,
   TSessionConfig,
+  TSessionMode,
 } from '@shared/sessions/MissionSession'
 import { useEffect, useState } from 'react'
 import { DetailLocked } from '../../form/DetailLocked'
@@ -37,6 +38,10 @@ export default function SessionConfig({
     sessionConfig.infiniteResources,
   )
   const [name, setName] = useState(sessionConfig.name ?? mission.name)
+  const [mode, setMode] = useState<TSessionMode>(sessionConfig.mode)
+  const [singlePlayerForceId, setSinglePlayerForceId] = useState<string>(
+    sessionConfig.singlePlayerForceId ?? mission.forces[0]?._id ?? '',
+  )
 
   /* -- EFFECTS -- */
 
@@ -45,8 +50,10 @@ export default function SessionConfig({
     sessionConfig.accessibility = accessibility
     sessionConfig.infiniteResources = infiniteResources
     sessionConfig.name = name
+    sessionConfig.mode = mode
+    sessionConfig.singlePlayerForceId = singlePlayerForceId || undefined
     onChange()
-  }, [accessibility, infiniteResources, name])
+  }, [accessibility, infiniteResources, name, mode, singlePlayerForceId])
 
   /* -- PRE-RENDER PROCESSING -- */
 
@@ -112,6 +119,40 @@ export default function SessionConfig({
               value={infiniteResources}
               setValue={setInfiniteResources}
             />
+            <DetailDropdown<TSessionMode>
+              label='Mode'
+              options={['multiplayer', 'single-player']}
+              value={mode}
+              setValue={setMode}
+              isExpanded={false}
+              getKey={(value) => value}
+              render={(value) =>
+                value === 'single-player' ? 'Single-player' : 'Multiplayer'
+              }
+              fieldType='required'
+              handleInvalidOption={{
+                method: 'setToDefault',
+                defaultValue: 'multiplayer',
+              }}
+            />
+            <If condition={mode === 'single-player'}>
+              <DetailDropdown<string>
+                label='Force'
+                options={mission.forces.map((force) => force._id)}
+                value={singlePlayerForceId || (mission.forces[0]?._id ?? '')}
+                setValue={setSinglePlayerForceId}
+                isExpanded={false}
+                getKey={(forceId) => forceId}
+                render={(forceId) =>
+                  mission.getForceById(forceId)?.name ?? 'Unknown Force'
+                }
+                fieldType='required'
+                handleInvalidOption={{
+                  method: 'setToDefault',
+                  defaultValue: mission.forces[0]?._id ?? '',
+                }}
+              />
+            </If>
           </div>
         </PanelView>
         <PanelView title='Target Environments'>

@@ -188,6 +188,7 @@ export abstract class TargetArgument<
     return true
   }
 
+  // todo: Protect against infinite recursion.
   /**
    * Whether the dependencies in the corresponding parameter
    * are met for this argument.

@@ -63,8 +63,9 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
     targets: ServerTarget[],
     hooks: TargetEnvironmentHook[],
     rootDir: string,
+    multiRealmSupport: boolean = false,
   ) {
-    super(id, name, description, version, targets)
+    super(id, name, description, version, targets, multiRealmSupport)
 
     this.hooks = hooks
     this.rootDir = rootDir
@@ -259,6 +260,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
       [],
       schema.hooks,
       directory,
+      schema.multiRealmSupport,
     )
   }
 

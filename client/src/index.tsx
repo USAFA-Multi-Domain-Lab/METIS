@@ -13,6 +13,7 @@ import type { ClientOutput } from "@client/missions/forces/ClientOutput";
 import type { ClientMissionNode } from "@client/missions/nodes/ClientMissionNode";
 import type { ClientMissionPrototype } from "@client/missions/nodes/ClientMissionPrototype";
 import type { ClientSessionMember } from "@client/sessions/ClientSessionMember";
+import type { ClientSessionRealm } from "@client/sessions/ClientSessionRealm";
 import type { SessionClient } from "@client/sessions/SessionClient";
 import type { ClientTarget } from "@client/target-environments/ClientTarget";
 import type { ClientTargetEnvironment } from "@client/target-environments/ClientTargetEnvironment";
@@ -67,6 +68,7 @@ declare global {
 export type TMetisClientComponents = {
   session: SessionClient;
   member: ClientSessionMember;
+  realm: ClientSessionRealm;
   user: ClientUser;
   targetEnv: ClientTargetEnvironment;
   target: ClientTarget;

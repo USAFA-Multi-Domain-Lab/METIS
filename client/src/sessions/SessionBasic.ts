@@ -186,6 +186,7 @@ export class SessionBasic
       teardownFailed: false,
       config: {
         accessibility: 'id-required',
+        mode: 'multiplayer',
         infiniteResources: false,
         disabledTargetEnvs: [],
         targetEnvConfigs: {},

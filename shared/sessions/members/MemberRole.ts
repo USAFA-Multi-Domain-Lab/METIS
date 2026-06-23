@@ -49,6 +49,13 @@ export const AVAILABLE_ROLES_RAW = [
       MemberPermission.AVAILABLE_PERMISSIONS.cheats,
     ] as MemberPermission[],
   } as const,
+  {
+    _id: 'access_denied',
+    name: 'Access Denied',
+    description:
+      'Member of a session that has no access to any session features.',
+    permissions: [] as MemberPermission[],
+  },
 ] as const
 
 /* -- CLASS -- */

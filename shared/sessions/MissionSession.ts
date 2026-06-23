@@ -12,6 +12,7 @@ import type { TUserJson } from '../users/User'
 import { User } from '../users/User'
 import type { TChatChannel, TChatChannelJson } from './chat/ChatChannel'
 import type { TMember, TSessionMemberJson } from './members/SessionMember'
+import type { TRealm, TSessionRealmJson } from './realms/SessionRealm'
 
 /**
  * Base class for sessions. Represents a session of a mission being executed by users.
@@ -67,7 +68,12 @@ export abstract class MissionSession<
    */
   protected _mission: TMission<T>
   /**
-   * The mission being executed by the participants.
+   * The session's authoring template of the mission.
+   * @note This is the source from which realms are minted. Gameplay
+   * resolution (force/node/action lookups) for a member happens
+   * through that member's realm (`member.realm.mission`), not here.
+   * In a multiplayer session the default realm's mission is the same
+   * object as this template.
    */
   public get mission(): T['mission'] {
     return this._mission
@@ -77,6 +83,25 @@ export abstract class MissionSession<
   public get missionId(): TMission<T>['_id'] {
     return this.mission._id
   }
+
+  /**
+   * Protected cache for `realms`.
+   */
+  protected _realms: TRealm<T>[] = []
+  /**
+   * The realms in the session, which can be thought of as alternate
+   * timelines for the mission be hosted by the session. Each realm has
+   * its own copy of a mission, group of members, and game state.
+   */
+  public get realms(): TRealm<T>[] {
+    return [...this._realms]
+  }
+  /**
+   * A blank realm to which the session's members will subscribe to
+   * when the realm they should be in cannot be resolved. Consider this
+   * the 404 error page of realms.
+   */
+  public abstract get defaultRealm(): TRealm<T>
 
   /**
    * Protected cache for `members`.
@@ -101,6 +126,7 @@ export abstract class MissionSession<
       manager_limited: 2,
       manager: 3,
       observer: 4,
+      access_denied: 5,
     }
     return membersRaw.sort((a, b) => {
       return weights[a.role._id] - weights[b.role._id]
@@ -149,11 +175,6 @@ export abstract class MissionSession<
   public get state(): TSessionState {
     return this._state
   }
-
-  /**
-   * A map of actionIDs to actions compiled from those found in the mission being executed.
-   */
-  protected actions: Map<string, TAction<T>> = new Map<string, TAction<T>>()
 
   /**
    * Outcome of operations performed during the setup process.
@@ -236,7 +257,6 @@ export abstract class MissionSession<
     this.setupResults = setupResults
     this.teardownResults = teardownResults
     this._chatChannels = this.parseChatChannelData(chatChannelData)
-    this.mapActions()
   }
 
   /**
@@ -329,11 +349,6 @@ export abstract class MissionSession<
   ): TChatChannel<T>[]
 
   /**
-   * Loops through all the nodes in the mission, and each action in a node, and maps the actionId to the action in the field "actions".
-   */
-  protected abstract mapActions(): void
-
-  /**
    * Checks if the given user is currently in the session
    * (Whether as a participant, manager, or observer).
    * @param userId The ID of the user to check.
@@ -367,6 +382,17 @@ export abstract class MissionSession<
   }
 
   /**
+   * @param realmId The ID of the realm to get.
+   * @returns The realm with the given ID, or undefined if not found.
+   */
+  public getRealm(
+    realmId: TRealm<T>['_id'] | null | undefined,
+  ): TRealm<T> | undefined {
+    if (realmId === null || realmId === undefined) return undefined
+    return this._realms.find((realm) => realm._id === realmId)
+  }
+
+  /**
    * Gets a chat channel by its ID.
    * @param channelId The ID of the chat channel.
    * @returns The chat channel with the given ID, or undefined if not found.
@@ -395,11 +421,22 @@ export abstract class MissionSession<
   public static readonly API_ENDPOINT: string = '/api/v1/sessions'
 
   /**
+   * The name to use for the default realm of the session.
+   */
+  public static readonly DEFAULT_REALM_NAME: string = 'The World of 404s'
+
+  /**
+   * The ID to use for the default realm of the session.
+   */
+  public static readonly DEFAULT_REALM_ID: string = 'the-world-of-404s'
+
+  /**
    * Default value for the session configuration.
    */
   public static get DEFAULT_CONFIG(): TSessionConfig {
     return {
       accessibility: 'public',
+      mode: 'multiplayer',
       infiniteResources: false,
       disabledTargetEnvs: [],
       targetEnvConfigs: {},
@@ -431,6 +468,13 @@ export abstract class MissionSession<
   public static get ACCESSIBILITY_OPTIONS(): TSessionAccessibility[] {
     return ['public', 'id-required', 'invite-only', 'testing']
   }
+
+  /**
+   * The available play modes for a session.
+   */
+  public static get AVAILABLE_MODES(): TSessionMode[] {
+    return ['multiplayer', 'single-player']
+  }
 }
 
 /* -- TYPES -- */
@@ -450,6 +494,13 @@ export type TSessionAccessibility =
   | 'testing'
 
 /**
+ * The play mode of a session.
+ * @option 'multiplayer' Participants share one realm.
+ * @option 'single-player' Each participant gets their own realm.
+ */
+export type TSessionMode = 'multiplayer' | 'single-player'
+
+/**
  * Configuration options for a session, customizing the experience.
  */
 export type TSessionConfig = {
@@ -458,6 +509,24 @@ export type TSessionConfig = {
    * @default 'public'
    */
   accessibility: TSessionAccessibility
+  /**
+   * The play mode of the session.
+   * @option 'multiplayer' Every participant shares a single realm
+   * (a full copy of the launched mission). This is the default and
+   * matches the historical behavior.
+   * @option 'single-player' Each participant gets their own realm
+   * containing only the selected force, isolating their play.
+   * @default 'multiplayer'
+   */
+  mode: TSessionMode
+  /**
+   * The ID of the force each participant plays when the session is
+   * in single-player mode.
+   * @note Required when `mode` is `'single-player'`; ignored
+   * otherwise.
+   * @default null
+   */
+  singlePlayerForceId?: string
   /**
    * Whether resources will be infinite in the session.
    * @default false
@@ -525,9 +594,17 @@ export type TSessionJson = {
    */
   config: TSessionConfig
   /**
-   * The mission that is being executed in the session.
+   * The session's authoring template of the mission. This is the source
+   * from which realms are minted and is not the live gameplay state.
+   * Gameplay state lives in each realm's own mission copy.
    */
   mission: TMissionExistingJson
+  /**
+   * The realms in the session that are visible to the recipient.
+   * Contains only the subscribed realm for participants/observers,
+   * or is empty if the member has no subscribed realm.
+   */
+  realms: TSessionRealmJson[]
   /**
    * The members of the session in the mission.
    */
