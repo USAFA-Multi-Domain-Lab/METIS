@@ -9,7 +9,7 @@ const SuccessChanceMod = TargetSchema.create({
   _id: 'success-chance-mod',
   name: 'Success Chance Modifier',
   description: '',
-  script: async (context, applyTo, amount) => {
+  script: async (context, { applyTo, amount }) => {
     context.modifySuccessChance(applyTo, amount / 100)
   },
   parameters: [

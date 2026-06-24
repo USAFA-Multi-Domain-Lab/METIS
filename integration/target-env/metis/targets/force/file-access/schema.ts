@@ -8,7 +8,7 @@ const FileAccess = TargetSchema.create({
   _id: 'file-access',
   name: 'File Access',
   description: '',
-  script: async (context, applyTo, files, access) => {
+  script: async (context, { applyTo, files, access }) => {
     context.updateFileAccess(applyTo, files, access === 'granted')
   },
   parameters: [

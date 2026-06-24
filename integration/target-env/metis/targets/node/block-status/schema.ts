@@ -8,7 +8,7 @@ const BlockStatus = TargetSchema.create({
   _id: 'block-status',
   name: 'Block Status',
   description: '',
-  script: async (context, applyTo, blockStatus) => {
+  script: async (context, { applyTo, blockStatus }) => {
     context.updateNodeBlockStatus(applyTo, blockStatus === 'block')
   },
   parameters: [
