@@ -49,12 +49,14 @@ declare global {
   export type TBaseTargetParameter = TargetEnvTypes.TBaseTargetParameter
   export type TBaseTargetParameterJson = TargetEnvTypes.TBaseTargetParameterJson
   export type TTargetParameterJson = TargetEnvTypes.TTargetParameterJson
-  export type TTargetScriptContext = TargetEnvTypes.TTargetScriptExposedContext
+  export type TTargetScriptContext<
+    TParameters extends readonly TTargetParameterJson[] = [],
+  > = TargetEnvTypes.TTargetScriptContext<TParameters>
+  export type TTargetScriptArguments<
+    TParameters extends readonly TTargetParameterJson[],
+  > = TargetEnvTypes.TScriptArgumentValues<TParameters>
   export type TTargetSchemaOptions = TargetEnvTypes.TTargetSchemaOptions
   export type TTargetScript = TargetEnvTypes.TTargetScript
-  export type TContextWithParams<
-    TSchemas extends readonly TTargetParameterJson[],
-  > = TTargetScriptContext & TargetEnvTypes.TNamedParamsContext<TSchemas>
   export type TTargetEnvExposedForce = ServerContextTypes.TTargetEnvExposedForce
   export type TTargetEnvExposedNode = ServerContextTypes.TTargetEnvExposedNode
   export type TTargetEnvExposedAction =

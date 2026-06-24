@@ -85,6 +85,7 @@ export class TargetScriptContext<
     let commonContext: TCommonTargetScriptContext<TType> = {
       type: this.data.type as TType,
       effect: this.data.effect.toTargetEnvContext(),
+      getArguments: this.getArguments,
       ...this.exposeCommon(),
       sendOutput: this.ifContextIsCurrent(this.sendOutput.bind(this)),
       blockNodes: this.ifContextIsCurrent(this.blockNodes.bind(this)),
@@ -131,6 +132,30 @@ export class TargetScriptContext<
           triggeredBy: this.data.member.toTargetEnvContext(),
         }
     }
+  }
+
+  /**
+   * Resolves the exposed value of the argument matching the given parameter ID.
+   * @param parameterId The `_id` of the parameter whose argument value to resolve.
+   * @returns The exposed argument value, or `undefined` when no argument exists
+   * for the parameter or the parameter's dependencies are not met.
+   */
+  private resolveArgumentValue(parameterId: string): unknown {
+    let argument = this.data.effect.arguments.find(
+      (argument) => argument.parameterId === parameterId,
+    )
+    if (!argument || !argument.dependenciesMet) return undefined
+    return argument.toTargetEnvContext().value
+  }
+
+  /**
+   * @see {@link TTargetScriptExposedContext.getArguments}
+   */
+  private getArguments = (ids: string | readonly string[]): unknown => {
+    if (typeof ids === 'string') return this.resolveArgumentValue(ids)
+    let values: Record<string, unknown> = {}
+    for (let id of ids) values[id] = this.resolveArgumentValue(id)
+    return values
   }
 
   /**
@@ -683,6 +708,17 @@ export class TargetScriptContext<
 /* -- TYPES -- */
 
 /**
+ * Loosely-typed `getArguments` function used by the base
+ * {@link TTargetScriptExposedContext}. Parameterized target scripts replace this
+ * with a precisely-typed getter derived from their parameter list.
+ *
+ * @note The parameter is `any` so that a precise, parameter-aware getter stays
+ * assignable to this loose signature — letting a narrowed context still be
+ * passed wherever the base context is expected.
+ */
+export type TGetArgumentsFunctionLoose = (ids: any) => unknown
+
+/**
  * Exposed context data for an effect specific to
  * session-triggered effects.
  */
@@ -722,6 +758,17 @@ export interface TTargetScriptExposedContext<
    * An effect that is applied to its target.
    */
   readonly effect: TTargetEnvExposedEffect
+  /**
+   * Retrieves resolved argument values by parameter `_id`.
+   * @param ids A single parameter `_id`, or an array of `_ids`.
+   * @returns When passed a single `_id`, the resolved value for that argument.
+   * When passed an array, an object mapping each `_id` to its resolved value.
+   * @note A value resolves to `undefined` when no argument exists for the
+   * parameter or the parameter's dependencies are not met.
+   * @note This base signature is loosely typed. Parameterized target scripts
+   * receive a precisely-typed overload via {@link TTargetScriptWithParameterTypes}.
+   */
+  getArguments: TGetArgumentsFunctionLoose
   /**
    * The member who triggered the effect.
    */
