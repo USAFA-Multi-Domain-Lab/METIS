@@ -193,7 +193,7 @@ export class TargetDependency implements TDependency {
   public encode = () =>
     `${this.name}/${this.dependentId}/${JSON.stringify(
       this.args,
-      TargetDependency.JSON_REPLACER,
+      (_key, value) => TargetDependency.JSON_REPLACER(value),
     )}`
 
   /**
@@ -208,7 +208,7 @@ export class TargetDependency implements TDependency {
       let dependentId: string = encoding.split('/')[1]
       let args: TDependencyArg[] = JSON.parse(
         encoding.replace(`${name}/${dependentId}/`, ''),
-        TargetDependency.JSON_REVIVER,
+        (_key, value) => TargetDependency.JSON_REVIVER(value),
       )
       let condition = TargetDependency.GET_CONDITION(name)
       return new TargetDependency(name, dependentId, condition, args)
