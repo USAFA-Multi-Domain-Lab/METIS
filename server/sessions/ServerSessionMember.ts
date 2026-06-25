@@ -1,6 +1,14 @@
-import type { ClientConnection } from '@server/connect/ClientConnection'
+import type { TBuildResponseDataOptions } from '@server/connect/ClientConnection'
+import { ClientConnection } from '@server/connect/ClientConnection'
+import { sessionLogger } from '@server/logging'
 import type { TTargetEnvExposedMember } from '@server/target-environments/context/TargetEnvContext'
-import type { TServerEvents, TServerMethod } from '@shared/connect'
+import type {
+  TRequestEvents,
+  TRequestMethod,
+  TResponseEvent,
+  TServerEvents,
+  TServerMethod,
+} from '@shared/connect'
 import type { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import { type TMemberRoleId } from '@shared/sessions/members/MemberRole'
 import {
@@ -17,7 +25,21 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
   /**
    * The WS connection to the client where the given user is logged in.
    */
-  public connection: ClientConnection
+  public connection: ClientConnection | null
+
+  /** Private cache for {@link joined} */
+  private _joined: boolean
+  // Implemented
+  public get joined(): boolean {
+    return this._joined
+  }
+
+  /** Private cache for {@link banned} */
+  private _banned: boolean
+  // Implemented
+  public get banned(): boolean {
+    return this._banned
+  }
 
   /**
    * @param _id The unique ID of the session member.
@@ -36,6 +58,8 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
   ) {
     super(_id, connection.user, assignment, session, subscribedRealmId)
     this.connection = connection
+    this._banned = false
+    this._joined = true
   }
 
   /**
@@ -61,6 +85,13 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
     TMethod extends TServerMethod,
     TPayload extends Omit<TServerEvents[TMethod], 'method'>,
   >(method: TMethod, payload: TPayload): void {
+    // Never emit to a ghost member — their connection is no longer live.
+    if (!this.joined || !this.connection) {
+      sessionLogger.warn(
+        `Attempted to emit event "${method}" to ghost member ${this.userId} in session ${this.session._id}. Event was not emitted.`,
+      )
+      return
+    }
     this.connection.emit(method, payload)
   }
 
@@ -70,7 +101,67 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
    * @param error The error to emit to the client.
    */
   public emitError(error: ServerEmittedError): void {
+    // Never emit to a ghost member — their connection is no longer live.
+    if (!this.joined || !this.connection) {
+      sessionLogger.warn(
+        `Attempted to emit error "${error.code}" to ghost member ${this.userId} in session ${this.session._id}. Error was not emitted.`,
+      )
+      return
+    }
     this.connection.emitError(error)
+  }
+
+  /**
+   * Builds fulfilled `request` property for response events.
+   * @param requestEvent The request event for which to create
+   * the corresponding response event.
+   * @param options Additional options for building the request data.
+   * @returns The request data for the response event.
+   */
+  public buildResponseRequestData<
+    TMethod extends TRequestMethod,
+    TEvent extends TRequestEvents[TMethod],
+  >(
+    requestEvent: TEvent,
+    options: TBuildResponseDataOptions = {},
+  ): TResponseEvent<any, any, TEvent>['request'] {
+    return ClientConnection.buildResponseRequestData(
+      requestEvent,
+      this.userId,
+      options,
+    )
+  }
+
+  /**
+   * Removes the member from the session and performs
+   * any necessary clean up.
+   */
+  public leave(): void {
+    this.session.onMemberLeave(this)
+    this._joined = false
+    this.connection?.login.onMetisSessionLeave()
+    this.connection = null
+  }
+
+  /**
+   * Removes the member from the session and flags
+   * them as banned, preventing them from rejoining.
+   * Any necessary clean up is performed also.
+   */
+  public ban(): void {
+    // Order of operations important here.
+    this._banned = true
+    this.leave()
+  }
+
+  /**
+   * Marks the member as newly joined and reattaches the
+   * given connection to the member.
+   * @param connection The new WS connection for the member.
+   */
+  public rejoin(connection: ClientConnection): void {
+    this.connection = connection
+    this._joined = true
   }
 
   /**
@@ -124,29 +215,6 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
       this.createDefaultAssignment(connection, session),
       session,
       session.defaultRealm._id,
-    )
-  }
-
-  /**
-   * Creates a session-member instance for a user who
-   * previously joined the session and has an existing
-   * assignment (role, force, and realm).
-   * @param connection The WS connection for the user who is joining the session.
-   * @param session The session in which the member is joining.
-   * @param assignment The member's role, force, and realm assignment.
-   * @returns A new {@link ServerSessionMember} object.
-   */
-  public static createPreviousJoin(
-    connection: ClientConnection,
-    session: SessionServer,
-    assignment: TSessionMemberAssignment,
-  ): ServerSessionMember {
-    return new ServerSessionMember(
-      StringToolbox.generateRandomId(),
-      connection,
-      assignment,
-      session,
-      assignment.realmId ?? session.defaultRealm._id,
     )
   }
 

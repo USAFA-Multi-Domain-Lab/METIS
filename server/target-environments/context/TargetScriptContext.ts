@@ -330,13 +330,13 @@ export class TargetScriptContext<
     }
 
     if (isGlobal) {
-      this.session.sendOutput('Global:', message, outputContext)
+      this.realm.sendOutput('Global:', message, outputContext)
     } else {
       let forces = this.resolveServerForces(to)
 
       // Send the output to each resolved force.
       for (let force of forces) {
-        this.session.sendOutput(force.outputPrefix, message, outputContext, {
+        this.realm.sendOutput(force.outputPrefix, message, outputContext, {
           force,
         })
       }
@@ -374,7 +374,7 @@ export class TargetScriptContext<
     >,
     blocked: boolean,
   ) => {
-    this.session.updateNodeBlockStatus(this.resolveServerNodes(nodes), blocked)
+    this.realm.updateNodeBlockStatus(this.resolveServerNodes(nodes), blocked)
   }
 
   /**
@@ -408,7 +408,7 @@ export class TargetScriptContext<
     >,
     opened: boolean,
   ) => {
-    this.session.updateNodeOpenState(this.resolveServerNodes(nodes), opened)
+    this.realm.updateNodeOpenState(this.resolveServerNodes(nodes), opened)
   }
 
   /**
@@ -421,7 +421,7 @@ export class TargetScriptContext<
     message: string,
     severityLevel: TNodeAlertSeverityLevel,
   ) => {
-    this.session.addNodeAlert(
+    this.realm.addNodeAlert(
       this.resolveServerNodes(applyTo),
       message,
       severityLevel,
@@ -440,7 +440,7 @@ export class TargetScriptContext<
     >,
     operand: number,
   ) => {
-    this.session.modifySuccessChance(
+    this.realm.modifySuccessChance(
       this.resolveServerActionTargets(applyTo),
       operand,
     )
@@ -458,7 +458,7 @@ export class TargetScriptContext<
     >,
     operand: number,
   ) => {
-    this.session.modifyProcessTime(
+    this.realm.modifyProcessTime(
       this.resolveServerActionTargets(applyTo),
       operand,
     )
@@ -479,7 +479,7 @@ export class TargetScriptContext<
   ) => {
     let actions = this.resolveServerActionTargets(applyTo)
     for (let resource of ArrayToolbox.toArray(resources)) {
-      this.session.modifyResourceCost(actions, resource._id, operand)
+      this.realm.modifyResourceCost(actions, resource._id, operand)
     }
   }
 
@@ -492,7 +492,7 @@ export class TargetScriptContext<
     >,
     operand: number,
   ) => {
-    this.session.modifyResourcePool(this.resolveServerPools(applyTo), operand)
+    this.realm.modifyResourcePool(this.resolveServerPools(applyTo), operand)
   }
 
   /**
@@ -529,7 +529,7 @@ export class TargetScriptContext<
     files: TInstanceOrArray<TTargetEnvExposedFile>,
     granted: boolean,
   ) => {
-    this.session.updateFileAccess(
+    this.realm.updateFileAccess(
       this.resolveServerForces(applyTo),
       this.resolveServerFiles(files),
       granted,

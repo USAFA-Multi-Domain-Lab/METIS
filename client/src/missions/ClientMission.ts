@@ -1322,27 +1322,39 @@ export class ClientMission
     json: TMissionExistingJson,
     options: TExistingClientMissionOptions = {},
   ): ClientMission {
-    // Create a ClientUser object for the creator
-    // of the mission, if there is one.
-    let createdBy: ClientUser
+    // Force options to have `existsOnServer` as true, since this
+    // is an existing mission, then defer to the general builder.
+    options.existsOnServer = true
+    return ClientMission.fromJson(json, options)
+  }
 
-    // Parse reference data.
-    if (typeof json.createdBy === 'object') {
+  /**
+   * Creates a new {@link ClientMission} from the given JSON data.
+   * @param json The JSON data from which to create the mission.
+   * @param options Options to customize the mission based on its
+   * intended usage.
+   */
+  public static fromJson(
+    json: TMissionJson,
+    options: TExistingClientMissionOptions = {},
+  ): ClientMission {
+    // Create a ClientUser object for the creator of the mission,
+    // if there is one.
+    let createdBy: ClientUser | null
+
+    if (json.createdBy && typeof json.createdBy === 'object') {
       createdBy = ClientUser.fromCreatedByJson(json.createdBy)
-    } else {
+    } else if (json.createdBy) {
       createdBy = ClientUser.createUnpopulated(
         json.createdBy,
-        json.createdByUsername,
+        json.createdByUsername ?? '',
       )
+    } else {
+      createdBy = null
     }
 
-    // Force options to have `existsOnServer`
-    // as true, since this is an existing
-    // mission.
-    options.existsOnServer = true
-
     // Create a new mission.
-    let mission: ClientMission = new ClientMission(
+    return new ClientMission(
       json._id || StringToolbox.generateRandomId(),
       json.name,
       json.versionNumber,
@@ -1359,9 +1371,6 @@ export class ClientMission
       json.effects,
       options,
     )
-
-    // Return the mission.
-    return mission
   }
 
   /**

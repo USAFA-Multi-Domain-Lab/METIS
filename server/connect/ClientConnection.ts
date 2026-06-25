@@ -209,7 +209,7 @@ export class ClientConnection {
       if (!requester) {
         this.emitError(
           new ServerEmittedError(ServerEmittedError.CODE_MEMBER_NOT_FOUND, {
-            request: this.buildResponseReqData(event),
+            request: this.buildResponseRequestData(event),
           }),
         )
         return
@@ -219,7 +219,7 @@ export class ClientConnection {
           new ServerEmittedError(
             ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
             {
-              request: this.buildResponseReqData(event),
+              request: this.buildResponseRequestData(event),
             },
           ),
         )
@@ -235,7 +235,7 @@ export class ClientConnection {
       }
       this.emit('current-session', {
         data,
-        request: this.buildResponseReqData(event),
+        request: this.buildResponseRequestData(event),
       })
     })
 
@@ -250,7 +250,7 @@ export class ClientConnection {
       if (session === undefined) {
         return this.emitError(
           new ServerEmittedError(ServerEmittedError.CODE_SESSION_NOT_FOUND, {
-            request: this.buildResponseReqData(event),
+            request: this.buildResponseRequestData(event),
           }),
         )
       }
@@ -260,7 +260,7 @@ export class ClientConnection {
       if (session.state === 'ending' || session.state === 'ended') {
         return this.emitError(
           new ServerEmittedError(ServerEmittedError.CODE_SESSION_CLOSED, {
-            request: this.buildResponseReqData(event),
+            request: this.buildResponseRequestData(event),
           }),
         )
       }
@@ -274,13 +274,13 @@ export class ClientConnection {
             session: session.toJson({ requester: member }),
             memberId: member._id,
           },
-          request: this.buildResponseReqData(event),
+          request: this.buildResponseRequestData(event),
         })
       } catch (code: any) {
         // Emit an error if thrown.
         this.emitError(
           new ServerEmittedError(code, {
-            request: this.buildResponseReqData(event),
+            request: this.buildResponseRequestData(event),
           }),
         )
       }
@@ -299,7 +299,7 @@ export class ClientConnection {
       // Return response.
       this.emit('session-quit', {
         data: {},
-        request: this.buildResponseReqData(event),
+        request: this.buildResponseRequestData(event),
       })
     })
   }
@@ -314,23 +314,23 @@ export class ClientConnection {
 
   /**
    * Builds fulfilled `request` property for response events.
+   * @param requestEvent The request event for which to create
+   * the corresponding response event.
+   * @param options Additional options for building the request data.
+   * @returns The request data for the response event.
    */
-  public buildResponseReqData<
+  public buildResponseRequestData<
     TMethod extends TRequestMethod,
     TEvent extends TRequestEvents[TMethod],
   >(
     requestEvent: TEvent,
-    options: TBuildResReqDataOptions = {},
+    options: TBuildResponseDataOptions = {},
   ): TResponseEvent<any, any, TEvent>['request'] {
-    // Extract options.
-    let { fulfilled = true } = options
-
-    // Return the request data.
-    return {
-      event: requestEvent,
-      requesterId: this.userId,
-      fulfilled,
-    }
+    return ClientConnection.buildResponseRequestData(
+      requestEvent,
+      this.userId,
+      options,
+    )
   }
 
   /**
@@ -404,7 +404,7 @@ export class ClientConnection {
       // the data contains a requestId, build the
       // request data to include in the error event.
       if (looseEventData && looseEventData.requestId) {
-        request = this.buildResponseReqData(looseEventData as any)
+        request = this.buildResponseRequestData(looseEventData as any)
       }
 
       // If the error is a rate limiter error,
@@ -460,6 +460,33 @@ export class ClientConnection {
     let payload: TServerEvents['error'] = error.toJson()
     socket.send(JSON.stringify(payload))
   }
+
+  /**
+   * Builds fulfilled `request` property for response events.
+   * @param requestEvent The request event for which to create
+   * the corresponding response event.
+   * @param requesterId The ID of the user who made the request.
+   * @param options Additional options for building the request data.
+   * @returns The request data for the response event.
+   */
+  public static buildResponseRequestData<
+    TMethod extends TRequestMethod,
+    TEvent extends TRequestEvents[TMethod],
+  >(
+    requestEvent: TEvent,
+    requesterId: string,
+    options: TBuildResponseDataOptions = {},
+  ): TResponseEvent<any, any, TEvent>['request'] {
+    // Extract options.
+    let { fulfilled = true } = options
+
+    // Return the request data.
+    return {
+      event: requestEvent,
+      requesterId,
+      fulfilled,
+    }
+  }
 }
 
 /* -- TYPES -- */
@@ -478,9 +505,10 @@ interface IClientConnectionOptions {
 }
 
 /**
- * Options for `ClientConnection.buildFulfilledReqForRes`.
+ * Additional options for {@link ClientConnection.buildResponseRequestData}
+ * method.
  */
-type TBuildResReqDataOptions = {
+export type TBuildResponseDataOptions = {
   /**
    * Whether the request was fulfilled.
    * @default true

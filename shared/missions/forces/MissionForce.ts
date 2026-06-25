@@ -241,11 +241,6 @@ export abstract class MissionForce<
       localKey: this.localKey,
       nodes: this.exportNodes(options),
       resourcePools: this.resourcePools.serialize(options),
-      filterOutputs: (memberId) => {
-        json.outputs = this.filterOutputs(memberId).map((output) =>
-          output.toJson(),
-        )
-      },
     }
 
     /**
@@ -648,12 +643,6 @@ export interface TMissionForceSessionJson {
    * The outputs for a force's output panel.
    */
   outputs: TOutputJson[]
-  /**
-   * Updates the outputs in the JSON, only including
-   * the outputs that are relevant to the given member.
-   * @param memberId The ID of the member for which to filter the outputs.
-   */
-  filterOutputs: (memberId?: string) => void
 }
 
 /**

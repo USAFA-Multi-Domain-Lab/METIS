@@ -224,7 +224,7 @@ describe('Node alert socket networking', () => {
       (event) => (event as any).method === 'node-alert-added',
     )
 
-    session.addNodeAlert([node], 'Network anomaly detected', 'warning')
+    session.realms[0].addNodeAlert([node], 'Network anomaly detected', 'warning')
 
     let firstEvent = await firstEventPromise
     let secondEvent = await secondEventPromise

@@ -19,7 +19,7 @@ const routerMap: TMetisRouterMap = (
     defineRequests({
       body: {
         username: RequestBodyFilters.USERNAME,
-        password: RequestBodyFilters.PASSWORD,
+        password: RequestBodyFilters.STRING,
       },
     }),
     login,

@@ -343,6 +343,10 @@ export interface TTargetEnvExposedSession extends Readonly<
        */
       members: TTargetEnvExposedMember[]
       /**
+       * @see {@link MissionSession.joinedMembers}
+       */
+      joinedMembers: TTargetEnvExposedMember[]
+      /**
        * @see {@link MissionSession.participants}
        */
       participants: TTargetEnvExposedMember[]

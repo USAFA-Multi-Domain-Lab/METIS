@@ -402,6 +402,7 @@ export default function SessionMemberRow({
   })
 
   // Render main component.
+  // todo: Display ban/join status in the row.
   return (
     <div key={member.username} className='SessionMemberRow'>
       <div className='Cell CellName'>{member.username}</div>

@@ -15,6 +15,7 @@ METIS is a **real-time cybersecurity training platform** designed for military a
 - **const vs let**: Use `let` for variables by default. `const` is only used for values where reassignment would be an actual concern. Most variables in the app are `let`.
 - **Casting Types** Casting is discouraged whenever proper typing is possible. When its unavoidable that's fine, but it should be a last resort.
 - **Naming Conventions** Typical abbreviations you would find in code are discouraged in this project. Please use terminology that would be safe for a professional email. No one-letter variable names in for loops or typing `req` instead of `request`. Spell the word out fully.
+- **Implementations & Editing Files** NEVER edit files or proceed with an implementation without express approval. If a prompt uses language that strongly suggests that an edit is warranted, then proceed. However, if a user is simply asking for an opinion or suggesting a new direction, do not assume they are requesting an implementation right away.
 
 **Instructions Covering Specific Topics**
 

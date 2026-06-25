@@ -206,7 +206,6 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       launchedAt,
       realms: realmData,
       members: memberData,
-      banList,
       config,
       setupResults: setupResultData,
       teardownResults: teardownResultData,
@@ -235,7 +234,6 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       config,
       mission,
       memberData,
-      banList,
       setupResults,
       teardownResults,
       chatChannels,
@@ -299,13 +297,22 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   // Implemented
   protected parseMemberData(data: TSessionMemberJson[]): ClientSessionMember[] {
     return data.map(
-      ({ _id, user: userData, assignment, subscribedRealmId }) => {
+      ({
+        _id,
+        user: userData,
+        assignment,
+        subscribedRealmId,
+        joined,
+        banned,
+      }) => {
         return new ClientSessionMember(
           _id,
           ClientUser.fromExistingJson(userData),
           assignment,
           this,
           subscribedRealmId,
+          joined,
+          banned,
         )
       },
     )
@@ -363,11 +370,10 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       }),
       realms: this._realms.map((realm) => realm.toJson()),
       members: this.members.map((member) => member.toJson()),
-      banList: this.banList,
       setupResults: this.setupResults.map((result) => result.toJson()),
       teardownResults: this.teardownResults.map((result) => result.toJson()),
       config: this.config,
-      chatChannels: this._chatChannels.map((c) => c.toJson()),
+      chatChannels: this._chatChannels.map((chat) => chat.toJson()),
       unreadChatChannelMessages: {},
       pendingSessionPanelAlerts: [],
     }
@@ -387,7 +393,6 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       launchedAt: this.launchedAt.toISOString(),
       config: this.config,
       participantIds: this.participants.map(({ _id: memberId }) => memberId),
-      banList: this.banList,
       observerIds: this.observers.map(({ _id: memberId }) => memberId),
       managerIds: this.managers.map(({ _id: memberId }) => memberId),
       setupFailed: this.setupFailed,
@@ -1098,17 +1103,17 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   private importStartData(
     event: TResponseEvents['session-started' | 'session-reset'],
   ): void {
-    // Gather details.
-    let { structure, forces, prototypes, files, chatChannels } = event.data
-    // Mark the session as started.
+    let { subscribedRealm: realmData, chatChannels } = event.data
+    let realm = ClientSessionRealm.fromJson(realmData, this)
+
+    // Reset session state.
     this._state = 'started'
-    // Import start data, revealing forces to user.
-    this.subscribedMission.importStartData(structure, forces, prototypes, files)
-    // Remap actions.
-    this.subscribedRealm.mapActions()
-    // Reset chat state.
+    this._realms = []
     this._chatChannels = this.parseChatChannelData(chatChannels)
     this._unreadChatMessageCount = new Map()
+
+    // Add new realm and subscribe the member to it.
+    this._realms.push(realm)
   }
 
   /**
@@ -1282,6 +1287,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    */
   private onEnding = (event: TResponseEvents['session-ending']): void => {
     this._state = 'ending'
+    this.cleanUp()
   }
 
   /**
@@ -1361,13 +1367,22 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   ): void => {
     let { members } = event.data
     this._members = members.map(
-      ({ _id, user: userData, assignment, subscribedRealmId }) => {
+      ({
+        _id,
+        user: userData,
+        assignment,
+        subscribedRealmId,
+        joined,
+        banned,
+      }) => {
         return new ClientSessionMember(
           _id,
           ClientUser.fromExistingJson(userData),
           assignment,
           this,
           subscribedRealmId,
+          joined,
+          banned,
         )
       },
     )
@@ -1503,7 +1518,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         // only if access is being granted. Otherwise,
         // there is no need.
         if (!file && data.granted) {
-          file = ClientMissionFile.fromJson(fileJson, this.mission)
+          file = ClientMissionFile.fromJson(fileJson, this.subscribedMission)
           this.subscribedMission.files.push(file)
         }
         return file
@@ -1874,8 +1889,8 @@ type TSessionRequestOptions = {
 type TSessionLifecycleOptions = {
   /**
    * Callback for when the server acknowledges
-   * the request to start the session and has
-   * marked the session as 'starting'.
+   * the request to start/end the session and has
+   * marked the session as 'starting'/'ending'.
    */
   onInit?: () => void
 }

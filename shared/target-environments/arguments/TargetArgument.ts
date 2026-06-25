@@ -188,12 +188,26 @@ export abstract class TargetArgument<
     return true
   }
 
-  // todo: Protect against infinite recursion.
   /**
    * Whether the dependencies in the corresponding parameter
    * are met for this argument.
    */
   public get dependenciesMet(): boolean {
+    return this._dependenciesMet(new Set())
+  }
+  /**
+   * Recursive algorithm that determines what is returned from
+   * the {@link dependenciesMet} getter.
+   */
+  private _dependenciesMet(visited: Set<string>): boolean {
+    if (visited.has(this.parameterId)) {
+      console.warn(
+        `Circular dependency detected involving parameter "${this.parameterId}". Treating dependencies as unmet.`,
+      )
+      return false
+    }
+    visited.add(this.parameterId)
+
     let dependencies = this.parameter?.dependencies ?? []
     if (!dependencies.length) return true
 
@@ -201,7 +215,7 @@ export abstract class TargetArgument<
       let dependentArgument = this.effect.arguments.find(
         (argument) => argument.parameterId === dependency.dependentId,
       )
-      if (!dependentArgument?.dependenciesMet) return false
+      if (!dependentArgument?._dependenciesMet(visited)) return false
       return dependency.condition(dependentArgument.value)
     })
   }

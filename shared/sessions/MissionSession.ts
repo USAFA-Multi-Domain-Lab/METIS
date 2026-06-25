@@ -115,6 +115,14 @@ export abstract class MissionSession<
   }
 
   /**
+   * The members who are currently joined (online) in the session.
+   * Excludes ghost members who have quit but retain an assignment.
+   */
+  public get joinedMembers(): TMember<T>[] {
+    return this._members.filter(({ joined: isJoined }) => isJoined)
+  }
+
+  /**
    * The members sorted by their role in the session.
    * @note Sort order: Participants, Managers, Observers.
    */
@@ -152,17 +160,6 @@ export abstract class MissionSession<
    */
   public get managers(): TMember<T>[] {
     return this._members.filter(({ role }) => role._id === 'manager')
-  }
-
-  /**
-   * Protected cache for `banList`.
-   */
-  protected _banList: string[]
-  /**
-   * IDs of users who have been banned from the session.
-   */
-  public get banList(): string[] {
-    return [...this._banList]
   }
 
   /**
@@ -229,12 +226,11 @@ export abstract class MissionSession<
     ownerId: string,
     ownerUsername: User['username'],
     ownerFirstName: User['firstName'],
-    ownerLastName: User['firstName'],
+    ownerLastName: User['lastName'],
     launchedAt: Date,
     config: Partial<TSessionConfig>,
     mission: TMission<T>,
     memberData: TSessionMemberJson[],
-    banList: string[],
     setupResults: EnvScriptResults[],
     teardownResults: EnvScriptResults[],
     chatChannelData: TChatChannelJson[],
@@ -253,7 +249,6 @@ export abstract class MissionSession<
     this._mission = mission
     this._state = 'unstarted'
     this._members = this.parseMemberData(memberData)
-    this._banList = banList
     this.setupResults = setupResults
     this.teardownResults = teardownResults
     this._chatChannels = this.parseChatChannelData(chatChannelData)
@@ -349,13 +344,17 @@ export abstract class MissionSession<
   ): TChatChannel<T>[]
 
   /**
-   * Checks if the given user is currently in the session
+   * Checks if the given user is currently joined (online) in the session
    * (Whether as a participant, manager, or observer).
    * @param userId The ID of the user to check.
    * @returns Whether the given user is joined into the session.
+   * @note A ghost member (quit but retaining an assignment) is not
+   * considered joined.
    */
   public isJoined(userId: User['_id']): boolean {
-    for (let { userId: x } of this.members) if (x === userId) return true
+    for (let member of this._members) {
+      if (member.userId === userId && member.joined) return true
+    }
     return false
   }
 
@@ -610,10 +609,6 @@ export type TSessionJson = {
    */
   members: TSessionMemberJson[]
   /**
-   * The IDs of participants who have been banned from the session.
-   */
-  banList: string[]
-  /**
    * @see {@link MissionSession.setupResults}
    */
   setupResults: TEnvScriptResultJson[]
@@ -686,11 +681,6 @@ export type TSessionBasicJson = {
    * The IDs of the participants of the session.
    */
   participantIds: string[]
-  /**
-   * The IDs of the participants banned from the session.
-   * @note Empty if the user does not have observer permissions.
-   */
-  banList: string[]
   /**
    * The IDs of the observers of the session.
    */

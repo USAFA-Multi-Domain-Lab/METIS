@@ -3,6 +3,7 @@ import type {
   TNodeHostedLookUpData,
 } from '@shared/missions/Mission'
 import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
+import type { TSessionRealmJson } from '@shared/sessions/realms/SessionRealm'
 import type { TEnvScriptResultJson } from '@shared/target-environments/EnvScriptResults'
 import type { MetisComponent } from '../MetisComponent'
 import type {
@@ -12,7 +13,6 @@ import type {
 import type { TExecutionOutcomeJson } from '../missions/actions/ExecutionOutcome'
 import type { TActionModifier } from '../missions/actions/MissionAction'
 import type { TMissionFileJson } from '../missions/files/MissionFile'
-import type { TMissionForceSaveJson } from '../missions/forces/MissionForce'
 import type { TOutputJson } from '../missions/forces/MissionOutput'
 import type { TResourcePoolJson } from '../missions/forces/ResourcePool'
 import type { TMissionNodeJson } from '../missions/nodes/MissionNode'
@@ -577,21 +577,10 @@ export type TResponseEvents = {
     'session-started',
     {
       /**
-       * The node structure available to the client.
+       * The realm the member is subscribed to, containing the filtered
+       * mission data they are permitted to see.
        */
-      structure: TAnyObject
-      /**
-       * The force(s) the client has access to.
-       */
-      forces: TMissionForceSaveJson[]
-      /**
-       * The prototype data used to create the mission's structure of nodes.
-       */
-      prototypes: TMissionPrototypeJson[]
-      /**
-       * The file(s) that the client has access to.
-       */
-      files: TMissionFileJson[]
+      subscribedRealm: TSessionRealmJson
       /**
        * The chat channels available in this session.
        */
@@ -630,21 +619,10 @@ export type TResponseEvents = {
     'session-reset',
     {
       /**
-       * The node structure available to the client.
+       * The realm the member is subscribed to, containing the filtered
+       * mission data they are permitted to see.
        */
-      structure: TAnyObject
-      /**
-       * The force(s) the client has access to.
-       */
-      forces: TMissionForceSaveJson[]
-      /**
-       * The prototype data used to create the mission's structure of nodes.
-       */
-      prototypes: TMissionPrototypeJson[]
-      /**
-       * The file(s) that the client has access to.
-       */
-      files: TMissionFileJson[]
+      subscribedRealm: TSessionRealmJson
       /**
        * The chat channels available in this session.
        */

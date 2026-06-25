@@ -1,8 +1,5 @@
 import { ClientMission } from '@client/missions/ClientMission'
-import type {
-  TCreateNewOptions,
-  TSessionRealmJson,
-} from '@shared/sessions/realms/SessionRealm'
+import type { TSessionRealmJson } from '@shared/sessions/realms/SessionRealm'
 import { SessionRealm } from '@shared/sessions/realms/SessionRealm'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { TMetisClientComponents } from '..'
@@ -27,6 +24,11 @@ export class ClientSessionRealm extends SessionRealm<TMetisClientComponents> {
     super(_id, name, session, mission)
   }
 
+  // Implemented
+  protected initialize(): void {
+    this.mapActions()
+  }
+
   /**
    * Deserializes a {@link ClientSessionRealm} from a {@link TSessionRealmJson}.
    */
@@ -38,7 +40,7 @@ export class ClientSessionRealm extends SessionRealm<TMetisClientComponents> {
       data._id,
       data.name,
       session,
-      ClientMission.fromExistingJson(data.mission, {
+      ClientMission.fromJson(data.mission, {
         nonRevealedDisplayMode: 'blur',
       }),
     )
@@ -53,7 +55,7 @@ export class ClientSessionRealm extends SessionRealm<TMetisClientComponents> {
   public static createNew(
     name: string,
     session: SessionClient,
-    options: TCreateNewOptions<TMetisClientComponents> = {},
+    options: TCreateNewClientRealmOptions = {},
   ): ClientSessionRealm {
     const {
       mission = ClientMission.createNew(),
@@ -61,4 +63,33 @@ export class ClientSessionRealm extends SessionRealm<TMetisClientComponents> {
     } = options
     return new ClientSessionRealm(_id, name, session, mission)
   }
+
+  // Implemented
+  public toJson(): TSessionRealmJson {
+    return {
+      _id: this._id,
+      name: this.name,
+      mission: this.mission.toJson(),
+    }
+  }
+}
+
+/* -- TYPES -- */
+
+/**
+ * Additional options for {@link ClientSessionRealm.createNew}.
+ */
+export type TCreateNewClientRealmOptions = {
+  /**
+   * A mission to use for the realm.
+   * @note If not provided, a blank mission will
+   * be created.
+   */
+  mission?: ClientMission
+  /**
+   * The `_id` of the realm.
+   * @note If not provided, a random ID will be
+   * generated.
+   */
+  _id?: string
 }

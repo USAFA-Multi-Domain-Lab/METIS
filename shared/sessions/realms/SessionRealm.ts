@@ -1,6 +1,6 @@
 import { MetisComponent } from '../../MetisComponent'
 import type { TAction } from '../../missions/actions/MissionAction'
-import type { TMission, TMissionExistingJson } from '../../missions/Mission'
+import type { TMission, TMissionJson } from '../../missions/Mission'
 import type { TSession } from '../MissionSession'
 
 /**
@@ -47,7 +47,6 @@ export abstract class SessionRealm<
    * @param _id The unique ID of the realm.
    * @param name A human-readable name for the realm.
    * @param session The session to which the realm belongs.
-   * @param mission The realm's own copy of the mission.
    */
   protected constructor(
     _id: string,
@@ -56,12 +55,15 @@ export abstract class SessionRealm<
     mission: TMission<T>,
   ) {
     super(_id, name, false)
-
     this.session = session
     this.mission = mission
-
-    this.mapActions()
+    this.initialize()
   }
+
+  /**
+   * Initializes the realm's mission state for use.
+   */
+  protected abstract initialize(): void
 
   /**
    * Loops through every action in this realm's copy of the
@@ -94,13 +96,7 @@ export abstract class SessionRealm<
    * Converts the SessionRealm object to JSON.
    * @returns A JSON representation of the realm.
    */
-  public toJson(): TSessionRealmJson {
-    return {
-      _id: this._id,
-      name: this.name,
-      mission: this.mission.toExistingJson(),
-    }
-  }
+  public abstract toJson(): TSessionRealmJson
 }
 
 /* -- TYPES -- */
@@ -127,29 +123,8 @@ export interface TSessionRealmJson {
   name: string
   /**
    * The realm's copy of the mission.
+   * @note A live gameplay snapshot, not a persisted record, so
+   * database-identity fields (createdAt, createdBy, etc.) will be absent.
    */
-  mission: TMissionExistingJson
-}
-
-/* -- TYPES -- */
-
-/**
- * Options for creating a new {@link SessionRealm}
- * via client and server `createNew` methods.
- */
-export type TCreateNewOptions<
-  T extends TMetisBaseComponents = TMetisBaseComponents,
-> = {
-  /**
-   * A mission to use for the realm.
-   * @note If not provided,  a blank mission will
-   * be created.
-   */
-  mission?: TMission<T>
-  /**
-   * The `_id` of the realm.
-   * @note If not provided, a random ID  will be
-   * generated.
-   */
-  _id?: string
+  mission: TMissionJson
 }

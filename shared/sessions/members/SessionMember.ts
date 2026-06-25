@@ -131,6 +131,20 @@ export abstract class SessionMember<
   }
 
   /**
+   * Whether the member is currently joined (online) in the session.
+   * @note A member who quits but retains a force or realm assignment is kept
+   * in the session as a ghost with this set to `false`, so managers can
+   * still see them and so their assignment is restored on rejoin.
+   */
+  public abstract joined: boolean
+
+  /**
+   * If true, this member will not be permitted to rejoin the session,
+   * unless ban is reverted.
+   */
+  public abstract banned: boolean
+
+  /**
    * The session to which the member belongs.
    */
   public session: TSession<T>
@@ -227,11 +241,24 @@ export abstract class SessionMember<
 
   /**
    * Updates {@link assignment} with a new realm ID.
-   * @param realmId The new realm ID to assign to the
-   * member, or `null` to unassign.
+   * @param realm The realm to assign. This can be the
+   * ID or the realm itself. `null` will unassign the member
+   * from any realm.
    */
-  public assignToRealm(realmId: string | null): void {
-    this.assignment.realmId = realmId
+  public assignToRealm(realm: string | T['realm'] | null): void {
+    if (typeof realm !== 'string' && realm !== null) realm = realm._id
+    this.assignment.realmId = realm
+  }
+
+  /**
+   * Subscribes the member to a realm for routing purposes.
+   * @param realm The realm to subscribe to. This can be the
+   * ID or the realm itself.
+   * @note This does not change the member's assigned realm.
+   */
+  public subscribeToRealm(realm: string | T['realm']): void {
+    if (typeof realm !== 'string') realm = realm._id
+    this.subscribedRealmId = realm
   }
 
   /**
@@ -244,6 +271,8 @@ export abstract class SessionMember<
       user: this.user.toExistingJson(),
       assignment: this.assignment,
       subscribedRealmId: this.subscribedRealmId,
+      joined: this.joined,
+      banned: this.banned,
     }
   }
 
@@ -307,4 +336,13 @@ export interface TSessionMemberJson {
    * The ID of the realm this member is currently subscribed to.
    */
   subscribedRealmId: string
+  /**
+   * Whether the member is currently joined (online) in the session.
+   */
+  joined: boolean
+  /**
+   * Whether the member has been banned from the session and cannot
+   * rejoin.
+   */
+  banned: boolean
 }

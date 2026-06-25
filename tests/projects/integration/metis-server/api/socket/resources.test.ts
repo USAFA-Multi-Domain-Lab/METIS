@@ -589,7 +589,11 @@ describe('Action execution resource socket networking', () => {
     ])
 
     // Triggers a modifier event.
-    session.modifyResourceCost([action], fuelPool.resourceId, resourceCostOperand)
+    session.realms[0].modifyResourceCost(
+      [action],
+      fuelPool.resourceId,
+      resourceCostOperand,
+    )
 
     let modifierEvent = await listeners['action-resource-cost-updated']
 
