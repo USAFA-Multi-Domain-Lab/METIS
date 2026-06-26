@@ -91,7 +91,7 @@ $form-row-gap: 1.5em;
 
 .Detail {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(225px, 100%));
+  grid-template-columns: repeat(auto-fill, minmax(14em, 100%));
   row-gap: 0.5em;
 
   .FieldErrorMessage {

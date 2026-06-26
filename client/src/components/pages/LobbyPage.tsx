@@ -12,17 +12,17 @@ import {
 import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
 import type { TNavigation_P } from '../content/general-layout/Navigation'
 import { HomeButton } from '../content/general-layout/Navigation'
+import Panel from '../content/general-layout/panels/Panel'
+import PanelView from '../content/general-layout/panels/PanelView'
 import PropertyBadge from '../content/general-layout/property-badges/PropertyBadge'
 import PropertyBadges from '../content/general-layout/property-badges/PropertyBadges'
 import SessionMembers from '../content/session/members/SessionMembers'
-import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
-import If from '../content/util/If'
 import './LobbyPage.scss'
 
 /**
@@ -38,10 +38,19 @@ export default function LobbyPage({
   const {} = useRequireLogin()
   const globalContext = useGlobalContext()
   const [server] = globalContext.server
-  const { finishLoading, navigateTo, handleError, prompt } =
-    globalContext.actions
-  const navButtonEngine = useButtonSvgEngine({
-    elements: [HomeButton({ icon: 'quit', description: 'Quit session' })],
+  const { finishLoading, handleError, prompt } = globalContext.actions
+  const navigationButtonEngine = useButtonSvgEngine({
+    elements: [
+      {
+        key: 'start-session',
+        type: 'button',
+        icon: 'play',
+        description: 'Start session',
+        hidden: !session.member.isAuthorized('startEndSessions'),
+        onClick: () => onClickStartSession(),
+      },
+      HomeButton({ icon: 'quit', description: 'Quit session' }),
+    ],
   })
   const { verifyNavigation } = useSessionRedirects(session)
   const [startInitiated, setStartInitiated] = useState<boolean>(
@@ -55,7 +64,7 @@ export default function LobbyPage({
    * Config for the navigation on this page.
    */
   const navigation = compute<TNavigation_P>(() => {
-    return { buttonEngine: navButtonEngine }
+    return { buttonEngine: navigationButtonEngine }
   })
 
   /**
@@ -136,13 +145,6 @@ export default function LobbyPage({
   }
 
   /**
-   * Callback for the session configuration button.
-   */
-  const onClickSessionConfig = () => {
-    navigateTo('SessionConfigPage', { session, cancelPage: 'LobbyPage' })
-  }
-
-  /**
    * Creates a description for a property badge in a
    * standardized format.
    * @param label Short identifier for the purpose for the badge.
@@ -215,42 +217,13 @@ export default function LobbyPage({
     }
   })
 
+  // Disable the start session button if the session
+  // start has been initiated.
+  useEffect(() => {
+    navigationButtonEngine.setDisabled('start-session', startInitiated)
+  }, [startInitiated])
+
   /* -- RENDER -- */
-
-  /**
-   * JSX for the button section.
-   */
-  const buttonSectionJsx = compute<TReactElement>(() => {
-    // Gather details.
-    let buttonsJsx: TReactElement[] = []
-
-    // If the current member can start and end sessions,
-    // add the start session button.
-    if (session.member.isAuthorized('startEndSessions')) {
-      buttonsJsx.push(
-        <ButtonText
-          key={'start-button'}
-          text={'Start Session'}
-          onClick={onClickStartSession}
-        />,
-      )
-    }
-
-    // If the current member can configure sessions,
-    // add the configure session button.
-    if (session.member.isAuthorized('configureSessions')) {
-      buttonsJsx.push(
-        <ButtonText
-          key={'configure-button'}
-          text={'Configure Session'}
-          onClick={onClickSessionConfig}
-        />,
-      )
-    }
-
-    // Return the JSX.
-    return <div className='ButtonSection Section'>{buttonsJsx}</div>
-  })
 
   // Render root component.
   return (
@@ -318,7 +291,10 @@ export default function LobbyPage({
               )}
             />
             <PropertyBadge
-              active={session.config.mode === 'single-player'}
+              active={
+                session.config.mode === 'single-player' &&
+                session.member.isAuthorized('completeVisibility')
+              }
               icon={sessionForceIcon}
               value={sessionForceName}
               description={constructBadgeDescription(
@@ -330,15 +306,20 @@ export default function LobbyPage({
             />
           </PropertyBadges>
         </div>
-        <If condition={startInitiated}>
+        {startInitiated && (
           <div className='StatusSection Section'>
             <div className={startStatusClasses.value}>{startStatus}</div>
           </div>
-        </If>
-        <div className='MembersSection Section'>
-          <SessionMembers session={session} />
-        </div>
-        <If condition={!startInitiated}>{buttonSectionJsx}</If>
+        )}
+        <Panel>
+          <PanelView title={'Members'}>
+            <div className='MembersSection Section'>
+              <SessionMembers session={session} />
+            </div>
+          </PanelView>
+          {session.member.isAuthorized('configureSessions') &&
+            !startInitiated && <PanelView title={'Configuration'}></PanelView>}
+        </Panel>
       </DefaultPageLayout>
     </div>
   )

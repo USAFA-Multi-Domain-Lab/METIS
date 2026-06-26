@@ -3,6 +3,7 @@
 
 .SessionMembers {
   min-width: fit-content;
+  font-size: 0.75rem;
 
   .RowTitles {
     @include member-row-like;
@@ -10,7 +11,6 @@
     padding: 0.25em 0 1.25em;
 
     .CellTitle {
-      // font-style: italic;
       font-weight: bold;
     }
   }
