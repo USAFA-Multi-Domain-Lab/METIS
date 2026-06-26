@@ -83,19 +83,5 @@
       width: 100%;
     }
 
-    .Panel {
-      background: none;
-      border: none;
-
-      .PanelTabBar {
-        border: none;
-
-        .Tabs {
-          .PanelTab {
-            border-right: none;
-          }
-        }
-      }
-    }
-  }
+}
 }

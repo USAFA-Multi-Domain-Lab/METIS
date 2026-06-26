@@ -311,7 +311,7 @@ export default function LobbyPage({
             <div className={startStatusClasses.value}>{startStatus}</div>
           </div>
         )}
-        <Panel>
+        <Panel transparent>
           <PanelView title={'Members'}>
             <div className='MembersSection Section'>
               <SessionMembers session={session} />

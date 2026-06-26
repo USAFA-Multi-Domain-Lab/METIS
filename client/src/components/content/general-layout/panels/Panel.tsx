@@ -29,6 +29,7 @@ export const usePanelContext = () => {
  */
 export default function Panel({
   children,
+  transparent = false,
   selectView: externalSelectView,
   onViewSelected,
 }: TPanel_P): TReactElement | null {
@@ -72,6 +73,7 @@ export default function Panel({
   const rootClasses = compute<ClassList>(() => {
     let result = new ClassList('Panel')
     result.set('Tabbed', viewElements.length > 1)
+    result.set('Transparent', transparent)
     return result
   })
 
@@ -121,6 +123,12 @@ export interface TPanel_P {
    * The content of the panel.
    */
   children?: React.ReactNode
+  /**
+   * When true, removes the panel background and
+   * all borders (including tab bar).
+   * @default false
+   */
+  transparent?: boolean
   /**
    * Optional ref to pass to externally set the panel view.
    * @param title The title of the view to select.

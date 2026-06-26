@@ -22,4 +22,19 @@
     background: none;
     border: none;
   }
+
+  &.Transparent {
+    background: none;
+    border: none;
+
+    .PanelTabBar {
+      border: none;
+
+      .Tabs {
+        .PanelTab:not(:last-child) {
+          border-right: none;
+        }
+      }
+    }
+  }
 }
