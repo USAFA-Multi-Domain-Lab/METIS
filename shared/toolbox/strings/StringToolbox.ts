@@ -41,7 +41,8 @@ export class StringToolbox {
   }
 
   /**
-   * @param input A string in camelCase, PascalCase, or snake_case, or kebab-case.
+   * @param input A string in lower case, MiXed CaSe, camelCase,
+   * PascalCase, snake_case, or kebab-case.
    * @returns A string in Title Case.
    * @example
    * StringToolbox.toTitleCase('helloWorld') // Hello World
@@ -49,7 +50,11 @@ export class StringToolbox {
    * StringToolbox.toTitleCase('hello_world') // Hello World
    * StringToolbox.toTitleCase('hello-world') // Hello World
    */
-  public static toTitleCase(input: string): string {
+  public static toTitleCase(
+    input: string,
+    options: TToTitleCaseOptions = {},
+  ): string {
+    const { allCapsExceptions = [] } = options
     const exceptions = new Set([
       'a',
       'an',
@@ -69,6 +74,9 @@ export class StringToolbox {
       'up',
       'with',
     ])
+    const allCapsExceptionsSet = new Set(
+      allCapsExceptions.map((word) => word.toLowerCase()),
+    )
 
     const words = input
       .replace(/([a-z])([A-Z])/g, '$1 $2') // camelCase → camel Case
@@ -81,8 +89,13 @@ export class StringToolbox {
     return words
       .map((word, index) => {
         const isFirstOrLast = index === 0 || index === words.length - 1
-        if (exceptions.has(word) && !isFirstOrLast) return word
-        return word.charAt(0).toUpperCase() + word.slice(1)
+        if (allCapsExceptionsSet.has(word)) {
+          return word.toUpperCase()
+        } else if (exceptions.has(word) && !isFirstOrLast) {
+          return word
+        } else {
+          return word.charAt(0).toUpperCase() + word.slice(1)
+        }
       })
       .join(' ')
   }
@@ -203,4 +216,23 @@ export class StringToolbox {
  */
 export function s(count: number): string {
   return StringToolbox.s(count)
+}
+
+/* -- TYPES -- */
+
+/**
+ * Additonal options for {@link StringToolbox.toTitleCase}
+ * which can customize the resulting string based on the
+ * callers needs.
+ */
+export type TToTitleCaseOptions = {
+  /**
+   * A list of words that should be fully capitalized in the resulting string.
+   * @note This is particularly useful for acronyms.
+   * @note exceptions can be provided in any case (upper, lower, or mixed)
+   * and will be matched case-insensitively.
+   * @example
+   * StringToolbox.toTitleCase('id-required', { allCapsExceptions: ['ID'] }) // ID Required
+   */
+  allCapsExceptions?: string[]
 }

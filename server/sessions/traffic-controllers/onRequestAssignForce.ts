@@ -49,6 +49,16 @@ export const onRequestAssignForce =
         )
       }
 
+      // If a force ID was provided but it does not correspond to
+      // a force in the session's mission, then emit an error.
+      if (forceId !== null && !this.mission.getForceById(forceId)) {
+        return member.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
+            request,
+          }),
+        )
+      }
+
       targetMember.assignToForce(forceId)
 
       // Emit a response that the assignment has

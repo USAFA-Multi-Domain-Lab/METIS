@@ -1034,7 +1034,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
           sessionDataExposure: { expose: 'all' },
         }
       }
-
       member.emit(responseMethod, {
         method: responseMethod,
         data: {

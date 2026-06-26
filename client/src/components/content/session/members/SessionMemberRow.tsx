@@ -9,6 +9,7 @@ import { MemberRole } from '@shared/sessions/members/MemberRole'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import Prompt from '../../communication/Prompt'
+import { DetailLocked } from '../../form/DetailLocked'
 import { DetailDropdown } from '../../form/dropdowns/standard/DetailDropdown'
 import ButtonSvgPanel from '../../user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../../user-controls/buttons/panels/hooks'
@@ -65,6 +66,11 @@ export default function SessionMemberRow({
   const assignedRoleId: TMemberRoleId = assignedRole._id
 
   /**
+   * Whether the session is in single-player mode.
+   */
+  const isSinglePlayer: boolean = session.config.mode === 'single-player'
+
+  /**
    * Whether the target member can be assigned a force.
    */
   const targetIsForceAssignable: boolean =
@@ -115,7 +121,8 @@ export default function SessionMemberRow({
       currentManagesMembers &&
       sessionUnstarted &&
       !targetCompleteVisibility &&
-      currentCompleteVisibility,
+      currentCompleteVisibility &&
+      !isSinglePlayer,
   )
   /**
    * Whether the dropdown to assign a role to the member should
@@ -307,7 +314,7 @@ export default function SessionMemberRow({
       innerJsx = (
         <DetailDropdown<ClientMissionForce>
           label='Force'
-          options={session.subscribedMission.forces}
+          options={session.mission.forces}
           value={assignedForce}
           setValue={setAssignedForce}
           isExpanded={false}
@@ -322,6 +329,24 @@ export default function SessionMemberRow({
           }}
           emptyText='Assign force'
           disabled={forceLock}
+        />
+      )
+    }
+    // In single-player mode, show the configured force as a locked
+    // field for force-assignable members visible to the manager.
+    else if (
+      isSinglePlayer &&
+      targetIsForceAssignable &&
+      currentCompleteVisibility
+    ) {
+      let singlePlayerForce = session.mission.getForceById(
+        session.config.singlePlayerForceId,
+      )
+      innerJsx = (
+        <DetailLocked
+          label='Force'
+          value={singlePlayerForce?.name ?? 'Not configured'}
+          color={`${singlePlayerForce?.color}77`}
         />
       )
     }

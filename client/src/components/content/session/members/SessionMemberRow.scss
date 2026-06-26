@@ -37,6 +37,24 @@
           }
         }
       }
+
+      &.DetailLocked {
+        display: inline-block;
+        margin: 0;
+        padding: 0;
+
+        .TitleRow {
+          display: none;
+        }
+
+        .Field {
+          column-gap: 0.5em;
+          margin: 0;
+          border: none;
+          padding: 0;
+          background: none;
+        }
+      }
     }
   }
 }

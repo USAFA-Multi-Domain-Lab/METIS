@@ -11,11 +11,14 @@ import {
 } from '@client/toolbox/hooks'
 import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
 import { ClassList } from '@shared/toolbox/html/ClassList'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useState } from 'react'
 import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
 import type { TNavigation_P } from '../content/general-layout/Navigation'
 import { HomeButton } from '../content/general-layout/Navigation'
+import PropertyBadge from '../content/general-layout/property-badges/PropertyBadge'
+import PropertyBadges from '../content/general-layout/property-badges/PropertyBadges'
 import SessionMembers from '../content/session/members/SessionMembers'
 import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
@@ -49,22 +52,6 @@ export default function LobbyPage({
   /* -- COMPUTED -- */
 
   /**
-   * The formatted accessibility for the session.
-   */
-  const accessibility = compute<string>(() => {
-    switch (session.config.accessibility) {
-      case 'public':
-        return 'Public'
-      case 'id-required':
-        return 'ID Required'
-      case 'invite-only':
-        return 'Invite Only'
-      default:
-        return 'Unknown'
-    }
-  })
-
-  /**
    * Config for the navigation on this page.
    */
   const navigation = compute<TNavigation_P>(() => {
@@ -87,6 +74,32 @@ export default function LobbyPage({
   const startStatusClasses = compute<ClassList>(() => {
     return new ClassList('StartStatus').set('StartStatusFailure', setupFailed)
   })
+
+  /**
+   * The icon used to represent a single-player force in
+   * the property badges.
+   */
+  const sessionForceIcon = compute<TMetisIcon>(() => {
+    let force = session.mission.getForceById(session.config.singlePlayerForceId)
+    return force?.outlineIcon ?? '_blank'
+  })
+
+  /**
+   * The name of the force assigned for single-player mode,
+   * or an error string if not configured.
+   */
+  const sessionForceName = compute<string>(() => {
+    let force = session.mission.getForceById(session.config.singlePlayerForceId)
+    return force?.name ?? 'Error: Not configured'
+  })
+
+  /**
+   * The color of the force assigned for single-player mode,
+   * or an error string if not configured.
+   */
+  const singlePlayerForceColor = session.mission.getForceById(
+    session.config.singlePlayerForceId,
+  )?.color
 
   /* -- FUNCTIONS -- */
 
@@ -127,6 +140,32 @@ export default function LobbyPage({
    */
   const onClickSessionConfig = () => {
     navigateTo('SessionConfigPage', { session, cancelPage: 'LobbyPage' })
+  }
+
+  /**
+   * Creates a description for a property badge in a
+   * standardized format.
+   * @param label Short identifier for the purpose for the badge.
+   * @param value The current state of the property for the badge,
+   * preformatted in a readable format.
+   * @param explanations Gives a more detailed explanation of the property.
+   * If a string is provided, it will be used as the explanation for all values.
+   * If an object is provided, the keys should be the possible values of the property,
+   * and the values should be the corresponding explanations.
+   * @returns The formatted badge description.
+   */
+  const constructBadgeDescription = (
+    label: string,
+    value: string,
+    explanations?: string | { [key: string]: string },
+  ) => {
+    let description = `**${label}:** ${value}`
+    if (typeof explanations === 'string') {
+      description += `\n\t\n*${explanations}*`
+    } else if (explanations && explanations[value]) {
+      description += `\n\t\n*${explanations[value]}*`
+    }
+    return description
   }
 
   /* -- EFFECTS -- */
@@ -217,24 +256,79 @@ export default function LobbyPage({
   return (
     <div className='LobbyPage Page DarkPage'>
       <DefaultPageLayout navigation={navigation}>
-        <div className='Title'>Lobby</div>
         <div className='DetailSection Section'>
-          <div className='SessionId StaticDetail'>
-            <div className='Label'>Session ID:</div>
-            <div className='Value'>{session._id}</div>
-          </div>
-          <div className='Visibility StaticDetail'>
-            <div className='Label'>Accessibility:</div>
-            <div className='Value'>{accessibility}</div>
-          </div>
-          <div className='SessionName StaticDetail'>
-            <div className='Label'>Session:</div>
-            <div className='Value'>{session.name}</div>
-          </div>
-          <div className='MissionName StaticDetail'>
-            <div className='Label'>Mission:</div>
-            <div className='Value'>{mission.name}</div>
-          </div>
+          <div className='Title'>Lobby</div>
+          <PropertyBadges>
+            <PropertyBadge
+              icon='key'
+              value={session._id}
+              description={constructBadgeDescription(
+                'Session ID',
+                session._id,
+                'The unique identifier for this session. This ID can be used to join private sessions.',
+              )}
+            />
+            <PropertyBadge
+              icon='launch'
+              value={session.name}
+              description={constructBadgeDescription(
+                'Session Name',
+                session.name,
+              )}
+            />
+            <PropertyBadge
+              icon={mission.outlineIcon}
+              value={mission.name}
+              description={constructBadgeDescription(
+                'Mission Name',
+                mission.name,
+              )}
+            />
+            <PropertyBadge
+              icon={
+                session.config.accessibility === 'public' ? 'shown' : 'private'
+              }
+              value={StringToolbox.toTitleCase(session.config.accessibility, {
+                allCapsExceptions: ['ID'],
+              })}
+              description={constructBadgeDescription(
+                'Accessibility',
+                StringToolbox.toTitleCase(session.config.accessibility, {
+                  allCapsExceptions: ['ID'],
+                }),
+                {
+                  'Public': 'Anyone can join the session.',
+                  'ID Required': 'Users must provide the session ID to join.',
+                  'Invite Only': 'Users must be invited to join the session.',
+                },
+              )}
+            />
+            <PropertyBadge
+              icon={session.config.mode === 'single-player' ? 'user' : 'group'}
+              value={StringToolbox.toTitleCase(session.config.mode)}
+              description={constructBadgeDescription(
+                'Mode',
+                StringToolbox.toTitleCase(session.config.mode),
+                {
+                  'Single Player':
+                    'Each participant is assigned to a dedicated realm without any interaction with other participants.',
+                  'Multiplayer':
+                    'All participants interact within a shared realm.',
+                },
+              )}
+            />
+            <PropertyBadge
+              active={session.config.mode === 'single-player'}
+              icon={sessionForceIcon}
+              value={sessionForceName}
+              description={constructBadgeDescription(
+                'Single Player Force',
+                sessionForceName,
+                'The force being used for single-player mode. This force is auto-assigned to each participant in this mode.',
+              )}
+              color={singlePlayerForceColor}
+            />
+          </PropertyBadges>
         </div>
         <If condition={startInitiated}>
           <div className='StatusSection Section'>
