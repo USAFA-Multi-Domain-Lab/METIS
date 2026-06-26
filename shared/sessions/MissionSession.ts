@@ -11,8 +11,9 @@ import type { TMission, TMissionExistingJson } from '../missions/Mission'
 import type { TUserJson } from '../users/User'
 import { User } from '../users/User'
 import type { TChatChannel, TChatChannelJson } from './chat/ChatChannel'
+import type { TMemberRoleId } from './members/MemberRole'
 import type { TMember, TSessionMemberJson } from './members/SessionMember'
-import type { TRealm, TSessionRealmJson } from './realms/SessionRealm'
+import type { TRealm, TSessionRealmJson } from './SessionRealm'
 
 /**
  * Base class for sessions. Represents a session of a mission being executed by users.
@@ -124,18 +125,18 @@ export abstract class MissionSession<
 
   /**
    * The members sorted by their role in the session.
-   * @note Sort order: Participants, Managers, Observers.
+   * @note Sort order: Participants, Limited Observers, Managers, Observers.
    */
   public get membersSorted(): TMember<T>[] {
     let membersRaw = [...this._members]
     let weights = {
       participant: 0,
       observer_limited: 1,
-      manager_limited: 2,
-      manager: 3,
-      observer: 4,
-      access_denied: 5,
-    }
+      manager: 2,
+      observer: 3,
+      access_denied: 4,
+    } satisfies Record<TMemberRoleId, number>
+
     return membersRaw.sort((a, b) => {
       return weights[a.role._id] - weights[b.role._id]
     })

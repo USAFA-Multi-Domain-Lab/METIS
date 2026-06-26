@@ -3,7 +3,7 @@ import type {
   TNodeHostedLookUpData,
 } from '@shared/missions/Mission'
 import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
-import type { TSessionRealmJson } from '@shared/sessions/realms/SessionRealm'
+import type { TSessionRealmJson } from '@shared/sessions/SessionRealm'
 import type { TEnvScriptResultJson } from '@shared/target-environments/EnvScriptResults'
 import type { MetisComponent } from '../MetisComponent'
 import type {

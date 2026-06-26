@@ -9,8 +9,8 @@ import type { TOutputContext } from '@shared/missions/forces/MissionOutput'
 import type { TMissionJsonOptions } from '@shared/missions/Mission'
 import type { MissionComponent } from '@shared/missions/MissionComponent'
 import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
-import type { TSessionRealmJson } from '@shared/sessions/realms/SessionRealm'
-import { SessionRealm } from '@shared/sessions/realms/SessionRealm'
+import type { TSessionRealmJson } from '@shared/sessions/SessionRealm'
+import { SessionRealm } from '@shared/sessions/SessionRealm'
 import type { TInstanceOrArray } from '@shared/toolbox/arrays/ArrayToolbox'
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
@@ -112,33 +112,6 @@ export class ServerSessionRealm extends SessionRealm<TMetisServerComponents> {
     for (let component of ArrayToolbox.toArray(components.flat())) {
       this.confirmComponentInMission(component)
     }
-  }
-
-  /**
-   * Applies a modifier to one or more actions and emits a batch event.
-   * @param actions The actions to modify.
-   * @param modifier The modifier to apply.
-   */
-  private modifyActions(
-    actions: ServerMissionAction[],
-    modifier: TActionModifier,
-  ): void {
-    let method = ServerMissionAction.getServerMethodForModifier(modifier)
-
-    this.confirmComponentsInMission(actions)
-    actions.forEach((action) => action.applyModifier(modifier))
-
-    let batchMap = new ComponentModifierBatchMap(this, actions)
-    batchMap.emit(method, (actions) => ({
-      data: {
-        lookUpData: ArrayToolbox.mapProperties(actions, [
-          '_id',
-          'forceId',
-          'nodeId',
-        ]),
-        modifier,
-      },
-    }))
   }
 
   /**
@@ -258,6 +231,33 @@ export class ServerSessionRealm extends SessionRealm<TMetisServerComponents> {
           nodeId: node._id,
           alertId: alertIdMap.get(node._id)!,
         })),
+      },
+    }))
+  }
+
+  /**
+   * Applies a modifier to one or more actions and emits a batch event.
+   * @param actions The actions to modify.
+   * @param modifier The modifier to apply.
+   */
+  private modifyActions(
+    actions: ServerMissionAction[],
+    modifier: TActionModifier,
+  ): void {
+    let method = ServerMissionAction.getServerMethodForModifier(modifier)
+
+    this.confirmComponentsInMission(actions)
+    actions.forEach((action) => action.applyModifier(modifier))
+
+    let batchMap = new ComponentModifierBatchMap(this, actions)
+    batchMap.emit(method, (actions) => ({
+      data: {
+        lookUpData: ArrayToolbox.mapProperties(actions, [
+          '_id',
+          'forceId',
+          'nodeId',
+        ]),
+        modifier,
       },
     }))
   }
@@ -427,10 +427,10 @@ export class ServerSessionRealm extends SessionRealm<TMetisServerComponents> {
       force.storeOutput(output)
 
       // If a member is specified, send the output to that member.
-      // Also send to any members with complete visibility (e.g. admins)
-      // who are not the targeted member so they see it in real-time.
+      // Do not send to complete-visibility members in this case,
+      // since private outputs are truly private in METIS.
       if (member) {
-        const outputJson = output.toJson()
+        let outputJson = output.toJson()
         member.emit('send-output', {
           data: {
             outputData: outputJson,

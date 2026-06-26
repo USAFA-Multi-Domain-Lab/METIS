@@ -1,7 +1,7 @@
-import { MetisComponent } from '../../MetisComponent'
-import type { TAction } from '../../missions/actions/MissionAction'
-import type { TMission, TMissionJson } from '../../missions/Mission'
-import type { TSession } from '../MissionSession'
+import { MetisComponent } from '../MetisComponent'
+import type { TAction } from '../missions/actions/MissionAction'
+import type { TMission, TMissionJson } from '../missions/Mission'
+import type { TSession } from './MissionSession'
 
 /**
  * A parallel, isolated copy of a mission within a session.

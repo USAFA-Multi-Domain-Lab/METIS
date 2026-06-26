@@ -37,7 +37,7 @@ export class ServerChatMessage extends ChatMessage<TMetisServerComponents> {
       sessionId: session._id,
       senderId: member._id,
       senderUsername: member.username,
-      senderForceId: member.forceId,
+      senderForceId: member.assignedForceId,
       message: html,
       timestamp: Date.now(),
     })

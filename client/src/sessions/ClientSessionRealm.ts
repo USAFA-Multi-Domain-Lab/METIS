@@ -1,6 +1,6 @@
 import { ClientMission } from '@client/missions/ClientMission'
-import type { TSessionRealmJson } from '@shared/sessions/realms/SessionRealm'
-import { SessionRealm } from '@shared/sessions/realms/SessionRealm'
+import type { TSessionRealmJson } from '@shared/sessions/SessionRealm'
+import { SessionRealm } from '@shared/sessions/SessionRealm'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { TMetisClientComponents } from '..'
 import type { SessionClient } from './SessionClient'

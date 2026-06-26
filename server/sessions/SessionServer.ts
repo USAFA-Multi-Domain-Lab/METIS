@@ -4,7 +4,6 @@ import type { ServerExecutionOutcome } from '@server/missions/actions/ServerExec
 import type { ServerMissionAction } from '@server/missions/actions/ServerMissionAction'
 import type { ServerEffect } from '@server/missions/effects/ServerEffect'
 import type { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
-import type { ServerMissionNode } from '@server/missions/nodes/ServerMissionNode'
 import type { ServerMission } from '@server/missions/ServerMission'
 import { OutdatedContextError } from '@server/target-environments/context/OutdatedContextError'
 import type {
@@ -45,7 +44,7 @@ import type {
   TSessionState,
 } from '@shared/sessions/MissionSession'
 import { MissionSession } from '@shared/sessions/MissionSession'
-import type { TSessionRealmJson } from '@shared/sessions/realms/SessionRealm'
+import type { TSessionRealmJson } from '@shared/sessions/SessionRealm'
 import type { TEnvScriptResultJson } from '@shared/target-environments/EnvScriptResults'
 import { EnvScriptResults } from '@shared/target-environments/EnvScriptResults'
 import type { TInstanceOrArray } from '@shared/toolbox/arrays/ArrayToolbox'
@@ -54,11 +53,25 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { User } from '@shared/users/User'
 import { targetEnvLogger } from '../logging'
 import type { ServerChatChannel } from './chat/ServerChatChannel'
-import { ServerChatMessage } from './chat/ServerChatMessage'
 import { ServerSessionMember } from './ServerSessionMember'
 import type { TServerRealmJsonOptions } from './ServerSessionRealm'
 import { ServerSessionRealm } from './ServerSessionRealm'
 import { TargetEnvStore } from './TargetEnvStore'
+import { onAcknowledgeSessionPanelAlert } from './traffic-controllers/onAcknowledgeSessionPanelAlert'
+import { onFetchSessionPanelAlerts } from './traffic-controllers/onFetchSessionPanelAlerts'
+import { onRequestAcknowledgeNodeAlert } from './traffic-controllers/onRequestAcknowledgeNodeAlert'
+import { onRequestAssignForce } from './traffic-controllers/onRequestAssignForce'
+import { onRequestAssignRole } from './traffic-controllers/onRequestAssignRole'
+import { onRequestBan } from './traffic-controllers/onRequestBan'
+import { onRequestConfigUpdate } from './traffic-controllers/onRequestConfigUpdate'
+import { onRequestEndSession } from './traffic-controllers/onRequestEndSession'
+import { onRequestExecuteAction } from './traffic-controllers/onRequestExecuteAction'
+import { onRequestKick } from './traffic-controllers/onRequestKick'
+import { onRequestOpenNode } from './traffic-controllers/onRequestOpenNode'
+import { onRequestResetSession } from './traffic-controllers/onRequestResetSession'
+import { onRequestSendChatMessage } from './traffic-controllers/onRequestSendChatMessage'
+import { onRequestSendOutput } from './traffic-controllers/onRequestSendOutput'
+import { onRequestStartSession } from './traffic-controllers/onRequestStartSession'
 
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
@@ -67,7 +80,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   /**
    * @see {@link instanceId}.
    */
-  private _instanceId: string
+  protected _instanceId: string
 
   /**
    * An identifier with higher specifity in comparison to {@link _id}.
@@ -128,7 +141,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * Tracks which session panel tabs have pending (unacknowledged) alerts
    * per member.
    */
-  private _pendingSessionPanelAlerts = new Map<
+  protected _pendingSessionPanelAlerts = new Map<
     string,
     Set<TSessionPanelAlert>
   >()
@@ -153,21 +166,21 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    */
   private get listenerInputRegistry() {
     return [
-      ['request-start-session', this.onRequestStart],
-      ['request-end-session', this.onRequestEnd],
-      ['request-reset-session', this.onRequestReset],
-      ['request-config-update', this.onRequestConfigUpdate],
-      ['request-kick', this.onRequestKick],
-      ['request-ban', this.onRequestBan],
-      ['request-assign-force', this.onRequestAssignForce],
-      ['request-assign-role', this.onRequestAssignRole],
-      ['request-open-node', this.onRequestOpenNode],
-      ['request-execute-action', this.onRequestExecuteAction],
-      ['request-send-output', this.onRequestSendOutput],
-      ['request-acknowledge-node-alert', this.onRequestAcknowledgeNodeAlert],
-      ['request-send-chat-message', this.onRequestSendChatMessage],
-      ['acknowledge-session-panel-alert', this.onAcknowledgeSessionPanelAlert],
-      ['fetch-session-panel-alerts', this.onFetchSessionPanelAlerts],
+      ['request-start-session', onRequestStartSession],
+      ['request-end-session', onRequestEndSession],
+      ['request-reset-session', onRequestResetSession],
+      ['request-config-update', onRequestConfigUpdate],
+      ['request-kick', onRequestKick],
+      ['request-ban', onRequestBan],
+      ['request-assign-force', onRequestAssignForce],
+      ['request-assign-role', onRequestAssignRole],
+      ['request-open-node', onRequestOpenNode],
+      ['request-execute-action', onRequestExecuteAction],
+      ['request-send-output', onRequestSendOutput],
+      ['request-acknowledge-node-alert', onRequestAcknowledgeNodeAlert],
+      ['request-send-chat-message', onRequestSendChatMessage],
+      ['acknowledge-session-panel-alert', onAcknowledgeSessionPanelAlert],
+      ['fetch-session-panel-alerts', onFetchSessionPanelAlerts],
     ] as const
   }
 
@@ -267,7 +280,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * @param member The session member to filter channels for.
    * @returns The channels visible to the member.
    */
-  private getVisibleChannels(member: ServerSessionMember): ServerChatChannel[] {
+  public getVisibleChannels(member: ServerSessionMember): ServerChatChannel[] {
     return this._chatChannels.filter((c) => c.canMemberSee(member))
   }
 
@@ -803,9 +816,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       // Only participants and participant-observers are
       // assigned to a dedicated realm. Other members
       // observe everything.
-      if (!member.isAuthorized('forceAssignable')) continue
+      if (!member.isAuthorized('forceAssignable') || member.banned) continue
 
-      let realm = ServerSessionRealm.createNew(`${member.username}`, this, {
+      let realm = ServerSessionRealm.createNew(member.username, this, {
         missionMintOptions: {
           forceExposure: {
             expose: 'force-with-all-nodes',
@@ -839,7 +852,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Participants are assigned to and share the single realm.
     for (let member of this.members) {
-      if (member.isAuthorized('forceAssignable')) {
+      if (member.isAuthorized('forceAssignable') && !member.banned) {
         member.assignToRealm(realm)
         member.subscribeToRealm(realm)
       }
@@ -854,7 +867,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * creating mode-specific realms and enforcing any mode-specific
    * restrictions on the session configuration.
    */
-  private initializeMode(): void {
+  protected initializeMode(): void {
     // Create the realms now that the participant roster is known. In
     // single-player this is one realm per participant (which also
     // assigns every participant a force/realm, so the dismissal check
@@ -891,8 +904,19 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * @note Realms are not recreated, so realm identity and member
    * subscriptions are preserved and no reassignment is required.
    */
-  private resetRealms(): void {
+  protected resetRealms(): void {
     this.realms.forEach((realm) => realm.reset())
+  }
+
+  /**
+   * Removes the given member(s) from the session list.
+   * @param members The member(s) to remove from the session.
+   */
+  public removeMembers(members: TInstanceOrArray<ServerSessionMember>): void {
+    members = ArrayToolbox.toArray(members)
+    this._members = this._members.filter(
+      ({ _id }) => !members.some((member) => member._id === _id),
+    )
   }
 
   /**
@@ -970,7 +994,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * @param event The associated request event.
    * @param responseMethod The method of the event to emit (start or reset).
    */
-  private emitStartResponses(
+  protected emitStartResponses(
     event: TClientEvents['request-start-session' | 'request-reset-session'],
     member: ServerSessionMember,
     responseMethod: 'session-started' | 'session-reset',
@@ -1022,22 +1046,24 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     }
   }
 
-  private buildFullfilledRequest<TMethod extends keyof TRequestEvents>(
-    member: ServerSessionMember,
-    event: TClientEvents[TMethod],
-  ): TRequestOfResponse {
-    return member.buildResponseRequestData(event, {
-      fulfilled: true,
-    })
-  }
-
-  private requireSessionState = (
+  /**
+   * Can be added at the beginning of a request handler to ensure
+   * that the session is in the required state for the request to
+   * be processed.
+   * @param member The member that emitted the request event.
+   * @param event The request event emitted by the member.
+   * @param requiredState The state that the session must be
+   * in for the request to be processed.
+   * @throws a server emitted error if the session is not in the
+   * required state.
+   */
+  protected requireSessionState = (
     member: ServerSessionMember,
     event: TClientEvents[keyof TRequestEvents],
     requiredState: TSessionState,
   ): void => {
     // Build request for response data.
-    let fulfilledRequest = this.buildFullfilledRequest(member, event)
+    let fulfilledRequest = member.buildResponseRequestData(event)
 
     if (this._state !== requiredState) {
       let error = new ServerEmittedError(
@@ -1050,907 +1076,13 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
-   * Called when a member requests to start the session.
-   * @param member The member requesting to start the session.
-   * @param event The event emitted by the member.
-   */
-  public onRequestStart = async (
-    member: ServerSessionMember,
-    event: TClientEvents['request-start-session'],
-  ): Promise<void> => {
-    // Build request for response data.
-    let fulfilledRequest = member.buildResponseRequestData(event, {
-      fulfilled: true,
-    })
-    let unfulfilledRequest = member.buildResponseRequestData(event, {
-      fulfilled: false,
-    })
-
-    // If the member does not have the correct permissions
-    // to start the session, then emit an error.
-    if (!member.isAuthorized('startEndSessions')) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request: fulfilledRequest },
-        ),
-      )
-    }
-    // If the session has already previously started,
-    // then emit an error.
-    if (this._state !== 'unstarted') {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-          { request: fulfilledRequest },
-        ),
-      )
-    }
-
-    this.initializeMode()
-
-    // Loop through all members and find any
-    // that have no force availability, and
-    // mark them for dismissal.
-    let toDismiss: ServerSessionMember[] = []
-    for (let member of this.joinedMembers) {
-      if (
-        (!member.isAssignedToForce || !member.isAssignedToRealm) &&
-        !member.isAuthorized('completeVisibility')
-      ) {
-        toDismiss.push(member)
-      }
-    }
-
-    // Dismiss members found.
-    for (let member of toDismiss) {
-      // Remove the member from the list.
-      this._members = this._members.filter(({ _id }) => _id !== member._id)
-      // Emit an event to the member that they have
-      // been dismissed.
-      member.emit('dismissed', { data: {} })
-      member.leave()
-    }
-
-    // Emit an event to all users that the user list
-    // has changed.
-    this.emitToAll('session-members-updated', {
-      data: {
-        members: this.members.map((member) => member.toJson()),
-      },
-    })
-
-    // Emit starting event. Then, once set up is complete,
-    // emit started event.
-    this._state = 'starting'
-    this.emitToAll('session-starting', {
-      data: {},
-      request: unfulfilledRequest,
-    })
-
-    // Perform setup.
-    await this.setUp()
-
-    // If the setup failed...
-    if (this.setupFailed) {
-      // ...and it is a test session, then destroy it.
-      if (this.config.accessibility === 'testing') {
-        this._state = 'ended'
-        this.destroy()
-      }
-      // ...do not proceed.
-      return
-    }
-
-    // Mark the session as started.
-    this._state = 'started'
-    this.emitStartResponses(event, member, 'session-started')
-    // Perform any effect triggered by session start.
-    this.applyMissionEffects('session-start')
-  }
-
-  /**
-   * Called when a member requests to end the session.
-   * @param member The member requesting to end the session.
-   * @param event The event emitted by the member.
-   */
-  public onRequestEnd = async (
-    member: ServerSessionMember,
-    event: TClientEvents['request-end-session'],
-  ): Promise<void> => {
-    // Build request for response data.
-    let fulfilledRequest = member.buildResponseRequestData(event, {
-      fulfilled: true,
-    })
-    let unfulfilledRequest = member.buildResponseRequestData(event, {
-      fulfilled: false,
-    })
-    let connection = member.connection
-
-    // If the member does not have the correct permissions
-    // to start the session, then emit an error.
-    if (!member.isAuthorized('startEndSessions')) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request: fulfilledRequest },
-        ),
-      )
-    }
-    // If the session is not in the 'started' state,
-    // then emit an error.
-    if (this._state !== 'started') {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-          { request: fulfilledRequest },
-        ),
-      )
-    }
-
-    // Emit ending event. Then, once tear down is complete,
-    // emit ended event.
-    this._state = 'ending'
-    this.emitToAll('session-ending', {
-      data: {},
-      request: unfulfilledRequest,
-    })
-    this.clearMembers()
-    await this.tearDown()
-
-    // If teardown failed, do not proceed.
-    if (this.teardownFailed) return
-
-    // Mark the session as ended.
-    this._state = 'ended'
-    // Must use connection directly because the member
-    // has already had the connection detached.
-    connection?.emit('session-ended', {
-      data: { sessionId: this._id },
-      request: fulfilledRequest,
-    })
-    this.destroy()
-  }
-
-  /**
-   * Called when a member requests to reset the session.
-   * @param member The member requesting to reset the session.
-   * @param event The event emitted by the member.
-   */
-  public onRequestReset = async (
-    member: ServerSessionMember,
-    event: TClientEvents['request-reset-session'],
-    // Build request for response data.
-  ): Promise<void> => {
-    let fulfilledRequest = member.buildResponseRequestData(event, {
-      fulfilled: true,
-    })
-    let unfulfilledRequest = member.buildResponseRequestData(event, {
-      fulfilled: false,
-    })
-
-    // If the member does not have the correct permissions
-    // to start the session, then emit an error.
-    if (!member.isAuthorized('startEndSessions')) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request: fulfilledRequest },
-        ),
-      )
-    }
-    // If the session has not been started
-    // then emit an error.
-    if (this._state === 'unstarted') {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-          { request: fulfilledRequest },
-        ),
-      )
-    }
-
-    this._state = 'resetting'
-    this.emitToAll('session-resetting', {
-      data: {},
-      request: unfulfilledRequest,
-    })
-
-    // Perform teardown.
-    await this.tearDown()
-    // If teardown failed, do not proceed.
-    if (this.teardownFailed) return
-
-    // Assign a new instance ID.
-    this._instanceId = StringToolbox.generateRandomId()
-
-    this.resetRealms()
-
-    // Reset setup and teardown results for the
-    // new instance.
-    this.setupResults = []
-    this.teardownResults = []
-
-    // Perform setup.
-    await this.setUp()
-    // If setup failed, do not proceed.
-    if (this.setupFailed) return
-
-    // Mark as started and emit the response to
-    // all members.
-    this._state = 'started'
-    this.emitStartResponses(event, member, 'session-reset')
-
-    // Perform any effect triggered by session start.
-    this.applyMissionEffects('session-start')
-  }
-
-  /**
-   * Called when a member requests to update the configuration
-   * for the session.
-   * @param member The member requesting to update the configuration.
-   * @param event The event emitted by the member.
-   */
-  public onRequestConfigUpdate = (
-    member: ServerSessionMember,
-    event: TClientEvents['request-config-update'],
-  ): void => {
-    // Build request for response data.
-    let request = member.buildResponseRequestData(event)
-    // Parse data from event.
-    let { config: configUpdates } = event.data
-
-    // If the member does not have the correct permissions
-    // to start the session, then emit an error.
-    if (!member.isAuthorized('configureSessions')) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request },
-        ),
-      )
-    }
-    // If the session is not in the 'unstarted' state,
-    // then emit an error.
-    if (this._state !== 'unstarted') {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-          { request },
-        ),
-      )
-    }
-
-    // Assign the new configuration to the session.
-    Object.assign(this._config, configUpdates)
-    // Update the session name if it has changed.
-    if (this.name !== configUpdates.name && configUpdates.name) {
-      this.name = configUpdates.name
-    }
-
-    // Emit an event to all users that the session configuration
-    // has been updated.
-    this.emitToAll('session-config-updated', {
-      data: { config: this.config },
-      request,
-    })
-  }
-
-  /**
-   * Called when a member requests to kick another member from the session.
-   * @param member The member requesting to kick another member.
-   * @param event The event emitted by the member.
-   */
-  public onRequestKick = (
-    member: ServerSessionMember,
-    event: TClientEvents['request-kick'],
-  ): void => {
-    // Build request for response data.
-    let request = member.buildResponseRequestData(event)
-    // Parse data from event.
-    const { memberId: targetMemberId } = event.data
-    // Get the target member to kick.
-    const targetMember = this.getMember(targetMemberId)
-
-    // If the member requesting does not have the
-    // correct permissions to kick participants,
-    // then emit an error.
-    if (!member.isAuthorized('manageSessionMembers')) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request },
-        ),
-      )
-    }
-    // If the target member is not found, then emit
-    // an error.
-    if (!targetMember) {
-      return member.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_MEMBER_NOT_FOUND, {
-          request,
-        }),
-      )
-    }
-    // If the target member has the `manageSessionMembers`
-    // permission, then they cannot be kicked.
-    if (targetMember.isAuthorized('manageSessionMembers')) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          {
-            request,
-          },
-        ),
-      )
-    }
-
-    // Emit an event to the target member and to the requester that the
-    // target member has been kicked.
-    let payload = {
-      data: {
-        sessionId: this._id,
-        memberId: targetMemberId,
-        userId: targetMember.userId,
-      },
-      request,
-    }
-    member.emit('kicked', payload)
-    targetMember.emit('kicked', payload)
-
-    targetMember.leave()
-
-    // Emit an event to all users that the user list
-    // has changed.
-    this.emitToAll('session-members-updated', {
-      data: {
-        members: this.members.map((member) => member.toJson()),
-      },
-    })
-  }
-
-  /**
-   * Called when a member requests to ban another member from the session.
-   * @param member The member requesting to ban another member.
-   * @param event The event emitted by the member.
-   */
-  public onRequestBan = (
-    member: ServerSessionMember,
-    event: TClientEvents['request-ban'],
-  ): void => {
-    // Build request for response data.
-    let request = member.buildResponseRequestData(event)
-    // Parse data from event.
-    const { memberId: targetMemberId } = event.data
-    // Get the target member to ban.
-    const targetMember = this.getMember(targetMemberId)
-
-    // If the member requesting does not have the
-    // correct permissions to ban participants,
-    // then emit an error.
-    if (!member.isAuthorized('manageSessionMembers')) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request },
-        ),
-      )
-    }
-    // If the target member is not found, then emit
-    // an error.
-    if (!targetMember) {
-      return member.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_MEMBER_NOT_FOUND, {
-          request,
-        }),
-      )
-    }
-    // If the target member has the `manageSessionMembers`
-    // permission, then they cannot be banned.
-    if (targetMember.isAuthorized('manageSessionMembers')) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          {
-            request,
-          },
-        ),
-      )
-    }
-
-    // Emit an event to the target member and to the
-    // requester that the target member has been banned.
-    let payload = {
-      data: {
-        sessionId: this._id,
-        memberId: targetMemberId,
-        userId: targetMember.userId,
-      },
-      request,
-    }
-    member.emit('banned', payload)
-    targetMember.emit('banned', payload)
-
-    targetMember.ban()
-
-    // Emit an event to all users that the user list
-    // has changed.
-    this.emitToAll('session-members-updated', {
-      data: {
-        members: this.members.map((member) => member.toJson()),
-      },
-    })
-  }
-
-  /**
-   *  Called when a member requests to assign another member to a force.
-   * @param member The member requesting to assign another member to a force.
-   * @param event The event emitted by the member.
-   */
-  public onRequestAssignForce = (
-    member: ServerSessionMember,
-    event: TClientEvents['request-assign-force'],
-  ): void => {
-    // Build request for response data.
-    let request = member.buildResponseRequestData(event)
-    // Parse data from event.
-    const { memberId: targetMemberId, forceId } = event.data
-    // Get the target member to assign.
-    const targetMember = this.getMember(targetMemberId)
-
-    // If the member requesting does not have the
-    // correct permissions to assign forces,
-    // then emit an error.
-    if (!member.isAuthorized('manageSessionMembers')) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request },
-        ),
-      )
-    }
-    // If the target member is not found, then emit
-    // an error.
-    if (!targetMember) {
-      return member.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_MEMBER_NOT_FOUND, {
-          request,
-        }),
-      )
-    }
-    // If the target member does not have the permission
-    // to be assigned to a force, then emit an error.
-    if (!targetMember.isAuthorized('forceAssignable')) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          {
-            request,
-          },
-        ),
-      )
-    }
-
-    targetMember.assignToForce(forceId)
-
-    // Emit a response that the assignment has
-    // been made.
-    member.emit('force-assigned', {
-      data: { sessionId: this._id, memberId: targetMemberId, forceId },
-      request,
-    })
-
-    // Emit to all members that the user list has changed.
-    this.emitToAll('session-members-updated', {
-      data: {
-        members: this.members.map((member) => member.toJson()),
-      },
-    })
-  }
-
-  /**
-   * Called when a member requests to assign a role to another member.
-   * @param member The member requesting to assign a role to another member.
-   * @param event The event emitted by the member.
-   */
-  public onRequestAssignRole = (
-    member: ServerSessionMember,
-    event: TClientEvents['request-assign-role'],
-  ): void => {
-    // Build request for response data.
-    let request = member.buildResponseRequestData(event)
-    // Parse data from event.
-    const { memberId: targetMemberId, roleId } = event.data
-    // Get the target member to assign.
-    const targetMember = this.getMember(targetMemberId)
-
-    // If the member requesting does not have the
-    // correct permissions to assign roles,
-    // then emit an error.
-    if (!member.isAuthorized('manageSessionMembers')) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request },
-        ),
-      )
-    }
-    // If the target member is not found, then emit
-    // an error.
-    if (!targetMember) {
-      return member.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_MEMBER_NOT_FOUND, {
-          request,
-        }),
-      )
-    }
-    // If the target member has the `manageSessionMembers`
-    // permission, then they cannot have their role
-    // changed.
-    if (targetMember.isAuthorized('manageSessionMembers')) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          {
-            request,
-          },
-        ),
-      )
-    }
-
-    targetMember.assignToRole(roleId)
-
-    // Emit a response that the assignment has
-    // been made.
-    member.emit('role-assigned', {
-      data: { sessionId: this._id, memberId: targetMemberId, roleId: roleId },
-      request,
-    })
-
-    // Emit to all members that the user list has changed.
-    this.emitToAll('session-members-updated', {
-      data: {
-        members: this.members.map((member) => member.toJson()),
-      },
-    })
-  }
-
-  /**
-   * Called when a member requests to open a node.
-   * @param member The member requesting to open a node.
-   * @param event The event emitted by the member.
-   */
-  public onRequestOpenNode = (
-    member: ServerSessionMember,
-    event: TClientEvents['request-open-node'],
-  ): void => {
-    // Organize data.
-    let mission: ServerMission = member.subscribedRealm.mission
-    let { nodeId } = event.data
-
-    // If the member doesn't have the permission
-    // to manipulate nodes, then emit an error.
-    if (!member.isAuthorized('manipulateNodes')) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          {
-            request: member.buildResponseRequestData(event),
-          },
-        ),
-      )
-    }
-
-    // Find the node, given the ID.
-    let node: ServerMissionNode | undefined = mission.getNodeById(nodeId)
-
-    // If the session is not in the 'started' state,
-    // then emit an error.
-    if (this.state !== 'started') {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-          {
-            request: member.buildResponseRequestData(event),
-          },
-        ),
-      )
-    }
-    // If the node is undefined, then emit
-    // an error.
-    if (node === undefined) {
-      return member.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
-          request: member.buildResponseRequestData(event),
-        }),
-      )
-    }
-    // If the member doesn't belong to the node's force and doesn't
-    // have complete visibility, then emit an error.
-    if (
-      !member.isAuthorized('completeVisibility') &&
-      member.assignedForceId !== node.forceId
-    ) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          {
-            request: member.buildResponseRequestData(event),
-          },
-        ),
-      )
-    }
-    // If the node is executable, then emit
-    // an error.
-    if (!node.openable) {
-      return member.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_OPENABLE, {
-          request: member.buildResponseRequestData(event),
-        }),
-      )
-    }
-
-    try {
-      node.openState(true)
-
-      // Extract data from the node.
-      const {
-        revealedStructure: structure,
-        revealedDescendants: descendants,
-        revealedDescendantPrototypes: prototypes,
-      } = node
-
-      // Construct open event payload.
-      //
-      // Note: Currently, a shared payload works because
-      // all members get the same node data as long as
-      // they have visibility for that force. If this ever
-      // changes, and node visibility varies member to member
-      // of a force, this logic will need to be updated to
-      // emit different payloads to different members.
-      let payload: TServerEvents['node-opened'] = {
-        method: 'node-opened',
-        data: {
-          _id: nodeId,
-          forceId: node.forceId,
-          opened: true,
-          structure: structure,
-          revealedDescendants: descendants.map((n) =>
-            n.toJson({
-              sessionDataExposure: {
-                expose: 'member-specific',
-                memberId: member._id,
-              },
-            }),
-          ),
-          revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),
-        },
-        request: { event, requesterId: member.userId, fulfilled: true },
-      }
-
-      // Emit open event.
-      for (let forceMember of this.getMembersForForce(
-        node.force._id,
-        member.subscribedRealmId,
-      )) {
-        forceMember.emit('node-opened', payload)
-      }
-    } catch (error) {
-      // Emit an error if the node could not be opened.
-      member.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
-          request: member.buildResponseRequestData(event),
-          message: 'Failed to open node.',
-        }),
-      )
-    }
-  }
-
-  /**
-   * Called when a member requests to execute an action on a node.
-   * @param member The member requesting to execute an action.
-   * @param event The event emitted by the member.
-   * @resolves When the action has been executed or a client error is found.
-   */
-  public onRequestExecuteAction = async (
-    member: ServerSessionMember,
-    event: TClientEvents['request-execute-action'],
-  ): Promise<void> => {
-    // Gather data.
-    let { config } = this
-    let { actionId, cheats = {} } = event.data
-    let action: ServerMissionAction | undefined =
-      member.subscribedRealm.getAction(actionId)
-    let request = member.buildResponseRequestData(event)
-
-    // Clear the cheats if the member is not authorized
-    // to use them.
-    if (!member.isAuthorized('cheats')) cheats = {}
-
-    // If the member doesn't have the permission
-    // to manipulate nodes, then emit an error.
-    if (!member.isAuthorized('manipulateNodes')) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          {
-            request,
-          },
-        ),
-      )
-    }
-
-    // If the session is not in the 'started' state,
-    // then emit an error.
-    if (this.state !== 'started') {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-          {
-            request,
-          },
-        ),
-      )
-    }
-    // If the action is undefined, then emit
-    // an error.
-    if (action === undefined) {
-      return member.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_ACTION_NOT_FOUND, {
-          request,
-        }),
-      )
-    }
-    // If the member doesn't belong to the action's force and doesn't
-    // have complete visibility, then emit an error.
-    if (
-      !member.isAuthorized('completeVisibility') &&
-      member.assignedForceId !== action.force._id
-    ) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          {
-            request,
-          },
-        ),
-      )
-    }
-    // If the action is not executable, then
-    // emit an error.
-    if (!action.node.executable) {
-      return member.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_EXECUTABLE, {
-          request,
-        }),
-      )
-    }
-    // If the node is not revealed, then
-    // emit an error.
-    if (!action.node.revealed) {
-      return member.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_REVEALED, {
-          request,
-        }),
-      )
-    }
-    // If the participant does not have enough
-    // resources to execute the action, then
-    // emit an error.
-    if (!this.areEnoughResources(action, cheats)) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_ACTION_INSUFFICIENT_RESOURCES,
-          {
-            request,
-          },
-        ),
-      )
-    }
-    // If the action has exceeded its maximum
-    // number of executions, then emit an error.
-    if (action.executionLimitReached) {
-      return member.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_ACTION_EXECUTION_LIMIT, {
-          request,
-        }),
-      )
-    }
-
-    try {
-      // Execute the action, awaiting result.
-      let outcome = await action.execute({
-        sessionConfig: config,
-        cheats,
-        onInit: (execution: ServerActionExecution) =>
-          this.onExecution(member, request, execution),
-      })
-
-      // Handle the outcome of the action.
-      this.onOutcome(member, request, outcome)
-    } catch (error) {
-      // Emit an error if the action could not be executed.
-      member.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
-          request: member.buildResponseRequestData(event),
-          message: 'Failed to execute action.',
-        }),
-      )
-    }
-  }
-
-  /**
-   * Called when a member requests to acknowledge a node alert.
-   * @param member The member acknowledging the node alert.
-   * @param event The event emitted by the member.
-   */
-  private onRequestAcknowledgeNodeAlert = (
-    member: ServerSessionMember,
-    event: TClientEvents['request-acknowledge-node-alert'],
-  ): void => {
-    try {
-      this.requireSessionState(member, event, 'started')
-
-      let { nodeId, alertId } = event.data
-      let node = member.subscribedRealm.mission.getNodeById(nodeId)
-      let alert = node?.getAlert(alertId)
-      let request = this.buildFullfilledRequest(member, event)
-
-      if (!node || !alert) {
-        return member.emitError(
-          new ServerEmittedError(ServerEmittedError.CODE_NODE_ALERT_NOT_FOUND, {
-            request,
-          }),
-        )
-      }
-
-      // Ensure the member belongs to the node's force or has complete
-      // visibility before allowing the acknowledgement.
-      if (
-        !member.isAuthorized('completeVisibility') &&
-        member.assignedForceId !== node.forceId
-      ) {
-        return member.emitError(
-          new ServerEmittedError(
-            ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-            { request },
-          ),
-        )
-      }
-
-      alert.acknowledged = true
-
-      // Communicate with all members of the force
-      // that the alert has now been acknowledged.
-      for (let forceMember of this.getMembersForForce(
-        node.forceId,
-        member.subscribedRealmId,
-      )) {
-        forceMember.emit('node-alert-acknowledged', {
-          method: 'node-alert-acknowledged',
-          data: event.data,
-          request,
-        })
-      }
-    } catch (error) {
-      // Emit an error if the action could not be executed.
-      member.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
-          request: member.buildResponseRequestData(event),
-          message: 'Failed to acknowledge node alert.',
-        }),
-      )
-    }
-  }
-
-  /**
    * Sub-handler of `onRequestExecuteAction` which processes the
    * initiation of an action execution.
    * @param member The member provided to `onRequestExecuteAction`.
    * @param event The event provided to `onRequestExecuteAction`.
    * @param execution The execution that was initiated.
    */
-  private onExecution(
+  protected onExecution(
     member: ServerSessionMember,
     request: TRequestOfResponse,
     execution: ServerActionExecution,
@@ -2006,7 +1138,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * Sub-handler of `onRequestExecuteAction` which processes the
    * outcome of an action execution.
    */
-  private onOutcome(
+  protected onOutcome(
     member: ServerSessionMember,
     request: TRequestOfResponse,
     outcome: ServerExecutionOutcome,
@@ -2074,201 +1206,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Apply effects, if the outcome calls for it.
     if (effectTrigger)
       this.applyActionEffects(member, action, effectTrigger, outcome.execution)
-  }
-
-  /**
-   * Called when a member requests to send an output.
-   * @param member The member requesting to send an output.
-   * @param event The event emitted by the member.
-   */
-  public onRequestSendOutput = (
-    member: ServerSessionMember,
-    event: TClientEvents['request-send-output'],
-  ): void => {
-    // Gather details.
-    let { key } = event.data
-    let request = member.buildResponseRequestData(event)
-
-    // If the session is not in the 'started' state,
-    // then emit an error.
-    if (this.state !== 'started') {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-          {
-            request,
-          },
-        ),
-      )
-    }
-
-    switch (key) {
-      case 'pre-execution':
-        // Extract the node ID from the event data.
-        let { nodeId } = event.data
-
-        // Find the node given the ID.
-        let node: ServerMissionNode | undefined =
-          member.subscribedRealm.mission.getNodeById(nodeId)
-
-        // If the node is undefined, then emit
-        // an error.
-        if (node === undefined) {
-          return member.emitError(
-            new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_FOUND, {
-              request,
-            }),
-          )
-        }
-
-        // If the member doesn't belong to the node's force and doesn't
-        // have complete visibility, then emit an error.
-        if (
-          !member.isAuthorized('completeVisibility') &&
-          member.assignedForceId !== node.forceId
-        ) {
-          return member.emitError(
-            new ServerEmittedError(
-              ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-              {
-                request,
-              },
-            ),
-          )
-        }
-
-        // If the node is not revealed, then
-        // emit an error.
-        if (!node.revealed) {
-          return member.emitError(
-            new ServerEmittedError(ServerEmittedError.CODE_NODE_NOT_REVEALED, {
-              request,
-            }),
-          )
-        }
-
-        try {
-          if (node.preExecutionText === '') {
-            // Emit an event to the participant that the
-            // pre-execution message was sent.
-            member.emit('output-sent', {
-              data: {
-                key: 'pre-execution',
-                nodeId,
-              },
-              request: {
-                event,
-                requesterId: member.userId,
-                fulfilled: true,
-              },
-            })
-            return
-          }
-
-          // Send an output to the force.
-          member.subscribedRealm.sendOutput(
-            member.outputPrefix,
-            node.preExecutionText,
-            { type: 'pre-execution', sourceNodeId: node._id },
-            {
-              force: node.force,
-              member,
-            },
-          )
-
-          // Emit an event to the participant that the
-          // pre-execution message was sent.
-          member.emit('output-sent', {
-            data: {
-              key: 'pre-execution',
-              nodeId,
-            },
-            request: {
-              event,
-              requesterId: member.userId,
-              fulfilled: true,
-            },
-          })
-        } catch (error: any) {
-          // Emit an error if the pre-execution message could not be sent.
-          member.emitError(
-            new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
-              request,
-              message: 'Failed to send pre-execution message.',
-            }),
-          )
-        }
-    }
-  }
-
-  /**
-   * Called when a member requests to send a chat message to a channel.
-   * @param member The member sending the message.
-   * @param event The event emitted by the member.
-   */
-  public onRequestSendChatMessage = (
-    member: ServerSessionMember,
-    event: TClientEvents['request-send-chat-message'],
-  ): void => {
-    let request = member.buildResponseRequestData(event)
-    let { channelId, message } = event.data
-
-    // Only allow messaging in a started session.
-    if (this._state !== 'started') {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-          { request },
-        ),
-      )
-    }
-
-    // Find the channel.
-    let channel = this.getChatChannel(channelId)
-    if (!channel) {
-      return member.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_CHAT_CHANNEL_NOT_FOUND, {
-          request,
-        }),
-      )
-    }
-
-    // Ensure the member is allowed to see (and therefore post to) the channel.
-    if (!channel.canMemberSee(member)) {
-      return member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request },
-        ),
-      )
-    }
-
-    // Generate and store the message.
-    let chatMessage = ServerChatMessage.generate(channel, this, member, message)
-    channel.messages.push(chatMessage)
-    let messageJson = chatMessage.toJson()
-
-    // Broadcast to all joined members who can see the channel.
-    for (let recipient of this.joinedMembers) {
-      if (channel.canMemberSee(recipient)) {
-        recipient.emit('chat-message-received', {
-          data: { message: messageJson },
-        })
-
-        // Also emit a session panel alert and increment the unread count for recipients
-        // who didn't send the message, but have received it.
-        if (recipient._id !== member._id) {
-          this.emitSessionPanelAlert(recipient, 'Messenger')
-          this.incrementUnreadChatCount(recipient._id, channel._id)
-        }
-      }
-    }
-
-    // Confirm delivery to the sender.
-    member.emit('chat-message-sent', {
-      data: messageJson,
-      request,
-    })
   }
 
   /**
@@ -2360,7 +1297,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     if (
       !member.banned &&
       !member.isAssignedToForce &&
-      !member.isAssignedToRealm
+      !member.isAssignedToRealm &&
+      member.userId !== this.ownerId
     ) {
       this._members = this._members.filter(
         (someMember) => member._id !== someMember._id,
@@ -2579,7 +1517,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * @param member The session member the alert is being cleared for.
    * @param panel The panel tab with an alert to be cleared.
    */
-  private clearSessionPanelAlert(
+  protected clearSessionPanelAlert(
     member: ServerSessionMember,
     panel: TSessionPanelAlert,
   ): void {
@@ -2592,7 +1530,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * @param memberId The ID of the member receiving the message.
    * @param channelId The ID of the channel the message was sent to.
    */
-  private incrementUnreadChatCount(memberId: string, channelId: string): void {
+  protected incrementUnreadChatCount(
+    memberId: string,
+    channelId: string,
+  ): void {
     let allChannelsWithUnreadMessages =
       this._unreadChatChannelMessages.get(memberId)
 
@@ -2617,7 +1558,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * @param memberId The ID of the member that the unread messages are being cleared for.
    * @param channelId The ID of the channel that the unread messages are being cleared for.
    */
-  private clearUnreadChatCount(memberId: string, channelId: string): void {
+  protected clearUnreadChatCount(memberId: string, channelId: string): void {
     this._unreadChatChannelMessages.get(memberId)?.delete(channelId)
   }
 
@@ -2625,7 +1566,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * Returns whether a member has any channels with unread messages.
    * @param memberId The ID of the member to check.
    */
-  private hasPendingUnreadChatMessages(memberId: string): boolean {
+  protected hasPendingUnreadChatMessages(memberId: string): boolean {
     const allChannelsWithUnreadMessages =
       this._unreadChatChannelMessages.get(memberId)
 
@@ -2637,42 +1578,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       allChannelsWithUnreadMessages.values(),
     )
     return unreadMessagesForEachChannel.some((count) => count > 0)
-  }
-
-  /**
-   * Acknowledges a session panel alert by viewing the panel.
-   * @param member The session member acknowledging the alert.
-   * @param event The acknowledge event.
-   */
-  private onAcknowledgeSessionPanelAlert = (
-    member: ServerSessionMember,
-    event: TClientEvents['acknowledge-session-panel-alert'],
-  ): void => {
-    if (event.data.panel === 'Messenger') {
-      this.clearUnreadChatCount(member._id, event.data.channelId)
-
-      if (!this.hasPendingUnreadChatMessages(member._id)) {
-        this.clearSessionPanelAlert(member, 'Messenger')
-      }
-    } else {
-      this.clearSessionPanelAlert(member, event.data.panel)
-    }
-  }
-
-  /**
-   * Fetches the current session panel alerts for a member.
-   * @param member The requesting session member.
-   */
-  private onFetchSessionPanelAlerts = (
-    member: ServerSessionMember,
-    _event: TClientEvents['fetch-session-panel-alerts'],
-  ): void => {
-    const panels = Array.from(
-      this._pendingSessionPanelAlerts.get(member._id) ?? [],
-    )
-    if (panels.length) {
-      member.emit('session-panel-alert', { data: { panels } })
-    }
   }
 
   /**
