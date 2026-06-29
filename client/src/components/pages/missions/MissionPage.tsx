@@ -334,11 +334,15 @@ export default function MissionPage(
         return done()
       }
 
+      // Necessary so that `loadGlobalFiles` receives
+      // the loaded mission.
+      let activeMission = mission
+
       // Handle the editing of an existing mission.
       if (props.missionId !== null) {
         beginLoading('Loading mission...')
 
-        let mission = await ClientMission.$fetchOne(props.missionId, {
+        activeMission = await ClientMission.$fetchOne(props.missionId, {
           nonRevealedDisplayMode: 'show',
         })
 
@@ -346,17 +350,17 @@ export default function MissionPage(
         // excluded nodes on the mission map while
         // in preview mode. See "MapNode.tsx" for
         // more info.
-        mission.allNodes.forEach((node) => {
+        activeMission.allNodes.forEach((node) => {
           const disableNode = node.exclude && viewMode === 'preview'
           if (disableNode) node.disable()
         })
 
-        setMission(mission)
-        setLocalFiles(mission.files)
-        setSelection(mission)
-        setIssues(mission.allIssues)
+        setMission(activeMission)
+        setLocalFiles(activeMission.files)
+        setSelection(activeMission)
+        setIssues(activeMission.allIssues)
       } else {
-        mission.context = 'edit'
+        activeMission.context = 'edit'
       }
 
       // The user currently logged in must
@@ -364,7 +368,7 @@ export default function MissionPage(
       // files.
       if (isAuthorized('files_read')) {
         beginLoading('Loading global files...')
-        await loadGlobalFiles(mission)
+        await loadGlobalFiles(activeMission)
       }
 
       finishLoading()
@@ -561,17 +565,20 @@ export default function MissionPage(
         // Fetch files from API and store
         // them in the state.
         const globalFiles = await ClientFileReference.$fetchAll()
-        globalFiles.forEach((file) => {
+        globalFiles.forEach((fileReference) => {
           // Disable files if the user is only
           // allowed to preview the mission.
           if (viewMode === 'preview') {
-            file.disable()
+            fileReference.disable()
           }
           // Disable any files that are already in
           // the mission.
           else {
-            file.setDisabled(
-              mission.files.some((f) => f.reference._id === file._id),
+            fileReference.setDisabled(
+              mission.files.some(
+                (missionFile) =>
+                  missionFile.reference._id === fileReference._id,
+              ),
               'File is already attached.',
             )
           }

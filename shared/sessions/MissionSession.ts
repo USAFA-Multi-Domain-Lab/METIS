@@ -120,7 +120,7 @@ export abstract class MissionSession<
    * Excludes ghost members who have quit but retain an assignment.
    */
   public get joinedMembers(): TMember<T>[] {
-    return this._members.filter(({ joined: isJoined }) => isJoined)
+    return this._members.filter(({ joined }) => joined)
   }
 
   /**
