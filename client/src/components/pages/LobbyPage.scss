@@ -2,19 +2,24 @@
 @use '@client/assets/styles/util.scss' as *;
 
 .Page.LobbyPage {
+  $content-height: calc(100vh - #{$nav-height} - #{$footer-height});
+  display: grid;
+  grid-template-rows: $nav-height $content-height $footer-height;
+  height: 100vh;
+
   .Content {
-    $content-padding: 3em;
+    $content-padding-horizontal: 2em;
 
     display: flex;
     box-sizing: border-box;
     flex-direction: column;
     align-items: left;
     width: 100%;
-    min-height: 100%;
-    padding: $content-padding;
+    height: $content-height;
+    padding: 2em $content-padding-horizontal 0;
 
     .Section {
-      margin: 0 0 1.75em;
+      padding: 0 0 1.75em;
 
       &.DetailSection {
         .Title {
@@ -62,8 +67,23 @@
 
       &.MembersSection {
         padding-top: 1.5em;
-        max-width: calc(100vw - 2 * #{$content-padding});
+        max-width: calc(100vw - 2 * #{$content-padding-horizontal});
         overflow: auto;
+      }
+
+      &.ConfigurationSection {
+        height: 100%;
+
+        .SessionConfigMenu {
+          height: 100%;
+
+          .MenuContent {
+            overflow: auto;
+            box-sizing: border-box;
+            height: 100%;
+            padding-bottom: 2em;
+          }
+        }
       }
 
       &.ButtonSection {
@@ -82,6 +102,5 @@
     .Section {
       width: 100%;
     }
-
-}
+  }
 }

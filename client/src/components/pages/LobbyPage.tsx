@@ -21,6 +21,7 @@ import Panel from '../content/general-layout/panels/Panel'
 import PanelView from '../content/general-layout/panels/PanelView'
 import PropertyBadge from '../content/general-layout/property-badges/PropertyBadge'
 import PropertyBadges from '../content/general-layout/property-badges/PropertyBadges'
+import SessionConfigMenu from '../content/session/config/SessionConfigMenu'
 import SessionMembers from '../content/session/members/SessionMembers'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './LobbyPage.scss'
@@ -57,6 +58,7 @@ export default function LobbyPage({
     session.state === 'starting',
   )
   const [setupFailed, setSetupFailed] = useState<boolean>(session.setupFailed)
+  const [, setConfigVersion] = useState<number>(0)
 
   /* -- COMPUTED -- */
 
@@ -185,6 +187,13 @@ export default function LobbyPage({
 
   useEventListener(server, 'session-setup-update', () => {
     setSetupFailed(session.setupFailed)
+  })
+
+  // Re-render when the config changes (locally via auto-save, or
+  // remotely from another manager) so the property badges stay
+  // in sync.
+  useEventListener(server, 'session-config-updated', () => {
+    setConfigVersion((version) => version + 1)
   })
 
   // Add navigation middleware to properly
@@ -318,7 +327,13 @@ export default function LobbyPage({
             </div>
           </PanelView>
           {session.member.isAuthorized('configureSessions') &&
-            !startInitiated && <PanelView title={'Configuration'}></PanelView>}
+            !startInitiated && (
+              <PanelView title={'Configuration'}>
+                <div className='ConfigurationSection Section'>
+                  <SessionConfigMenu session={session} />
+                </div>
+              </PanelView>
+            )}
         </Panel>
       </DefaultPageLayout>
     </div>

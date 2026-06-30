@@ -17,18 +17,11 @@
 
   .Branding {
     background-position-x: 0;
+    font-size: 0.65em;
+    padding-top: 0.25em;
   }
 
-  .Links {
-    display: flex;
-    place-content: center;
-    column-gap: 10px;
-
-    .ButtonText {
-      display: flex;
-      align-items: center;
-      margin: 0;
-      height: $nav-height;
-    }
+  .ButtonSvgPanel {
+    padding-bottom: 0.125em;
   }
 }

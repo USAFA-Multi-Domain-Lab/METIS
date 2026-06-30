@@ -1,21 +1,11 @@
 import Panel from '@client/components/content/general-layout/panels/Panel'
 import PanelView from '@client/components/content/general-layout/panels/PanelView'
 import type { ClientMission } from '@client/missions/ClientMission'
-import { compute } from '@client/toolbox'
-import type {
-  TSessionAccessibility,
-  TSessionConfig,
-  TSessionMode,
-} from '@shared/sessions/MissionSession'
-import { useEffect, useState } from 'react'
-import { DetailLocked } from '../../form/DetailLocked'
-import { DetailString } from '../../form/DetailString'
-import { DetailToggle } from '../../form/DetailToggle'
-import { DetailDropdown } from '../../form/dropdowns/standard/DetailDropdown'
+import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import { ButtonText } from '../../user-controls/buttons/ButtonText'
-import If from '../../util/If'
 import './SessionConfig.scss'
-import TargetEnvSettings from './TargetEnvSettings'
+import SessionGeneralConfig from './SessionGeneralConfig'
+import TargetEnvSettings from './TargetEnvConfig'
 
 /**
  * Allows the modification of the given session config.
@@ -30,70 +20,6 @@ export default function SessionConfig({
   onSave,
   onCancel,
 }: TSessionConfig_P): TReactElement | null {
-  /* -- STATE -- */
-  const [accessibility, setAccessibility] = useState<TSessionAccessibility>(
-    sessionConfig.accessibility,
-  )
-  const [infiniteResources, setInfiniteResources] = useState(
-    sessionConfig.infiniteResources,
-  )
-  const [name, setName] = useState(sessionConfig.name ?? mission.name)
-  const [mode, setMode] = useState<TSessionMode>(sessionConfig.mode)
-  const [singlePlayerForceId, setSinglePlayerForceId] = useState<string>(
-    sessionConfig.singlePlayerForceId ?? mission.forces[0]?._id ?? '',
-  )
-
-  /* -- EFFECTS -- */
-
-  // componentDidUpdate
-  useEffect(() => {
-    sessionConfig.accessibility = accessibility
-    sessionConfig.infiniteResources = infiniteResources
-    sessionConfig.name = name
-    sessionConfig.mode = mode
-    sessionConfig.singlePlayerForceId = singlePlayerForceId || undefined
-    onChange()
-  }, [accessibility, infiniteResources, name, mode, singlePlayerForceId])
-
-  /* -- PRE-RENDER PROCESSING -- */
-
-  /**
-   * JSX for accessibility selection.
-   */
-  const accessibilityJsx = compute<TReactElement>(() => {
-    if (accessibility === 'testing') {
-      return <DetailLocked label='Accessibility' value='Testing' />
-    } else {
-      return (
-        <DetailDropdown<TSessionConfig['accessibility']>
-          label='Accessibility'
-          options={['public', 'id-required']}
-          value={accessibility}
-          setValue={setAccessibility}
-          isExpanded={false}
-          getKey={(value) => value}
-          render={(value) => {
-            switch (value) {
-              case 'public':
-                return 'Public'
-              case 'id-required':
-                return 'ID Required'
-              case 'invite-only':
-                return 'Invite Only'
-              default:
-                return 'Unknown Option'
-            }
-          }}
-          fieldType='required'
-          handleInvalidOption={{
-            method: 'setToDefault',
-            defaultValue: 'public',
-          }}
-        />
-      )
-    }
-  })
-
   /* -- RENDER -- */
 
   return (
@@ -102,57 +28,12 @@ export default function SessionConfig({
       <Panel>
         <PanelView title='Session'>
           <div className='PanelContent'>
-            <DetailLocked label='Mission Name' value={mission.name} />
-            <If condition={sessionId !== null}>
-              <DetailLocked label='Session ID' value={sessionId!} />
-            </If>
-            <DetailString
-              label='Session Name'
-              value={name}
-              setValue={setName}
-              fieldType='required'
-              defaultValue={mission.name}
+            <SessionGeneralConfig
+              sessionConfig={sessionConfig}
+              mission={mission}
+              sessionId={sessionId}
+              onChange={onChange}
             />
-            {accessibilityJsx}
-            <DetailToggle
-              label='Infinite Resources'
-              value={infiniteResources}
-              setValue={setInfiniteResources}
-            />
-            <DetailDropdown<TSessionMode>
-              label='Mode'
-              options={['multiplayer', 'single-player']}
-              value={mode}
-              setValue={setMode}
-              isExpanded={false}
-              getKey={(value) => value}
-              render={(value) =>
-                value === 'single-player' ? 'Single-player' : 'Multiplayer'
-              }
-              fieldType='required'
-              handleInvalidOption={{
-                method: 'setToDefault',
-                defaultValue: 'multiplayer',
-              }}
-            />
-            <If condition={mode === 'single-player'}>
-              <DetailDropdown<string>
-                label='Force'
-                options={mission.forces.map((force) => force._id)}
-                value={singlePlayerForceId || (mission.forces[0]?._id ?? '')}
-                setValue={setSinglePlayerForceId}
-                isExpanded={false}
-                getKey={(forceId) => forceId}
-                render={(forceId) =>
-                  mission.getForceById(forceId)?.name ?? 'Unknown Force'
-                }
-                fieldType='required'
-                handleInvalidOption={{
-                  method: 'setToDefault',
-                  defaultValue: mission.forces[0]?._id ?? '',
-                }}
-              />
-            </If>
           </div>
         </PanelView>
         <PanelView title='Target Environments'>

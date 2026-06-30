@@ -4,8 +4,8 @@
 .Page.MissionPage {
   $page-width: 100vw;
   $page-height: 100vh;
-  $page-row-1-height: 82px;
-  $page-row-3-height: 30px;
+  $page-row-1-height: $nav-height;
+  $page-row-3-height: $footer-height;
   $page-row-2-height: calc(
     $page-height - $page-row-1-height - $page-row-3-height
   );
@@ -31,8 +31,8 @@
   }
 
   .Content {
-    $content-vertical-padding: 35px;
-    $content-horizontal-padding: 30px;
+    $content-vertical-padding: 1em;
+    $content-horizontal-padding: 1em;
 
     margin: 0 auto;
     height: calc(100% - #{$content-vertical-padding * 2});
