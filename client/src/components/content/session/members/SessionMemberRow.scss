@@ -4,12 +4,23 @@
 .SessionMemberRow {
   @include member-row-like;
 
-  .ButtonSvg_ban:hover {
-    filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(300deg)
-      brightness(200%) contrast(98%);
-  }
-
   .Cell {
+    &.CellControls {
+      margin-top: -0.35em;
+
+      .ButtonSvgPanel {
+        .ButtonSvg_ban:hover {
+          filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(300deg)
+            brightness(200%) contrast(98%);
+        }
+      }
+    }
+
+    &.CellStatus {
+      font-style: italic;
+      color: $color-faded;
+    }
+
     .Detail {
       min-width: none;
 
@@ -27,9 +38,24 @@
           padding: 0;
           background: none;
 
+          .AvailableOptions {
+            > :first-child {
+              padding-top: 1.75em;
+            }
+          }
+
           .DropdownOption {
-            padding-top: 0;
+            align-items: start;
+            padding-top: 0.15em;
             padding-left: 0;
+
+            .Indicator {
+              line-height: 0.8em;
+            }
+
+            &.Selected {
+              padding: 0;
+            }
 
             &:not(.Selected) {
               padding-bottom: 0.75em;
@@ -55,6 +81,13 @@
           background: none;
         }
       }
+    }
+  }
+
+  &.MemberStatus_Banned {
+    .CellName,
+    .CellStatus {
+      color: $color-failure-light;
     }
   }
 }

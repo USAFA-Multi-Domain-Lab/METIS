@@ -102,6 +102,12 @@ export const clientEventSchemas: TClientEventSchemas = {
       memberId: zod.string(),
     }),
   ),
+  'request-unban': zodRequestEvent(
+    'request-unban',
+    zod.object({
+      memberId: zod.string(),
+    }),
+  ),
   'request-assign-force': zodRequestEvent(
     'request-assign-force',
     zod.object({

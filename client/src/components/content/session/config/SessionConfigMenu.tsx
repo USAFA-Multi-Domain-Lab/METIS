@@ -15,6 +15,7 @@ import TargetEnvConfig from './TargetEnvConfig'
  */
 export default function SessionConfigMenu({
   session,
+  disabled = false,
 }: TSessionConfigMenu_P): TReactElement | null {
   /* -- STATE -- */
 
@@ -75,22 +76,26 @@ export default function SessionConfigMenu({
           )
         })}
       </div>
-      <div className='MenuContent'>
-        {section === 'general' && (
-          <SessionGeneralConfig
-            sessionConfig={session.config}
-            mission={mission}
-            sessionId={session._id}
-            onCommit={commit}
-          />
-        )}
-        {section === 'target-environments' && (
-          <TargetEnvConfig
-            sessionConfig={session.config}
-            mission={mission}
-            onCommit={commit}
-          />
-        )}
+      <div className='MenuContentWrapper'>
+        <div className='MenuContent'>
+          {section === 'general' && (
+            <SessionGeneralConfig
+              sessionConfig={session.config}
+              mission={mission}
+              sessionId={session._id}
+              disabled={disabled}
+              onCommit={commit}
+            />
+          )}
+          {section === 'target-environments' && (
+            <TargetEnvConfig
+              sessionConfig={session.config}
+              mission={mission}
+              disabled={disabled}
+              onCommit={commit}
+            />
+          )}
+        </div>
       </div>
     </div>
   )
@@ -125,4 +130,9 @@ export type TSessionConfigMenu_P = {
    * The session whose configuration is being modified.
    */
   session: SessionClient
+  /**
+   * Whether all configuration options are locked from editing.
+   * @default false
+   */
+  disabled?: boolean
 }

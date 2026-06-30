@@ -954,6 +954,54 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
+   * Lifts a member's ban from the session, allowing them to rejoin.
+   * @param memberId The ID of the member whose ban to lift.
+   * @resolves When the member's ban has been lifted.
+   * @rejects If the member failed to be unbanned.
+   */
+  public async $unban(memberId: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      // Callback for errors.
+      const onError = (message: string) => {
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
+
+      // Get the member.
+      let member = this.getMember(memberId)
+
+      // If the member is not found,
+      // callback an error.
+      if (member === undefined) {
+        return onError('Member not found.')
+      }
+
+      // Emit a request to unban the user.
+      this.server.request(
+        'request-unban',
+        { memberId },
+        `Lifting ban for "${member.user.username}".`,
+        {
+          onResponse: (event) => {
+            switch (event.method) {
+              case 'unbanned':
+                return resolve()
+              case 'error':
+                return onError(event.message)
+              default:
+                return onError(
+                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+                )
+            }
+          },
+        },
+      )
+    })
+  }
+
+  /**
    * Assigns a force to a member.
    * @param memberId The ID of the member to be assigned.
    * @param forceId The ID of the force to be assigned, `null` if unassigning.

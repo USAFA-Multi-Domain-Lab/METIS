@@ -19,6 +19,7 @@ export default function SessionGeneralConfig({
   sessionConfig,
   mission,
   sessionId = null,
+  disabled = false,
   onChange = () => {},
   onCommit = () => {},
 }: TSessionGeneralConfig_P): TReactElement | null {
@@ -128,6 +129,7 @@ export default function SessionGeneralConfig({
           options={['public', 'id-required']}
           value={accessibility}
           setValue={changeAccessibility}
+          disabled={disabled}
           isExpanded={false}
           getKey={(value) => value}
           render={(value) => {
@@ -166,6 +168,7 @@ export default function SessionGeneralConfig({
         setValue={setName}
         fieldType='required'
         defaultValue={mission.name}
+        disabled={disabled}
         onBlur={commitName}
       />
       {accessibilityJsx}
@@ -173,12 +176,14 @@ export default function SessionGeneralConfig({
         label='Infinite Resources'
         value={infiniteResources}
         setValue={changeInfiniteResources}
+        disabled={disabled}
       />
       <DetailDropdown<TSessionMode>
         label='Mode'
         options={['multiplayer', 'single-player']}
         value={mode}
         setValue={changeMode}
+        disabled={disabled}
         isExpanded={false}
         getKey={(value) => value}
         render={(value) =>
@@ -196,6 +201,7 @@ export default function SessionGeneralConfig({
           options={mission.forces.map((force) => force._id)}
           value={singlePlayerForceId || (mission.forces[0]?._id ?? '')}
           setValue={changeSinglePlayerForceId}
+          disabled={disabled}
           isExpanded={false}
           getKey={(forceId) => forceId}
           render={(forceId) =>
@@ -230,6 +236,11 @@ export type TSessionGeneralConfig_P = {
    * The ID of the session being configured, or null if creating a new session.
    */
   sessionId?: string | null
+  /**
+   * Whether all fields are locked from editing.
+   * @default false
+   */
+  disabled?: boolean
   /**
    * Callback for when the session config is changed.
    * @default () => {}

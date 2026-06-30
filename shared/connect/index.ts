@@ -686,6 +686,28 @@ export type TResponseEvents = {
     TClientEvents['request-ban']
   >
   /**
+   * Occurs for a member whose ban has been lifted, allowing
+   * them to rejoin the session.
+   */
+  'unbanned': TResponseEvent<
+    'unbanned',
+    {
+      /**
+       * The ID of the session for which the member's ban was lifted.
+       */
+      sessionId: string
+      /**
+       * The ID of the member whose ban was lifted.
+       */
+      memberId: string
+      /**
+       * The ID of the user whose ban was lifted.
+       */
+      userId: string
+    },
+    TClientEvents['request-unban']
+  >
+  /**
    * Occurs when a force assignment change has been made.
    */
   'force-assigned': TResponseEvent<
@@ -951,6 +973,18 @@ export type TRequestEvents = {
     {
       /**
        * The ID of the member to ban.
+       */
+      memberId: string
+    }
+  >
+  /**
+   * Occurs when the client requests to lift a member's ban from the session.
+   */
+  'request-unban': TRequestEvent<
+    'request-unban',
+    {
+      /**
+       * The ID of the member whose ban to lift.
        */
       memberId: string
     }

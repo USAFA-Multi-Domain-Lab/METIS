@@ -155,6 +155,15 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
   }
 
   /**
+   * Lifts the member's ban, allowing them to rejoin the session.
+   * @note The member remains a non-joined ghost until they actually
+   * rejoin — this only clears the banned flag.
+   */
+  public unban(): void {
+    this._banned = false
+  }
+
+  /**
    * Marks the member as newly joined and reattaches the
    * given connection to the member.
    * @param connection The new WS connection for the member.

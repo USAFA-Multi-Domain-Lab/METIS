@@ -145,6 +145,15 @@ export abstract class SessionMember<
   public abstract banned: boolean
 
   /**
+   * Whether the member is currently joined, not joined,
+   * or banned.
+   */
+  public get status(): TSessionMemberStatus {
+    if (this.banned) return 'banned'
+    return this.joined ? 'joined' : 'not-joined'
+  }
+
+  /**
    * The session to which the member belongs.
    */
   public session: TSession<T>
@@ -303,6 +312,14 @@ export abstract class SessionMember<
  * @returns The member type.
  */
 export type TMember<T extends TMetisBaseComponents> = T['member']
+
+/**
+ * The membership status of a session member.
+ * @option 'joined' currently joined (online) in the session.
+ * @option 'not-joined' a ghost member who has quit but retains an assignment.
+ * @option 'banned' banned from the session and cannot rejoin.
+ */
+export type TSessionMemberStatus = 'joined' | 'not-joined' | 'banned'
 
 /**
  * The stored assignment of a session member — their role, force, and realm

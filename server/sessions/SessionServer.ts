@@ -72,6 +72,7 @@ import { onRequestResetSession } from './traffic-controllers/onRequestResetSessi
 import { onRequestSendChatMessage } from './traffic-controllers/onRequestSendChatMessage'
 import { onRequestSendOutput } from './traffic-controllers/onRequestSendOutput'
 import { onRequestStartSession } from './traffic-controllers/onRequestStartSession'
+import { onRequestUnban } from './traffic-controllers/onRequestUnban'
 
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
@@ -172,6 +173,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       ['request-config-update', onRequestConfigUpdate],
       ['request-kick', onRequestKick],
       ['request-ban', onRequestBan],
+      ['request-unban', onRequestUnban],
       ['request-assign-force', onRequestAssignForce],
       ['request-assign-role', onRequestAssignRole],
       ['request-open-node', onRequestOpenNode],

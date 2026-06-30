@@ -2,27 +2,25 @@
 @use '@client/components/content/form/index.scss' as *;
 
 .SessionConfigMenu {
-  display: grid;
-  grid-template-columns: minmax(15em, auto) 1fr;
+  display: flex;
   column-gap: 2.5em;
   box-sizing: border-box;
   align-items: start;
   width: 100%;
-  padding: 1em 0 0;
 
   .MenuOptions {
     overflow: hidden;
     display: flex;
     flex-direction: column;
     row-gap: 0.25em;
+    min-width: 12em;
     height: 100%;
 
     .MenuOption {
       box-sizing: border-box;
       width: 100%;
-      border-radius: 0.5em;
       padding: 0.75em 1em;
-      border: none;
+      border-left: 2px solid transparent;
       background-color: transparent;
       color: $color-faded;
       font-size: 0.75em;
@@ -36,14 +34,24 @@
 
       &.Selected {
         color: $color-accent-light;
-        @include background-mask($opacity: 0.15);
+        border-color: $color-accent-light;
       }
     }
   }
 
-  .MenuContent {
-    @include form-container;
-    min-width: 0;
-    padding-top: 0;
+  .MenuContentWrapper {
+    display: flex;
+    justify-content: center;
+    max-height: 100%;
+    width: 100%;
+    overflow: auto;
+
+    .MenuContent {
+      @include form-container;
+      min-width: 0;
+      padding-top: 0;
+      width: 100%;
+      max-width: 40em;
+    }
   }
 }

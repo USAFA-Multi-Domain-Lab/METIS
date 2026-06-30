@@ -6,6 +6,8 @@ import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks'
 import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
 import { MemberRole } from '@shared/sessions/members/MemberRole'
+import { ClassList } from '@shared/toolbox/html/ClassList'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import Prompt from '../../communication/Prompt'
@@ -47,6 +49,14 @@ export default function SessionMemberRow({
         icon: 'ban',
         description: 'Ban member from the session (Cannot rejoin).',
         onClick: () => onClickBan(),
+      },
+      {
+        key: 'unban',
+        type: 'button',
+        icon: 'up',
+        description:
+          'Lift ban for this member, allowing them to rejoin the session.',
+        onClick: () => onClickUnban(),
       },
     ],
   })
@@ -122,7 +132,8 @@ export default function SessionMemberRow({
       sessionUnstarted &&
       !targetCompleteVisibility &&
       currentCompleteVisibility &&
-      !isSinglePlayer,
+      !isSinglePlayer &&
+      !member.banned,
   )
   /**
    * Whether the dropdown to assign a role to the member should
@@ -134,7 +145,20 @@ export default function SessionMemberRow({
       currentManagesMembers &&
       sessionUnstarted &&
       !targetCompleteVisibility &&
-      currentCompleteVisibility,
+      currentCompleteVisibility &&
+      !member.banned,
+  )
+
+  /**
+   * Classes to use for the top-level element of this component.
+   */
+  const rootClasses = new ClassList('SessionMemberRow').switch(
+    {
+      'joined': 'MemberStatus_Joined',
+      'not-joined': 'MemberStatus_NotJoined',
+      'banned': 'MemberStatus_Banned',
+    },
+    member.status,
   )
 
   /* -- FUNCTIONS -- */
@@ -193,6 +217,37 @@ export default function SessionMemberRow({
     } catch (error) {
       handleError({
         message: `Failed to ban "${member.username}".`,
+        notifyMethod: 'bubble',
+      })
+    }
+
+    // Finish loading.
+    finishLoading()
+  }
+
+  /**
+   * Callback for button click to lift a member's ban.
+   */
+  const onClickUnban = async (): Promise<void> => {
+    // Confirm the user wants to perform the operation.
+    let { choice } = await prompt(
+      `Are you sure you want to lift the ban on "${member.username}"?`,
+      Prompt.ConfirmationChoices,
+    )
+
+    // If the user cancels, return.
+    if (choice === 'Cancel') {
+      return
+    }
+
+    try {
+      // Begin loading.
+      beginLoading(`Lifting ban on "${member.username}"...`)
+      // Unban the member.
+      await session.$unban(member._id)
+    } catch (error) {
+      handleError({
+        message: `Failed to lift ban on "${member.username}".`,
         notifyMethod: 'bubble',
       })
     }
@@ -272,6 +327,10 @@ export default function SessionMemberRow({
     if (assignedRoleId !== member.roleId) {
       setAssignedRole(member.role)
     }
+
+    controlsCellButtonEngine.setHidden('kick', member.status !== 'joined')
+    controlsCellButtonEngine.setHidden('ban', member.status === 'banned')
+    controlsCellButtonEngine.setHidden('unban', member.status !== 'banned')
   }, [member])
 
   /* -- RENDER -- */
@@ -284,7 +343,9 @@ export default function SessionMemberRow({
     let style: React.CSSProperties = { color: 'gray', fontStyle: 'italic' }
     let text: string = ''
 
-    if (targetCompleteVisibility) {
+    if (member.banned) {
+      text = 'N/A'
+    } else if (targetCompleteVisibility) {
       text = targetManipulatesNodes ? 'Complete control' : 'Complete visibility'
     } else if (!currentCompleteVisibility && !currentLimitedVisibility) {
       text = member.assignedForceId ? 'Assigned' : 'Not assigned'
@@ -398,6 +459,17 @@ export default function SessionMemberRow({
   })
 
   /**
+   * JSX for the status cell.
+   */
+  const statusCell = compute<TReactElement>(() => {
+    return (
+      <div className='Cell CellStatus'>
+        {StringToolbox.toTitleCase(member.status)}
+      </div>
+    )
+  })
+
+  /**
    * JSX for the controls cell.
    */
   const controlsCell = compute<TReactElement>(() => {
@@ -427,12 +499,12 @@ export default function SessionMemberRow({
   })
 
   // Render main component.
-  // todo: Display ban/join status in the row.
   return (
-    <div key={member.username} className='SessionMemberRow'>
+    <div key={member.username} className={rootClasses.value}>
       <div className='Cell CellName'>{member.username}</div>
       {roleCell}
       {forceCell}
+      {statusCell}
       {controlsCell}
     </div>
   )

@@ -326,14 +326,16 @@ export default function LobbyPage({
               <SessionMembers session={session} />
             </div>
           </PanelView>
-          {session.member.isAuthorized('configureSessions') &&
-            !startInitiated && (
-              <PanelView title={'Configuration'}>
-                <div className='ConfigurationSection Section'>
-                  <SessionConfigMenu session={session} />
-                </div>
-              </PanelView>
-            )}
+          {session.member.isAuthorized('configureSessions') && (
+            <PanelView title={'Configuration'}>
+              <div className='ConfigurationSection Section'>
+                <SessionConfigMenu
+                  session={session}
+                  disabled={startInitiated}
+                />
+              </div>
+            </PanelView>
+          )}
         </Panel>
       </DefaultPageLayout>
     </div>

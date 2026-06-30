@@ -67,6 +67,7 @@ export default function SessionMembers({
         <div className='CellTitle CellTitleName'>Name</div>
         <div className='CellTitle CellTitleRole'>Role</div>
         <div className='CellTitle CellTitleForce'>Force</div>
+        <div className='CellTitle CellTitleStatus'>Status</div>
         <div className='CellTitle CellTitleControls'>Controls</div>
       </div>
       <div className='Rows'>{rowsJsx}</div>

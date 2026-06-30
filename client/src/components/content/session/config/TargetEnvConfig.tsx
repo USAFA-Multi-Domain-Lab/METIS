@@ -7,7 +7,6 @@ import type { TTargetEnvConfig } from '@shared/target-environments/types'
 import { useEffect, useState } from 'react'
 import { DetailToggle } from '../../form/DetailToggle'
 import { DetailDropdown } from '../../form/dropdowns/standard/DetailDropdown'
-import If from '../../util/If'
 import './TargetEnvConfig.scss'
 
 /**
@@ -17,6 +16,7 @@ import './TargetEnvConfig.scss'
 export default function TargetEnvConfig({
   sessionConfig,
   mission,
+  disabled = false,
   onChange = () => {},
   onCommit = () => {},
 }: TTargetEnvConfig_P): TReactElement | null {
@@ -132,7 +132,9 @@ export default function TargetEnvConfig({
   const envConfigContent = compute<TReactElement[]>(() => {
     return mission.targetEnvironments.map((targetEnv) => {
       // Determine if the target environment is enabled.
-      const isEnabled = !disabledTargetEnvs.includes(targetEnv._id)
+      const targetEnvironmentDisabled = disabledTargetEnvs.includes(
+        targetEnv._id,
+      )
       // Determine the selected configuration for the target environment.
       const configId = targetEnvConfigs[targetEnv._id]
       const selectedConfig =
@@ -144,14 +146,15 @@ export default function TargetEnvConfig({
         <div key={targetEnv._id} className='EnvConfig'>
           <DetailToggle
             label={`${targetEnv.name}`}
-            value={isEnabled}
+            value={!targetEnvironmentDisabled}
             setValue={() => toggleEnabled(targetEnv)}
+            disabled={disabled}
           />
-          {targetEnv.configs.length && (
+          {targetEnv.configs.length > 0 && (
             <DetailDropdown<TTargetEnvConfig>
               label='Configuration'
               options={targetEnv.configs}
-              disabled={!isEnabled}
+              disabled={disabled || targetEnvironmentDisabled}
               value={selectedConfig}
               setValue={(newValue) =>
                 selectEnvConfig(newValue, selectedConfig, targetEnv)
@@ -172,34 +175,36 @@ export default function TargetEnvConfig({
   /* -- RENDER -- */
 
   return (
-    <If condition={mounted && mission.targetEnvironments.length}>
-      <div className='TargetEnvConfig'>
-        <div className='EnvTitle'>Target Environments</div>
-        <div className='EnvDescription'>
-          Enable or disable effects for each target environment. When enabled,
-          select which configuration to use.
+    <>
+      {mounted && mission.targetEnvironments.length && (
+        <div className='TargetEnvConfig'>
+          <div className='EnvTitle'>Target Environments</div>
+          <div className='EnvDescription'>
+            Enable or disable effects for each target environment. When enabled,
+            select which configuration to use.
+          </div>
+          <div className='EnvActions'>
+            <button
+              type='button'
+              className='ActionButton'
+              disabled={disabled || allTargetEnvsEnabled}
+              onClick={enableAll}
+            >
+              Enable All
+            </button>
+            <button
+              type='button'
+              className='ActionButton'
+              disabled={disabled || allTargetEnvsDisabled}
+              onClick={disableAll}
+            >
+              Disable All
+            </button>
+          </div>
+          {envConfigContent}
         </div>
-        <div className='EnvActions'>
-          <button
-            type='button'
-            className='ActionButton'
-            disabled={allTargetEnvsEnabled}
-            onClick={enableAll}
-          >
-            Enable All
-          </button>
-          <button
-            type='button'
-            className='ActionButton'
-            disabled={allTargetEnvsDisabled}
-            onClick={disableAll}
-          >
-            Disable All
-          </button>
-        </div>
-        {envConfigContent}
-      </div>
-    </If>
+      )}
+    </>
   )
 }
 
@@ -217,6 +222,11 @@ type TTargetEnvConfig_P = {
    * The mission to which the target environments belong.
    */
   mission: ClientMission
+  /**
+   * Whether all configuration options are locked from editing.
+   * @default false
+   */
+  disabled?: boolean
   /**
    * Callback for when the session config is changed.
    * @default () => {}
