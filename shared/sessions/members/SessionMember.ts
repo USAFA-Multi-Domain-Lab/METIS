@@ -1,9 +1,10 @@
 import { MetisComponent } from '../../MetisComponent'
-import type { MissionForce, TForce } from '../../missions/forces/MissionForce'
+import type { TForce } from '../../missions/forces/MissionForce'
 import type { TUser, TUserExistingJson } from '../../users/User'
-import type { TSession } from '../MissionSession'
+import { MissionSession, type TSession } from '../MissionSession'
+import type { TRealm } from '../SessionRealm'
 import type { TSessionAuthParam } from './MemberPermission'
-import type { MemberRole, TMemberRoleId } from './MemberRole'
+import { MemberRole, type TMemberRoleId } from './MemberRole'
 
 /**
  * Represents a user using METIS.
@@ -16,7 +17,7 @@ export abstract class SessionMember<
     return this.user.name
   }
   // Overridden
-  public set name(value: string) {
+  public set name(_value: string) {
     throw new Error(
       'Cannot set name of SessionMember directly. Use user.name instead.',
     )
@@ -56,30 +57,100 @@ export abstract class SessionMember<
   }
 
   /**
+   * The member's current assignment — their role ID, force ID, and realm ID.
+   */
+  public assignment: TSessionMemberAssignment
+
+  /**
    * The role of the member in the session.
    */
-  public role: MemberRole
+  public get role(): MemberRole {
+    return MemberRole.get(this.assignment.roleId)
+  }
 
   /**
    * The ID of the member's role in the session.
    */
   public get roleId(): TMemberRoleId {
-    return this.role._id
+    return this.assignment.roleId
   }
 
   /**
-   * The ID of the force to which the member is assigned.
-   * @note If `null`, the member is not assigned to a force.
+   * The force to which the member is explicitly assigned, or `null`.
+   * Resolved from the assigned realm's mission. If a force is assigned
+   * but could not be found, `null` will be returned in that case also.
    */
-  public forceId: string | null
+  public get assignedForce(): TForce<T> | null {
+    return (
+      this.assignedRealm?.mission.getForceById(this.assignment.forceId) ?? null
+    )
+  }
 
   /**
-   * The force to which the member is assigned.
-   * @note If `null`, the member is not assigned to a force.
+   * The realm to which the member is explicitly assigned, or `null`.
+   * Resolved from the session's realm list by the stored realm ID.
+   * @note If a realm is assigned but could not be found, `null` will
+   * be returned in that case also.
+   *
    */
-  public get force(): TForce<T> | null {
-    if (this.forceId === null) return null
-    return this.session.mission.getForceById(this.forceId) ?? null
+  public get assignedRealm(): TRealm<T> | null {
+    return this.session.getRealm(this.assignment.realmId) ?? null
+  }
+
+  /**
+   * The ID of the assigned force, or `null`, if
+   * not assigned to a force.
+   */
+  public get assignedForceId(): string | null {
+    return this.assignment.forceId
+  }
+
+  /**
+   * The ID of the assigned realm, or `null`, if
+   * not assigned to a realm.
+   */
+  public get assignedRealmId(): string | null {
+    return this.assignment.realmId
+  }
+
+  /**
+   * The ID of the realm this member is currently subscribed to for routing.
+   * Can be updated independently (e.g. when a manager switches the realm
+   * they are viewing).
+   */
+  public subscribedRealmId: string
+
+  /**
+   * The realm this member is subscribed to, resolved from {@link subscribedRealmId}.
+   * Falls back to {@link MissionSession.defaultRealm} if the ID cannot be found.
+   */
+  public get subscribedRealm(): TRealm<T> {
+    return (
+      this.session.getRealm(this.subscribedRealmId) ?? this.session.defaultRealm
+    )
+  }
+
+  /**
+   * Whether the member is currently joined (online) in the session.
+   * @note A member who quits but retains a force or realm assignment is kept
+   * in the session as a ghost with this set to `false`, so managers can
+   * still see them and so their assignment is restored on rejoin.
+   */
+  public abstract joined: boolean
+
+  /**
+   * If true, this member will not be permitted to rejoin the session,
+   * unless ban is reverted.
+   */
+  public abstract banned: boolean
+
+  /**
+   * Whether the member is currently joined, not joined,
+   * or banned.
+   */
+  public get status(): TSessionMemberStatus {
+    if (this.banned) return 'banned'
+    return this.joined ? 'joined' : 'not-joined'
   }
 
   /**
@@ -118,8 +189,15 @@ export abstract class SessionMember<
   /**
    * Whether the member has been assigned to a force.
    */
-  public get isAssigned(): boolean {
-    return this.forceId !== null
+  public get isAssignedToForce(): boolean {
+    return this.assignment.forceId !== null
+  }
+
+  /**
+   * Whether the member has been assigned to a realm.
+   */
+  public get isAssignedToRealm(): boolean {
+    return this.assignment.realmId !== null
   }
 
   /**
@@ -134,21 +212,62 @@ export abstract class SessionMember<
    * Creates a new SessionMember object.
    * @param _id The unique ID of the session member.
    * @param user The user that is a member of the session.
-   * @param role The role of the user in the session.
+   * @param assignment The member's role, force, and realm assignment.
+   * @param session The session to which the member belongs.
    */
   protected constructor(
     _id: string,
     user: TUser<T>,
-    role: MemberRole,
-    forceId: TForce<T>['_id'] | null,
+    assignment: TSessionMemberAssignment,
     session: TSession<T>,
+    subscribedRealmId: string,
   ) {
     super(_id, '', false)
 
     this.user = user
-    this.role = role
-    this.forceId = forceId
+    this.assignment = assignment
     this.session = session
+    this.subscribedRealmId = subscribedRealmId
+  }
+
+  /**
+   * Updates {@link assignment} with a new role ID.
+   * @param roleId The new role ID to assign to the
+   * member.
+   */
+  public assignToRole(roleId: TMemberRoleId): void {
+    this.assignment.roleId = roleId
+  }
+
+  /**
+   * Updates {@link assignment} with a new force ID.
+   * @param forceId The new force ID to assign to the
+   * member, or `null` to unassign.
+   */
+  public assignToForce(forceId: string | null): void {
+    this.assignment.forceId = forceId
+  }
+
+  /**
+   * Updates {@link assignment} with a new realm ID.
+   * @param realm The realm to assign. This can be the
+   * ID or the realm itself. `null` will unassign the member
+   * from any realm.
+   */
+  public assignToRealm(realm: string | T['realm'] | null): void {
+    if (typeof realm !== 'string' && realm !== null) realm = realm._id
+    this.assignment.realmId = realm
+  }
+
+  /**
+   * Subscribes the member to a realm for routing purposes.
+   * @param realm The realm to subscribe to. This can be the
+   * ID or the realm itself.
+   * @note This does not change the member's assigned realm.
+   */
+  public subscribeToRealm(realm: string | T['realm']): void {
+    if (typeof realm !== 'string') realm = realm._id
+    this.subscribedRealmId = realm
   }
 
   /**
@@ -159,8 +278,10 @@ export abstract class SessionMember<
     return {
       _id: this._id,
       user: this.user.toExistingJson(),
-      roleId: this.role._id,
-      forceId: this.forceId,
+      assignment: this.assignment,
+      subscribedRealmId: this.subscribedRealmId,
+      joined: this.joined,
+      banned: this.banned,
     }
   }
 
@@ -193,6 +314,26 @@ export abstract class SessionMember<
 export type TMember<T extends TMetisBaseComponents> = T['member']
 
 /**
+ * The membership status of a session member.
+ * @option 'joined' currently joined (online) in the session.
+ * @option 'not-joined' a ghost member who has quit but retains an assignment.
+ * @option 'banned' banned from the session and cannot rejoin.
+ */
+export type TSessionMemberStatus = 'joined' | 'not-joined' | 'banned'
+
+/**
+ * The stored assignment of a session member — their role, force, and realm
+ * expressed as IDs.
+ * @note Complete-visibility members aren't assigned forces and realms since
+ * they can float between all realms and forces.
+ */
+export type TSessionMemberAssignment = {
+  roleId: TMemberRoleId
+  forceId: string | null
+  realmId: string | null
+}
+
+/**
  * The JSON representation of a User object.
  */
 export interface TSessionMemberJson {
@@ -205,12 +346,20 @@ export interface TSessionMemberJson {
    */
   user: TUserExistingJson
   /**
-   * The ID of the member's role in the session.
+   * The member's role, force, and realm assignment expressed as IDs.
    */
-  roleId: TMemberRoleId
+  assignment: TSessionMemberAssignment
   /**
-   * The ID of the force to which the member is assigned.
-   * @note If `null`, the member is not assigned to a force.
+   * The ID of the realm this member is currently subscribed to.
    */
-  forceId: MissionForce['_id'] | null
+  subscribedRealmId: string
+  /**
+   * Whether the member is currently joined (online) in the session.
+   */
+  joined: boolean
+  /**
+   * Whether the member has been banned from the session and cannot
+   * rejoin.
+   */
+  banned: boolean
 }

@@ -33,7 +33,7 @@ export default function MessengerMessage({
    */
   const forceColor = compute<string | null>(() => {
     if (!message.senderForceId) return null
-    let force = session.mission.getForceById(message.senderForceId)
+    let force = session.subscribedMission.getForceById(message.senderForceId)
     return force?.color ?? null
   })
 

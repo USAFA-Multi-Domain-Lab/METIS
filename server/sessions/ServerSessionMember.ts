@@ -1,10 +1,20 @@
-import type { ClientConnection } from '@server/connect/ClientConnection'
+import type { TBuildResponseDataOptions } from '@server/connect/ClientConnection'
+import { ClientConnection } from '@server/connect/ClientConnection'
+import { sessionLogger } from '@server/logging'
 import type { TTargetEnvExposedMember } from '@server/target-environments/context/TargetEnvContext'
-import type { TServerEvents, TServerMethod } from '@shared/connect'
+import type {
+  TRequestEvents,
+  TRequestMethod,
+  TResponseEvent,
+  TServerEvents,
+  TServerMethod,
+} from '@shared/connect'
 import type { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
-import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
-import { MemberRole } from '@shared/sessions/members/MemberRole'
-import { SessionMember } from '@shared/sessions/members/SessionMember'
+import { type TMemberRoleId } from '@shared/sessions/members/MemberRole'
+import {
+  SessionMember,
+  type TSessionMemberAssignment,
+} from '@shared/sessions/members/SessionMember'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { SessionServer } from './SessionServer'
 
@@ -15,22 +25,41 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
   /**
    * The WS connection to the client where the given user is logged in.
    */
-  public connection: ClientConnection
+  public connection: ClientConnection | null
+
+  /** Private cache for {@link joined} */
+  private _joined: boolean
+  // Implemented
+  public get joined(): boolean {
+    return this._joined
+  }
+
+  /** Private cache for {@link banned} */
+  private _banned: boolean
+  // Implemented
+  public get banned(): boolean {
+    return this._banned
+  }
 
   /**
    * @param _id The unique ID of the session member.
    * @param connection The WS connection for the user who is joining the session.
-   * @param role The role of the user in the session.
+   * @param assignment The member's role, force, and realm assignment.
+   * @param session The session to which the member belongs.
+   * @param subscribedRealmId The ID of the realm to which the member is
+   * subscribed.
    */
   private constructor(
     _id: string,
     connection: ClientConnection,
-    role: MemberRole,
-    forceId: string | null,
+    assignment: TSessionMemberAssignment,
     session: SessionServer,
+    subscribedRealmId: string,
   ) {
-    super(_id, connection.user, role, forceId, session)
+    super(_id, connection.user, assignment, session, subscribedRealmId)
     this.connection = connection
+    this._banned = false
+    this._joined = true
   }
 
   /**
@@ -56,6 +85,13 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
     TMethod extends TServerMethod,
     TPayload extends Omit<TServerEvents[TMethod], 'method'>,
   >(method: TMethod, payload: TPayload): void {
+    // Never emit to a ghost member — their connection is no longer live.
+    if (!this.joined || !this.connection) {
+      sessionLogger.warn(
+        `Attempted to emit event "${method}" to ghost member ${this.userId} in session ${this.session._id}. Event was not emitted.`,
+      )
+      return
+    }
     this.connection.emit(method, payload)
   }
 
@@ -65,31 +101,129 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
    * @param error The error to emit to the client.
    */
   public emitError(error: ServerEmittedError): void {
+    // Never emit to a ghost member — their connection is no longer live.
+    if (!this.joined || !this.connection) {
+      sessionLogger.warn(
+        `Attempted to emit error "${error.code}" to ghost member ${this.userId} in session ${this.session._id}. Error was not emitted.`,
+      )
+      return
+    }
     this.connection.emitError(error)
+  }
+
+  /**
+   * Builds fulfilled `request` property for response events.
+   * @param requestEvent The request event for which to create
+   * the corresponding response event.
+   * @param options Additional options for building the request data.
+   * @returns The request data for the response event.
+   */
+  public buildResponseRequestData<
+    TMethod extends TRequestMethod,
+    TEvent extends TRequestEvents[TMethod],
+  >(
+    requestEvent: TEvent,
+    options: TBuildResponseDataOptions = {},
+  ): TResponseEvent<any, any, TEvent>['request'] {
+    return ClientConnection.buildResponseRequestData(
+      requestEvent,
+      this.userId,
+      options,
+    )
+  }
+
+  /**
+   * Removes the member from the session and performs
+   * any necessary clean up.
+   */
+  public leave(): void {
+    this.session.onMemberLeave(this)
+    this._joined = false
+    this.connection?.login.onMetisSessionLeave()
+    this.connection = null
+  }
+
+  /**
+   * Removes the member from the session and flags
+   * them as banned, preventing them from rejoining.
+   * Any necessary clean up is performed also.
+   */
+  public ban(): void {
+    // Order of operations important here.
+    this._banned = true
+    this.leave()
+  }
+
+  /**
+   * Lifts the member's ban, allowing them to rejoin the session.
+   * @note The member remains a non-joined ghost until they actually
+   * rejoin — this only clears the banned flag.
+   */
+  public unban(): void {
+    this._banned = false
+  }
+
+  /**
+   * Marks the member as newly joined and reattaches the
+   * given connection to the member.
+   * @param connection The new WS connection for the member.
+   */
+  public rejoin(connection: ClientConnection): void {
+    this.connection = connection
+    this._joined = true
+  }
+
+  /**
+   * Creates a default assignment for a new session member based
+   * on the user's permissions and the state of the session.
+   * @param connection The WS connection with which the user who is
+   * joining the session.
+   * @param session The session which the member is joining.
+   * @returns The default assignment for the new session member.
+   */
+  public static createDefaultAssignment(
+    connection: ClientConnection,
+    session: SessionServer,
+  ): TSessionMemberAssignment {
+    let roleId: TMemberRoleId
+    let canManageAny = connection.user.isAuthorized('sessions_join_manager')
+    let canManageThisSession =
+      connection.user.isAuthorized('sessions_join_manager_native') &&
+      session.ownerId === connection.userId
+    let canObserve = connection.user.isAuthorized('sessions_join_observer')
+    let canParticipate = connection.user.isAuthorized(
+      'sessions_join_participant',
+    )
+
+    if (canManageAny || canManageThisSession) {
+      roleId = 'manager'
+    } else if (canObserve) {
+      roleId = 'observer'
+    } else if (canParticipate) {
+      roleId = 'participant'
+    } else {
+      roleId = 'access_denied'
+    }
+
+    return { roleId, realmId: null, forceId: null }
   }
 
   /**
    * Creates a new `ServerSessionMember` object with a random ID.
    * @param connection The WS connection for the user who is joining the session.
-   * @param role The role of the user in the session.
    * @param session The session in which the member is joining.
+   * @returns A new {@link ServerSessionMember} object.
    */
-  public static create(
+  public static createNew(
     connection: ClientConnection,
-    role: MemberRole | TMemberRoleId,
     session: SessionServer,
-    forceId: string | null,
   ): ServerSessionMember {
-    // If the role passed is a role ID,
-    // get the `MemberRole` object.
-    if (typeof role === 'string') role = MemberRole.get(role)
-
     return new ServerSessionMember(
       StringToolbox.generateRandomId(),
       connection,
-      role,
-      forceId,
+      this.createDefaultAssignment(connection, session),
       session,
+      session.defaultRealm._id,
     )
   }
 

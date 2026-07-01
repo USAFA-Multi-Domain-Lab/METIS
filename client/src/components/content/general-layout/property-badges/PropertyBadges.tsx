@@ -1,6 +1,6 @@
+import type { TRootElementRefSupport } from '@client/toolbox/html/elements'
 import type { TAdditionalClassesSupport } from '@shared/toolbox/html/ClassList'
 import { ClassList } from '@shared/toolbox/html/ClassList'
-import type { TRootElementRefSupport } from '@shared/toolbox/html/elements'
 import './PropertyBadges.scss'
 
 /**

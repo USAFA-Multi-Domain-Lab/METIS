@@ -19,6 +19,8 @@ export const launchSession: TExpressHandler = async (request, response) => {
     missionId,
     name,
     accessibility,
+    mode,
+    singlePlayerForceId,
     infiniteResources,
     disabledTargetEnvs,
     targetEnvConfigs,
@@ -28,6 +30,8 @@ export const launchSession: TExpressHandler = async (request, response) => {
   let sessionConfig: TSessionConfig = {
     name: name ?? SessionServer.DEFAULT_CONFIG.name,
     accessibility: accessibility ?? SessionServer.DEFAULT_CONFIG.accessibility,
+    mode: mode ?? SessionServer.DEFAULT_CONFIG.mode,
+    singlePlayerForceId,
     infiniteResources:
       infiniteResources ?? SessionServer.DEFAULT_CONFIG.infiniteResources,
     disabledTargetEnvs:

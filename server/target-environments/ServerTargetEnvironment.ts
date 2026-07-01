@@ -1,3 +1,4 @@
+import type { ServerSessionRealm } from '@server/sessions/ServerSessionRealm'
 import { TargetEnvSchema } from '@server/target-environments/schema/TargetEnvSchema'
 import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
 import {
@@ -11,7 +12,6 @@ import type { TTargetEnvConfig } from '@shared/target-environments/types'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import fs from 'fs'
 import path from 'path'
-import type { SessionServer } from '../sessions/SessionServer'
 import { EnvHookContext } from './context/EnvHookContext'
 import type { TTargetEnvExposedEnvironment } from './context/TargetEnvContext'
 import type { TargetEnvironmentHook } from './hooks/TargetEnvironmentHook'
@@ -64,8 +64,9 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
     targets: ServerTarget[],
     hooks: TargetEnvironmentHook[],
     rootDir: string,
+    multiRealmSupport: boolean = false,
   ) {
-    super(id, name, description, version, targets)
+    super(id, name, description, version, targets, multiRealmSupport)
 
     this.hooks = hooks
     this.rootDir = rootDir
@@ -123,12 +124,15 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    * Invokes the given method, by calling all registered
    * hook callbacks for that method.
    * @param method The method to invoke.
+   * @param realm The realm being used for the invocation. For
+   * realm-compatible target environments, this can be used to
+   * setup realm-dedicated instances on their end.
    * @resolves When all callbacks have been invoked and resolved.
    * @rejects If any callback throws an error.
    */
   private async invoke(
     method: TTargetEnvMethods,
-    session: SessionServer,
+    realm: ServerSessionRealm,
   ): Promise<EnvScriptResults[]> {
     let results: EnvScriptResults[] = []
     let errorOccurred = false
@@ -147,7 +151,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
         }
 
         try {
-          let context = new EnvHookContext(session, this)
+          let context = EnvHookContext.create(realm, this)
           await context.execute((context) => hook.invoke(context))
           results.push(EnvScriptResults.success(hook.environment, source))
         } catch (error: any) {
@@ -166,23 +170,23 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   }
 
   /**
-   * Sets up the target environment for the given session.
-   * @param session The session used for setup.
+   * Sets up the target environment for the given realm.
+   * @param realm The realm used for setup.
    * @resolves When setup is complete.
    * @rejects If setup fails.
    */
-  public setUp(session: SessionServer): Promise<EnvScriptResults[]> {
-    return this.invoke('environment-setup', session)
+  public setUp(realm: ServerSessionRealm): Promise<EnvScriptResults[]> {
+    return this.invoke('environment-setup', realm)
   }
 
   /**
-   * Tears down the target environment for the given session.
-   * @param session The session used for teardown.
+   * Tears down the target environment for the given realm.
+   * @param realm The realm being torn down.
    * @resolves When teardown is complete.
    * @rejects If teardown fails.
    */
-  public tearDown(session: SessionServer): Promise<EnvScriptResults[]> {
-    return this.invoke('environment-teardown', session)
+  public tearDown(realm: ServerSessionRealm): Promise<EnvScriptResults[]> {
+    return this.invoke('environment-teardown', realm)
   }
 
   /**
@@ -266,6 +270,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
       [],
       schema.hooks,
       directory,
+      schema.multiRealmSupport,
     )
   }
 

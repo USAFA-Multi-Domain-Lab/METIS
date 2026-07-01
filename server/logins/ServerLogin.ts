@@ -224,10 +224,10 @@ export class ServerLogin {
   }
 
   /**
-   * Handles when the user quits a METIS session.
+   * Handles when the user leaves a METIS session.
    * @see {@link Session} class for more information.
    */
-  public onMetisSessionQuit(): void {
+  public onMetisSessionLeave(): void {
     this._metisSessionId = null
   }
 

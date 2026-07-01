@@ -1,0 +1,2205 @@
+{
+  "name": "Tests",
+  "versionNumber": 1,
+  "createdBy": {
+    "_id": "000000000000000000000001",
+    "username": "admin",
+    "accessId": "admin",
+    "firstName": "Admin",
+    "lastName": "User",
+    "needsPasswordReset": false,
+    "createdAt": "2025-01-29T22:16:27.707Z",
+    "updatedAt": "2026-06-17T16:08:36.522Z",
+    "createdBy": "000000000000000000000000",
+    "createdByUsername": "metis"
+  },
+  "createdByUsername": "admin",
+  "structure": {
+    "e809bf63-2a0d-496e-b95c-ca098faaf630": {},
+    "d98d7645-126a-4c1e-a5e6-c4e43d87ed08": {
+      "b3d138c9-80c4-46c5-8aa1-4ca70b15bec4": {
+        "ba2ca26e-9691-4f89-8336-038da559c647": {},
+        "5ed0dba4-a055-4f74-9d42-b1e6e5e0dc59": {}
+      }
+    },
+    "6dfe95b1-e280-4f66-be63-eb0700d6d8be": {},
+    "1594efe0-58a4-4127-b947-161e81e64321": {},
+    "457b60e4-d7cf-4fad-9986-eb41346eedee": {},
+    "a1b468b5-5896-41a5-96f1-943a9e378566": {},
+    "fabd8255-3b52-44fa-85f6-d02339542e4a": {}
+  },
+  "prototypes": [
+    {
+      "_id": "b307ca9b-534f-4c10-882c-9e075c16d47f",
+      "structureKey": "e809bf63-2a0d-496e-b95c-ca098faaf630",
+      "depthPadding": 0
+    },
+    {
+      "_id": "7984671b-5c06-41dd-aa76-f189a072b716",
+      "structureKey": "d98d7645-126a-4c1e-a5e6-c4e43d87ed08",
+      "depthPadding": 0
+    },
+    {
+      "_id": "7afbf4a8-96d2-48ea-8932-20c036f6c8f9",
+      "structureKey": "b3d138c9-80c4-46c5-8aa1-4ca70b15bec4",
+      "depthPadding": 0
+    },
+    {
+      "_id": "be9d8774-8b16-4219-8848-4cb3334552cb",
+      "structureKey": "ba2ca26e-9691-4f89-8336-038da559c647",
+      "depthPadding": 0
+    },
+    {
+      "_id": "5180514a-5a39-490d-8053-d5f4c5ca1a61",
+      "structureKey": "5ed0dba4-a055-4f74-9d42-b1e6e5e0dc59",
+      "depthPadding": 0
+    },
+    {
+      "_id": "53940edb-db3c-44b1-b2b8-bb00522775b6",
+      "structureKey": "6dfe95b1-e280-4f66-be63-eb0700d6d8be",
+      "depthPadding": 0
+    },
+    {
+      "_id": "119b8864-8d91-4808-9a86-f33ea913ecb1",
+      "structureKey": "1594efe0-58a4-4127-b947-161e81e64321",
+      "depthPadding": 0
+    },
+    {
+      "_id": "08e879e7-7d1b-46c8-9a4c-697bd223d33c",
+      "structureKey": "457b60e4-d7cf-4fad-9986-eb41346eedee",
+      "depthPadding": 0
+    },
+    {
+      "_id": "3627f18a-8422-439e-ba78-878a6145fabb",
+      "structureKey": "a1b468b5-5896-41a5-96f1-943a9e378566",
+      "depthPadding": 0
+    },
+    {
+      "_id": "0668fcbf-2d3b-49a3-8753-92a44c8c76e1",
+      "structureKey": "fabd8255-3b52-44fa-85f6-d02339542e4a",
+      "depthPadding": 0
+    }
+  ],
+  "forces": [
+    {
+      "_id": "d7407f6a-9d03-4cff-8404-7fe13e6c0761",
+      "introMessage": "<p>Welcome to your force!</p>",
+      "name": "Friendly Force",
+      "color": "#52b1ff",
+      "resourcePools": [
+        {
+          "_id": "7c3a143c-b07b-439e-bce7-67a2f652cb91",
+          "localKey": "1",
+          "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+          "initialBalance": 50,
+          "allowNegative": false,
+          "excluded": false
+        },
+        {
+          "_id": "4e5f937e-ad98-465e-8546-3aa120e2c9b5",
+          "localKey": "2",
+          "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+          "initialBalance": 25,
+          "allowNegative": false,
+          "excluded": false
+        },
+        {
+          "_id": "01254851-55ce-4991-8def-6407c806664c",
+          "localKey": "3",
+          "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+          "initialBalance": 10,
+          "allowNegative": false,
+          "excluded": false
+        }
+      ],
+      "revealAllNodes": false,
+      "localKey": "1",
+      "nodes": [
+        {
+          "_id": "21e85d1b-919e-4032-906b-0971b593ffe9",
+          "localKey": "1",
+          "prototypeId": "b307ca9b-534f-4c10-882c-9e075c16d47f",
+          "name": "File Access",
+          "color": "#52b1ff",
+          "description": "",
+          "preExecutionText": "",
+          "executable": true,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": [
+            {
+              "_id": "0ebf7070-4b45-4efb-a215-ae0d109179d3",
+              "name": "Grant Access",
+              "description": "",
+              "type": "repeatable",
+              "baseProcessTime": 1000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 1,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "0a8c6e0b-dae8-4e5c-8bea-d5db08523ae0",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 0,
+                  "hidden": true
+                },
+                {
+                  "_id": "eeacfbe7-b888-40fc-8df7-2e677d88faa6",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "90332e11-feba-457f-8ddf-ac22b4f78f70",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 0,
+                  "hidden": false
+                }
+              ],
+              "opensNode": false,
+              "opensNodeHidden": false,
+              "localKey": "1",
+              "effects": [
+                {
+                  "_id": "691022d8-d54e-46c6-99d4-e72c560cf518",
+                  "targetId": "file-access",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "Grant Access",
+                  "trigger": "execution-success",
+                  "order": 1,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "47a7a317-d1eb-499d-bb01-d08666919ec3",
+                      "parameterId": "applyTo",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "force",
+                          "lastKnownName": "Friendly Force",
+                          "ids": [
+                            "d7407f6a-9d03-4cff-8404-7fe13e6c0761"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "1c1b0318-47ec-4f46-a103-996658bdf7c2",
+                      "parameterId": "files",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "missionFile",
+                          "lastKnownName": "mace_web_application_framework 1-6.pdf",
+                          "ids": [
+                            "dc49c5e9-0e38-400b-b718-ef3b179b5dce"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "d87f072b-8c37-415d-9bf6-b5a0cd7c0d55",
+                      "parameterId": "access",
+                      "type": "dropdown",
+                      "value": "granted"
+                    }
+                  ],
+                  "localKey": "1"
+                }
+              ]
+            },
+            {
+              "_id": "8e084c00-80ba-46de-8d52-c8a64a3dd2d1",
+              "name": "Revoke Access",
+              "description": "",
+              "type": "single-use",
+              "baseProcessTime": 1000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 1,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "f14b1ee6-7f55-4958-89f2-e5df373919f4",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 1,
+                  "hidden": false
+                },
+                {
+                  "_id": "79f93414-38ce-44ee-b363-cc474054a964",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "b050af06-7148-4db0-95ae-29cab90de236",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 0,
+                  "hidden": false
+                }
+              ],
+              "opensNode": false,
+              "opensNodeHidden": false,
+              "localKey": "2",
+              "effects": [
+                {
+                  "_id": "c9d76102-e57a-45b4-a67d-dc4ba6f6eff4",
+                  "targetId": "file-access",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "Revoke Access",
+                  "trigger": "execution-success",
+                  "order": 1,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "8134fae4-5e63-4fec-9ee1-4673b3482cf4",
+                      "parameterId": "applyTo",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "force",
+                          "lastKnownName": "Friendly Force",
+                          "ids": [
+                            "d7407f6a-9d03-4cff-8404-7fe13e6c0761"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "aba54266-3fd8-41bc-97a1-7806387fd1c1",
+                      "parameterId": "files",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "missionFile",
+                          "lastKnownName": "mace_web_application_framework 1-6.pdf",
+                          "ids": [
+                            "dc49c5e9-0e38-400b-b718-ef3b179b5dce"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "2d0fc2b8-e951-440a-bc52-bf5417dce75f",
+                      "parameterId": "access",
+                      "type": "dropdown",
+                      "value": "revoked"
+                    }
+                  ],
+                  "localKey": "1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "_id": "c6ea037c-8e3a-4aa4-be9e-71ae1ed4b24c",
+          "localKey": "2",
+          "prototypeId": "7984671b-5c06-41dd-aa76-f189a072b716",
+          "name": "Block Tests",
+          "color": "#52b1ff",
+          "description": "<p>Options to block/unblock nodes down the chain.</p>",
+          "preExecutionText": "",
+          "executable": true,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": [
+            {
+              "_id": "71c065c3-4dc4-4228-a30d-ed02aa8bdda2",
+              "name": "Unblock",
+              "description": "",
+              "type": "repeatable",
+              "baseProcessTime": 3000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 1,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "fccb7df2-2bd3-4cf2-a5f1-a0f50ce32963",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "85d90523-56ed-4575-bb2b-3b594a47d76d",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "405cd374-67a6-404a-82ba-c53ce58372e7",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 0,
+                  "hidden": false
+                }
+              ],
+              "opensNode": false,
+              "opensNodeHidden": false,
+              "localKey": "1",
+              "effects": [
+                {
+                  "_id": "76b6fae8-eb2f-494c-a22d-ca2a9d1b7f07",
+                  "targetId": "block-status",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "New Effect",
+                  "trigger": "execution-success",
+                  "order": 1,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "76e2510c-d211-4be2-bb12-00657419d3e5",
+                      "parameterId": "applyTo",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "node",
+                          "lastKnownName": "Initially Blocked",
+                          "ids": [
+                            "d7407f6a-9d03-4cff-8404-7fe13e6c0761",
+                            "0a5619e6-d183-4194-8f0c-4c600d16370e"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "491b6cb6-f51d-46a7-a6f5-08f8d736e77f",
+                      "parameterId": "blockStatus",
+                      "type": "dropdown",
+                      "value": "unblock"
+                    }
+                  ],
+                  "localKey": "1"
+                }
+              ]
+            },
+            {
+              "_id": "307d66b7-9287-46cf-aa72-d85e28bfd240",
+              "name": "Reblock",
+              "description": "",
+              "type": "repeatable",
+              "baseProcessTime": 3000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 1,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "b8d255f7-d1db-4a35-bdbc-742588b54fe8",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "5221c2a8-c487-4ced-b61d-c1bd5da4af1d",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "2dc4670c-0105-4447-8e4f-945186c9fb13",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 0,
+                  "hidden": false
+                }
+              ],
+              "opensNode": false,
+              "opensNodeHidden": false,
+              "localKey": "2",
+              "effects": [
+                {
+                  "_id": "ccf7b812-2099-45c1-9580-912172f63a4f",
+                  "targetId": "block-status",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "Block Initially Blocked",
+                  "trigger": "execution-success",
+                  "order": 1,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "0bf78d65-916e-42e6-9e6b-5cc4d90a3823",
+                      "parameterId": "applyTo",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "node",
+                          "lastKnownName": "Initially Blocked",
+                          "ids": [
+                            "d7407f6a-9d03-4cff-8404-7fe13e6c0761",
+                            "0a5619e6-d183-4194-8f0c-4c600d16370e"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "e0dc41e1-8c58-4726-83fb-934dfd8296ca",
+                      "parameterId": "blockStatus",
+                      "type": "dropdown",
+                      "value": "block"
+                    }
+                  ],
+                  "localKey": "1"
+                }
+              ]
+            },
+            {
+              "_id": "a8a89209-d209-43d3-aa63-fd3ac6d0dab3",
+              "name": "Open",
+              "description": "",
+              "type": "single-use",
+              "baseProcessTime": 3000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 1,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "b5c35e12-29d1-46f2-a574-3a8730838c7e",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "78077862-9ce0-4082-8486-6e6ef9a5074a",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "3add4c1e-ac49-4f93-8e09-49c1d806cd6a",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 0,
+                  "hidden": false
+                }
+              ],
+              "opensNode": true,
+              "opensNodeHidden": false,
+              "localKey": "3",
+              "effects": []
+            },
+            {
+              "_id": "234ab9e7-db8e-4d18-ab33-eadb2d56471f",
+              "name": "Block Many",
+              "description": "",
+              "type": "repeatable",
+              "baseProcessTime": 3000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 1,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "8d5dea7f-8fe6-450e-82a2-0f0e73826d41",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "fe5a7efb-7a0a-4ffd-bfe2-8f14bbb02c66",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "72dfd9ed-0ac5-4c6c-bb9d-8a9b54940123",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 0,
+                  "hidden": false
+                }
+              ],
+              "opensNode": true,
+              "opensNodeHidden": false,
+              "localKey": "4",
+              "effects": [
+                {
+                  "_id": "8ce720af-14ef-4ce8-8d9f-7014892a956d",
+                  "targetId": "block-status",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "Block Status",
+                  "trigger": "execution-success",
+                  "order": 1,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "2072fe18-7897-4f0e-a86e-97df05ae98f4",
+                      "parameterId": "applyTo",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "node",
+                          "lastKnownName": "Resource Tests",
+                          "ids": [
+                            "d7407f6a-9d03-4cff-8404-7fe13e6c0761",
+                            "3aab7a91-bd60-446c-ae66-54a0d48571e9"
+                          ]
+                        },
+                        {
+                          "componentType": "node",
+                          "lastKnownName": "Success Chance Tests",
+                          "ids": [
+                            "d7407f6a-9d03-4cff-8404-7fe13e6c0761",
+                            "39174f27-9aa2-4b39-a8fb-5b9f43e65a3c"
+                          ]
+                        },
+                        {
+                          "componentType": "node",
+                          "lastKnownName": "Process Time Tests",
+                          "ids": [
+                            "d7407f6a-9d03-4cff-8404-7fe13e6c0761",
+                            "33110e54-00c8-48e1-82c0-c79230e674ee"
+                          ]
+                        },
+                        {
+                          "componentType": "force",
+                          "lastKnownName": "Enemy Force",
+                          "ids": [
+                            "5fd1c3bf-70eb-43cf-965c-539a365d223e"
+                          ]
+                        },
+                        {
+                          "componentType": "node",
+                          "lastKnownName": "08e879e7",
+                          "ids": [
+                            "0cf9e537-636f-4103-ac5d-11cbe894166a",
+                            "154a101c-1ecb-45a7-875d-27b0b0486326"
+                          ]
+                        },
+                        {
+                          "componentType": "node",
+                          "lastKnownName": "08e879e7",
+                          "ids": [
+                            "747549ca-e0cc-4393-9965-dbd2998bc47b",
+                            "1fbb53a1-0944-4198-a6ac-8f6f0196383d"
+                          ]
+                        },
+                        {
+                          "componentType": "node",
+                          "lastKnownName": "0668fcbf",
+                          "ids": [
+                            "0cf9e537-636f-4103-ac5d-11cbe894166a",
+                            "c9388be1-671a-4d33-b74b-a93e59a7e875"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "ce815ed3-77ec-41c3-8a72-462bfb2530f8",
+                      "parameterId": "blockStatus",
+                      "type": "dropdown",
+                      "value": "block"
+                    }
+                  ],
+                  "localKey": "1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "_id": "0a5619e6-d183-4194-8f0c-4c600d16370e",
+          "localKey": "3",
+          "prototypeId": "7afbf4a8-96d2-48ea-8932-20c036f6c8f9",
+          "name": "Initially Blocked",
+          "color": "#52b1ff",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": true,
+          "actions": []
+        },
+        {
+          "_id": "7359871d-5bf2-40d8-bec1-0fe0dc90b885",
+          "localKey": "4",
+          "prototypeId": "be9d8774-8b16-4219-8848-4cb3334552cb",
+          "name": "Initially Block Child #1",
+          "color": "#52b1ff",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "ee4bbbb5-8dfa-4800-9211-93d545c7310d",
+          "localKey": "5",
+          "prototypeId": "5180514a-5a39-490d-8053-d5f4c5ca1a61",
+          "name": "Initially Block Child #2",
+          "color": "#52b1ff",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "09137ac3-8c34-49c3-af5e-98db0f2f7093",
+          "localKey": "6",
+          "prototypeId": "53940edb-db3c-44b1-b2b8-bb00522775b6",
+          "name": "Environment Tests",
+          "color": "#52b1ff",
+          "description": "",
+          "preExecutionText": "",
+          "executable": true,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": [
+            {
+              "_id": "df6721fc-5fab-43ce-bc3f-babfd76866e5",
+              "name": "Execute Test Target Script 1",
+              "description": "",
+              "type": "repeatable",
+              "baseProcessTime": 1000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 1,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "50cdac15-c2ce-47dc-bc8b-1604447073fa",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "7bde4a07-4ed7-465b-9b9c-875b7cab04c5",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "7b00a9c8-dd12-413b-8040-3c10b6676d23",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 0,
+                  "hidden": false
+                }
+              ],
+              "opensNode": false,
+              "opensNodeHidden": false,
+              "localKey": "1",
+              "effects": [
+                {
+                  "_id": "a8d9d2b5-8651-4cc0-aec7-63b2e3310788",
+                  "targetId": "output",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "Output 1",
+                  "trigger": "execution-success",
+                  "order": 2,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "78590e48-ef60-47e0-8b63-0b0836ba00d7",
+                      "parameterId": "to",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "force",
+                          "lastKnownName": "Friendly Force",
+                          "ids": [
+                            "d7407f6a-9d03-4cff-8404-7fe13e6c0761"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "5b5633d3-04f1-4263-95bd-d8885ca70d17",
+                      "parameterId": "message",
+                      "type": "large-string",
+                      "value": ""
+                    }
+                  ],
+                  "localKey": "2"
+                },
+                {
+                  "_id": "2b6497b4-f60e-4c48-b85b-d15bee203fbd",
+                  "targetId": "output",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "Output 2",
+                  "trigger": "execution-success",
+                  "order": 3,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "365bc745-c2a1-4fda-a91b-b6ad0a5aad03",
+                      "parameterId": "to",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "force",
+                          "lastKnownName": "Friendly Force",
+                          "ids": [
+                            "d7407f6a-9d03-4cff-8404-7fe13e6c0761"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "4e57a374-02e0-44f4-9637-010617c14c9e",
+                      "parameterId": "message",
+                      "type": "large-string",
+                      "value": ""
+                    }
+                  ],
+                  "localKey": "3"
+                }
+              ]
+            },
+            {
+              "_id": "c6c8a982-2fb9-4da9-913d-01867a8c6ee2",
+              "name": "Execute Test Target Script 2",
+              "description": "",
+              "type": "repeatable",
+              "baseProcessTime": 1000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 1,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "9a30531a-d6bc-41a4-bfa3-a83da9b638c2",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 1,
+                  "hidden": false
+                },
+                {
+                  "_id": "430c27f0-8af1-450c-8844-5c19061cf171",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "87b17f79-1f80-436c-b08a-07d1cd579c25",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 0,
+                  "hidden": false
+                }
+              ],
+              "opensNode": true,
+              "opensNodeHidden": false,
+              "localKey": "2",
+              "effects": []
+            }
+          ]
+        },
+        {
+          "_id": "3aab7a91-bd60-446c-ae66-54a0d48571e9",
+          "localKey": "7",
+          "prototypeId": "119b8864-8d91-4808-9a86-f33ea913ecb1",
+          "name": "Resource Tests",
+          "color": "#52b1ff",
+          "description": "",
+          "preExecutionText": "",
+          "executable": true,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": [
+            {
+              "_id": "e8dafc82-be46-49ae-bb83-f4958ee3f80e",
+              "name": "Award to Enemy",
+              "description": "",
+              "type": "repeatable",
+              "baseProcessTime": 2000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 0.5,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "8d163371-5444-432c-8eb6-fa4c0a0ec663",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "257c544c-5faf-4870-862c-5aac48012026",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "5f9b9b16-4e14-4f26-a57e-ef931ace5bc7",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 0,
+                  "hidden": false
+                }
+              ],
+              "opensNode": true,
+              "opensNodeHidden": false,
+              "localKey": "1",
+              "effects": [
+                {
+                  "_id": "3dbbd842-52fd-4916-b045-1b6b6d501bcd",
+                  "targetId": "resource-pool",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "Award to Enemy",
+                  "trigger": "execution-success",
+                  "order": 1,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "550881aa-3c4e-4bb0-94dd-94656ab20c38",
+                      "parameterId": "applyTo",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "resourcePool",
+                          "lastKnownName": "Dollars",
+                          "ids": [
+                            "5fd1c3bf-70eb-43cf-965c-539a365d223e",
+                            "31c19cb3-1581-4b2a-a656-2fb0cd207212"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "53b1d3b1-10b2-4f01-b79d-2c0848aaaef4",
+                      "parameterId": "operation",
+                      "type": "dropdown",
+                      "value": "award"
+                    },
+                    {
+                      "_id": "b3c1c2a4-9c36-4634-af4e-16c6b875a9a5",
+                      "parameterId": "amount",
+                      "type": "number",
+                      "value": 10
+                    }
+                  ],
+                  "localKey": "1"
+                }
+              ]
+            },
+            {
+              "_id": "0977d315-6db5-47e5-8880-29b351cd549c",
+              "name": "Award to Self",
+              "description": "",
+              "type": "repeatable",
+              "baseProcessTime": 2000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 1,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "a33d4e4e-e0c3-43a7-94df-5b73c2ba114b",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "80db784e-7f83-4112-8cec-61e03ac5f832",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "ff5bf065-ec52-4c35-8112-475ea741e51f",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 0,
+                  "hidden": false
+                }
+              ],
+              "opensNode": true,
+              "opensNodeHidden": false,
+              "localKey": "2",
+              "effects": [
+                {
+                  "_id": "c749e8a7-55bb-4e5b-aee2-c083df2b90c8",
+                  "targetId": "resource-pool",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "Award to Self",
+                  "trigger": "execution-success",
+                  "order": 2,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "c9d383e6-0d63-47ed-a2b9-6d34560dfbae",
+                      "parameterId": "applyTo",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "resourcePool",
+                          "lastKnownName": "Dollars",
+                          "ids": [
+                            "d7407f6a-9d03-4cff-8404-7fe13e6c0761",
+                            "7c3a143c-b07b-439e-bce7-67a2f652cb91"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "c2b87689-53d9-4821-bdd1-1ff0ea59e1ce",
+                      "parameterId": "operation",
+                      "type": "dropdown",
+                      "value": "award"
+                    },
+                    {
+                      "_id": "7082409f-b865-4608-b2d9-dd97df109f33",
+                      "parameterId": "amount",
+                      "type": "number",
+                      "value": 10
+                    }
+                  ],
+                  "localKey": "1"
+                }
+              ]
+            },
+            {
+              "_id": "75f39dd4-638b-4002-bcff-3f16a1096dd6",
+              "name": "Increase Cost of Self",
+              "description": "",
+              "type": "repeatable",
+              "baseProcessTime": 2000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 1,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "f61c350c-df1d-4d42-8e23-5a6843b7a7fe",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 1,
+                  "hidden": false
+                },
+                {
+                  "_id": "13522365-e3ec-48c5-974f-1495753d839f",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "e292ef36-baca-4c6b-870e-9bc8a7bbca0d",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 0,
+                  "hidden": false
+                }
+              ],
+              "opensNode": true,
+              "opensNodeHidden": false,
+              "localKey": "3",
+              "effects": [
+                {
+                  "_id": "26579716-8d75-4a7a-813a-d17c2cd3a1f7",
+                  "targetId": "resource-cost-mod",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "Increase Cost of Self",
+                  "trigger": "execution-success",
+                  "order": 1,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "64d82ca3-e2f7-4aaf-85cd-d970afd274ed",
+                      "parameterId": "applyTo",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "action",
+                          "lastKnownName": "Increase Cost of Self",
+                          "ids": [
+                            "d7407f6a-9d03-4cff-8404-7fe13e6c0761",
+                            "3aab7a91-bd60-446c-ae66-54a0d48571e9",
+                            "75f39dd4-638b-4002-bcff-3f16a1096dd6"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "85efb2c7-ee01-49db-91f0-aaf787235e3d",
+                      "parameterId": "resources",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "resource",
+                          "lastKnownName": "Dollars",
+                          "ids": [
+                            "33b3fc1f-c8f2-43d3-91df-65a007ce5af5"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "c640f6f5-3879-45ce-b538-b441d9c6f97b",
+                      "parameterId": "amount",
+                      "type": "number",
+                      "value": 10
+                    }
+                  ],
+                  "localKey": "1"
+                }
+              ]
+            },
+            {
+              "_id": "1e938740-a88b-4589-ad61-db6d0c733450",
+              "name": "Increase Cost of All",
+              "description": "",
+              "type": "repeatable",
+              "baseProcessTime": 2000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 1,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "ec144887-9fb2-41ea-8e49-0c1eb60f61a2",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 101,
+                  "hidden": false
+                },
+                {
+                  "_id": "b859684d-d4bd-4b0f-9d43-9e47422b8d25",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 1,
+                  "hidden": false
+                },
+                {
+                  "_id": "338f8245-38c9-4ac9-a1fc-b330fc712cd3",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 1,
+                  "hidden": false
+                }
+              ],
+              "opensNode": true,
+              "opensNodeHidden": false,
+              "localKey": "4",
+              "effects": [
+                {
+                  "_id": "5f439218-0f50-42a6-9ec5-4344f4002258",
+                  "targetId": "resource-cost-mod",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "Increase Cost of All",
+                  "trigger": "execution-success",
+                  "order": 2,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "45f33de5-b2dc-4279-8ea5-a1f7b99f7cbb",
+                      "parameterId": "applyTo",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "node",
+                          "lastKnownName": "Resource Tests",
+                          "ids": [
+                            "d7407f6a-9d03-4cff-8404-7fe13e6c0761",
+                            "3aab7a91-bd60-446c-ae66-54a0d48571e9"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "32db5935-fce5-49be-9fc2-a15d84bb8679",
+                      "parameterId": "resources",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "resource",
+                          "lastKnownName": "Dollars",
+                          "ids": [
+                            "33b3fc1f-c8f2-43d3-91df-65a007ce5af5"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "fedb0955-9c40-40b6-a707-66717a7dc6a2",
+                      "parameterId": "amount",
+                      "type": "number",
+                      "value": 10
+                    }
+                  ],
+                  "localKey": "1"
+                }
+              ]
+            },
+            {
+              "_id": "f1624645-991a-4c57-b707-780538864158",
+              "name": "Increase Cost of Enemy",
+              "description": "",
+              "type": "repeatable",
+              "baseProcessTime": 2000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 1,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "da70902a-8098-4e4b-85cd-6ff23ef1eede",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 1,
+                  "hidden": false
+                },
+                {
+                  "_id": "d138a89f-48bc-4ed6-b20a-48cade6ed6ec",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 0,
+                  "hidden": false
+                },
+                {
+                  "_id": "44b651ab-c33d-4c00-8ed7-05931138c14a",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 0,
+                  "hidden": false
+                }
+              ],
+              "opensNode": false,
+              "opensNodeHidden": false,
+              "localKey": "5",
+              "effects": [
+                {
+                  "_id": "21539838-ae7a-4a95-96b1-2426c753392d",
+                  "targetId": "resource-cost-mod",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "Resource Cost Modifier",
+                  "trigger": "execution-success",
+                  "order": 1,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "30ad0faa-6756-4330-86c7-7b9cda543bd2",
+                      "parameterId": "applyTo",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "action",
+                          "lastKnownName": "New Action",
+                          "ids": [
+                            "5fd1c3bf-70eb-43cf-965c-539a365d223e",
+                            "892eef4a-2cc9-4084-b590-e7aa7546fa82",
+                            "f6eb28a0-1e7a-4cc8-8982-b65cbda4e633"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "7b72e12f-02b3-4560-a2b7-70d9c24e3a45",
+                      "parameterId": "resources",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "resource",
+                          "lastKnownName": "Dollars",
+                          "ids": [
+                            "33b3fc1f-c8f2-43d3-91df-65a007ce5af5"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "32bd4bcb-2cd1-44a9-8729-24db5748c63a",
+                      "parameterId": "amount",
+                      "type": "number",
+                      "value": 5
+                    }
+                  ],
+                  "localKey": "1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "_id": "39174f27-9aa2-4b39-a8fb-5b9f43e65a3c",
+          "localKey": "8",
+          "prototypeId": "08e879e7-7d1b-46c8-9a4c-697bd223d33c",
+          "name": "Success Chance Tests",
+          "color": "#52b1ff",
+          "description": "",
+          "preExecutionText": "",
+          "executable": true,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": [
+            {
+              "_id": "535b74de-f922-464b-a8ca-9b9d83b4e4d3",
+              "name": "Decrease Chance of Self",
+              "description": "",
+              "type": "repeatable",
+              "baseProcessTime": 5000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 1,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "d120552a-6a2a-403d-8c3a-0fa3489de894",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 2,
+                  "hidden": false
+                },
+                {
+                  "_id": "5a7d1456-1e08-4649-8dd7-d9581bc05ad1",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 1,
+                  "hidden": false
+                },
+                {
+                  "_id": "ba28df7d-467c-4701-9f5f-31006a069629",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 1,
+                  "hidden": false
+                }
+              ],
+              "opensNode": true,
+              "opensNodeHidden": false,
+              "localKey": "1",
+              "effects": [
+                {
+                  "_id": "7e43651c-fb37-4096-908c-4d244f12fd12",
+                  "targetId": "success-chance-mod",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "Success Chance Modifier",
+                  "trigger": "execution-success",
+                  "order": 1,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "95e4e3ad-585b-476b-9f0e-a45a692efaee",
+                      "parameterId": "applyTo",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "action",
+                          "lastKnownName": "Decrease Chance of Self",
+                          "ids": [
+                            "d7407f6a-9d03-4cff-8404-7fe13e6c0761",
+                            "39174f27-9aa2-4b39-a8fb-5b9f43e65a3c",
+                            "535b74de-f922-464b-a8ca-9b9d83b4e4d3"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "80646d6e-97b6-4704-aa72-fba731dee260",
+                      "parameterId": "amount",
+                      "type": "number",
+                      "value": -5
+                    }
+                  ],
+                  "localKey": "1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "_id": "33110e54-00c8-48e1-82c0-c79230e674ee",
+          "localKey": "9",
+          "prototypeId": "3627f18a-8422-439e-ba78-878a6145fabb",
+          "name": "Process Time Tests",
+          "color": "#bc6fec",
+          "description": "",
+          "preExecutionText": "",
+          "executable": true,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": [
+            {
+              "_id": "a02e56c2-48c6-461f-85c7-9f94451d73fc",
+              "name": "Increase Execution Time",
+              "description": "",
+              "type": "repeatable",
+              "baseProcessTime": 2000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 1,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "9ce45167-6c2b-4955-a7b4-f6e6302c583c",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 10,
+                  "hidden": false
+                },
+                {
+                  "_id": "b3b68066-326b-46d6-aabe-75bb33cf448a",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 1,
+                  "hidden": false
+                },
+                {
+                  "_id": "ce3c7b3c-7728-4935-b48c-d1b59291ffe7",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 1,
+                  "hidden": false
+                }
+              ],
+              "opensNode": true,
+              "opensNodeHidden": false,
+              "localKey": "1",
+              "effects": [
+                {
+                  "_id": "9cc187d7-fbc8-4681-bcdf-745a637d9050",
+                  "targetId": "process-time-mod",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "Process Time Modifier",
+                  "trigger": "execution-success",
+                  "order": 1,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "9fff6032-b8d0-446f-a3f1-9c808885bfa2",
+                      "parameterId": "applyTo",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "action",
+                          "lastKnownName": "Increase Execution Time",
+                          "ids": [
+                            "d7407f6a-9d03-4cff-8404-7fe13e6c0761",
+                            "33110e54-00c8-48e1-82c0-c79230e674ee",
+                            "a02e56c2-48c6-461f-85c7-9f94451d73fc"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "f95ae868-465a-46f6-855c-d77eea520d25",
+                      "parameterId": "processTimeHours",
+                      "type": "number",
+                      "value": 0
+                    },
+                    {
+                      "_id": "51d61df5-dab6-4cd6-bd83-f327d6289d00",
+                      "parameterId": "processTimeMinutes",
+                      "type": "number",
+                      "value": 0
+                    },
+                    {
+                      "_id": "3e0cac1c-89f6-42fa-81ad-8e3117e5be26",
+                      "parameterId": "processTimeSeconds",
+                      "type": "number",
+                      "value": 1
+                    }
+                  ],
+                  "localKey": "1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "_id": "b56f1c06-77c9-4ac8-b72f-7080eae8a5e2",
+          "localKey": "10",
+          "prototypeId": "0668fcbf-2d3b-49a3-8753-92a44c8c76e1",
+          "name": "Node Alert Tests",
+          "color": "#52b1ff",
+          "description": "",
+          "preExecutionText": "",
+          "executable": true,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": [
+            {
+              "_id": "e7b2260f-7497-436e-9e96-1f7912b7a45f",
+              "name": "Produce Alerts",
+              "description": "",
+              "type": "repeatable",
+              "baseProcessTime": 2000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 1,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "6b0976e1-a232-4250-bff0-132843b02704",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 10,
+                  "hidden": false
+                },
+                {
+                  "_id": "64fad8a6-c779-4830-92b6-f61b3a4d7104",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 1,
+                  "hidden": false
+                },
+                {
+                  "_id": "cbf33224-63ad-41e1-8cc9-fc1e8e8a6c8f",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 2,
+                  "hidden": false
+                }
+              ],
+              "opensNode": true,
+              "opensNodeHidden": false,
+              "localKey": "1",
+              "effects": [
+                {
+                  "_id": "0ca2e307-3a08-496c-88ad-80d32db42e38",
+                  "targetId": "node-alert",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "Node Alert",
+                  "trigger": "execution-success",
+                  "order": 1,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "7bac3198-4460-438f-a790-aae952a3b686",
+                      "parameterId": "applyTo",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "node",
+                          "lastKnownName": "0668fcbf",
+                          "ids": [
+                            "5fd1c3bf-70eb-43cf-965c-539a365d223e",
+                            "8355ef98-6c1a-4718-b557-c62cb23392e9"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "1c69963a-ffbd-4d30-949d-f08ecf415927",
+                      "parameterId": "severityLevel",
+                      "type": "dropdown",
+                      "value": "info"
+                    },
+                    {
+                      "_id": "9f551569-0cff-4281-8746-0e6079028637",
+                      "parameterId": "message",
+                      "type": "large-string",
+                      "value": "<p>Here is some important info.</p>"
+                    },
+                    {
+                      "_id": "9dc20d6c-1987-40d3-8bfe-5dd16bf552c2",
+                      "parameterId": "test",
+                      "type": "string",
+                      "value": "test"
+                    },
+                    {
+                      "_id": "c55720f2-d1a6-4337-9e81-9d64597b8067",
+                      "parameterId": "test2",
+                      "type": "large-string",
+                      "value": "### Test 2"
+                    },
+                    {
+                      "_id": "6b26e3ea-4f15-4870-bb99-721dae82bc4c",
+                      "parameterId": "test3",
+                      "type": "dropdown",
+                      "value": "option1"
+                    }
+                  ],
+                  "localKey": "1"
+                },
+                {
+                  "_id": "8fa266c5-e5cc-4926-9cae-2f11c5bf1d5e",
+                  "targetId": "node-alert",
+                  "environmentId": "metis",
+                  "targetEnvironmentVersion": "2.5.0",
+                  "name": "Node Warning",
+                  "trigger": "execution-success",
+                  "order": 2,
+                  "description": "",
+                  "arguments": [
+                    {
+                      "_id": "3048ec88-b603-4e85-86a6-8b94c7e0505f",
+                      "parameterId": "applyTo",
+                      "type": "mission-component",
+                      "value": [
+                        {
+                          "componentType": "node",
+                          "lastKnownName": "119b8864",
+                          "ids": [
+                            "5fd1c3bf-70eb-43cf-965c-539a365d223e",
+                            "7f365c64-5295-49a0-84f2-8c1193495120"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "_id": "2a4cac0e-821e-463a-a503-0de62337bdac",
+                      "parameterId": "severityLevel",
+                      "type": "dropdown",
+                      "value": "warning"
+                    },
+                    {
+                      "_id": "02387e9c-3624-4ef4-bdef-8a6adb5c77ee",
+                      "parameterId": "message",
+                      "type": "large-string",
+                      "value": "<p>This is a warning.</p>"
+                    },
+                    {
+                      "_id": "ab984a16-434d-4f64-9ca4-da46ece1b190",
+                      "parameterId": "test",
+                      "type": "string",
+                      "value": "test"
+                    },
+                    {
+                      "_id": "f48430d6-8b11-4a71-95e7-471ddcb6a792",
+                      "parameterId": "test2",
+                      "type": "large-string",
+                      "value": "### Test 2"
+                    },
+                    {
+                      "_id": "f8bdd945-0c20-44d6-a0a8-4ff33d590e9a",
+                      "parameterId": "test3",
+                      "type": "dropdown",
+                      "value": "option1"
+                    }
+                  ],
+                  "localKey": "2"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_id": "5fd1c3bf-70eb-43cf-965c-539a365d223e",
+      "introMessage": "<p>Welcome to your force!</p>",
+      "name": "Enemy Force",
+      "color": "#fd6b72",
+      "resourcePools": [
+        {
+          "_id": "31c19cb3-1581-4b2a-a656-2fb0cd207212",
+          "localKey": "1",
+          "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+          "initialBalance": 100,
+          "allowNegative": false,
+          "excluded": false
+        },
+        {
+          "_id": "2092d3d9-3df1-4f57-a220-55645cf8552a",
+          "localKey": "2",
+          "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+          "initialBalance": 0,
+          "allowNegative": false,
+          "excluded": false
+        },
+        {
+          "_id": "f0401c11-b126-4e15-92b6-8a781dc020e6",
+          "localKey": "3",
+          "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+          "initialBalance": 0,
+          "allowNegative": false,
+          "excluded": false
+        }
+      ],
+      "revealAllNodes": false,
+      "localKey": "2",
+      "nodes": [
+        {
+          "_id": "88b756a1-4aef-4fce-aa29-cdc69e95520a",
+          "localKey": "1",
+          "prototypeId": "b307ca9b-534f-4c10-882c-9e075c16d47f",
+          "name": "Unnamed Node",
+          "color": "#fd6b72",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": true,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "892eef4a-2cc9-4084-b590-e7aa7546fa82",
+          "localKey": "2",
+          "prototypeId": "7984671b-5c06-41dd-aa76-f189a072b716",
+          "name": "Text Editor Tests",
+          "color": "#fd6b72",
+          "description": "<h3>Code Block Test</h3><pre><code class=\"language-plaintext\">cmd overflow content next-line uh-oh --can-you-read-this</code></pre>",
+          "preExecutionText": "",
+          "executable": true,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": [
+            {
+              "_id": "f6eb28a0-1e7a-4cc8-8982-b65cbda4e633",
+              "name": "New Action",
+              "description": "",
+              "type": "repeatable",
+              "baseProcessTime": 5000,
+              "processTimeHidden": false,
+              "baseSuccessChance": 0.5,
+              "successChanceHidden": false,
+              "resourceCosts": [
+                {
+                  "_id": "e35f29c9-da21-4b0c-879c-c31cbc472df7",
+                  "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+                  "baseAmount": 1,
+                  "hidden": false
+                },
+                {
+                  "_id": "7579b549-da45-4ff2-9700-b726fc0a2563",
+                  "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+                  "baseAmount": 1,
+                  "hidden": false
+                },
+                {
+                  "_id": "167ed8c9-f72c-4612-9fae-c01dabe026c7",
+                  "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+                  "baseAmount": 0,
+                  "hidden": false
+                }
+              ],
+              "opensNode": true,
+              "opensNodeHidden": false,
+              "localKey": "1",
+              "effects": []
+            }
+          ]
+        },
+        {
+          "_id": "821bebda-2d45-4c38-9016-7897dfaa9e8b",
+          "localKey": "3",
+          "prototypeId": "7afbf4a8-96d2-48ea-8932-20c036f6c8f9",
+          "name": "7afbf4a8",
+          "color": "#fd6b72",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "b6bdbc64-80ed-467d-9b13-61da4e2c06d1",
+          "localKey": "4",
+          "prototypeId": "be9d8774-8b16-4219-8848-4cb3334552cb",
+          "name": "be9d8774",
+          "color": "#fd6b72",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "59f8efbc-f600-45db-8520-2143f9a8bd9c",
+          "localKey": "5",
+          "prototypeId": "5180514a-5a39-490d-8053-d5f4c5ca1a61",
+          "name": "5180514a",
+          "color": "#fd6b72",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "96a93a8f-f7bd-47f9-a0e0-353af01ff936",
+          "localKey": "6",
+          "prototypeId": "53940edb-db3c-44b1-b2b8-bb00522775b6",
+          "name": "53940edb",
+          "color": "#fd6b72",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "7f365c64-5295-49a0-84f2-8c1193495120",
+          "localKey": "7",
+          "prototypeId": "119b8864-8d91-4808-9a86-f33ea913ecb1",
+          "name": "119b8864",
+          "color": "#fd6b72",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "fafbcbaf-0cec-411a-b5ce-ecb577951eb4",
+          "localKey": "8",
+          "prototypeId": "08e879e7-7d1b-46c8-9a4c-697bd223d33c",
+          "name": "08e879e7",
+          "color": "#fd6b72",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "006f99b6-46ed-4234-8b99-9e91c3a852ec",
+          "localKey": "9",
+          "prototypeId": "3627f18a-8422-439e-ba78-878a6145fabb",
+          "name": "3627f18a",
+          "color": "#fd6b72",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "8355ef98-6c1a-4718-b557-c62cb23392e9",
+          "localKey": "10",
+          "prototypeId": "0668fcbf-2d3b-49a3-8753-92a44c8c76e1",
+          "name": "0668fcbf",
+          "color": "#fd6b72",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        }
+      ]
+    },
+    {
+      "_id": "0cf9e537-636f-4103-ac5d-11cbe894166a",
+      "introMessage": "<p>Welcome to your force!</p>",
+      "name": "Guerrilla Force",
+      "color": "#ffdb67",
+      "resourcePools": [
+        {
+          "_id": "06f80b05-20ac-4a9c-9f33-c7a89041bd20",
+          "localKey": "1",
+          "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+          "initialBalance": 0,
+          "allowNegative": false,
+          "excluded": false
+        },
+        {
+          "_id": "8dd53971-77c4-4904-8d0b-eabad5f2d30a",
+          "localKey": "1",
+          "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+          "initialBalance": 0,
+          "allowNegative": false,
+          "excluded": false
+        },
+        {
+          "_id": "433276c9-676a-4a10-9d0b-c9cdedb22389",
+          "localKey": "1",
+          "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+          "initialBalance": 0,
+          "allowNegative": false,
+          "excluded": false
+        }
+      ],
+      "revealAllNodes": false,
+      "localKey": "3",
+      "nodes": [
+        {
+          "_id": "87ddb3e5-3ebb-44eb-8e0d-918fadb5cc7a",
+          "localKey": "1",
+          "prototypeId": "b307ca9b-534f-4c10-882c-9e075c16d47f",
+          "name": "b307ca9b",
+          "color": "#ffdb67",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "2cef582c-1373-4274-8447-6cad792df064",
+          "localKey": "2",
+          "prototypeId": "7984671b-5c06-41dd-aa76-f189a072b716",
+          "name": "7984671b",
+          "color": "#ffdb67",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "59d44b2d-bf3f-4155-bf16-7c7a446c89b3",
+          "localKey": "3",
+          "prototypeId": "7afbf4a8-96d2-48ea-8932-20c036f6c8f9",
+          "name": "7afbf4a8",
+          "color": "#ffdb67",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "818bed79-4a58-4199-a7ef-6e8eed668009",
+          "localKey": "4",
+          "prototypeId": "be9d8774-8b16-4219-8848-4cb3334552cb",
+          "name": "be9d8774",
+          "color": "#ffdb67",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "70ec8b42-8a72-47f3-8baf-92b9efbbc788",
+          "localKey": "5",
+          "prototypeId": "5180514a-5a39-490d-8053-d5f4c5ca1a61",
+          "name": "5180514a",
+          "color": "#ffdb67",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "c62f0f92-8e43-4fc8-8c77-2d4d46b69d93",
+          "localKey": "6",
+          "prototypeId": "53940edb-db3c-44b1-b2b8-bb00522775b6",
+          "name": "53940edb",
+          "color": "#ffdb67",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "4adba383-4daa-4aed-b046-4f37dec24ef6",
+          "localKey": "7",
+          "prototypeId": "119b8864-8d91-4808-9a86-f33ea913ecb1",
+          "name": "119b8864",
+          "color": "#ffdb67",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "154a101c-1ecb-45a7-875d-27b0b0486326",
+          "localKey": "8",
+          "prototypeId": "08e879e7-7d1b-46c8-9a4c-697bd223d33c",
+          "name": "08e879e7",
+          "color": "#52b1ff",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "76b806ba-86ab-4038-9648-56b603355d49",
+          "localKey": "9",
+          "prototypeId": "3627f18a-8422-439e-ba78-878a6145fabb",
+          "name": "3627f18a",
+          "color": "#ffdb67",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "c9388be1-671a-4d33-b74b-a93e59a7e875",
+          "localKey": "10",
+          "prototypeId": "0668fcbf-2d3b-49a3-8753-92a44c8c76e1",
+          "name": "0668fcbf",
+          "color": "#ffdb67",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        }
+      ]
+    },
+    {
+      "_id": "747549ca-e0cc-4393-9965-dbd2998bc47b",
+      "introMessage": "<p>Welcome to your force!</p>",
+      "name": "Local National Force",
+      "color": "#7ed321",
+      "resourcePools": [
+        {
+          "_id": "c9756930-0c5e-4300-bdee-d34300957664",
+          "localKey": "1",
+          "resourceId": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+          "initialBalance": 0,
+          "allowNegative": false,
+          "excluded": false
+        },
+        {
+          "_id": "fa2f4f63-ecaf-4591-a44b-bae25e24a033",
+          "localKey": "1",
+          "resourceId": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+          "initialBalance": 0,
+          "allowNegative": false,
+          "excluded": false
+        },
+        {
+          "_id": "6e649edd-bbd8-4692-9aa6-c7a8224d726a",
+          "localKey": "1",
+          "resourceId": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+          "initialBalance": 0,
+          "allowNegative": false,
+          "excluded": false
+        }
+      ],
+      "revealAllNodes": false,
+      "localKey": "4",
+      "nodes": [
+        {
+          "_id": "c9b26b37-eada-4611-9ef8-a2666dd8b50c",
+          "localKey": "1",
+          "prototypeId": "b307ca9b-534f-4c10-882c-9e075c16d47f",
+          "name": "b307ca9b",
+          "color": "#7ed321",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "b33e192e-0e0a-4d55-8f4d-40756084dc26",
+          "localKey": "2",
+          "prototypeId": "7984671b-5c06-41dd-aa76-f189a072b716",
+          "name": "7984671b",
+          "color": "#7ed321",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "3579e59a-8265-447d-a7a8-2a3ffdd2cdfa",
+          "localKey": "3",
+          "prototypeId": "7afbf4a8-96d2-48ea-8932-20c036f6c8f9",
+          "name": "7afbf4a8",
+          "color": "#7ed321",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "ae4ee52e-9925-4dde-9da6-7814b52c7b65",
+          "localKey": "4",
+          "prototypeId": "be9d8774-8b16-4219-8848-4cb3334552cb",
+          "name": "be9d8774",
+          "color": "#7ed321",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "4ca6f609-6866-4103-8720-a50ddb282216",
+          "localKey": "5",
+          "prototypeId": "5180514a-5a39-490d-8053-d5f4c5ca1a61",
+          "name": "5180514a",
+          "color": "#7ed321",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "3f2ceed4-c4cb-46ad-b11d-4e6b42526e89",
+          "localKey": "6",
+          "prototypeId": "53940edb-db3c-44b1-b2b8-bb00522775b6",
+          "name": "53940edb",
+          "color": "#7ed321",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "dde66dcf-3b75-4f15-8309-5bcbce2c70c4",
+          "localKey": "7",
+          "prototypeId": "119b8864-8d91-4808-9a86-f33ea913ecb1",
+          "name": "119b8864",
+          "color": "#7ed321",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "1fbb53a1-0944-4198-a6ac-8f6f0196383d",
+          "localKey": "8",
+          "prototypeId": "08e879e7-7d1b-46c8-9a4c-697bd223d33c",
+          "name": "08e879e7",
+          "color": "#ff6dce",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "41f93c19-a2ca-49b3-9824-ad9c7708a7b2",
+          "localKey": "9",
+          "prototypeId": "3627f18a-8422-439e-ba78-878a6145fabb",
+          "name": "3627f18a",
+          "color": "#7ed321",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        },
+        {
+          "_id": "8ab87b5f-05cc-45c3-85da-b66320fb91bc",
+          "localKey": "10",
+          "prototypeId": "0668fcbf-2d3b-49a3-8753-92a44c8c76e1",
+          "name": "0668fcbf",
+          "color": "#7ed321",
+          "description": "",
+          "preExecutionText": "",
+          "executable": false,
+          "device": false,
+          "exclude": false,
+          "initiallyBlocked": false,
+          "actions": []
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "_id": "dc49c5e9-0e38-400b-b718-ef3b179b5dce",
+      "reference": {
+        "_id": "68477db495d34627d0ff3fa0",
+        "name": "mace_web_application_framework 1-6.pdf",
+        "path": "0d84525628e88ffef304042ec8b09d1a_.pdf",
+        "mimetype": "application/pdf",
+        "size": 357626,
+        "createdBy": "000000000000000000000001",
+        "createdByUsername": "admin",
+        "createdAt": "2025-06-10T00:35:00.957Z",
+        "updatedAt": "2025-06-10T00:35:00.957Z"
+      },
+      "alias": "",
+      "lastKnownName": "mace_web_application_framework 1-6.pdf",
+      "initialAccess": []
+    },
+    {
+      "_id": "f9980ca1-d55d-46fd-828c-a50b9c85cac0",
+      "reference": {
+        "_id": "68508da25888faff6b237c63",
+        "name": "My Guest List.csv",
+        "path": "ea2b29d2ec29c7c9dd251c16ba597613_.csv",
+        "mimetype": "text/csv",
+        "size": 9757,
+        "createdBy": "000000000000000000000001",
+        "createdByUsername": "admin",
+        "createdAt": "2025-06-16T21:33:22.358Z",
+        "updatedAt": "2025-06-16T21:33:22.358Z"
+      },
+      "alias": "",
+      "lastKnownName": "My Guest List.csv",
+      "initialAccess": [
+        "5fd1c3bf-70eb-43cf-965c-539a365d223e"
+      ]
+    },
+    {
+      "_id": "a54fad02-19f5-4f6e-bd56-67364045a3a2",
+      "reference": {
+        "_id": "68629f751f6301e0591d5553",
+        "name": "metis-phase-2.pdf",
+        "path": "ae91239ea2d1cb40fcb790cd12dd788f_.pdf",
+        "mimetype": "application/pdf",
+        "size": 24543600,
+        "createdBy": "000000000000000000000001",
+        "createdByUsername": "admin",
+        "createdAt": "2025-06-30T14:30:13.181Z",
+        "updatedAt": "2025-06-30T14:30:13.181Z"
+      },
+      "alias": "",
+      "lastKnownName": "metis-phase-2.pdf",
+      "initialAccess": [
+        "d7407f6a-9d03-4cff-8404-7fe13e6c0761"
+      ]
+    }
+  ],
+  "effects": [],
+  "resources": [
+    {
+      "_id": "33b3fc1f-c8f2-43d3-91df-65a007ce5af5",
+      "name": "Dollars",
+      "icon": "resources/dollar",
+      "order": 0
+    },
+    {
+      "_id": "1b4669f1-83c8-4185-ab60-fcece6d60c21",
+      "name": "Manpower",
+      "icon": "resources/helmet",
+      "order": 2
+    },
+    {
+      "_id": "c7d2838d-a86b-4d47-915a-02c42bcb9f62",
+      "name": "Technology",
+      "icon": "resources/microchip",
+      "order": 3
+    }
+  ],
+  "schemaBuildNumber": 58,
+  "_id": "64b2f0000000000000000099",
+  "createdAt": "2025-01-29T22:16:27.707Z",
+  "updatedAt": "2026-06-17T16:08:36.522Z",
+  "launchedAt": null
+}

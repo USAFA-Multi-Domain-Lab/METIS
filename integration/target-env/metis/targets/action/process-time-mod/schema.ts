@@ -57,9 +57,9 @@ const ProcessTimeMod = TargetSchema.create({
       default: 0,
       integersOnly: true,
       tooltipDescription:
-        `This allows you to positively or negatively affect the process time for all selected actions. A positive value increases the process time, while a negative value decreases the process time.\n` +
+        `This allows you to offset the process time for all actions within the selected component range. A positive value increases the process time, while a negative value decreases the process time.\n` +
         `\t\n` +
-        `For example, if the process time is 1h and you set the process time to +1h, then the process time will be 2h.\n` +
+        `For example, if 1 is entered here and the process time for any given action is 1h, then the process time will be 2h.\n` +
         `\t\n` +
         `*Note: If the result is less than 0h, then the process time will be 0h. If the result is greater than 1h, then the process time will be 1h.*`,
     },

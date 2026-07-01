@@ -10,6 +10,7 @@ import { ClientMission } from '@client/missions/ClientMission'
 import { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
 import { ClientOutput } from '@client/missions/forces/ClientOutput'
 import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
+import { ClientSessionRealm } from '@client/sessions/ClientSessionRealm'
 import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
 import { Logging } from '@client/toolbox/Logging'
 import { ClientUser } from '@client/users/ClientUser'
@@ -27,8 +28,10 @@ import type {
 } from '@shared/missions/actions/ActionExecution'
 import type { TExecutionOutcomeJson } from '@shared/missions/actions/ExecutionOutcome'
 import type { TChatChannelJson } from '@shared/sessions/chat/ChatChannel'
-import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
-import { MemberRole } from '@shared/sessions/members/MemberRole'
+import type {
+  MemberRole,
+  TMemberRoleId,
+} from '@shared/sessions/members/MemberRole'
 import type { TSessionMemberJson } from '@shared/sessions/members/SessionMember'
 import type {
   TSessionBasicJson,
@@ -92,6 +95,37 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
+   * The realm to which {@link member} is subscribed.
+   */
+  public get subscribedRealm(): ClientSessionRealm {
+    return this.member.subscribedRealm
+  }
+
+  /**
+   * The mission instance within the {@link subscribedRealm} which
+   * the member is currently using.
+   */
+  public get subscribedMission(): ClientMission {
+    return this.subscribedRealm.mission
+  }
+
+  /**
+   * Private cache for {@link defaultRealm}.
+   */
+  private _defaultRealm?: ClientSessionRealm
+  // Implemented
+  public get defaultRealm(): ClientSessionRealm {
+    if (!this._defaultRealm) {
+      this._defaultRealm = ClientSessionRealm.createNew(
+        MissionSession.DEFAULT_REALM_NAME,
+        this,
+        { _id: MissionSession.DEFAULT_REALM_ID },
+      )
+    }
+    return this._defaultRealm
+  }
+
+  /**
    * Unread chat message count per chat channel.
    */
   private _unreadChatMessageCount: Map<string, number>
@@ -124,11 +158,11 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * Returns all chat channels that the member can see.
    */
   public get memberChatChannels(): ClientChatChannel[] {
-    let { forceId, role } = this.member
+    let { assignedForceId, role } = this.member
     let hasCompleteVisibility = role.isAuthorized('completeVisibility')
 
-    return this._chatChannels.filter((c) =>
-      c.canSee(forceId, hasCompleteVisibility),
+    return this._chatChannels.filter((channel) =>
+      channel.canSee(assignedForceId, hasCompleteVisibility),
     )
   }
 
@@ -137,7 +171,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    */
   public get memberHasUnreadChatMessages(): boolean {
     return this.memberChatChannels.some(
-      (c) => this.getUnreadChatMessageCount(c._id) > 0,
+      (channel) => this.getUnreadChatMessageCount(channel._id) > 0,
     )
   }
 
@@ -171,8 +205,8 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       ownerFirstName,
       ownerLastName,
       launchedAt,
+      realms: realmData,
       members: memberData,
-      banList,
       config,
       setupResults: setupResultData,
       teardownResults: teardownResultData,
@@ -205,7 +239,6 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       config,
       mission,
       memberData,
-      banList,
       setupResults,
       teardownResults,
       liveResults,
@@ -216,6 +249,12 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     this.server = server
     this.memberId = memberId
     this._state = state
+
+    // Deserialize realms from the JSON. The server sends only the realms
+    // visible to this member (subscribed realm, or empty if unassigned).
+    this._realms = realmData.map((realm) =>
+      ClientSessionRealm.fromJson(realm, this),
+    )
     this._activeExecutions = []
     this._unreadChatMessageCount = new Map(
       Object.entries(unreadChatChannelMessages),
@@ -265,14 +304,24 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   // Implemented
   protected parseMemberData(data: TSessionMemberJson[]): ClientSessionMember[] {
     return data.map(
-      ({ _id, user: userData, roleId, forceId }) =>
-        new ClientSessionMember(
+      ({
+        _id,
+        user: userData,
+        assignment,
+        subscribedRealmId,
+        joined,
+        banned,
+      }) => {
+        return new ClientSessionMember(
           _id,
           ClientUser.fromExistingJson(userData),
-          roleId,
-          forceId,
+          assignment,
           this,
-        ),
+          subscribedRealmId,
+          joined,
+          banned,
+        )
+      },
     )
   }
 
@@ -280,20 +329,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   protected parseChatChannelData(
     data: TChatChannelJson[],
   ): ClientChatChannel[] {
-    return data.map((d) => ClientChatChannel.fromJson(d, this))
-  }
-
-  // Implemented
-  protected mapActions(): void {
-    // Initialize the actions map.
-    this.actions = new Map<string, ClientMissionAction>()
-
-    // Loops through and add each action found.
-    this.mission.forces.forEach((force) =>
-      force.nodes.forEach((node) =>
-        node.actions.forEach((action) => this.actions.set(action._id, action)),
-      ),
-    )
+    return data.map((datum) => ClientChatChannel.fromJson(datum, this))
   }
 
   /**
@@ -339,13 +375,13 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         },
         rootEffectsExposure: { expose: 'none' },
       }),
+      realms: this._realms.map((realm) => realm.toJson()),
       members: this.members.map((member) => member.toJson()),
-      banList: this.banList,
       setupResults: this.setupResults.map((result) => result.toJson()),
       teardownResults: this.teardownResults.map((result) => result.toJson()),
       liveResults: this.liveResults.map((result) => result.toJson()),
       config: this.config,
-      chatChannels: this._chatChannels.map((c) => c.toJson()),
+      chatChannels: this._chatChannels.map((chat) => chat.toJson()),
       unreadChatChannelMessages: {},
       pendingSessionPanelAlerts: [],
     }
@@ -365,7 +401,6 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       launchedAt: this.launchedAt.toISOString(),
       config: this.config,
       participantIds: this.participants.map(({ _id: memberId }) => memberId),
-      banList: this.banList,
       observerIds: this.observers.map(({ _id: memberId }) => memberId),
       managerIds: this.managers.map(({ _id: memberId }) => memberId),
       setupFailed: this.setupFailed,
@@ -380,7 +415,8 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   public openNode(nodeId: string, options: TSessionRequestOptions = {}): void {
     // Gather details.
     let server: ServerConnection = this.server
-    let node: ClientMissionNode | undefined = this.mission.getNodeById(nodeId)
+    let node: ClientMissionNode | undefined =
+      this.subscribedMission.getNodeById(nodeId)
 
     // Callback for errors.
     const onError = (message: string) => {
@@ -417,7 +453,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         // request.
         onResponse: (event) => {
           if (event.method === 'node-opened') {
-            this.mission.emitEvent('autopan')
+            this.subscribedMission.emitEvent('autopan')
           }
 
           if (event.method === 'error') {
@@ -441,7 +477,8 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     options: TExecuteActionOptions = {},
   ): void {
     let server: ServerConnection = this.server
-    let action: ClientMissionAction | undefined = this.actions.get(actionId)
+    let action: ClientMissionAction | undefined =
+      this.subscribedRealm.getAction(actionId)
     const { cheats } = options
 
     // Callback for errors.
@@ -513,7 +550,8 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   ) {
     // Gather details.
     let server: ServerConnection = this.server
-    let node: ClientMissionNode | undefined = this.mission.getNodeById(nodeId)
+    let node: ClientMissionNode | undefined =
+      this.subscribedMission.getNodeById(nodeId)
     let { onError = () => {} } = options
 
     // If the node doesn't have a pre-execution message,
@@ -570,7 +608,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     // firstCall parameter.
     const algorithm = (firstCall: boolean = true) => {
       // Emit a 'tick' event.
-      if (!firstCall) this.mission.emitEvent('execution-tick')
+      if (!firstCall) this.subscribedMission.emitEvent('execution-tick')
 
       // Set a timeout to call recursively until
       // the time runs out on all active executions.
@@ -587,7 +625,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
           // Emit a final tick event, assuming
           // this isn't the first call.
           if (!firstCall) {
-            this.mission.emitEvent('execution-tick')
+            this.subscribedMission.emitEvent('execution-tick')
           }
         }
       }, 50) as any as number | null // Type casting for browser compatibility.
@@ -924,6 +962,54 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
+   * Lifts a member's ban from the session, allowing them to rejoin.
+   * @param memberId The ID of the member whose ban to lift.
+   * @resolves When the member's ban has been lifted.
+   * @rejects If the member failed to be unbanned.
+   */
+  public async $unban(memberId: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      // Callback for errors.
+      const onError = (message: string) => {
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
+
+      // Get the member.
+      let member = this.getMember(memberId)
+
+      // If the member is not found,
+      // callback an error.
+      if (member === undefined) {
+        return onError('Member not found.')
+      }
+
+      // Emit a request to unban the user.
+      this.server.request(
+        'request-unban',
+        { memberId },
+        `Lifting ban for "${member.user.username}".`,
+        {
+          onResponse: (event) => {
+            switch (event.method) {
+              case 'unbanned':
+                return resolve()
+              case 'error':
+                return onError(event.message)
+              default:
+                return onError(
+                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+                )
+            }
+          },
+        },
+      )
+    })
+  }
+
+  /**
    * Assigns a force to a member.
    * @param memberId The ID of the member to be assigned.
    * @param forceId The ID of the force to be assigned, `null` if unassigning.
@@ -1073,17 +1159,17 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   private importStartData(
     event: TResponseEvents['session-started' | 'session-reset'],
   ): void {
-    // Gather details.
-    let { structure, forces, prototypes, files, chatChannels } = event.data
-    // Mark the session as started.
+    let { subscribedRealm: realmData, chatChannels } = event.data
+    let realm = ClientSessionRealm.fromJson(realmData, this)
+
+    // Reset session state.
     this._state = 'started'
-    // Import start data, revealing forces to user.
-    this.mission.importStartData(structure, forces, prototypes, files)
-    // Remap actions.
-    this.mapActions()
-    // Reset chat state.
+    this._realms = []
     this._chatChannels = this.parseChatChannelData(chatChannels)
     this._unreadChatMessageCount = new Map()
+
+    // Add new realm and subscribe the member to it.
+    this._realms.push(realm)
   }
 
   /**
@@ -1257,6 +1343,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    */
   private onEnding = (event: TResponseEvents['session-ending']): void => {
     this._state = 'ending'
+    this.cleanUp()
   }
 
   /**
@@ -1336,14 +1423,24 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   ): void => {
     let { members } = event.data
     this._members = members.map(
-      ({ _id, user: userData, roleId, forceId }) =>
-        new ClientSessionMember(
+      ({
+        _id,
+        user: userData,
+        assignment,
+        subscribedRealmId,
+        joined,
+        banned,
+      }) => {
+        return new ClientSessionMember(
           _id,
           ClientUser.fromExistingJson(userData),
-          roleId,
-          forceId,
+          assignment,
           this,
-        ),
+          subscribedRealmId,
+          joined,
+          banned,
+        )
+      },
     )
   }
 
@@ -1478,7 +1575,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         `Event "force-assigned" was triggered, but the member with the given memberId ("${memberId}") could not be found.`,
       )
     }
-    member.forceId = forceId
+    member.assignToForce(forceId)
   }
 
   /**
@@ -1488,13 +1585,12 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   private onRoleAssigned = (event: TServerEvents['role-assigned']): void => {
     let { memberId, roleId } = event.data
     let member = this.getMember(memberId)
-    let role = MemberRole.get(roleId)
     if (member === undefined) {
       return console.warn(
         `Event "role-assigned" was triggered, but the member with the given memberId ("${memberId}") could not be found.`,
       )
     }
-    member.role = role
+    member.assignToRole(roleId)
   }
 
   /**
@@ -1521,7 +1617,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     let { lookUpData, modifier } = event.data
 
     for (let lookUpDatum of lookUpData) {
-      let action = this.mission.lookUpAction(lookUpDatum)
+      let action = this.subscribedMission.lookUpAction(lookUpDatum)
       action?.onModify(modifier)
     }
   }
@@ -1535,7 +1631,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   ): void => {
     const { lookUpData, blocked } = event.data
     for (let lookUpDatum of lookUpData) {
-      let node = this.mission.lookUpNode(lookUpDatum)
+      let node = this.subscribedMission.lookUpNode(lookUpDatum)
       if (node) node.blocked = blocked
     }
   }
@@ -1549,7 +1645,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   ): void => {
     let { lookUpData, operand } = event.data
     for (let lookUpDatum of lookUpData) {
-      let pool = this.mission.lookUpPool(lookUpDatum)
+      let pool = this.subscribedMission.lookUpPool(lookUpDatum)
       pool?.onModify(operand)
     }
   }
@@ -1564,13 +1660,13 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     let { data } = event
     let files = data.files
       .map((fileJson) => {
-        let file = this.mission.getFileById(fileJson._id)
+        let file = this.subscribedMission.getFileById(fileJson._id)
         // Create a new file instance from the JSON,
         // only if access is being granted. Otherwise,
         // there is no need.
         if (!file && data.granted) {
-          file = ClientMissionFile.fromJson(fileJson, this.mission)
-          this.mission.files.push(file)
+          file = ClientMissionFile.fromJson(fileJson, this.subscribedMission)
+          this.subscribedMission.files.push(file)
         }
         return file
       })
@@ -1578,7 +1674,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
 
     // Update access per force.
     for (let forceId of data.forceIds) {
-      let force = this.mission.getForceById(forceId)
+      let force = this.subscribedMission.getForceById(forceId)
 
       if (!force) {
         console.warn(
@@ -1595,11 +1691,11 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       //    would otherwise negate file-access restrictions.
       if (
         !data.granted &&
-        this.member.forceId === forceId &&
+        this.member.assignedForceId === forceId &&
         !this.member.isAuthorized('completeVisibility')
       ) {
         let revokedIds = new Set(data.files.map((fileJson) => fileJson._id))
-        this.mission.files = this.mission.files.filter(
+        this.subscribedMission.files = this.subscribedMission.files.filter(
           (file) => !revokedIds.has(file._id),
         )
       }
@@ -1615,7 +1711,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   private onSendOutput = (event: TServerEvents['send-output']): void => {
     let { outputData } = event.data
     let { forceId } = outputData
-    let force = this.mission.getForceById(forceId)
+    let force = this.subscribedMission.getForceById(forceId)
     if (force) {
       let output = new ClientOutput(force, outputData)
       force.storeOutput(output)
@@ -1633,7 +1729,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     switch (key) {
       case 'pre-execution':
         let { nodeId } = event.data
-        let node = this.mission.getNodeById(nodeId)
+        let node = this.subscribedMission.getNodeById(nodeId)
         node?.onOutput()
     }
   }
@@ -1664,7 +1760,8 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     const { actionId } = executionData
 
     // Find the action and node, given the action ID.
-    let action: ClientMissionAction | undefined = this.actions.get(actionId)
+    let action: ClientMissionAction | undefined =
+      this.subscribedRealm.getAction(actionId)
     let node: ClientMissionNode
 
     // Handle action not found.
@@ -1714,7 +1811,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
 
     const outcomeData: TExecutionOutcomeJson = event.data.outcome
     const { executionId } = outcomeData
-    const execution = this.mission.getExecution(executionId)
+    const execution = this.subscribedMission.getExecution(executionId)
     if (!execution) {
       return console.error(`Execution "${executionId}" could not be found.`)
     }
@@ -1736,7 +1833,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
 
     // Remap actions if there are revealed nodes, since
     // those revealed nodes may contain new actions.
-    if (revealedDescendants) this.mapActions()
+    if (revealedDescendants) this.subscribedRealm.mapActions()
 
     // Remove execution from active executions.
     this._activeExecutions = this._activeExecutions.filter(
@@ -1753,7 +1850,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     event: TServerEvents['node-alert-acknowledged'],
   ): void => {
     const { nodeId, alertId } = event.data
-    const node = this.mission.getNodeById(nodeId)
+    const node = this.subscribedMission.getNodeById(nodeId)
     if (!node) {
       return console.warn(`Node "${nodeId}" was not found.`)
     }
@@ -1778,7 +1875,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         data
 
       // Find the target node in the mission using lookup data.
-      let node = this.mission.lookUpNode(data)
+      let node = this.subscribedMission.lookUpNode(data)
       if (!node) {
         console.warn(
           `Node "${data._id}" was not found. This is likely due to an effect being applied to a node that has not yet been revealed to the user.`,
@@ -1802,7 +1899,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     }
 
     // Rebuild the action map once if any node revealed new descendants.
-    if (hasRevealedDescendants) this.mapActions()
+    if (hasRevealedDescendants) this.subscribedRealm.mapActions()
   }
 
   /**
@@ -1815,7 +1912,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   ): void => {
     const { message, severityLevel, ids: alerts } = event.data
     for (const { nodeId, alertId } of alerts) {
-      let node = this.mission.getNodeById(nodeId)
+      let node = this.subscribedMission.getNodeById(nodeId)
       if (!node) {
         console.warn(
           `Node "${nodeId}" was not found. This is likely due to an effect being applied to a node that has not yet been revealed to the user.`,
@@ -1939,8 +2036,8 @@ type TSessionRequestOptions = {
 type TSessionLifecycleOptions = {
   /**
    * Callback for when the server acknowledges
-   * the request to start the session and has
-   * marked the session as 'starting'.
+   * the request to start/end the session and has
+   * marked the session as 'starting'/'ending'.
    */
   onInit?: () => void
 }

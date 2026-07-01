@@ -69,7 +69,6 @@ export default function DetailMultiSelect<TOption>(
     setValue,
     render,
     getKey,
-    renderOptions,
     uniqueClassName,
     uniqueLabelClassName,
     uniqueFieldClassName,
@@ -185,12 +184,6 @@ export default function DetailMultiSelect<TOption>(
 
   /* -- RENDER -- */
 
-  // Render the options as a JSX element rather than invoking `renderOptions()`
-  // directly, so it mounts as a child fiber of the provider below and can read
-  // the multiselect's local context. A direct call would execute its hooks in
-  // this component's fiber, above the provider, and fail to find the context.
-  const RenderOptions = renderOptions
-
   return (
     <LocalContextProvider
       context={multiselectContext}
@@ -220,12 +213,22 @@ export default function DetailMultiSelect<TOption>(
             </div>
           </div>
           <div className={allOptionsClasses.value}>
-            <RenderOptions />
+            <MultiSelectOptionRenderer />
           </div>
         </div>
       </div>
     </LocalContextProvider>
   )
+}
+
+/**
+ * Renders the multiselect's options by invoking the `renderOptions` prop
+ * pulled from context.
+ * @note This will by default render the {@link MultiSelectOptions} component.
+ */
+function MultiSelectOptionRenderer(): TReactElement {
+  const { renderOptions } = useMultiSelectContext()
+  return <>{renderOptions()}</>
 }
 
 /* -- TYPES -- */

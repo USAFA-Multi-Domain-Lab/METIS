@@ -13,10 +13,10 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    gap: 2em;
+    gap: 1em;
     width: 100%;
     height: 100%;
-    padding: 2em;
+    padding: 1em;
 
     &:has(> .List:only-child) {
       justify-content: center;

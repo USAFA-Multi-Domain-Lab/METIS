@@ -6,8 +6,9 @@
 export type TDetailBase_P = {
   /**
    * The label for the detail.
+   * @note If null is passed, the label will not be displayed.
    */
-  label: string
+  label: string | null
   /**
    * Boolean that determines if the detail should be disabled.
    */

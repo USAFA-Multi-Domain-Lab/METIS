@@ -26,7 +26,10 @@ export class ServerChatChannel extends ChatChannel<TMetisServerComponents> {
   public canMemberSee(member: ServerSessionMember): boolean {
     if (this.forceIds === 'all') return true
     if (member.isAuthorized('completeVisibility')) return true
-    return member.forceId !== null && this.forceIds.includes(member.forceId)
+    return (
+      member.assignedForceId !== null &&
+      this.forceIds.includes(member.assignedForceId)
+    )
   }
 
   /**

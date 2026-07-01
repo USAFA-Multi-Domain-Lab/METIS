@@ -292,7 +292,9 @@ export function DetailDropdown<TOption>(
           </DropdownOption>
           <div className={availableOptionsClasses.value}>{optionsJsx}</div>
         </div>
-        <div className={fieldErrorClasses.value}>{warningTooltipDescription}</div>
+        <div className={fieldErrorClasses.value}>
+          {warningTooltipDescription}
+        </div>
       </div>
     </LocalContextProvider>
   )
@@ -398,7 +400,7 @@ type TDetailDropdownOptional_P<TOption> = TDetailOptional_P<TOption> &
     /**
      * The function to render the display name for the option.
      */
-    render: (option: TOption) => ReactNode | null | undefined
+    render: (option: NonNullable<TOption>) => ReactNode | null | undefined
     /**
      * Gets the key for the given option.
      * @param option The option for which to get the key.

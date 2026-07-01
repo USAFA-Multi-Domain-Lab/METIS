@@ -105,9 +105,6 @@ export class SessionBasic
   public participantIds: string[]
 
   // Implemented
-  public banList: string[]
-
-  // Implemented
   public observerIds: string[]
 
   // Implemented
@@ -152,7 +149,6 @@ export class SessionBasic
     this.launchedAt = new Date(data.launchedAt)
     this.config = data.config
     this.participantIds = data.participantIds
-    this.banList = data.banList
     this.observerIds = data.observerIds
     this.managerIds = data.managerIds
     this.setupFailed = data.setupFailed
@@ -181,11 +177,11 @@ export class SessionBasic
       participantIds: [],
       observerIds: [],
       managerIds: [],
-      banList: [],
       setupFailed: false,
       teardownFailed: false,
       config: {
         accessibility: 'id-required',
+        mode: 'multiplayer',
         infiniteResources: false,
         disabledTargetEnvs: [],
         targetEnvConfigs: {},

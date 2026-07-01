@@ -16,6 +16,7 @@ export default function PropertyBadge({
   active = true,
   value,
   icon,
+  color,
   description,
   strikethrough = false,
   strikethroughReason = '',
@@ -94,7 +95,11 @@ export default function PropertyBadge({
   return (
     <div className={rootClasses.value}>
       <div className='PropertyIcon' style={iconStyle}></div>
-      <div className={valueClasses.value} ref={propertyValueRef}>
+      <div
+        className={valueClasses.value}
+        ref={propertyValueRef}
+        style={{ color }}
+      >
         {value}
       </div>
       <div className={strikethroughReasonClasses.value}>
@@ -127,6 +132,11 @@ export interface TPropertyBadge_P extends TAdditionalClassesSupport {
    * a string or number.
    */
   value: React.ReactNode
+  /**
+   * An optional color applied to the value text. Accepts any
+   * valid CSS color string.
+   */
+  color?: string
   /**
    * A description that displays when hovering over the property.
    * This should clarify the significance of the property, in case

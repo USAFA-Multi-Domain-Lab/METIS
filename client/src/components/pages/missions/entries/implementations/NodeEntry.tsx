@@ -333,7 +333,7 @@ export default function NodeEntry({
           itemsPerPageMin={5}
           listButtonIcons={['add']}
           itemButtonIcons={actionListItemButtons}
-          getCellText={(action) => action.name}
+          getCellContent={(action) => action.name}
           getListButtonLabel={(button) => {
             switch (button) {
               case 'add':

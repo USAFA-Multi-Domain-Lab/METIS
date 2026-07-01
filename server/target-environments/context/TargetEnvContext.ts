@@ -26,6 +26,7 @@ import type { TargetEnvironment } from '@shared/target-environments/TargetEnviro
 import type { Target } from '@shared/target-environments/targets/Target'
 import type { TTargetEnvConfig } from '@shared/target-environments/types'
 import type { TEffectType } from '../../../shared/missions/effects/Effect'
+import type { ServerSessionRealm } from '../../sessions/ServerSessionRealm'
 import type { SessionServer } from '../../sessions/SessionServer'
 import { TargetEnvStore } from '../../sessions/TargetEnvStore'
 import type { ServerTargetEnvironment } from '../ServerTargetEnvironment'
@@ -56,10 +57,16 @@ export abstract class TargetEnvContext<
   protected abstract readonly permittedStates: TSessionState[]
 
   /**
-   * The mission for the current context.
+   * The realm within which this context operates.
+   */
+  protected readonly realm: ServerSessionRealm
+
+  /**
+   * The mission for the current context, rooted
+   * in the provided realm.
    */
   protected get mission() {
-    return this.session.mission
+    return this.realm.mission
   }
 
   /**
@@ -72,7 +79,9 @@ export abstract class TargetEnvContext<
   /**
    * The session for the current context.
    */
-  protected readonly session: SessionServer
+  protected get session(): SessionServer {
+    return this.realm.session
+  }
 
   /**
    * The ID of the session for the current context.
@@ -128,14 +137,15 @@ export abstract class TargetEnvContext<
   }
 
   /**
-   * @param session The session for the current context.
+   * @param realm The realm within which this context operates.
+   * @param enviroment The target environment for the current context.
    */
   protected constructor(
-    session: SessionServer,
+    realm: ServerSessionRealm,
     enviroment: ServerTargetEnvironment,
   ) {
-    this.session = session
-    this._instanceId = session.instanceId
+    this.realm = realm
+    this._instanceId = realm.session.instanceId
     this.environment = enviroment
   }
 
@@ -332,6 +342,10 @@ export interface TTargetEnvExposedSession extends Readonly<
        * @see {@link MissionSession.members}
        */
       members: TTargetEnvExposedMember[]
+      /**
+       * @see {@link MissionSession.joinedMembers}
+       */
+      joinedMembers: TTargetEnvExposedMember[]
       /**
        * @see {@link MissionSession.participants}
        */

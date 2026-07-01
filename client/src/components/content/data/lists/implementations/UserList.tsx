@@ -252,7 +252,7 @@ export default function UserList({
       listButtonIcons={listButtons}
       itemButtonIcons={itemButtons}
       getColumnLabel={getUserColumnLabel}
-      getCellText={getUserCellText}
+      getCellContent={getUserCellText}
       getColumnWidth={getUserColumnWidth}
       getItemTooltip={(item) => `Open ${item.username}`}
       getListButtonLabel={getUserListButtonTooltip}

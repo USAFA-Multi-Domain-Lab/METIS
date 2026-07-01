@@ -3,6 +3,7 @@ import type {
   TNodeHostedLookUpData,
 } from '@shared/missions/Mission'
 import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
+import type { TSessionRealmJson } from '@shared/sessions/SessionRealm'
 import type { TEnvScriptResultJson } from '@shared/target-environments/EnvScriptResults'
 import type { MetisComponent } from '../MetisComponent'
 import type {
@@ -12,7 +13,6 @@ import type {
 import type { TExecutionOutcomeJson } from '../missions/actions/ExecutionOutcome'
 import type { TActionModifier } from '../missions/actions/MissionAction'
 import type { TMissionFileJson } from '../missions/files/MissionFile'
-import type { TMissionForceSaveJson } from '../missions/forces/MissionForce'
 import type { TOutputJson } from '../missions/forces/MissionOutput'
 import type { TResourcePoolJson } from '../missions/forces/ResourcePool'
 import type { TMissionNodeJson } from '../missions/nodes/MissionNode'
@@ -594,21 +594,10 @@ export type TResponseEvents = {
     'session-started',
     {
       /**
-       * The node structure available to the client.
+       * The realm the member is subscribed to, containing the filtered
+       * mission data they are permitted to see.
        */
-      structure: TAnyObject
-      /**
-       * The force(s) the client has access to.
-       */
-      forces: TMissionForceSaveJson[]
-      /**
-       * The prototype data used to create the mission's structure of nodes.
-       */
-      prototypes: TMissionPrototypeJson[]
-      /**
-       * The file(s) that the client has access to.
-       */
-      files: TMissionFileJson[]
+      subscribedRealm: TSessionRealmJson
       /**
        * The chat channels available in this session.
        */
@@ -647,21 +636,10 @@ export type TResponseEvents = {
     'session-reset',
     {
       /**
-       * The node structure available to the client.
+       * The realm the member is subscribed to, containing the filtered
+       * mission data they are permitted to see.
        */
-      structure: TAnyObject
-      /**
-       * The force(s) the client has access to.
-       */
-      forces: TMissionForceSaveJson[]
-      /**
-       * The prototype data used to create the mission's structure of nodes.
-       */
-      prototypes: TMissionPrototypeJson[]
-      /**
-       * The file(s) that the client has access to.
-       */
-      files: TMissionFileJson[]
+      subscribedRealm: TSessionRealmJson
       /**
        * The chat channels available in this session.
        */
@@ -723,6 +701,28 @@ export type TResponseEvents = {
       userId: string
     },
     TClientEvents['request-ban']
+  >
+  /**
+   * Occurs for a member whose ban has been lifted, allowing
+   * them to rejoin the session.
+   */
+  'unbanned': TResponseEvent<
+    'unbanned',
+    {
+      /**
+       * The ID of the session for which the member's ban was lifted.
+       */
+      sessionId: string
+      /**
+       * The ID of the member whose ban was lifted.
+       */
+      memberId: string
+      /**
+       * The ID of the user whose ban was lifted.
+       */
+      userId: string
+    },
+    TClientEvents['request-unban']
   >
   /**
    * Occurs when a force assignment change has been made.
@@ -990,6 +990,18 @@ export type TRequestEvents = {
     {
       /**
        * The ID of the member to ban.
+       */
+      memberId: string
+    }
+  >
+  /**
+   * Occurs when the client requests to lift a member's ban from the session.
+   */
+  'request-unban': TRequestEvent<
+    'request-unban',
+    {
+      /**
+       * The ID of the member whose ban to lift.
        */
       memberId: string
     }

@@ -1,0 +1,108 @@
+@use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
+
+.SessionMemberList {
+  &,
+  .List {
+    .ListItems {
+      .ListItemCell {
+        &.ListItemCell_assignedForce,
+        &.ListItemCell_role {
+          overflow: visible;
+        }
+
+        // The status column is always shown faded and italicized.
+        &.ListItemCell_status {
+          font-style: italic;
+          color: $color-faded;
+        }
+      }
+
+      // Banned members are highlighted in red across their name and
+      // status cells.
+      .ListItem.MemberStatus_Banned {
+        .ListItemCell_name,
+        .ListItemCell_status {
+          color: $color-failure-light;
+        }
+      }
+
+      .Detail {
+        min-width: none;
+        margin: 0;
+        padding: 0;
+
+        .Field {
+          margin: 0;
+          border: none;
+          padding: 0;
+          background: none;
+        }
+
+        &.DetailDropdown {
+          height: 2.5em;
+          width: 100%;
+          overflow: visible;
+
+          .Field {
+            .AvailableOptions {
+              background: $color-primary-dark;
+              border: 1px solid $color-faded;
+              border-radius: 0.5em;
+              position: relative;
+              z-index: $z-index-member-list-dropdown;
+              top: 0.525em;
+            }
+
+            .DropdownOption {
+              align-items: start;
+              margin: 0;
+
+              .Value {
+                padding: 0.25em 1em;
+              }
+
+              &:first-child {
+                .Value {
+                  padding-top: 0.5em;
+                }
+              }
+
+              &:last-child {
+                margin: 0;
+
+                .Value {
+                  padding-bottom: 0.5em;
+                }
+              }
+
+              &.Selected {
+                .Value {
+                  padding: 0.25em 0 0;
+                }
+              }
+
+              &:not(.Selected):hover {
+                @include background-mask($opacity: 0.1);
+              }
+            }
+
+            .DropdownOption.Selected,
+            .AvailableOptions {
+              max-width: 12em;
+            }
+          }
+        }
+
+        &.DetailLocked {
+          display: inline-block;
+
+          .Field {
+            align-items: start;
+            column-gap: 0.5em;
+          }
+        }
+      }
+    }
+  }
+}

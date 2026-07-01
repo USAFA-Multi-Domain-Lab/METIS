@@ -23,7 +23,7 @@ export default function MissionFileList(
       column: 'name',
       direction: 'ascending',
     },
-    getCellText: (
+    getCellContent: (
       file: ClientMissionFile,
       column: keyof ClientMissionFile,
     ): string => {

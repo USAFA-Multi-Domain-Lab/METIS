@@ -10,8 +10,8 @@ $detail-field-vertical-padding: 1em;
 $detail-field-horizontal-padding: 1.2em;
 $detail-field-padding: $detail-field-vertical-padding
   $detail-field-horizontal-padding;
-$detail-field-font-size: 0.92rem;
-$form-row-gap: 1.5em;
+$form-font-size: 0.875rem;
+$form-row-gap: 1.6em;
 
 @mixin detail-field-styling() {
   box-sizing: border-box;
@@ -22,7 +22,6 @@ $form-row-gap: 1.5em;
   padding: $detail-field-padding;
   background-color: $color-secondary;
   color: $detail-field-text-color;
-  font-size: $detail-field-font-size;
 
   &.Error {
     border: 2px solid $color-failure;
@@ -39,6 +38,7 @@ $form-row-gap: 1.5em;
   display: grid;
   align-content: start;
   row-gap: $form-row-gap;
+  font-size: $form-font-size;
 }
 
 @mixin detail-info-styling() {
@@ -91,7 +91,7 @@ $form-row-gap: 1.5em;
 
 .Detail {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(225px, 100%));
+  grid-template-columns: repeat(auto-fill, minmax(14em, 100%));
   row-gap: 0.5em;
 
   .FieldErrorMessage {
@@ -148,7 +148,6 @@ $form-row-gap: 1.5em;
   .Field,
   input {
     @include detail-field-styling();
-    font-size: 0.92rem;
 
     &::placeholder {
       color: $color-faded;

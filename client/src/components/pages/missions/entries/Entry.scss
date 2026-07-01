@@ -66,8 +66,8 @@
     border-bottom: $border;
     border-radius: unset;
 
-    .ListItems .ListItem {
-      border-top: unset;
+    .ListItems > .ListItemLike {
+      background: unset;
     }
   }
 

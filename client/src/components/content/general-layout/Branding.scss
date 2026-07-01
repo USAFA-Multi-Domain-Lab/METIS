@@ -3,6 +3,7 @@
 .Branding {
   display: grid;
   grid-template-columns: 1fr 2fr;
+  align-items: center;
   width: 11em;
   padding: 0;
   cursor: pointer;
@@ -18,7 +19,7 @@
 
   .Emblem {
     @include branding-img('../../../assets/images/new_metis_emblem.png');
-    margin-right: 15px;
+    margin-right: 1em;
   }
 
   .Logo {

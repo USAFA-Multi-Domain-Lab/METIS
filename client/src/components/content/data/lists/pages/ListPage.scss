@@ -1,4 +1,5 @@
 @use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
 
 .ListPage {
   $item-non-padded-height: 1.4em;
@@ -14,11 +15,14 @@
 
   .ListItems {
     box-sizing: border-box;
-    width: 100%;
+    // Grow to the widest row so that content-less rows (blanks, the
+    // "no items" message, stripes) span the full horizontal scroll
+    // width rather than collapsing to the viewport width.
+    width: fit-content;
+    min-width: 100%;
 
-    .ListItem,
-    .ListItemUpload .UploadItemContent {
-      border-top: 2px solid rgba(white, 0.075);
+    > :nth-child(odd) {
+      background-color: rgba($color-secondary, 0.35);
     }
   }
 

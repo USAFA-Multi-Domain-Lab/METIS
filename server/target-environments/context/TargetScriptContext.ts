@@ -17,7 +17,7 @@ import type {
 } from '../../../shared/missions/effects/Effect'
 import type { TOutputContext } from '../../../shared/missions/forces/MissionOutput'
 import type { ServerSessionMember } from '../../sessions/ServerSessionMember'
-import type { SessionServer } from '../../sessions/SessionServer'
+import type { ServerSessionRealm } from '../../sessions/ServerSessionRealm'
 import type {
   TTargetEnvExposedAction,
   TTargetEnvExposedContext,
@@ -64,11 +64,11 @@ export class TargetScriptContext<
   protected readonly data: TSelectTargetEnvData[TType]
 
   /**
-   * @param session The session for the current context.
+   * @param realm The realm where this effect is being applied.
    * @param variedContext The context data that varies based on the type of effect.
    */
   protected constructor(
-    session: SessionServer,
+    realm: ServerSessionRealm,
     variedContext: TSelectTargetEnvData[TType],
   ) {
     if (!variedContext.effect.environment) {
@@ -76,7 +76,7 @@ export class TargetScriptContext<
         'Effect has no associated target environment. A target environment is necessary for context creation.',
       )
     }
-    super(session, variedContext.effect.environment)
+    super(realm, variedContext.effect.environment)
     this.data = variedContext
   }
 
@@ -355,13 +355,13 @@ export class TargetScriptContext<
     }
 
     if (isGlobal) {
-      this.session.sendOutput('Global:', message, outputContext)
+      this.realm.sendOutput('Global:', message, outputContext)
     } else {
       let forces = this.resolveServerForces(to)
 
       // Send the output to each resolved force.
       for (let force of forces) {
-        this.session.sendOutput(force.outputPrefix, message, outputContext, {
+        this.realm.sendOutput(force.outputPrefix, message, outputContext, {
           force,
         })
       }
@@ -399,7 +399,7 @@ export class TargetScriptContext<
     >,
     blocked: boolean,
   ) => {
-    this.session.updateNodeBlockStatus(this.resolveServerNodes(nodes), blocked)
+    this.realm.updateNodeBlockStatus(this.resolveServerNodes(nodes), blocked)
   }
 
   /**
@@ -433,7 +433,7 @@ export class TargetScriptContext<
     >,
     opened: boolean,
   ) => {
-    this.session.updateNodeOpenState(this.resolveServerNodes(nodes), opened)
+    this.realm.updateNodeOpenState(this.resolveServerNodes(nodes), opened)
   }
 
   /**
@@ -446,7 +446,7 @@ export class TargetScriptContext<
     message: string,
     severityLevel: TNodeAlertSeverityLevel,
   ) => {
-    this.session.addNodeAlert(
+    this.realm.addNodeAlert(
       this.resolveServerNodes(applyTo),
       message,
       severityLevel,
@@ -465,7 +465,7 @@ export class TargetScriptContext<
     >,
     operand: number,
   ) => {
-    this.session.modifySuccessChance(
+    this.realm.modifySuccessChance(
       this.resolveServerActionTargets(applyTo),
       operand,
     )
@@ -483,7 +483,7 @@ export class TargetScriptContext<
     >,
     operand: number,
   ) => {
-    this.session.modifyProcessTime(
+    this.realm.modifyProcessTime(
       this.resolveServerActionTargets(applyTo),
       operand,
     )
@@ -504,7 +504,7 @@ export class TargetScriptContext<
   ) => {
     let actions = this.resolveServerActionTargets(applyTo)
     for (let resource of ArrayToolbox.toArray(resources)) {
-      this.session.modifyResourceCost(actions, resource._id, operand)
+      this.realm.modifyResourceCost(actions, resource._id, operand)
     }
   }
 
@@ -517,7 +517,7 @@ export class TargetScriptContext<
     >,
     operand: number,
   ) => {
-    this.session.modifyResourcePool(this.resolveServerPools(applyTo), operand)
+    this.realm.modifyResourcePool(this.resolveServerPools(applyTo), operand)
   }
 
   /**
@@ -554,7 +554,7 @@ export class TargetScriptContext<
     files: TInstanceOrArray<TTargetEnvExposedFile>,
     granted: boolean,
   ) => {
-    this.session.updateFileAccess(
+    this.realm.updateFileAccess(
       this.resolveServerForces(applyTo),
       this.resolveServerFiles(files),
       granted,
@@ -565,14 +565,13 @@ export class TargetScriptContext<
    * Creates context for a session-triggered effect.
    * @param effect The effect for which the context is purposed.
    * @param session The session where the effect was triggered.
-   * @param environment The target environment where the effect was triggered.
    * @returns The new context.
    */
   public static createSessionContext(
+    realm: ServerSessionRealm,
     effect: ServerEffect<'sessionTriggeredEffect'>,
-    session: SessionServer,
   ): TargetScriptContext<'sessionTriggeredEffect'> {
-    return new TargetScriptContext(session, {
+    return new TargetScriptContext(realm, {
       type: 'sessionTriggeredEffect',
       effect,
       get effectId() {
@@ -631,19 +630,16 @@ export class TargetScriptContext<
   /**
    * Creates context for a execution-triggered effect.
    * @param effect The effect for which the context is purposed.
-   * @param session The session where the effect was triggered.
-   * @param environment The target environment where the effect was triggered.
    * @param member The member responsible for triggering the effect.
    * @param execution The execution responsible for triggering the effect.
    * @returns The new context.
    */
   public static createExecutionContext(
     effect: ServerEffect<'executionTriggeredEffect'>,
-    session: SessionServer,
     member: ServerSessionMember,
     execution: ServerActionExecution,
   ): TargetScriptContext<'executionTriggeredEffect'> {
-    return new TargetScriptContext(session, {
+    return new TargetScriptContext(member.subscribedRealm, {
       type: 'executionTriggeredEffect',
       effect,
       get effectId() {

@@ -2,25 +2,51 @@
 @use '@client/assets/styles/util.scss' as *;
 
 .Page.LobbyPage {
+  $content-height: calc(100vh - #{$nav-height} - #{$footer-height});
+  display: grid;
+  grid-template-rows: $nav-height $content-height $footer-height;
+  height: 100vh;
+
   .Content {
-    $content-padding: 3em;
+    $content-padding-horizontal: 2em;
 
     display: flex;
     box-sizing: border-box;
     flex-direction: column;
     align-items: left;
     width: 100%;
-    min-height: 100%;
-    padding: $content-padding;
+    height: $content-height;
+    padding: 2em $content-padding-horizontal 0;
 
-    .Title {
-      margin: 0 0 1em;
-      font-size: 1.5rem;
-      font-weight: bold;
+    .PanelView {
+      box-sizing: border-box;
+      padding-top: 1.5em;
     }
 
     .Section {
-      margin: 0 0 1.75em;
+      padding: 0 0 1.75em;
+
+      &.DetailSection {
+        .Title {
+          margin: 0 0 1em;
+          font-size: 1.5em;
+          font-weight: bold;
+        }
+
+        .PropertyBadges {
+          align-items: start;
+          font-size: 0.75rem;
+        }
+
+        @media (min-width: 800px) {
+          display: grid;
+          grid-template-columns: 1fr auto;
+
+          .Title {
+            margin: 0;
+          }
+        }
+      }
 
       &.StatusSection {
         display: flex;
@@ -45,8 +71,54 @@
       }
 
       &.MembersSection {
-        max-width: calc(100vw - 2 * #{$content-padding});
+        box-sizing: border-box;
+        height: 100%;
+        max-width: calc(100vw - 2 * #{$content-padding-horizontal});
         overflow: auto;
+
+        .List {
+          height: 100%;
+
+          .ListNav {
+            margin-bottom: 0.5em;
+            height: 2em;
+            padding-top: 0;
+            padding-left: 0;
+          }
+
+          .ListItems {
+            $item-border: 1px solid rgba($color-primary-light, 0.2);
+
+            .ListItemLike {
+              border-top: $item-border;
+              height: 2.4em;
+              background: unset;
+
+              &:nth-child(even) {
+                background: rgba($color-primary-dark, 0.25);
+              }
+
+              &:last-child {
+                border-bottom: $item-border;
+              }
+            }
+          }
+        }
+      }
+
+      &.ConfigurationSection {
+        height: 100%;
+
+        .SessionConfigMenu {
+          height: 100%;
+
+          .MenuContent {
+            overflow: auto;
+            box-sizing: border-box;
+            height: 100%;
+            padding-bottom: 2em;
+          }
+        }
       }
 
       &.ButtonSection {
@@ -64,12 +136,6 @@
     .Title,
     .Section {
       width: 100%;
-    }
-
-    .StaticDetail {
-      display: grid;
-      grid-template-columns: 10em 1fr;
-      margin: 0.75em 0;
     }
   }
 }

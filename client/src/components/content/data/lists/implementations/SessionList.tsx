@@ -91,15 +91,15 @@ export default function SessionList({
   }
 
   /**
-   * Gets the text for a session list cell.
-   * @param session The session for which to get the text.
-   * @param column The column for which to get the text.
-   * @returns The text to display in the cell.
+   * Gets the content for a session list cell.
+   * @param session The session for which to get the content.
+   * @param column The column for which to get the content.
+   * @returns The content to display in the cell.
    */
-  const getSessionCellText = (
+  const getSessionCellContent = (
     session: SessionBasic,
     column: keyof SessionBasic,
-  ): string => {
+  ): React.ReactNode => {
     switch (column) {
       case 'launchedAt':
         return DateToolbox.format(session.launchedAt, 'yyyy-mm-dd HH:MM')
@@ -336,7 +336,7 @@ export default function SessionList({
         }
       }}
       getColumnLabel={getSessionColumnLabel}
-      getCellText={getSessionCellText}
+      getCellContent={getSessionCellContent}
       getColumnWidth={getSessionColumnWidth}
       getItemTooltip={() => 'Join session'}
       getListButtonLabel={getSessionListButtonTooltip}

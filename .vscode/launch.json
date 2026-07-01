@@ -1,0 +1,45 @@
+{
+  "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "dev: all",
+      "configurations": ["dev: backend (debug)", "dev: react", "dev: mongosh"]
+    }
+  ],
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "dev: backend (debug)",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "tsx",
+        "watch",
+        "--tsconfig",
+        "server/tsconfig.json",
+        "server/start.ts"
+      ],
+      "env": {
+        "METIS_ENV_TYPE": "dev"
+      },
+      "cwd": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "dev: react",
+      "command": "npm run react",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "dev: mongosh",
+      "command": "mongosh -u metis-dev-server --authenticationDatabase metis-dev",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

@@ -7,7 +7,10 @@ import type {
 import { SESSION_PANEL_ALERTS_NO_MESSENGER } from '@shared/connect'
 import { ChatMessage } from '@shared/sessions/chat/ChatMessage'
 import { MemberRole } from '@shared/sessions/members/MemberRole'
-import type { TSessionAccessibility } from '@shared/sessions/MissionSession'
+import type {
+  TSessionAccessibility,
+  TSessionMode,
+} from '@shared/sessions/MissionSession'
 import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
 import type { TZodify } from '@shared/toolbox/zod'
 import { z as zod } from 'zod'
@@ -74,6 +77,13 @@ export const clientEventSchemas: TClientEventSchemas = {
             'testing',
           ] as TNonEmptyArray<TSessionAccessibility>)
           .optional(),
+        mode: zod
+          .enum([
+            'multiplayer',
+            'single-player',
+          ] as TNonEmptyArray<TSessionMode>)
+          .optional(),
+        singlePlayerForceId: zod.string().optional(),
         infiniteResources: zod.boolean().optional(),
         disabledTargetEnvs: zod.array(zod.string()).optional(),
         targetEnvConfigs: zod.record(zod.string(), zod.string()).optional(),
@@ -88,6 +98,12 @@ export const clientEventSchemas: TClientEventSchemas = {
   ),
   'request-ban': zodRequestEvent(
     'request-ban',
+    zod.object({
+      memberId: zod.string(),
+    }),
+  ),
+  'request-unban': zodRequestEvent(
+    'request-unban',
     zod.object({
       memberId: zod.string(),
     }),

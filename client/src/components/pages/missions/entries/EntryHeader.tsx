@@ -1,11 +1,11 @@
 import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import type { ButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/engines'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import type { TRootElementRefSupport } from '@client/toolbox/html/elements'
 import {
   ClassList,
   type TAdditionalClassesSupport,
 } from '@shared/toolbox/html/ClassList'
-import type { TRootElementRefSupport } from '@shared/toolbox/html/elements'
 import './EntryHeader.scss'
 
 /**

@@ -1,8 +1,8 @@
 import { generateValidationError } from '@server/database/validation'
 import type { TTargetEnvExposedMission } from '@server/target-environments/context/TargetEnvContext'
-import { targetArgumentJsonSchema } from '@shared/target-environments/arguments/TargetArgument'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import { ServerUser } from '@server/users/ServerUser'
+import { targetArgumentJsonSchema } from '@shared/target-environments/arguments/TargetArgument'
 import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
 import {
   ObjectToolbox,
@@ -190,6 +190,29 @@ export class ServerMission extends Mission<TMetisServerComponents> {
 
     // Return the mission.
     return mission
+  }
+
+  /**
+   * @returns a brand new mission for use, ready
+   * to be designed and saved to the server.
+   */
+  public static createNew(): ServerMission {
+    return new ServerMission(
+      ServerMission.DEFAULT_PROPERTIES._id,
+      ServerMission.DEFAULT_PROPERTIES.name,
+      ServerMission.DEFAULT_PROPERTIES.versionNumber,
+      ServerMission.DEFAULT_PROPERTIES.createdAt,
+      ServerMission.DEFAULT_PROPERTIES.updatedAt,
+      ServerMission.DEFAULT_PROPERTIES.launchedAt,
+      ServerMission.DEFAULT_PROPERTIES.createdBy,
+      ServerMission.DEFAULT_PROPERTIES.createdByUsername,
+      ServerMission.DEFAULT_PROPERTIES.structure,
+      ServerMission.DEFAULT_PROPERTIES.resources,
+      ServerMission.DEFAULT_PROPERTIES.prototypes,
+      ServerMission.DEFAULT_PROPERTIES.forces,
+      ServerMission.DEFAULT_PROPERTIES.files,
+      ServerMission.DEFAULT_PROPERTIES.effects,
+    )
   }
 
   /**

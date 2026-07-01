@@ -7,18 +7,19 @@ import type { TTargetEnvConfig } from '@shared/target-environments/types'
 import { useEffect, useState } from 'react'
 import { DetailToggle } from '../../form/DetailToggle'
 import { DetailDropdown } from '../../form/dropdowns/standard/DetailDropdown'
-import If from '../../util/If'
-import './TargetEnvSettings.scss'
+import './TargetEnvConfig.scss'
 
 /**
  * Allows the modification of target environment settings
  * within a session config.
  */
-export default function TargetEnvSettings({
+export default function TargetEnvConfig({
   sessionConfig,
   mission,
+  disabled = false,
   onChange = () => {},
-}: TTargetEnvSettings_P): TReactElement | null {
+  onCommit = () => {},
+}: TTargetEnvConfig_P): TReactElement | null {
   /* -- STATE -- */
   const [disabledTargetEnvs, setDisabledTargetEnvs] = useState<string[]>(
     sessionConfig.disabledTargetEnvs,
@@ -72,13 +73,11 @@ export default function TargetEnvSettings({
    */
   const toggleEnabled = (targetEnv: ClientTargetEnvironment) => {
     const isEnabled = !disabledTargetEnvs.includes(targetEnv._id)
-    if (isEnabled) {
-      setDisabledTargetEnvs([...disabledTargetEnvs, targetEnv._id])
-    } else {
-      setDisabledTargetEnvs(
-        disabledTargetEnvs.filter((id) => id !== targetEnv._id),
-      )
-    }
+    const next = isEnabled
+      ? [...disabledTargetEnvs, targetEnv._id]
+      : disabledTargetEnvs.filter((id) => id !== targetEnv._id)
+    setDisabledTargetEnvs(next)
+    onCommit({ disabledTargetEnvs: next })
   }
 
   /**
@@ -88,6 +87,7 @@ export default function TargetEnvSettings({
     if (allTargetEnvsDisabled) return
     const allIds = mission.targetEnvironments.map((env) => env._id)
     setDisabledTargetEnvs(allIds)
+    onCommit({ disabledTargetEnvs: allIds })
   }
 
   /**
@@ -96,6 +96,7 @@ export default function TargetEnvSettings({
   const enableAll = () => {
     if (allTargetEnvsEnabled) return
     setDisabledTargetEnvs([])
+    onCommit({ disabledTargetEnvs: [] })
   }
 
   /**
@@ -115,10 +116,12 @@ export default function TargetEnvSettings({
 
     // Update the list of target environment configs
     // in the session config.
-    setTargetEnvConfigs({
+    const next = {
       ...targetEnvConfigs,
       [targetEnv._id]: config._id,
-    })
+    }
+    setTargetEnvConfigs(next)
+    onCommit({ targetEnvConfigs: next })
   }
 
   /* -- PRE-RENDER PROCESSING -- */
@@ -129,7 +132,9 @@ export default function TargetEnvSettings({
   const envConfigContent = compute<TReactElement[]>(() => {
     return mission.targetEnvironments.map((targetEnv) => {
       // Determine if the target environment is enabled.
-      const isEnabled = !disabledTargetEnvs.includes(targetEnv._id)
+      const targetEnvironmentDisabled = disabledTargetEnvs.includes(
+        targetEnv._id,
+      )
       // Determine the selected configuration for the target environment.
       const configId = targetEnvConfigs[targetEnv._id]
       const selectedConfig =
@@ -141,15 +146,15 @@ export default function TargetEnvSettings({
         <div key={targetEnv._id} className='EnvConfig'>
           <DetailToggle
             label={`${targetEnv.name}`}
-            value={isEnabled}
+            value={!targetEnvironmentDisabled}
             setValue={() => toggleEnabled(targetEnv)}
+            disabled={disabled}
           />
-
-          <If condition={targetEnv.configs.length}>
+          {targetEnv.configs.length > 0 && (
             <DetailDropdown<TTargetEnvConfig>
               label='Configuration'
               options={targetEnv.configs}
-              disabled={!isEnabled}
+              disabled={disabled || targetEnvironmentDisabled}
               value={selectedConfig}
               setValue={(newValue) =>
                 selectEnvConfig(newValue, selectedConfig, targetEnv)
@@ -161,7 +166,7 @@ export default function TargetEnvSettings({
                 method: 'setToFirst',
               }}
             />
-          </If>
+          )}
         </div>
       )
     })
@@ -170,43 +175,45 @@ export default function TargetEnvSettings({
   /* -- RENDER -- */
 
   return (
-    <If condition={mounted && mission.targetEnvironments.length}>
-      <div className='TargetEnvSettings'>
-        <div className='EnvTitle'>Target Environments</div>
-        <div className='EnvDescription'>
-          Enable or disable effects for each target environment. When enabled,
-          select which configuration to use.
+    <>
+      {mounted && mission.targetEnvironments.length && (
+        <div className='TargetEnvConfig'>
+          <div className='EnvTitle'>Target Environments</div>
+          <div className='EnvDescription'>
+            Enable or disable effects for each target environment. When enabled,
+            select which configuration to use.
+          </div>
+          <div className='EnvActions'>
+            <button
+              type='button'
+              className='ActionButton'
+              disabled={disabled || allTargetEnvsEnabled}
+              onClick={enableAll}
+            >
+              Enable All
+            </button>
+            <button
+              type='button'
+              className='ActionButton'
+              disabled={disabled || allTargetEnvsDisabled}
+              onClick={disableAll}
+            >
+              Disable All
+            </button>
+          </div>
+          {envConfigContent}
         </div>
-        <div className='EnvActions'>
-          <button
-            type='button'
-            className='ActionButton'
-            disabled={allTargetEnvsEnabled}
-            onClick={enableAll}
-          >
-            Enable All
-          </button>
-          <button
-            type='button'
-            className='ActionButton'
-            disabled={allTargetEnvsDisabled}
-            onClick={disableAll}
-          >
-            Disable All
-          </button>
-        </div>
-        {envConfigContent}
-      </div>
-    </If>
+      )}
+    </>
   )
 }
 
 /* -- types -- */
 
 /**
- * Props for the `TargetEnvSettings` component.
+ * Props for the `TargetEnvConfig` component.
  */
-type TTargetEnvSettings_P = {
+type TTargetEnvConfig_P = {
   /**
    * The session config to modify.
    */
@@ -216,8 +223,19 @@ type TTargetEnvSettings_P = {
    */
   mission: ClientMission
   /**
+   * Whether all configuration options are locked from editing.
+   * @default false
+   */
+  disabled?: boolean
+  /**
    * Callback for when the session config is changed.
    * @default () => {}
    */
   onChange?: () => void
+  /**
+   * Callback to persist a config change as it happens. Used for
+   * auto-save.
+   * @default () => {}
+   */
+  onCommit?: (updates: Partial<TSessionConfig>) => void
 }

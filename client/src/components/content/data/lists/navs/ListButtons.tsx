@@ -17,6 +17,7 @@ export default function ListButtons<
 
   const listContext = useListContext<TItem>()
   const {
+    items,
     elements,
     state,
     itemButtonIcons,
@@ -24,6 +25,7 @@ export default function ListButtons<
     aggregatedButtons,
     aggregateButtonLayout,
     getItemButtonDisabled,
+    getItemButtonHidden,
   } = listContext
   const [selection] = state.selection
   const [buttonOverflowCount] = state.buttonOverflowCount
@@ -38,15 +40,22 @@ export default function ListButtons<
   /* -- EFFECTS -- */
 
   useEffect(() => {
-    // Enable/disable any buttons when the
-    // selection changes.
+    // Enable/disable any buttons when the selection or items change. A
+    // button hidden for the selected item is disabled here, since the
+    // top buttons are always visible (unlike the per-item options
+    // menu). The selection reference can be a stale snapshot after an
+    // items refresh, so resolve the live item by id to reflect remote
+    // updates such as status changes.
+    const selected = items.find(({ _id }) => _id === selection?._id) ?? null
     itemButtonIcons.forEach((icon) =>
       buttonEngine.setDisabled(
         icon,
-        !selection || getItemButtonDisabled(icon, selection),
+        !selected ||
+          getItemButtonDisabled(icon, selected) ||
+          getItemButtonHidden(icon, selected),
       ),
     )
-  }, [selection])
+  }, [selection, items])
 
   useEffect(() => {
     let threshold = aggregatedButtonIcons.length - buttonOverflowCount

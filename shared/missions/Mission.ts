@@ -292,7 +292,7 @@ export abstract class Mission<
    * this mission.
    */
   public has(component: MissionComponent<T, Mission<T>>): boolean {
-    return component.mission._id === this._id
+    return component.mission === this
   }
 
   /**

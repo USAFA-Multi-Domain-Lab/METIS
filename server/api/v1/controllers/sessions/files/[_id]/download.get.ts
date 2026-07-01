@@ -1,6 +1,5 @@
 import type { MetisFileStore } from '@server/files/MetisFileStore'
 import type { ServerSessionMember } from '@server/sessions/ServerSessionMember'
-import type { SessionServer } from '@server/sessions/SessionServer'
 
 /**
  * Retrieves a mission file from the session, and
@@ -18,11 +17,11 @@ export const downloadMissionFile = async (
   fileStore: MetisFileStore,
 ) => {
   // Gather details.
-  const { _id } = request.params
-  const session: SessionServer = response.locals.session
+  const _id = request.params._id.toString()
   const sessionMember: ServerSessionMember = response.locals.sessionMember
-  const assignedForce = sessionMember.force
-  const file = session.getFile(_id)
+  const subscribedRealm = sessionMember.subscribedRealm
+  const assignedForce = sessionMember.assignedForce
+  const file = subscribedRealm.mission.getFileById(_id)
   const hasCompleteVisibility = sessionMember.isAuthorized('completeVisibility')
 
   // If the file is not found, return 404.

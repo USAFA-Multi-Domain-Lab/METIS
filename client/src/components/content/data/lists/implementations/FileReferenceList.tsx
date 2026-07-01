@@ -194,7 +194,7 @@ export default function (props: TFileReferenceList_P): TReactElement | null {
           return 'Unknown column'
       }
     },
-    getCellText: (
+    getCellContent: (
       file: ClientFileReference,
       column: keyof ClientFileReference,
     ): string => {
@@ -302,8 +302,10 @@ export default function (props: TFileReferenceList_P): TReactElement | null {
 /**
  * Props for `FileList`.
  */
-export interface TFileReferenceList_P
-  extends Omit<TList_P<ClientFileReference>, 'items'> {
+export interface TFileReferenceList_P extends Omit<
+  TList_P<ClientFileReference>,
+  'items'
+> {
   /**
    * The list of file references to display.
    */

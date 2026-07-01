@@ -31,6 +31,10 @@ const routerMap = (router: Router, server: MetisServer, done: () => void) => {
           accessibility: RequestBodyFilters.STRING_LITERAL<
             TSessionConfig['accessibility']
           >(SessionServer.ACCESSIBILITY_OPTIONS),
+          mode: RequestBodyFilters.STRING_LITERAL<TSessionConfig['mode']>(
+            SessionServer.AVAILABLE_MODES,
+          ),
+          singlePlayerForceId: RequestBodyFilters.STRING,
           infiniteResources: RequestBodyFilters.BOOLEAN,
           disabledTargetEnvs: RequestBodyFilters.ARRAY,
           name: RequestBodyFilters.STRING,

@@ -20,8 +20,9 @@ export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientCompo
     version: string,
     targetData: TTargetJson[],
     configs: TTargetEnvConfig[],
+    multiRealmSupport: boolean,
   ) {
-    super(_id, name, description, version)
+    super(_id, name, description, version, [], multiRealmSupport)
 
     this.targets = targetData.map((target) =>
       ClientTarget.fromJson(target, this),
@@ -60,6 +61,7 @@ export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientCompo
       ClientTargetEnvironment.DEFAULT_PROPERTIES.version,
       ClientTargetEnvironment.DEFAULT_PROPERTIES.targets,
       ClientTargetEnvironment.DEFAULT_PROPERTIES.configs,
+      ClientTargetEnvironment.DEFAULT_PROPERTIES.multiRealmSupport,
     )
   }
 
@@ -76,6 +78,8 @@ export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientCompo
       json.version,
       json.targets,
       json.configs,
+      json.multiRealmSupport ??
+        ClientTargetEnvironment.DEFAULT_PROPERTIES.multiRealmSupport,
     )
   }
 

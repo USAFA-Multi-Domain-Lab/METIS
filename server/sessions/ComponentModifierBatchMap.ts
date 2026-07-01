@@ -6,6 +6,7 @@ import type { TServerEvents, TServerMethod } from '@shared/connect'
 import type { TNonEmptyArray } from '@shared/toolbox/arrays/ArrayToolbox'
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import { ServerSessionMember } from './ServerSessionMember'
+import type { ServerSessionRealm } from './ServerSessionRealm'
 import type { SessionServer } from './SessionServer'
 
 /**
@@ -30,16 +31,25 @@ export class ComponentModifierBatchMap<
    * Reference to the session, which is needed to access members
    * for emitting events to clients.
    */
-  private session: SessionServer
+  private get session(): SessionServer {
+    return this.realm.session
+  }
 
   /**
-   * @param session The session instance, needed to access members for emitting events.
+   * The realm in which this batch is being emitted. All events are scoped
+   * to this realm and only members subscribed to this realm will receive
+   * emitted events.
+   */
+  private realm: ServerSessionRealm
+
+  /**
+   * @param realm The realm instance, needed to access members for emitting events.
    * @param components The components to batch together for emission. These should all
    * be of the same type (e.g. all nodes or all actions) and should all belong to the
-   * same session.
+   * same session and realm.
    */
-  public constructor(session: SessionServer, components: Array<TComponent>) {
-    this.session = session
+  public constructor(realm: ServerSessionRealm, components: Array<TComponent>) {
+    this.realm = realm
     this.internalMap = new Map<string, MissionComponentArray<TComponent>>([
       [
         ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY,
@@ -64,6 +74,16 @@ export class ComponentModifierBatchMap<
   }
 
   /**
+   * @returns The complete-visibility members that should receive
+   * this batch, scoped to the members resolving to the batch's realm.
+   */
+  private getCompleteVisibilityMembers(): ServerSessionMember[] {
+    let realm = this.realm
+    let members = realm.session.getMembersWithPermissions('completeVisibility')
+    return members.filter((member) => member.subscribedRealm._id === realm._id)
+  }
+
+  /**
    * Emits an event to the clients in batches based on each client's
    * visibility permissions.
    * @param method The server method to emit.
@@ -80,8 +100,7 @@ export class ComponentModifierBatchMap<
       batchId: string,
     ) => TPayloadData,
   ): void {
-    let completeVisibilityMembers =
-      this.session.getMembersWithPermissions('completeVisibility')
+    let completeVisibilityMembers = this.getCompleteVisibilityMembers()
 
     // Emit a force-agnostic event to all complete-visibility members,
     // if any.
@@ -106,7 +125,7 @@ export class ComponentModifierBatchMap<
         forceId !==
         ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY
       ) {
-        let members = this.session.getMembersForForce(forceId, {
+        let members = this.session.getMembersForForce(forceId, this.realm._id, {
           limitedVisibilityOnly: true,
         })
         if (!members.length) return
@@ -134,8 +153,7 @@ export class ComponentModifierBatchMap<
       batchId: string,
     ) => TPayloadData,
   ): void {
-    let completeVisibilityMembers =
-      this.session.getMembersWithPermissions('completeVisibility')
+    let completeVisibilityMembers = this.getCompleteVisibilityMembers()
 
     // Emit a force-agnostic event to all complete-visibility members,
     // if any.
@@ -161,7 +179,7 @@ export class ComponentModifierBatchMap<
         forceId !==
         ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY
       ) {
-        let members = this.session.getMembersForForce(forceId, {
+        let members = this.session.getMembersForForce(forceId, this.realm._id, {
           limitedVisibilityOnly: true,
         })
         for (let member of members) {

@@ -1,3 +1,4 @@
+import type { ServerSessionRealm } from '@server/sessions/ServerSessionRealm'
 import { SessionServer } from '@server/sessions/SessionServer'
 import type { TSessionState } from '@shared/sessions/MissionSession'
 import type { ServerTargetEnvironment } from '../ServerTargetEnvironment'
@@ -14,17 +15,6 @@ export class EnvHookContext extends TargetEnvContext<TEnvHookExposedContext> {
     return SessionServer.AVAILABLE_STATES
   }
 
-  /**
-   * @param session The session for the current context.
-   * @param environment The target environment for the current context.
-   */
-  public constructor(
-    session: SessionServer,
-    environment: ServerTargetEnvironment,
-  ) {
-    super(session, environment)
-  }
-
   // Implemented
   protected expose(): TEnvHookExposedContext {
     return {
@@ -33,16 +23,16 @@ export class EnvHookContext extends TargetEnvContext<TEnvHookExposedContext> {
   }
 
   /**
-   * Creates a new `EnvHookContext`.
-   * @param session The session for the current context.
-   * @param environment The target environment for the current context.
-   * @returns The new `EnvHookContext`.
+   * Creates a new {@link EnvHookContext}.
+   * @param realm The realm within which the target environment is being used.
+   * @param environment The target environment to which this context can be exposed.
+   * @returns The the context created.
    */
   public static create(
-    session: SessionServer,
+    realm: ServerSessionRealm,
     environment: ServerTargetEnvironment,
   ): EnvHookContext {
-    return new EnvHookContext(session, environment)
+    return new EnvHookContext(realm, environment)
   }
 }
 
