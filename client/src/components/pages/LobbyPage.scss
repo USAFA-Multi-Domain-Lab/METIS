@@ -19,6 +19,7 @@
     padding: 2em $content-padding-horizontal 0;
 
     .PanelView {
+      box-sizing: border-box;
       padding-top: 1.5em;
     }
 
@@ -70,8 +71,39 @@
       }
 
       &.MembersSection {
+        box-sizing: border-box;
+        height: 100%;
         max-width: calc(100vw - 2 * #{$content-padding-horizontal});
         overflow: auto;
+
+        .List {
+          height: 100%;
+
+          .ListNav {
+            margin-bottom: 0.5em;
+            height: 2em;
+            padding-top: 0;
+            padding-left: 0;
+          }
+
+          .ListItems {
+            $item-border: 1px solid rgba($color-primary-light, 0.2);
+
+            .ListItemLike {
+              border-top: $item-border;
+              height: 2.4em;
+              background: unset;
+
+              &:nth-child(even) {
+                background: rgba($color-primary-dark, 0.25);
+              }
+
+              &:last-child {
+                border-bottom: $item-border;
+              }
+            }
+          }
+        }
       }
 
       &.ConfigurationSection {

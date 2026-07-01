@@ -80,7 +80,7 @@ export default function MissionList(
           return 'Unknown column'
       }
     },
-    getCellText: (
+    getCellContent: (
       mission: ClientMission,
       column: keyof ClientMission,
     ): string => {

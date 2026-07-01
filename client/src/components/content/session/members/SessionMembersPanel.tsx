@@ -1,5 +1,5 @@
 import type { SessionClient } from '@client/sessions/SessionClient'
-import SessionMembers from './SessionMembers'
+import SessionMemberList from '../../data/lists/implementations/members/SessionMemberList'
 import './SessionMembersPanel.scss'
 
 /**
@@ -12,7 +12,7 @@ export default function SessionMembersPanel({
 
   return (
     <div className='SessionMembersPanel'>
-      <SessionMembers session={session} />
+      <SessionMemberList session={session} />
     </div>
   )
 }

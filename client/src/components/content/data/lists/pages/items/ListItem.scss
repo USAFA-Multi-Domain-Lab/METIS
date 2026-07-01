@@ -6,8 +6,18 @@
 .ListItem {
   cursor: pointer;
 
-  &:hover:not(.Selected):not(.PartiallyDisabled):not(.Dragged) {
+  // Apply the row hover mask, unless the cell currently being hovered
+  // has opted out of selection (e.g. a cell with its own interactive
+  // content like a dropdown).
+  &:hover:not(.Selected):not(.PartiallyDisabled):not(.Dragged):not(
+      :has(.NotSelectable:hover)
+    ) {
     @include background-mask($opacity: 0.05);
+  }
+
+  // Non-selectable cells should not present as clickable.
+  .NotSelectable {
+    cursor: default;
   }
 
   &.Selected {

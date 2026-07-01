@@ -34,11 +34,14 @@
         display: grid;
         align-items: center;
         grid-template-columns: 1fr auto;
-        padding: $detail-field-padding;
+
+        .Value {
+          padding: $detail-field-padding;
+        }
 
         .Indicator {
           display: block;
-          width: 1em;
+          width: 2.2em;
           text-align: center;
           font-size: 1.1rem;
           color: $detail-field-text-color;
@@ -60,7 +63,10 @@
         cursor: pointer;
         user-select: none;
         margin-right: 1em;
-        padding: 0.375em $detail-field-horizontal-padding;
+
+        .Value {
+          padding: 0.375em $detail-field-horizontal-padding;
+        }
 
         &:last-child {
           margin: 0 1em 0.6em 0;

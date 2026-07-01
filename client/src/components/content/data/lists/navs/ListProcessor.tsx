@@ -19,7 +19,14 @@ export default function ListProcessor(): TReactElement | null {
   /* -- STATE -- */
 
   const listContext = useListContext()
-  const { items, columns, elements, searchBlacklist, getCellText } = listContext
+  const {
+    items,
+    columns,
+    elements,
+    searchBlacklist,
+    getCellContent,
+    sortItems,
+  } = listContext
   const [, setProcessedItems] = listContext.state.processedItems
   const [sorting] = listContext.state.sorting
   const [searchActive, activateSearch] = listContext.state.searchActive
@@ -85,6 +92,19 @@ export default function ListProcessor(): TReactElement | null {
     let searchHintFound = false
     let searchableColumns: (keyof MetisComponent)[] = ['name', ...columns]
 
+    // Derives a sortable/searchable string for a cell. Cell content
+    // may be arbitrary JSX, which cannot be sorted or searched, so
+    // fall back to the raw cell value when the content is not a string.
+    const getCellSortText = (
+      item: MetisComponent,
+      column: keyof MetisComponent,
+    ): string => {
+      let content = getCellContent(item, column)
+      return typeof content === 'string'
+        ? content
+        : String((item as any)[column] ?? '')
+    }
+
     searchableColumns = searchableColumns.filter((column) => {
       return !searchBlacklist.includes(column)
     })
@@ -111,7 +131,7 @@ export default function ListProcessor(): TReactElement | null {
         for (let i = 0; i < searchableColumns.length && !matchFound; i++) {
           let column = searchableColumns[i]
           let cellText =
-            column === 'name' ? item.name : getCellText(item, column)
+            column === 'name' ? item.name : getCellSortText(item, column)
 
           // Normalize the cell text for comparison.
           cellText = cellText.toLowerCase()
@@ -125,7 +145,7 @@ export default function ListProcessor(): TReactElement | null {
         }
 
         // Set search hint if the item name starts with
-        // the search team and a hint is not already
+        // the search term and a hint is not already
         // found.
         if (
           matchFound !== null &&
@@ -147,36 +167,30 @@ export default function ListProcessor(): TReactElement | null {
     // If there is automatic sorting enabled,
     // apply it to the result.
     if (sorting.method === 'column-based') {
-      // Apply the sorting state to the result using
-      // a Schwartzian transform, starting by creating
-      // a temporary sorting array.
-      const sortingArray =
-        sorting.column === 'name'
-          ? result.map((item) => ({
-              item,
-              sortKey: item.name,
-            }))
-          : result.map((item) => ({
-              item,
-              sortKey: getCellText(item, sorting.column),
-            }))
-
-      // Sort the sorting array based on the sorting
-      // method.
-      switch (sorting.direction) {
-        case 'ascending': {
-          sortingArray.sort((a, b) => a.sortKey.localeCompare(b.sortKey))
-          break
-        }
-        case 'descending': {
-          sortingArray.sort((a, b) => b.sortKey.localeCompare(a.sortKey))
-          break
-        }
+      // Precompute the default sort key for each item once, so the
+      // default comparison stays a cheap lookup during sorting.
+      const sortKeys = new Map<MetisComponent, string>()
+      for (let item of result) {
+        sortKeys.set(
+          item,
+          sorting.column === 'name'
+            ? item.name
+            : getCellSortText(item, sorting.column),
+        )
       }
 
-      // Convert the sorting array back and store it
-      // in the result.
-      result = sortingArray.map((entry) => entry.item)
+      // The default comparison: compare the precomputed keys, honoring
+      // the sort direction.
+      const applyDefault = (a: MetisComponent, b: MetisComponent): number => {
+        let comparison = (sortKeys.get(a) ?? '').localeCompare(
+          sortKeys.get(b) ?? '',
+        )
+        return sorting.direction === 'descending' ? -comparison : comparison
+      }
+
+      // Sort the result, letting the consumer apply custom comparisons
+      // per column/direction or defer to the default behavior.
+      result.sort((a, b) => sortItems(a, b, sorting, () => applyDefault(a, b)))
     }
 
     // If no search hint was found, clear the hint.
@@ -260,42 +274,38 @@ export default function ListProcessor(): TReactElement | null {
 
   // Close the search box when the user clicks outside of the list nav
   // or the button context menu.
-  useEventListener(
-    document,
-    'mousedown',
-    (event: MouseEvent) => {
-      const selectors = ['.ButtonMenu']
-      const blacklistedClasses = ['InputBlocker']
-      const navElement = elements.nav.current
-      const target = event.target as HTMLElement
-      if (!navElement || !target) return
+  useEventListener(document, 'mousedown', (event: MouseEvent) => {
+    const selectors = ['.ButtonMenu']
+    const blacklistedClasses = ['InputBlocker']
+    const navElement = elements.nav.current
+    const target = event.target as HTMLElement
+    if (!navElement || !target) return
 
-      // Get all elements that prevent closing the search box.
-      const ignoredElms: HTMLElement[] = []
-      selectors.forEach((selector) => {
-        const elements = document.querySelectorAll<HTMLElement>(selector)
-        if (elements.length > 0) ignoredElms.push(...elements)
-      })
-      // Check if any of the blacklisted elements contain the element that
-      // was clicked.
-      const targetInIgnoredElms = ignoredElms.some(
-        (elm) => elm.contains(target) || elm === target,
-      )
-      // Check if the element that was clicked contains a class that's
-      // been blacklisted.
-      const targetHasBlacklistedClass = blacklistedClasses.some((cls) =>
-        target.classList.contains(cls),
-      )
-      // If the target is in the ignored elements, do not close the search box.
-      if (targetInIgnoredElms || targetHasBlacklistedClass) return
+    // Get all elements that prevent closing the search box.
+    const ignoredElms: HTMLElement[] = []
+    selectors.forEach((selector) => {
+      const elements = document.querySelectorAll<HTMLElement>(selector)
+      if (elements.length > 0) ignoredElms.push(...elements)
+    })
+    // Check if any of the blacklisted elements contain the element that
+    // was clicked.
+    const targetInIgnoredElms = ignoredElms.some(
+      (elm) => elm.contains(target) || elm === target,
+    )
+    // Check if the element that was clicked contains a class that's
+    // been blacklisted.
+    const targetHasBlacklistedClass = blacklistedClasses.some((cls) =>
+      target.classList.contains(cls),
+    )
+    // If the target is in the ignored elements, do not close the search box.
+    if (targetInIgnoredElms || targetHasBlacklistedClass) return
 
-      // If the clicked element is not part of the nav
-      // and the search input is empty, close the search box.
-      if (!navElement.contains(target) && searchField.current?.value === '') {
-        activateSearch(false)
-      }
-    },
-  )
+    // If the clicked element is not part of the nav
+    // and the search input is empty, close the search box.
+    if (!navElement.contains(target) && searchField.current?.value === '') {
+      activateSearch(false)
+    }
+  })
 
   /* -- RENDER -- */
 

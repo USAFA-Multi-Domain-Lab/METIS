@@ -10,7 +10,7 @@ $detail-field-vertical-padding: 1em;
 $detail-field-horizontal-padding: 1.2em;
 $detail-field-padding: $detail-field-vertical-padding
   $detail-field-horizontal-padding;
-$detail-font-size: 0.875rem;
+$form-font-size: 0.875rem;
 $form-row-gap: 1.6em;
 
 @mixin detail-field-styling() {
@@ -38,7 +38,7 @@ $form-row-gap: 1.6em;
   display: grid;
   align-content: start;
   row-gap: $form-row-gap;
-  font-size: $detail-font-size;
+  font-size: $form-font-size;
 }
 
 @mixin detail-info-styling() {

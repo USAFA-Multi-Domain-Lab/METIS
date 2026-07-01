@@ -10,6 +10,7 @@ import { DetailLocked } from '../../form/DetailLocked'
 import { DetailString } from '../../form/DetailString'
 import { DetailToggle } from '../../form/DetailToggle'
 import { DetailDropdown } from '../../form/dropdowns/standard/DetailDropdown'
+import './SessionGeneralConfig.scss'
 
 /**
  * Renders the general session settings (name, accessibility,
@@ -157,7 +158,7 @@ export default function SessionGeneralConfig({
   /* -- RENDER -- */
 
   return (
-    <>
+    <div className='SessionGeneralConfig'>
       <DetailLocked label='Mission Name' value={mission.name} />
       {sessionId !== null && (
         <DetailLocked label='Session ID' value={sessionId!} />
@@ -214,7 +215,7 @@ export default function SessionGeneralConfig({
           }}
         />
       )}
-    </>
+    </div>
   )
 }
 

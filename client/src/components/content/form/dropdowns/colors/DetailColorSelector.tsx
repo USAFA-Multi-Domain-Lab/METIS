@@ -51,7 +51,6 @@ export function DetailColorSelector({
         tooltipDescription={tooltipDescription}
         fieldType={fieldType}
       />
-
       <div className={fieldClasses.value}>
         <div
           className='Dropdown'

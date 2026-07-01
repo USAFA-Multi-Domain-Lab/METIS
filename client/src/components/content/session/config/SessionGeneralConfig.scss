@@ -1,0 +1,5 @@
+@use '../../form/index.scss' as *;
+
+.SessionGeneralConfig {
+  @include form-container;
+}

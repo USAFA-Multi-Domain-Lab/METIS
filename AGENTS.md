@@ -11,7 +11,7 @@ METIS is a **real-time cybersecurity training platform** designed for military a
 **General Instructions for Agents**
 
 - **Conversation Style** Never use the word "linter" when changes are made. If a change has been made, it was almost certainly a manual change made by the user.
-- **Working With Classes** Always order class members as follows: instance properties, constructor, instance methods, static properties, static methods. Group getters and setters with their private properties, such as `private _name`, `get name()`, and `set name(value)`, without line gaps. All other members should have a one line gap.
+- **Working With JS Classes** Always order class members as follows: instance properties, constructor, instance methods, static properties, static methods. Group getters and setters with their private properties, such as `private _name`, `get name()`, and `set name(value)`, without line gaps. All other members should have a one line gap.
 - **const vs let**: Use `let` for variables by default. `const` is only used for values where reassignment would be an actual concern. Most variables in the app are `let`.
 - **Casting Types** Casting is discouraged whenever proper typing is possible. When its unavoidable that's fine, but it should be a last resort.
 - **Naming Conventions** Typical abbreviations you would find in code are discouraged in this project. Please use terminology that would be safe for a professional email. No one-letter variable names in for loops or typing `req` instead of `request`. Spell the word out fully.

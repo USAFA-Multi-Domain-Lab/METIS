@@ -26,6 +26,7 @@ export const exportMission = async (
 ) => {
   // Extract the mission ID.
   let { _id: missionId } = request.params
+  missionId = missionId.toString()
 
   try {
     // Gather data from the database.

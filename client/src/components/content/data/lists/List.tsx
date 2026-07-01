@@ -7,6 +7,7 @@ import {
   usePostInitEffect,
 } from '@client/toolbox/hooks'
 import type { MetisComponent } from '@shared/MetisComponent'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { TUserPermissionId } from '@shared/users/UserPermission'
 import React, { useContext, useEffect, useRef, useState } from 'react'
@@ -22,6 +23,7 @@ import ListValidator from './ListValidator'
 import ListNav from './navs/ListNav'
 import type {
   TGetItemButtonDisabled,
+  TGetItemButtonHidden,
   TGetItemButtonLabel,
   TGetItemButtonPermission,
   TGetItemTooltip,
@@ -92,7 +94,10 @@ export function createDefaultListProps<
     searchBlacklist: [],
     selectionSync: useState<TItem | null>(null),
     getColumnLabel: (x) => StringToolbox.toTitleCase(x.toString()),
-    getCellText: (item, column) => (item[column] as any).toString(),
+    getCellContent: (item, column) => (item[column] as any).toString(),
+    isCellSelectable: () => true,
+    getAdditionalItemClasses: () => new ClassList(),
+    sortItems: (_a, _b, _sorting, applyDefault) => applyDefault(),
     getItemTooltip: () => '',
     getListButtonLabel: () => '',
     getListButtonPermissions: () => [],
@@ -100,6 +105,7 @@ export function createDefaultListProps<
     getItemButtonLabel: () => '',
     getItemButtonPermissions: () => [],
     getItemButtonDisabled: () => false,
+    getItemButtonHidden: () => false,
     getColumnWidth: () => '10em',
     onSelect: () => {},
     onItemDblClick: () => {},
@@ -727,13 +733,58 @@ export type TList_P<TItem extends MetisComponent> = {
    */
   getColumnLabel?: (column: TListColumnType<TItem>) => string
   /**
-   * Gets the text for a list item cell.
-   * @param item The item for which to get the text.
-   * @param column The column for which to get the text.
-   * @returns The text to display in the cell.
+   * Gets the content to display for a list item cell.
+   * @param item The item for which to get the content.
+   * @param column The column for which to get the content.
+   * @returns The content to display in the cell. May be a plain
+   * string or arbitrary JSX.
+   * @note When JSX is returned, sorting and searching fall back to
+   * the raw cell value, since only strings can be sorted/searched.
    * @default () => (item[column] as any).toString()
    */
-  getCellText?: (item: TItem, column: TListColumnType<TItem>) => string
+  getCellContent?: (
+    item: TItem,
+    column: TListColumnType<TItem>,
+  ) => React.ReactNode
+  /**
+   * Gets whether clicking the given cell should select (or deselect)
+   * its item.
+   * @param item The item the cell belongs to.
+   * @param column The column the cell belongs to.
+   * @returns Whether the cell's click should toggle selection.
+   * @note Returning `false` disables the cell's click-to-select
+   * behavior, which is useful for cells containing their own
+   * interactive content (e.g. dropdowns).
+   * @default () => true
+   */
+  isCellSelectable?: (item: TItem, column: TListColumnType<TItem>) => boolean
+  /**
+   * Compares two items for sorting when column-based sorting is
+   * active.
+   * @param a The first item to compare.
+   * @param b The second item to compare.
+   * @param sorting The current sorting state (column and direction).
+   * @param applyDefault Applies the built-in sort for the two items,
+   * returning its comparison result. Call this for columns where no
+   * custom behavior is needed.
+   * @returns A negative, zero, or positive number, per `Array.sort`.
+   * @default (a, b, sorting, applyDefault) => applyDefault()
+   */
+  sortItems?: (
+    a: TItem,
+    b: TItem,
+    sorting: TListSorting<TItem>,
+    applyDefault: () => number,
+  ) => number
+  /**
+   * Gets additional CSS classes to apply to the item's row.
+   * @param item The item for which to get the classes.
+   * @returns The classes to add to the row's root element.
+   * @note Useful for row-level styling driven by item state (e.g.
+   * highlighting banned members).
+   * @default () => new ClassList()
+   */
+  getAdditionalItemClasses?: (item: TItem) => ClassList
   /**
    * Gets the label for a list button.
    * @param button The button for which to get the label.
@@ -775,6 +826,16 @@ export type TList_P<TItem extends MetisComponent> = {
    * @default () => false
    */
   getItemButtonDisabled?: TGetItemButtonDisabled<TItem>
+  /**
+   * Gets whether the button for the item is hidden.
+   * @param button The button for which to check if it is hidden.
+   * @returns Whether the button is hidden.
+   * @note Hiding is per-item, evaluated for the selected item, which
+   * is useful for actions only valid in certain item states (e.g.
+   * only showing "unban" for banned members).
+   * @default () => false
+   */
+  getItemButtonHidden?: TGetItemButtonHidden<TItem>
   /**
    * Gets the width of the given column.
    * @param column The column for which to get the width.

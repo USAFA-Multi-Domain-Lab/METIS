@@ -12,7 +12,7 @@ import { StatusError } from '../../library/StatusError'
  */
 export const deleteSession: TExpressHandler = (request, response) => {
   try {
-    let _id: string = request.params._id
+    let _id: string = request.params._id.toString()
     let session: SessionServer | undefined = SessionServer.get(_id)
     let requester: ServerUser = response.locals.user
 

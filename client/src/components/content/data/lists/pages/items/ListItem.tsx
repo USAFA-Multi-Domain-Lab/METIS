@@ -39,11 +39,13 @@ export default function ListItem<T extends MetisComponent>({
     itemButtons,
     minNameColumnWidth,
     areIssues,
-    getCellText,
+    getCellContent,
     getColumnWidth,
     requireEnabledOnly,
     onItemDblClick,
     getItemButtonDisabled,
+    getItemButtonHidden,
+    getAdditionalItemClasses,
     getWarningText,
   } = listContext
   const { root: list } = listContext.elements
@@ -81,13 +83,24 @@ export default function ListItem<T extends MetisComponent>({
       .set('PartiallyDisabled', disabled)
       .set('Selected', selection?._id === item._id)
       .set('Deleted', item.deleted)
-      .set('Dragged', item._id === draggedItem?._id),
+      .set('Dragged', item._id === draggedItem?._id)
+      .import(getAdditionalItemClasses(item)),
   )
 
   /**
    * Whether this item is currently being dragged.
    */
   const isDragged = compute<boolean>(() => item._id === draggedItem?._id)
+
+  /**
+   * Whether every item button is hidden for this item, meaning the
+   * options menu would be empty.
+   */
+  const allButtonsHiddenForItem = compute<boolean>(
+    () =>
+      itemButtonIcons.length > 0 &&
+      itemButtonIcons.every((icon) => getItemButtonHidden(icon, item)),
+  )
 
   /**
    * Dynamic styling for the root element.
@@ -306,24 +319,26 @@ export default function ListItem<T extends MetisComponent>({
   }, [item])
 
   useEffect(() => {
-    // Enable/disable any buttons when the
-    // selection changes.
-    itemButtonIcons.forEach((icon) =>
-      optionsEngine.setDisabled(
-        icon,
-        !selection || getItemButtonDisabled(icon, selection),
-      ),
-    )
-  }, [selection])
+    // Enable/disable and show/hide the row's option-menu buttons based
+    // on this row's own item. The item is always the fresh instance
+    // (rows are keyed by id and re-rendered on updates), so the menu
+    // reflects remote changes such as status updates even while
+    // selected.
+    itemButtonIcons.forEach((icon) => {
+      optionsEngine.setDisabled(icon, getItemButtonDisabled(icon, item))
+      optionsEngine.setHidden(icon, getItemButtonHidden(icon, item))
+    })
+  }, [item])
 
   useEffect(() => {
-    // If the item is disabled, disable the
-    // options button.
+    // Disable the options button if the item is disabled, there are
+    // no item buttons, or every item button is hidden for this item
+    // (leaving nothing to show in the menu).
     optionMenuButtonEngine.setDisabled(
       'options',
-      disabled || !itemButtonIcons.length,
+      disabled || !itemButtonIcons.length || allButtonsHiddenForItem,
     )
-  }, [disabled, itemButtonIcons.length])
+  }, [disabled, itemButtonIcons.length, allButtonsHiddenForItem])
 
   useEffect(() => {
     if (selection?._id === item._id && disabled) {
@@ -384,7 +399,7 @@ export default function ListItem<T extends MetisComponent>({
     columns.forEach((column) =>
       result.push(
         <ListItemCell key={column.toString()} item={item} column={column}>
-          {getCellText(item, column)}
+          {getCellContent(item, column)}
         </ListItemCell>,
       ),
     )
@@ -462,6 +477,18 @@ export type TGetItemButtonPermission<TItem extends MetisComponent> = (
  */
 export type TGetItemButtonDisabled<TItem extends MetisComponent> = (
   // button: TSvgPanelElement['icon'],
+  button: string,
+  item: TItem | null,
+) => boolean
+
+/**
+ * Gets whether the button for the item is hidden.
+ * @param button The button for which to check if it is hidden.
+ * @param item The item the button belongs to.
+ * @returns Whether the button is hidden.
+ * @default () => false
+ */
+export type TGetItemButtonHidden<TItem extends MetisComponent> = (
   button: string,
   item: TItem | null,
 ) => boolean

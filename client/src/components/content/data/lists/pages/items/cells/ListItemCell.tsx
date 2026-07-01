@@ -17,10 +17,20 @@ export default function ListItemCell<TItem extends MetisComponent>({
   /* -- STATE -- */
 
   const listContext = useListContext<TItem>()
-  const { getItemTooltip, itemButtonIcons, requireEnabledOnly } = listContext
+  const {
+    getItemTooltip,
+    itemButtonIcons,
+    requireEnabledOnly,
+    isCellSelectable,
+  } = listContext
   const [selection, setSelection] = listContext.state.selection
 
   /* -- COMPUTED -- */
+
+  /**
+   * Whether clicking this cell should toggle item selection.
+   */
+  const selectable = compute<boolean>(() => isCellSelectable(item, column))
 
   /**
    * Root class name for the component.
@@ -31,6 +41,10 @@ export default function ListItemCell<TItem extends MetisComponent>({
       'ItemCellLike',
       `ListItemCell_${column.toString()}`,
     ]
+
+    // Mark cells that opt out of selection so the row hover effect
+    // can be suppressed when they are hovered.
+    if (!selectable) classList.push('NotSelectable')
 
     return classList.join(' ')
   })
@@ -75,6 +89,9 @@ export default function ListItemCell<TItem extends MetisComponent>({
    * Callback for when the item cell is clicked.
    */
   const onClick = requireEnabledOnly(item, () => {
+    // Skip selection for cells that opt out (e.g. cells containing
+    // their own interactive content like dropdowns).
+    if (!selectable) return
     if (selection?._id === item._id) setSelection(null)
     else setSelection(item)
   })
@@ -84,7 +101,7 @@ export default function ListItemCell<TItem extends MetisComponent>({
   // Render the item cell.
   return (
     <div className={rootClass} onClick={onClick}>
-      <Tooltip description={tooltipDescription} /> {children}
+      {selectable && <Tooltip description={tooltipDescription} />} {children}
     </div>
   )
 }

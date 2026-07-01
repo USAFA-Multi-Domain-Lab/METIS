@@ -114,8 +114,8 @@ export const restrictUserManagement = async (
   let userIds: string[] = []
 
   // Collect user IDs from params, query, or request body
-  if (request.params._id) userIds.push(request.params._id)
-  if (request.query._id) userIds.push(request.query._id)
+  if (request.params._id) userIds.push(request.params._id.toString())
+  if (request.query._id) userIds.push(request.query._id.toString())
 
   // Extract IDs from users in body if they exist
   users.forEach((user) => {

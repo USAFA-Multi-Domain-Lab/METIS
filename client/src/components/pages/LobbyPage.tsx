@@ -15,6 +15,7 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useEffect, useState } from 'react'
 import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
+import SessionMemberList from '../content/data/lists/implementations/members/SessionMemberList'
 import type { TNavigation_P } from '../content/general-layout/Navigation'
 import { HomeButton } from '../content/general-layout/Navigation'
 import Panel from '../content/general-layout/panels/Panel'
@@ -22,7 +23,6 @@ import PanelView from '../content/general-layout/panels/PanelView'
 import PropertyBadge from '../content/general-layout/property-badges/PropertyBadge'
 import PropertyBadges from '../content/general-layout/property-badges/PropertyBadges'
 import SessionConfigMenu from '../content/session/config/SessionConfigMenu'
-import SessionMembers from '../content/session/members/SessionMembers'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './LobbyPage.scss'
 
@@ -323,7 +323,7 @@ export default function LobbyPage({
         <Panel transparent>
           <PanelView title={'Members'}>
             <div className='MembersSection Section'>
-              <SessionMembers session={session} />
+              <SessionMemberList session={session} />
             </div>
           </PanelView>
           {session.member.isAuthorized('configureSessions') && (
