@@ -1,3 +1,4 @@
+import Tooltip from '@client/components/content/communication/Tooltip'
 import type { ClientTargetArgument } from '@client/target-environments/arguments/ClientTargetArgument'
 import { useObjectFormSync } from '@client/toolbox/hooks'
 import { TargetArgument } from '@shared/target-environments/arguments/TargetArgument'
@@ -80,7 +81,14 @@ export default function DropdownArgumentDetail({
         isExpanded={false}
         tooltipDescription={parameter.tooltipDescription}
         getKey={({ _id }) => _id}
-        render={({ name }) => name}
+        render={({ name, tooltipDescription }) => {
+          return (
+            <>
+              {name}
+              <Tooltip description={tooltipDescription ?? ''} />
+            </>
+          )
+        }}
         handleInvalidOption={{
           method: 'warning',
           message: staleWarningMessage,
@@ -120,7 +128,14 @@ export default function DropdownArgumentDetail({
         isExpanded={false}
         tooltipDescription={parameter.tooltipDescription}
         getKey={(option) => option?._id}
-        render={(option) => option?.name}
+        render={(option) => {
+          return (
+            <div>
+              {option?.name}
+              <Tooltip description={option?.tooltipDescription ?? ''} />
+            </div>
+          )
+        }}
         handleInvalidOption={{
           method: 'warning',
           message: staleWarningMessage,

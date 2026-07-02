@@ -28,7 +28,8 @@ export default function UserEntry({
   const [lastNameErrorMessage, setLastNameErrorMessage] = useState<string>()
   const [password1ErrorMessage, setPassword1ErrorMessage] = useState<string>()
   const [password2ErrorMessage, setPassword2ErrorMessage] = useState<string>()
-  const [username, setUsername] = useState<string>(user.username)
+  const [currentUsername, setCurrentUsername] = useState<string>(user.username)
+  const [originalUsername] = useState<string>(user.username)
   const [access, setAccess] = useState<UserAccess>(user.access)
   const [firstName, setFirstName] = useState<string>(user.firstName)
   const [lastName, setLastName] = useState<string>(user.lastName)
@@ -90,30 +91,30 @@ export default function UserEntry({
 
   // Sync the component state with the username property.
   usePostInitEffect(() => {
-    user.username = username
+    user.username = currentUsername
 
     // Clear any existing duplicate-username error as the user types.
     setUsernameAlreadyExists(false)
 
-    if (username !== '' && user.hasValidUsername) {
+    if (currentUsername !== '' && user.hasValidUsername) {
       removeUserEmptyString('username')
       setUsernameErrorMessage('')
       handleChange()
     }
 
-    if (username === '' && !user.hasValidUsername) {
+    if (currentUsername === '' && !user.hasValidUsername) {
       setUserEmptyStringArray([...userEmptyStringArray, `field=username`])
       setUsernameErrorMessage('At least one character is required here.')
     }
 
-    if (username !== '' && !user.hasValidUsername) {
+    if (currentUsername !== '' && !user.hasValidUsername) {
       setUsernameErrorMessage(
         'Usernames must be between 5 and 50 characters long and can only contain letters, numbers, and the following special characters: - _ .',
       )
     }
 
     forceUpdate()
-  }, [username])
+  }, [currentUsername])
 
   // Sync the component state with the user access property.
   usePostInitEffect(() => {
@@ -269,8 +270,11 @@ export default function UserEntry({
    * It checks if the username already exists in the database.
    */
   const handleUsernameOnBlur = async () => {
-    if (!existsInDatabase && user.hasValidUsername) {
-      let result = await ClientUser.$checkUsername(username)
+    if (
+      (!existsInDatabase && user.hasValidUsername) ||
+      (existsInDatabase && originalUsername !== currentUsername)
+    ) {
+      let result = await ClientUser.$checkUsername(currentUsername)
 
       if (result === 'active') {
         setUsernameAlreadyExists(true)
@@ -293,8 +297,8 @@ export default function UserEntry({
       <DetailString
         fieldType='required'
         label='Username'
-        value={username}
-        setValue={setUsername}
+        value={currentUsername}
+        setValue={setCurrentUsername}
         errorMessage={usernameErrorMessage}
         placeholder='Enter a username here...'
         onBlur={handleUsernameOnBlur}

@@ -10,9 +10,7 @@ const Delay = TargetSchema.create({
   description: 'Adds a delay in a series of effects being processed.',
   script: async (
     context,
-    delayTimeHours,
-    delayTimeMinutes,
-    delayTimeSeconds,
+    { delayTimeHours, delayTimeMinutes, delayTimeSeconds },
   ) => {
     let delayTime: number = 0
     // Update the delay time based on the provided values.

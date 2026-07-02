@@ -137,6 +137,39 @@ export class WebSocketApi extends Api {
   private _maxReconnectDelayMs: number
 
   /**
+   * Backing field for {@link queueWhileDisconnected}.
+   */
+  private _queueWhileDisconnected: boolean
+  /**
+   * Whether messages should be queued while the socket is disconnected and
+   * flushed automatically once the connection is re-established.
+   */
+  public get queueWhileDisconnected(): boolean {
+    return this._queueWhileDisconnected
+  }
+
+  /**
+   * Maximum number of messages allowed in the send queue at one time.
+   */
+  private _maxQueueSize: number
+
+  /**
+   * The number of messages currently waiting in the send queue.
+   */
+  public get queuedMessageCount(): number {
+    return this._sendQueue.length
+  }
+
+  /**
+   * Messages pending delivery, queued while the socket was not connected.
+   */
+  private _sendQueue: Array<{
+    payload: string
+    resolve: () => void
+    reject: (err: Error) => void
+  }>
+
+  /**
    * Controls whether TLS client verifies the server's certificate against
    * trusted Certificate Authorities (CAs).
    * @note If true, the server will reject any connection which is not authorized
@@ -180,6 +213,10 @@ export class WebSocketApi extends Api {
       options.reconnectDelay ?? WebSocketApi.DEFAULT_RECONNECT_DELAY
     this._maxReconnectDelayMs =
       options.maxReconnectDelay ?? WebSocketApi.DEFAULT_MAX_RECONNECT_DELAY
+    this._queueWhileDisconnected = options.queueWhileDisconnected ?? false
+    this._maxQueueSize =
+      options.maxQueueSize ?? WebSocketApi.DEFAULT_MAX_QUEUE_SIZE
+    this._sendQueue = []
   }
 
   /**
@@ -550,6 +587,7 @@ export class WebSocketApi extends Api {
           })
 
           this.startKeepAlive()
+          this.flushQueue()
           resolve()
         })
 
@@ -656,6 +694,9 @@ export class WebSocketApi extends Api {
       // Reset reconnect attempt count on manual disconnect.
       this._reconnectAttemptCount = 0
 
+      // Reject any queued sends — they will never be delivered.
+      this.clearQueue()
+
       if (!this._connection || this.state === WebSocket.CLOSED) {
         this._connection = null
         resolve()
@@ -683,23 +724,33 @@ export class WebSocketApi extends Api {
 
   /**
    * Sends data through the WebSocket connection.
+   * If the socket is disconnected and {@link queueWhileDisconnected} is enabled,
+   * the message is held in the send queue and flushed on the next successful open.
    * @param data The data to send.
-   * @resolves when the data has been sent.
-   * @rejects If the WebSocket is not connected or the data cannot be serialized.
+   * @resolves when the data has been sent (or queued for delivery).
+   * @rejects If the WebSocket is not connected (and queuing is disabled), the
+   * queue is full, or the data cannot be serialized.
    */
   public send(data: any): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (!this.isConnected) {
-        reject(new Error('WebSocket is not connected'))
-        return
-      }
-
       try {
         let payload: string
         if (typeof data === 'string') {
           payload = data
         } else {
           payload = JSON.stringify(data)
+        }
+
+        if (!this.isConnected && this._queueWhileDisconnected) {
+          if (this._sendQueue.length >= this._maxQueueSize) {
+            reject(new Error('WebSocket send queue is full.'))
+            return
+          }
+          this._sendQueue.push({ payload, resolve, reject })
+          return
+        } else if (!this.isConnected) {
+          reject(new Error('WebSocket is not connected'))
+          return
         }
 
         this._connection!.send(payload)
@@ -718,6 +769,37 @@ export class WebSocketApi extends Api {
    */
   public async sendMessage(message: TAnyObject): Promise<void> {
     return await this.send(message)
+  }
+
+  /**
+   * Rejects and discards all messages currently in the send queue.
+   * @returns The number of messages that were cleared.
+   */
+  public clearQueue(): number {
+    let count = this._sendQueue.length
+    let error = new Error('Send queue cleared.')
+    for (let item of this._sendQueue) {
+      item.reject(error)
+    }
+    this._sendQueue = []
+    return count
+  }
+
+  /**
+   * Sends all queued messages in order. Called immediately after the
+   * connection opens. Any message that fails to send rejects its promise.
+   */
+  private flushQueue(): void {
+    let queue = this._sendQueue
+    this._sendQueue = []
+    for (let item of queue) {
+      try {
+        this._connection!.send(item.payload)
+        item.resolve()
+      } catch (error: any) {
+        item.reject(error)
+      }
+    }
   }
 
   /**
@@ -762,6 +844,11 @@ export class WebSocketApi extends Api {
    * The default max reconnect delay in milliseconds.
    */
   private static readonly DEFAULT_MAX_RECONNECT_DELAY = 30000 // 30 seconds
+
+  /**
+   * The default maximum number of messages held in the send queue.
+   */
+  private static readonly DEFAULT_MAX_QUEUE_SIZE = 100
 }
 
 /**
@@ -815,6 +902,20 @@ const webSocketApiOptionsSchema = apiOptionsSchema.extend({
    * @default 30000 (30 seconds)
    */
   maxReconnectDelay: z.number().int().min(1000).max(300000).optional(),
+
+  /**
+   * Whether messages sent while the socket is disconnected should be held in
+   * a queue and flushed automatically on the next successful open.
+   * @default false
+   */
+  queueWhileDisconnected: z.boolean().optional(),
+
+  /**
+   * Maximum number of messages to hold in the send queue.
+   * If the queue is full, subsequent `send()` calls will reject immediately.
+   * @default 100
+   */
+  maxQueueSize: z.number().int().min(1).max(10000).optional(),
 })
 
 /**

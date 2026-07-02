@@ -1,6 +1,5 @@
 import type { TMissionComponentType } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
 import type { TTargetParameterJson } from '@shared/target-environments/parameters/TargetParameter'
-import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
 import type { TTargetJson } from '@shared/target-environments/targets/Target'
 import type {
   TExposedArgCompatibleComponent,
@@ -15,7 +14,10 @@ import type {
   TTargetEnvExposedPool,
   TTargetEnvExposedResource,
 } from '../context/TargetEnvContext'
-import type { TTargetScriptExposedContext } from '../context/TargetScriptContext'
+import type {
+  TGetArgumentsFunctionLoose,
+  TTargetScriptExposedContext,
+} from '../context/TargetScriptContext'
 import { TargetMigrationRegistry } from '../TargetMigrationRegistry'
 
 /**
@@ -123,13 +125,13 @@ export class TargetSchema {
    *     { _id: 'minutes', type: 'number', required: true, ... },
    *     { _id: 'seconds', type: 'number', required: true, ... },
    *   ],
-   *   script: async (context, hours, minutes, seconds) => {
+   *   script: async (context, { hours, minutes, seconds }) => {
    *     let delayTime: number = 0
    *
    *     // Update the delay time based on the provided values.
-   *     delayTime += delayTimeHours * 3600 * 1000 // ms
-   *     delayTime += delayTimeMinutes * 60 * 1000 // ms
-   *     delayTime += delayTimeSeconds * 1000 // ms
+   *     delayTime += hours * 3600 * 1000 // ms
+   *     delayTime += minutes * 60 * 1000 // ms
+   *     delayTime += seconds * 1000 // ms
    *
    *     // Only resolve after the delay time has passed.
    *     await context.sleep(delayTime)
@@ -137,36 +139,27 @@ export class TargetSchema {
    * })
    * ```
    */
-  public static create<const Params extends readonly TTargetParameterJson[]>(
-    options: TTypedTargetSchemaOptions<Params> & {
-      parameters: TValidateDropdownDefaults<NoInfer<Params>>
+  public static create<
+    const Parameters extends readonly TTargetParameterJson[],
+  >(
+    options: TTargetSchemaCreateOptions<Parameters> & {
+      parameters: TWithValidatedDropdownDefaults<NoInfer<Parameters>>
     },
   ): TargetSchema {
     const { script: typedScript, parameters } = options
 
-    const decodedParameters = parameters.map((parameter) => ({
-      parameter,
-      dependencies: parameter.dependencies?.map(TargetDependency.DECODE) ?? [],
-    }))
-
     const wrappedScript: TTargetScript = (context) => {
-      const resolved = new Map<string, unknown>()
+      // Dependency-gated resolution lives on the context's `getArguments` (backed by
+      // each argument's `dependenciesMet`), so the wrapper just collects every
+      // parameter's value into the `effectArguments` object passed to the script.
+      const effectArguments = context.getArguments(
+        parameters.map((parameter) => parameter._id),
+      ) as TScriptArgumentValues<Parameters>
 
-      for (const { parameter, dependencies } of decodedParameters) {
-        const match = context.effect.arguments.find(
-          (argument) => argument.parameterId === parameter._id,
-        )
-        const dependenciesMet = dependencies.every((dependency) =>
-          dependency.condition(resolved.get(dependency.dependentId)),
-        )
-        resolved.set(parameter._id, dependenciesMet ? match?.value : undefined)
-      }
-
-      const argValues = parameters.map((parameter) =>
-        resolved.get(parameter._id),
-      ) as InferArgumentsTuple<Params>
-
-      return typedScript(context, ...argValues)
+      return typedScript(
+        context as TTargetScriptContext<Parameters>,
+        effectArguments,
+      )
     }
 
     return new TargetSchema({
@@ -207,11 +200,12 @@ export interface TTargetSchemaOptions extends Omit<
 }
 
 /**
- * The minimum shape a parameter must satisfy to be usable with
- * {@link InferArgumentsTuple}. Both {@link TTargetParameterJson} and
- * {@link TTargetParameter} are structural subtypes of this.
+ * The minimum shape a parameter must have to be used with the target schema
+ * typing utilities. Both {@link TTargetParameterJson} and {@link TTargetParameter}
+ * satisfy this shape.
  */
-type TParamLike = {
+type TCompatibleParameter = {
+  _id: string
   type: keyof TSelectExposedArgumentValue
   required?: boolean
   validComponentTypes?:
@@ -222,10 +216,10 @@ type TParamLike = {
 }
 
 /**
- * Maps a {@link TMissionComponentType} string to the corresponding exposed
- * component type that will appear as an argument value at runtime.
+ * Maps each mission component type string to the corresponding exposed component
+ * object that will be available as an argument value at runtime.
  */
-type TSelectExposedMissionComponent = {
+type TExposedMissionComponentByType = {
   mission: TTargetEnvExposedMission
   force: TTargetEnvExposedForce
   node: TTargetEnvExposedNode
@@ -237,41 +231,46 @@ type TSelectExposedMissionComponent = {
 }
 
 /**
- * Core resolution logic for {@link SingleParamToArgValue}. Narrows the arg
- * value type based on `type`, `required`, `validComponentTypes`, and `options`
- * — without considering whether the parameter has dependencies.
+ * Resolves the argument value type for a single parameter based on its `type`,
+ * `required` flag, `validComponentTypes`, and `options` — before considering
+ * whether the parameter has unsatisfied dependencies.
  */
-type ResolveArgValue<P extends TParamLike> = P extends {
-  type: 'mission-component'
-  validComponentTypes:
-    | ReadonlyArray<infer V extends TMissionComponentType>
-    | Array<infer V extends TMissionComponentType>
-}
-  ? Array<TSelectExposedMissionComponent[V]>
-  : P extends { type: 'number'; required: true }
-    ? NonNullable<TSelectExposedArgumentValue['number']>
-    : P extends {
-          type: 'dropdown'
-          options: ReadonlyArray<{ value: infer V }> | Array<{ value: infer V }>
-        }
-      ? V
-      : TSelectExposedArgumentValue[P['type']]
+type TBaseArgumentValue<Parameter extends TCompatibleParameter> =
+  Parameter extends {
+    type: 'mission-component'
+    validComponentTypes:
+      | ReadonlyArray<infer ComponentType extends TMissionComponentType>
+      | Array<infer ComponentType extends TMissionComponentType>
+  }
+    ? Array<TExposedMissionComponentByType[ComponentType]>
+    : Parameter extends { type: 'number'; required: true }
+      ? NonNullable<TSelectExposedArgumentValue['number']>
+      : Parameter extends {
+            type: 'dropdown'
+            options:
+              | ReadonlyArray<{ value: infer OptionValue }>
+              | Array<{ value: infer OptionValue }>
+          }
+        ? OptionValue
+        : TSelectExposedArgumentValue[Parameter['type']]
 
 /**
- * Adds `| undefined` when `P` declares at least one dependency. A parameter
- * with a non-empty `dependencies` array may receive `undefined` at runtime
- * when its dependencies are not met, so the type must reflect that.
+ * Adds `| undefined` to a parameter's value type when that parameter declares
+ * at least one dependency. A parameter whose dependencies are not met will
+ * receive `undefined` at runtime.
  */
-type MaybeDepUndefined<P extends TParamLike, V> = P extends {
-  dependencies:
-    | readonly [string, ...string[]]
-    | [string, ...string[]]
+type THasDependenciesSoMaybeUndefined<
+  Parameter extends TCompatibleParameter,
+  Value,
+> = Parameter extends {
+  dependencies: readonly [string, ...string[]] | [string, ...string[]]
 }
-  ? V | undefined
-  : V
+  ? Value | undefined
+  : Value
 
 /**
- * Extracts the value type for a single parameter with the following narrowing:
+ * The fully resolved argument value type for a single parameter. Combines the
+ * base value type with the dependency-undefined check.
  *
  * - `mission-component` with `validComponentTypes` → `Array<T | U | ...>` using
  *   only the listed component types instead of the full {@link TExposedArgCompatibleComponent} union.
@@ -280,46 +279,98 @@ type MaybeDepUndefined<P extends TParamLike, V> = P extends {
  * - `dropdown` with `options` → the exact union of each option's `value` type
  *   instead of the wide {@link TDropdownTargetParameterOptionVal} fallback.
  * - Any parameter with a non-empty `dependencies` array → `T | undefined`,
- *   because the framework sets the arg to `undefined` when deps are not met.
+ *   because the framework sets the argument to `undefined` when its
+ *   dependencies are not met.
  */
-type SingleParamToArgValue<P extends TParamLike> = MaybeDepUndefined<
-  P,
-  ResolveArgValue<P>
->
+type TResolvedArgumentValue<Parameter extends TCompatibleParameter> =
+  THasDependenciesSoMaybeUndefined<Parameter, TBaseArgumentValue<Parameter>>
 
 /**
- * Derives a positional tuple of argument value types from a readonly tuple of
- * parameters, preserving declaration order.
+ * A record mapping each parameter's `_id` string literal to its fully resolved
+ * argument value type. This is the shape of the `effectArguments` object passed
+ * to a typed target script, and the value map backing {@link TGetArgumentsFunction}.
  *
- * Each element corresponds to the exposed value type for the parameter at the
- * same index — sourced from {@link TSelectExposedArgumentValue} so the types
- * always match what a target-env script actually receives at runtime.
+ * @example
+ * ```ts
+ * type ArgumentValues = TScriptArgumentValues<typeof MyTarget.parameters>
+ * // ArgumentValues['callsign'] → string, ArgumentValues['heading'] → number | undefined, etc.
+ * ```
  */
-export type InferArgumentsTuple<Params extends readonly TParamLike[]> = {
-  [K in keyof Params]: Params[K] extends TParamLike
-    ? SingleParamToArgValue<Params[K]>
-    : never
+export type TScriptArgumentValues<
+  Parameters extends readonly TCompatibleParameter[],
+> = {
+  readonly [Parameter in Parameters[number] as Parameter extends {
+    _id: infer Key extends string
+  }
+    ? string extends Key
+      ? never
+      : Key
+    : never]: TResolvedArgumentValue<Parameter>
 }
 
 /**
- * A typed script that receives one positional argument per parameter, in
- * declaration order, in addition to the context object.
- *
- * Use with {@link TargetSchema.create} so that TypeScript can infer the
- * argument types from the `parameters` array at the call site.
+ * The typed function signature for `getArguments` on a parameterized target
+ * script context. Overloaded: passing a single parameter `_id` returns that
+ * argument's value; passing an array of `_id`s returns an object mapping each
+ * `_id` to its value.
  */
-export type TTypedTargetScript<Params extends readonly TParamLike[]> = (
-  context: TTargetScriptExposedContext,
-  ...args: InferArgumentsTuple<Params>
+type TGetArgumentsFunction<
+  Parameters extends readonly TCompatibleParameter[],
+> = {
+  <Key extends keyof TScriptArgumentValues<Parameters>>(
+    id: Key,
+  ): TScriptArgumentValues<Parameters>[Key]
+  <Key extends keyof TScriptArgumentValues<Parameters>>(
+    ids: readonly Key[],
+  ): { [EachKey in Key]: TScriptArgumentValues<Parameters>[EachKey] }
+}
+
+/**
+ * The context object passed to a target script. This is the single canonical
+ * context type, shared by {@link TargetSchema.create} and by any helper that
+ * receives the context — such as a modular target-parameter `script` method.
+ *
+ * When given a parameter list, `getArguments` is precisely typed: it accepts
+ * only those parameters' `_id`s and returns each argument's resolved value type.
+ * When used without a parameter list (the default), `getArguments` keeps its
+ * loosely-typed signature — useful for helpers that operate across many targets
+ * and do not care about a specific parameter list.
+ *
+ * A context typed for a larger parameter list is assignable to one typed for a
+ * subset, so a parent target can pass its fully-typed context to a module whose
+ * `script` only declares its own parameters.
+ */
+export type TTargetScriptContext<
+  Parameters extends readonly TCompatibleParameter[] = [],
+> = Omit<TTargetScriptExposedContext, 'getArguments'> & {
+  getArguments: [Parameters] extends [readonly []]
+    ? TGetArgumentsFunctionLoose
+    : TGetArgumentsFunction<Parameters>
+}
+
+/**
+ * A target script function that receives a precisely-typed context and a record
+ * of resolved argument values derived from the given parameter list. Use with
+ * {@link TargetSchema.create} so TypeScript can infer each argument's type from
+ * the `parameters` array at the call site. The context's `getArguments` accessor
+ * is narrowed to the same parameter list, replacing the base context's loosely
+ * typed getter.
+ */
+export type TTargetScriptWithParameterTypes<
+  Parameters extends readonly TCompatibleParameter[],
+> = (
+  context: TTargetScriptContext<Parameters>,
+  effectArguments: TScriptArgumentValues<Parameters>,
 ) => Promise<void>
 
 /**
- * For a required dropdown parameter, resolves to `{ default: Options[number]['_id'] }`
- * so that intersecting it with the parameter type constrains `default` to only the
- * `_id` values present in `options`. For all other parameter types resolves to
- * `unknown`, which is the intersection identity and leaves the parameter type unchanged.
+ * For a required dropdown parameter, produces the shape
+ * `{ default: one of the declared option values }` so that intersecting it
+ * constrains the `default` field to a valid option. For all other parameter
+ * types, resolves to `unknown` (the intersection identity), leaving the
+ * parameter type unchanged.
  */
-type TDropdownDefaultConstraint<P> = P extends {
+type TDropdownDefaultValidator<Parameter> = Parameter extends {
   type: 'dropdown'
   required: true
   options: infer Options extends readonly { _id: string }[]
@@ -328,25 +379,27 @@ type TDropdownDefaultConstraint<P> = P extends {
   : unknown
 
 /**
- * Maps over a parameter tuple and intersects each required-dropdown entry with
- * {@link TDropdownDefaultConstraint}, producing a compile-time error when
- * `default` is not one of the `_id` values declared in `options`.
- * All other parameter types pass through unchanged.
+ * Maps over a parameter list and intersects each required-dropdown entry with
+ * {@link TDropdownDefaultValidator}, producing a compile-time error when a
+ * `default` value is not one of the declared option values. All other parameter
+ * types pass through unchanged.
  */
-type TValidateDropdownDefaults<Params extends readonly unknown[]> = {
-  [K in keyof Params]: Params[K] & TDropdownDefaultConstraint<Params[K]>
+type TWithValidatedDropdownDefaults<Parameters extends readonly unknown[]> = {
+  [Key in keyof Parameters]: Parameters[Key] &
+    TDropdownDefaultValidator<Parameters[Key]>
 }
 
 /**
  * Options for {@link TargetSchema.create}.
  *
- * Identical to {@link TTargetSchemaOptions} except that `parameters` is the
- * narrowly-typed `Params` tuple (preserving literal `_id`/`type` values) and
- * `script` accepts typed positional arguments derived from those parameters.
+ * Like {@link TTargetSchemaOptions} except that `parameters` preserves the
+ * narrowly-typed tuple (keeping literal `_id` and `type` values) and `script`
+ * accepts a typed function that receives argument values derived from that
+ * parameter list.
  */
-export interface TTypedTargetSchemaOptions<
-  Params extends readonly TTargetParameterJson[],
+export interface TTargetSchemaCreateOptions<
+  Parameters extends readonly TTargetParameterJson[],
 > extends Omit<TTargetSchemaOptions, 'script' | 'parameters'> {
-  parameters: Params
-  script: TTypedTargetScript<Params>
+  parameters: Parameters
+  script: TTargetScriptWithParameterTypes<Parameters>
 }

@@ -8,7 +8,7 @@ const ResourcePool = TargetSchema.create({
   _id: 'resource-pool',
   name: 'Resource Pool',
   description: "Modify a force's resource pool",
-  script: async (context, applyTo, operation, amount) => {
+  script: async (context, { applyTo, operation, amount }) => {
     switch (operation) {
       case 'award':
         context.modifyResourcePool(applyTo, amount)

@@ -56,6 +56,7 @@ export class DropdownTargetParameter {
         _id: option._id,
         name: option.name,
         value: option.value,
+        tooltipDescription: option.tooltipDescription,
       }
     })
   }
@@ -110,6 +111,7 @@ export class DropdownTargetParameter {
         _id: option._id,
         name: option.name,
         value: option.value,
+        tooltipDescription: option.tooltipDescription,
       }
     })
   }
@@ -131,10 +133,7 @@ export class DropdownTargetParameter {
  * The dropdown parameter type for a target.
  */
 export type TDropdownTargetParameter = TBaseTargetParameter &
-  (
-    | TDropdownTargetParameterOptional
-    | TDropdownTargetParameterRequired
-  ) & {
+  (TDropdownTargetParameterOptional | TDropdownTargetParameterRequired) & {
     /**
      * The parameter's input type.
      * @note This will render as a dropdown box with
@@ -276,6 +275,12 @@ export type TDropdownTargetParameterOption<
    * ```
    */
   value: Value
+  /**
+   * This will be used for a hover-over tooltip.
+   * @note This can be used to provide additional information or clarification about the argument.
+   * @default undefined
+   */
+  tooltipDescription?: string
 }
 /**
  * The dropdown parameter type for a target.
@@ -426,6 +431,12 @@ export type TDropdownTargetParameterOptionJson<
    * ```
    */
   value: Value
+  /**
+   * This will be used for a hover-over tooltip.
+   * @note This can be used to provide additional information or clarification about the argument.
+   * @default undefined
+   */
+  tooltipDescription?: string
 }
 
 /**

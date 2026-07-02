@@ -42,7 +42,7 @@ const NodeOpenState = TargetSchema.create({
   _id: 'open-state',
   name: 'Node Open State',
   description: 'Opens or closes a node(s), revealing or hiding its descendants',
-  script: async (context, applyTo, openState) => {
+  script: async (context, { applyTo, openState }) => {
     context.updateNodeOpenState(applyTo, openState === 'open')
   },
   parameters: [

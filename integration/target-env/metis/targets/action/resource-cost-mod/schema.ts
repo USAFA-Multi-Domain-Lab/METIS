@@ -9,7 +9,7 @@ const ResourceCostMod = TargetSchema.create({
   _id: 'resource-cost-mod',
   name: 'Resource Cost Modifier',
   description: '',
-  script: async (context, applyTo, resources, amount) => {
+  script: async (context, { applyTo, resources, amount }) => {
     context.modifyResourceCost(applyTo, resources, amount)
   },
   parameters: [

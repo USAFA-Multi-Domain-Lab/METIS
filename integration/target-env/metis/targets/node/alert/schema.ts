@@ -62,7 +62,7 @@ const NodeAlert = TargetSchema.create({
   _id: 'node-alert',
   name: 'Node Alert',
   description: 'Adds an alert to a node.',
-  script: async (context, applyTo, severityLevel, message) => {
+  script: async (context, { applyTo, severityLevel, message }) => {
     context.addNodeAlert(applyTo, message, severityLevel)
   },
   parameters: [
@@ -85,7 +85,7 @@ const NodeAlert = TargetSchema.create({
         warningOption,
         dangerOption,
       ] as const,
-      default: 'warning',
+      default: warningOption._id,
     },
     {
       type: 'large-string',

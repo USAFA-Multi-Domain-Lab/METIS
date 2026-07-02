@@ -12,6 +12,7 @@ import { ClientOutput } from '@client/missions/forces/ClientOutput'
 import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import { ClientSessionRealm } from '@client/sessions/ClientSessionRealm'
 import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
+import { Logging } from '@client/toolbox/Logging'
 import { ClientUser } from '@client/users/ClientUser'
 import type {
   TGenericServerEvents,
@@ -209,16 +210,20 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       config,
       setupResults: setupResultData,
       teardownResults: teardownResultData,
+      liveResults: liveResultData,
       chatChannels,
       unreadChatChannelMessages,
       pendingSessionPanelAlerts,
     } = data
 
-    // Parse setup and teardown results.
+    // Parse setup, teardown, and live results.
     let setupResults = setupResultData.map((datum) =>
       EnvScriptResults.fromJson(datum, ClientTargetEnvironment.REGISTRY),
     )
     let teardownResults = teardownResultData.map((datum) =>
+      EnvScriptResults.fromJson(datum, ClientTargetEnvironment.REGISTRY),
+    )
+    let liveResults = liveResultData.map((datum) =>
       EnvScriptResults.fromJson(datum, ClientTargetEnvironment.REGISTRY),
     )
 
@@ -236,6 +241,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       memberData,
       setupResults,
       teardownResults,
+      liveResults,
       chatChannels,
     )
 
@@ -265,6 +271,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       ['session-members-updated', this.onMembersUpdate],
       ['session-setup-update', this.onSetupUpdate],
       ['session-teardown-update', this.onTeardownUpdate],
+      ['session-live-update', this.onLiveUpdate],
       ['force-assigned', this.onForceAssigned],
       ['role-assigned', this.onRoleAssigned],
       ['node-opened', this.onNodeOpenedResponse],
@@ -372,6 +379,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       members: this.members.map((member) => member.toJson()),
       setupResults: this.setupResults.map((result) => result.toJson()),
       teardownResults: this.teardownResults.map((result) => result.toJson()),
+      liveResults: this.liveResults.map((result) => result.toJson()),
       config: this.config,
       chatChannels: this._chatChannels.map((chat) => chat.toJson()),
       unreadChatChannelMessages: {},
@@ -1449,6 +1457,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       EnvScriptResults.fromJson(data, ClientTargetEnvironment.REGISTRY),
     )
     this.setupResults.push(...newResults)
+    this.logScriptResults(newResults)
   }
 
   /**
@@ -1463,6 +1472,96 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       EnvScriptResults.fromJson(data, ClientTargetEnvironment.REGISTRY),
     )
     this.teardownResults.push(...newResults)
+    this.logScriptResults(newResults)
+  }
+
+  /**
+   * Handles when new target script results (effects) occur
+   * live, while the session is in the `started` state.
+   * @param event The event emitted by the server.
+   */
+  private onLiveUpdate = (
+    event: TServerEvents['session-live-update'],
+  ): void => {
+    let newResults = event.data.results.map((data) =>
+      EnvScriptResults.fromJson(data, ClientTargetEnvironment.REGISTRY),
+    )
+    this.liveResults.push(...newResults)
+    this.logScriptResults(newResults)
+  }
+
+  /**
+   * Logs target script results (hooks and effects) to the
+   * console at the session level, so managers can monitor and diagnose
+   * them as they occur.
+   * @param results The newly realized results to log.
+   */
+  private logScriptResults(results: EnvScriptResults[]): void {
+    let context = 'TE'
+
+    for (let result of results) {
+      let { source, status, environment, error } = result
+      let errorMessage =
+        error?.message || error?.code || error?.name || 'Unknown error'
+
+      switch (source.kind) {
+        case 'hook': {
+          let label =
+            source.method === 'environment-setup' ? 'setup' : 'teardown'
+          let properties = [environment.name, source.method]
+          let message = undefined
+
+          if (status === 'success') {
+            message = `${environment.name} ${label} hook succeeded.`
+            Logging.info(message, { context, properties })
+          } else if (status === 'skipped') {
+            message = `${environment.name} ${label} hook was skipped (a prior hook in this environment failed).`
+            Logging.warning(message, { context, properties })
+          } else {
+            message = `${environment.name} ${label} hook failed: ${errorMessage}`
+            Logging.error(message, { context, properties })
+          }
+
+          continue
+        }
+
+        case 'effect': {
+          let properties = [environment.name, source.trigger]
+          let message = undefined
+
+          if (status === 'success') {
+            message = `Effect "${source.effectName}" on "${source.targetName}" succeeded.`
+            Logging.info(message, { context, properties })
+          } else if (status === 'skipped') {
+            message = `Effect "${source.effectName}" on "${source.targetName}" was skipped (has unresolved issues).`
+            Logging.warning(message, { context, properties })
+          } else {
+            message = `Effect "${source.effectName}" on "${source.targetName}" failed: ${errorMessage}`
+            Logging.error(message, { context, properties })
+          }
+
+          continue
+        }
+
+        default: {
+          let properties = [environment.name, status]
+          let message = undefined
+
+          if (status === 'failure') {
+            message = `Target script failed: ${errorMessage}`
+            Logging.error(message, { context, properties })
+          } else if (status === 'skipped') {
+            message = `Target script was skipped.`
+            Logging.warning(message, { context, properties })
+          } else {
+            message = `Target script ${status}.`
+            Logging.info(message, { context, properties })
+          }
+
+          continue
+        }
+      }
+    }
   }
 
   /**

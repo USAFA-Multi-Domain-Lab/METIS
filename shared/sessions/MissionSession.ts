@@ -191,6 +191,15 @@ export abstract class MissionSession<
   protected teardownResults: EnvScriptResults[]
 
   /**
+   * Outcome of target scripts tied to effects that run while the
+   * session is in the `started` state, captured live as they occur.
+   * @note This is per instance. Therefore, if the session is reset,
+   * this will be cleared during the reset process after teardown
+   * and before setup.
+   */
+  protected liveResults: EnvScriptResults[]
+
+  /**
    * Chat channels active in this session.
    */
   protected _chatChannels: TChatChannel<T>[]
@@ -234,6 +243,7 @@ export abstract class MissionSession<
     memberData: TSessionMemberJson[],
     setupResults: EnvScriptResults[],
     teardownResults: EnvScriptResults[],
+    liveResults: EnvScriptResults[],
     chatChannelData: TChatChannelJson[],
   ) {
     super(_id, name, false)
@@ -252,6 +262,7 @@ export abstract class MissionSession<
     this._members = this.parseMemberData(memberData)
     this.setupResults = setupResults
     this.teardownResults = teardownResults
+    this.liveResults = liveResults
     this._chatChannels = this.parseChatChannelData(chatChannelData)
   }
 
@@ -617,6 +628,10 @@ export type TSessionJson = {
    * @see {@link MissionSession.teardownResults}
    */
   teardownResults: TEnvScriptResultJson[]
+  /**
+   * @see {@link MissionSession.liveResults}
+   */
+  liveResults: TEnvScriptResultJson[]
   /**
    * The chat channels in the session, each with their messages.
    */

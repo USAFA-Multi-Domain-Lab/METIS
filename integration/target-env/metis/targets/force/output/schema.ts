@@ -8,7 +8,7 @@ const Output = TargetSchema.create({
   _id: 'output',
   name: 'Output Panel',
   description: '',
-  script: async (context, to, message = '') => {
+  script: async (context, { to, message = '' }) => {
     context.sendOutput(message, to)
   },
   parameters: [

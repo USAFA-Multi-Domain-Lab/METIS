@@ -17,10 +17,7 @@ const ProcessTimeMod = TargetSchema.create({
   description: '',
   script: async (
     context,
-    applyTo,
-    processTimeHours,
-    processTimeMinutes,
-    processTimeSeconds,
+    { applyTo, processTimeHours, processTimeMinutes, processTimeSeconds },
   ) => {
     let processTime: number = 0
 

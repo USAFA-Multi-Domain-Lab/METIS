@@ -530,6 +530,23 @@ export type TGenericServerEvents = {
     }
   >
   /**
+   * Provides feedback to authorized users about the results of target scripts
+   * tied to effects that occur while the session is in the `started`
+   * state, captured live as they happen.
+   * @note Mirrors `session-setup-update` and `session-teardown-update`
+   * for the live phase of the session.
+   */
+  'session-live-update': TConnectEvent<
+    'session-live-update',
+    {
+      /**
+       * A list of newly realized results during the live session.
+       * @note This does not include any previously existing results.
+       */
+      results: TEnvScriptResultJson[]
+    }
+  >
+  /**
    * Occurs when a chat message is broadcast to members of a channel.
    */
   'chat-message-received': TConnectEvent<
