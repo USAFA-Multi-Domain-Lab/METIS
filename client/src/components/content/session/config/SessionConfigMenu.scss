@@ -52,6 +52,10 @@
       padding-top: 0;
       width: 100%;
       max-width: 40em;
+
+      .Disabled {
+        opacity: 0.65 !important;
+      }
     }
   }
 }

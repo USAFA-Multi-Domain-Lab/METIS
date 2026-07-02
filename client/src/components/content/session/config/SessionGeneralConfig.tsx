@@ -159,9 +159,17 @@ export default function SessionGeneralConfig({
 
   return (
     <div className='SessionGeneralConfig'>
-      <DetailLocked label='Mission Name' value={mission.name} />
+      <DetailLocked
+        label='Mission Name'
+        value={mission.name}
+        disabled={disabled}
+      />
       {sessionId !== null && (
-        <DetailLocked label='Session ID' value={sessionId!} />
+        <DetailLocked
+          label='Session ID'
+          value={sessionId!}
+          disabled={disabled}
+        />
       )}
       <DetailString
         label='Session Name'
