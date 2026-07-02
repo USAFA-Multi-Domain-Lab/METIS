@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { TDetail_P } from '../..'
 import type { TButtonText_P } from '../../../user-controls/buttons/ButtonText'
 import { ButtonText } from '../../../user-controls/buttons/ButtonText'
 import If from '../../../util/If'
 import DetailTitleRow from '../../DetailTitleRow'
+import { useCollapseOnOutsideClick } from '../../hooks/useCollapseOnOutsideClick'
 import { useDetailClassNames } from '../../hooks/useDetailClassNames'
 import './DetailColorSelector.scss'
 
@@ -29,6 +30,7 @@ export function DetailColorSelector({
 }: TDetailColorSelector_P): TReactElement {
   /* -- STATE -- */
   const [expanded, setExpanded] = useState<boolean>(isExpanded)
+  const rootRef = useRef<HTMLDivElement>(null)
 
   /* -- COMPUTED -- */
 
@@ -42,9 +44,15 @@ export function DetailColorSelector({
   })
   fieldClasses.add('FieldColorSelector')
   fieldClasses.set('IsExpanded', expanded)
+
+  /* -- EFFECTS -- */
+
+  useCollapseOnOutsideClick(expanded, setExpanded, rootRef)
+
   /* -- RENDER -- */
+
   return (
-    <div className={rootClasses.value}>
+    <div className={rootClasses.value} ref={rootRef}>
       <DetailTitleRow
         label={label}
         labelClassName={labelClasses.value}

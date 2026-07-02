@@ -691,6 +691,10 @@ export type TSessionBasicJson = {
    */
   managerIds: string[]
   /**
+   * The number of members currently joined (online) in the session.
+   */
+  joinedMemberCount: number
+  /**
    * @see {@link MissionSession.setupFailed}
    */
   setupFailed: boolean

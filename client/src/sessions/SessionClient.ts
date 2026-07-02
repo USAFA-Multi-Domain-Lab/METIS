@@ -395,6 +395,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       participantIds: this.participants.map(({ _id: memberId }) => memberId),
       observerIds: this.observers.map(({ _id: memberId }) => memberId),
       managerIds: this.managers.map(({ _id: memberId }) => memberId),
+      joinedMemberCount: this.joinedMembers.length,
       setupFailed: this.setupFailed,
       teardownFailed: this.teardownFailed,
     }

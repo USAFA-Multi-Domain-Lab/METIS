@@ -2,9 +2,10 @@ import { LocalContext, LocalContextProvider } from '@client/context/local'
 import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import type { ReactNode } from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { TDetailBase_P, TDetailOptional_P, TDetailRequired_P } from '../..'
 import DetailTitleRow from '../../DetailTitleRow'
+import { useCollapseOnOutsideClick } from '../../hooks/useCollapseOnOutsideClick'
 import { useDetailClassNames } from '../../hooks/useDetailClassNames'
 import DropdownOption from '../subcomponents/DropdownOption'
 import './DetailDropdown.scss'
@@ -85,6 +86,7 @@ export function DetailDropdown<TOption>(
     expanded: useState<boolean>(false),
   }
   const [expanded, setExpanded] = state.expanded
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   /* -- COMPUTED -- */
 
@@ -194,6 +196,8 @@ export function DetailDropdown<TOption>(
     }
   }, [options, handleInvalidOption.method])
 
+  useCollapseOnOutsideClick(expanded, setExpanded, dropdownRef)
+
   /* -- FUNCTIONS -- */
 
   /**
@@ -275,7 +279,7 @@ export function DetailDropdown<TOption>(
       state={state}
       elements={{}}
     >
-      <div className={rootClasses.value}>
+      <div className={rootClasses.value} ref={dropdownRef}>
         <DetailTitleRow
           label={label}
           labelClassName={labelClasses.value}

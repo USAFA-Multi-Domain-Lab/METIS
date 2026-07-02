@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import { useImperativeHandle, useRef, useState } from 'react'
 import type { TDetailBase_P } from '../..'
 import DetailTitleRow from '../../DetailTitleRow'
+import { useCollapseOnOutsideClick } from '../../hooks/useCollapseOnOutsideClick'
 import { useDetailClassNames } from '../../hooks/useDetailClassNames'
 import './DetailMultiSelect.scss'
 import MultiSelectOptions from './subcomponents/MultiSelectOptions'
@@ -119,6 +120,8 @@ export default function DetailMultiSelect<TOption>(
     collapse: () => setExpanded(false),
     toggleExpansion: () => setExpanded((previous) => !previous),
   }))
+
+  useCollapseOnOutsideClick(expanded, setExpanded, rootRef)
 
   /* -- FUNCTIONS -- */
 

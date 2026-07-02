@@ -73,8 +73,8 @@ export default function SessionList({
    */
   const getSessionColumnLabel = (column: keyof SessionBasic): string => {
     switch (column) {
-      case 'memberCount':
-        return 'Members'
+      case 'joinedMemberCount':
+        return 'Online'
       case 'accessibility':
         return 'Accessibility'
       case 'state':
@@ -115,7 +115,7 @@ export default function SessionList({
    */
   const getSessionColumnWidth = (column: keyof SessionBasic): string => {
     switch (column) {
-      case 'memberCount':
+      case 'joinedMemberCount':
         return '6em'
       case 'accessibility':
         return '9em'
@@ -302,7 +302,7 @@ export default function SessionList({
       columns={[
         'ownerFullName',
         'accessibility',
-        'memberCount',
+        'joinedMemberCount',
         'state',
         'runtimeFormatted',
         'launchedAt',

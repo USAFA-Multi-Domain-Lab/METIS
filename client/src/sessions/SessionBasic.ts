@@ -110,9 +110,9 @@ export class SessionBasic
   // Implemented
   public managerIds: string[]
 
-  /**
-   * The number of members joined to the session.
-   */
+  // Implemented
+  public joinedMemberCount: number
+
   // Overridden
   public override get warningText(): string {
     let superText = super.warningText
@@ -151,6 +151,7 @@ export class SessionBasic
     this.participantIds = data.participantIds
     this.observerIds = data.observerIds
     this.managerIds = data.managerIds
+    this.joinedMemberCount = data.joinedMemberCount
     this.setupFailed = data.setupFailed
     this.teardownFailed = data.teardownFailed
   }
@@ -177,6 +178,7 @@ export class SessionBasic
       participantIds: [],
       observerIds: [],
       managerIds: [],
+      joinedMemberCount: 0,
       setupFailed: false,
       teardownFailed: false,
       config: {

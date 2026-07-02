@@ -475,6 +475,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       participantIds: this.participants.map(({ userId: userId }) => userId),
       observerIds: this.observers.map(({ userId: userId }) => userId),
       managerIds: this.managers.map(({ userId: userId }) => userId),
+      joinedMemberCount: this.joinedMembers.length,
       setupFailed,
       teardownFailed,
     }
