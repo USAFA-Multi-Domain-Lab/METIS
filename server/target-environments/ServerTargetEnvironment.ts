@@ -1,12 +1,11 @@
 import type { ServerSessionRealm } from '@server/sessions/ServerSessionRealm'
 import { TargetEnvSchema } from '@server/target-environments/schema/TargetEnvSchema'
 import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
-import {
-  EnvScriptResults,
-  type TEnvScriptSource,
-  type TTargetEnvMethods,
-} from '@shared/target-environments/EnvScriptResults'
 import { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
+import type {
+  TEnvironmentTaskSource,
+  TTargetEnvironmentMethods,
+} from '@shared/target-environments/TargetEnvironmentTask'
 import { TargetEnvRegistry } from '@shared/target-environments/TargetEnvRegistry'
 import type { TTargetEnvConfig } from '@shared/target-environments/types'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
@@ -15,6 +14,7 @@ import path from 'path'
 import { EnvHookContext } from './context/EnvHookContext'
 import type { TTargetEnvExposedEnvironment } from './context/TargetEnvContext'
 import type { TargetEnvironmentHook } from './hooks/TargetEnvironmentHook'
+import { ServerEnvironmentTask } from './ServerEnvironmentTask'
 import { ServerTarget } from './ServerTarget'
 import { TargetEnvSandboxing } from './TargetEnvSandboxing'
 
@@ -131,42 +131,49 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    * @rejects If any callback throws an error.
    */
   private async invoke(
-    method: TTargetEnvMethods,
+    method: TTargetEnvironmentMethods,
     realm: ServerSessionRealm,
-  ): Promise<EnvScriptResults[]> {
-    let results: EnvScriptResults[] = []
-    let errorOccurred = false
-
-    // Describes the source of these results so managers can review
+  ): Promise<void> {
+    // Describes the source of these executions so managers can review
     // and diagnose hook executions.
-    let source: TEnvScriptSource = { kind: 'hook', method }
+    let source: TEnvironmentTaskSource = { kind: 'hook', method }
 
-    for (let hook of this.hooks) {
-      if (hook.method === method) {
-        // Skip remaining hooks if an error
-        // has already occurred.
-        if (errorOccurred) {
-          results.push(EnvScriptResults.skipped(hook.environment, source))
-          continue
-        }
+    // Phase 1 — enumerate the hooks for this method, binding each to a
+    // queued task, and announce the batch so authorized members see the
+    // full list awaiting initiation before any of it runs.
+    let tasks = this.hooks
+      .filter((hook) => hook.method === method)
+      .map((hook) => {
+        let context = EnvHookContext.create(realm, this)
+        return ServerEnvironmentTask.create(
+          realm.session,
+          hook.environment,
+          source,
+          () => context.run((exposedContext) => hook.invoke(exposedContext)),
+        )
+      })
+    for (let task of tasks) task.announce()
 
-        try {
-          let context = EnvHookContext.create(realm, this)
-          await context.execute((context) => hook.invoke(context))
-          results.push(EnvScriptResults.success(hook.environment, source))
-        } catch (error: any) {
-          if (!(error instanceof Error)) {
-            error = new Error(StringToolbox.limit(`${error}`, 128))
-          }
-          results.push(
-            EnvScriptResults.failure(hook.environment, error, source),
-          )
-          errorOccurred = true
-        }
+    // Phase 2 — run the tasks one by one. Once one fails, the remaining
+    // hooks in this environment are skipped, since a failed hook may
+    // leave the environment in an unusable state.
+    let failed = false
+    for (let task of tasks) {
+      if (failed) {
+        task.skip()
+        continue
+      }
+
+      try {
+        // The task transitions and broadcasts itself
+        // (queued -> running -> success/failure) as it progresses.
+        await task.run()
+      } catch {
+        // The failure is already recorded by the task; flag it so the
+        // remaining hooks in this environment are skipped.
+        failed = true
       }
     }
-
-    return results
   }
 
   /**
@@ -175,7 +182,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    * @resolves When setup is complete.
    * @rejects If setup fails.
    */
-  public setUp(realm: ServerSessionRealm): Promise<EnvScriptResults[]> {
+  public setUp(realm: ServerSessionRealm): Promise<void> {
     return this.invoke('environment-setup', realm)
   }
 
@@ -185,7 +192,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
    * @resolves When teardown is complete.
    * @rejects If teardown fails.
    */
-  public tearDown(realm: ServerSessionRealm): Promise<EnvScriptResults[]> {
+  public tearDown(realm: ServerSessionRealm): Promise<void> {
     return this.invoke('environment-teardown', realm)
   }
 

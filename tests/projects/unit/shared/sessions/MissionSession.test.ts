@@ -46,11 +46,11 @@ describe('MissionSession.config', () => {
 })
 
 describe('MissionSession setup/teardown flags', () => {
-  test('setupFailed and teardownFailed reflect EnvScriptResults failures', () => {
+  test('setupFailed and teardownFailed reflect script execution failures', () => {
     let session = new TestMissionSession()
 
-    session.setSetupResults([{ status: 'success' }, { status: 'failure' }])
-    session.setTeardownResults([{ status: 'success' }, { status: 'success' }])
+    session.setSetupTasks([{ status: 'success' }, { status: 'failure' }])
+    session.setTeardownTasks([{ status: 'success' }, { status: 'success' }])
 
     expect(session.setupFailed).toBe(true)
     expect(session.teardownFailed).toBe(false)
@@ -77,21 +77,40 @@ class TestMissionSession extends MissionSession<any> {
       [],
       [],
       [],
-      [],
-      [],
     )
   }
 
-  public setSetupResults(results: TEnvScriptResultsStub[]): void {
-    this.setupResults = results as any
+  public setSetupTasks(results: TEnvironmentTaskStub[]): void {
+    this.addTasks(results, { kind: 'hook', method: 'environment-setup' })
   }
 
-  public setTeardownResults(results: TEnvScriptResultsStub[]): void {
-    this.teardownResults = results as any
+  public setTeardownTasks(results: TEnvironmentTaskStub[]): void {
+    this.addTasks(results, {
+      kind: 'hook',
+      method: 'environment-teardown',
+    })
+  }
+
+  /**
+   * Pushes stub executions onto the master list with the given source,
+   * so the phase-specific getters route them correctly.
+   */
+  private addTasks(results: TEnvironmentTaskStub[], source: any): void {
+    for (let result of results) {
+      this._environmentTasks.push({ ...result, source } as any)
+    }
   }
 
   // Minimal implementations for abstract members used only for construction.
+  protected parseRealmData(): any[] {
+    return []
+  }
+
   protected parseMemberData(): any[] {
+    return []
+  }
+
+  protected parseEnvironmentTaskData(): any[] {
     return []
   }
 
@@ -113,9 +132,9 @@ class TestMissionSession extends MissionSession<any> {
 /* -- TYPES -- */
 
 /**
- * Minimal representation of EnvScriptResults used by MissionSession failure helpers.
+ * Minimal task stub used by MissionSession failure helpers.
  */
-type TEnvScriptResultsStub = {
+type TEnvironmentTaskStub = {
   /**
    * Status of the script invocation.
    */

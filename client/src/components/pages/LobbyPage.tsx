@@ -3,6 +3,7 @@ import {
   useNavigationMiddleware,
 } from '@client/context/global'
 import type { SessionClient } from '@client/sessions/SessionClient'
+import type { ClientEnvironmentTask } from '@client/target-environments/ClientEnvironmentTask'
 import { compute } from '@client/toolbox'
 import {
   useEventListener,
@@ -11,17 +12,15 @@ import {
 } from '@client/toolbox/hooks'
 import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
 import { ClassList } from '@shared/toolbox/html/ClassList'
-import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
 import SessionMemberList from '../content/data/lists/implementations/members/SessionMemberList'
+import TargetEnvironmentTaskList from '../content/data/lists/implementations/target-environments/TargetEnvironmentTaskList'
 import type { TNavigation_P } from '../content/general-layout/Navigation'
 import { HomeButton } from '../content/general-layout/Navigation'
 import Panel from '../content/general-layout/panels/Panel'
 import PanelView from '../content/general-layout/panels/PanelView'
-import PropertyBadge from '../content/general-layout/property-badges/PropertyBadge'
-import PropertyBadges from '../content/general-layout/property-badges/PropertyBadges'
 import SessionConfigMenu from '../content/session/config/SessionConfigMenu'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './LobbyPage.scss'
@@ -58,7 +57,11 @@ export default function LobbyPage({
     session.state === 'starting',
   )
   const [setupFailed, setSetupFailed] = useState<boolean>(session.setupFailed)
+  const [setupTasks, setSetupTasks] = useState<ClientEnvironmentTask[]>([
+    ...session.setupTasks,
+  ])
   const [, setConfigVersion] = useState<number>(0)
+  const selectView = useRef((title: string) => {})
 
   /* -- COMPUTED -- */
 
@@ -185,8 +188,9 @@ export default function LobbyPage({
     setStartInitiated(true)
   })
 
-  useEventListener(server, 'session-setup-update', () => {
+  useEventListener(server, 'session-task-update', () => {
     setSetupFailed(session.setupFailed)
+    setSetupTasks([...session.setupTasks])
   })
 
   // Re-render when the config changes (locally via auto-save, or
@@ -232,95 +236,32 @@ export default function LobbyPage({
     navigationButtonEngine.setDisabled('start-session', startInitiated)
   }, [startInitiated])
 
+  // Once session start is initiated, auto-select the setup view
+  // so authorized members can monitor target environment setup.
+  useEffect(() => {
+    if (
+      startInitiated &&
+      session.member.isAuthorized('viewTargetEnvironmentTasks')
+    ) {
+      selectView.current('Setup')
+    }
+  }, [startInitiated])
+
   /* -- RENDER -- */
 
   // Render root component.
   return (
-    <div className='LobbyPage Page DarkPage'>
+    <div className='LobbyPage Page'>
       <DefaultPageLayout navigation={navigation}>
         <div className='DetailSection Section'>
           <div className='Title'>Lobby</div>
-          <PropertyBadges>
-            <PropertyBadge
-              icon='key'
-              value={session._id}
-              description={constructBadgeDescription(
-                'Session ID',
-                session._id,
-                'The unique identifier for this session. This ID can be used to join private sessions.',
-              )}
-            />
-            <PropertyBadge
-              icon='launch'
-              value={session.name}
-              description={constructBadgeDescription(
-                'Session Name',
-                session.name,
-              )}
-            />
-            <PropertyBadge
-              icon={mission.outlineIcon}
-              value={mission.name}
-              description={constructBadgeDescription(
-                'Mission Name',
-                mission.name,
-              )}
-            />
-            <PropertyBadge
-              icon={
-                session.config.accessibility === 'public' ? 'shown' : 'private'
-              }
-              value={StringToolbox.toTitleCase(session.config.accessibility, {
-                allCapsExceptions: ['ID'],
-              })}
-              description={constructBadgeDescription(
-                'Accessibility',
-                StringToolbox.toTitleCase(session.config.accessibility, {
-                  allCapsExceptions: ['ID'],
-                }),
-                {
-                  'Public': 'Anyone can join the session.',
-                  'ID Required': 'Users must provide the session ID to join.',
-                  'Invite Only': 'Users must be invited to join the session.',
-                },
-              )}
-            />
-            <PropertyBadge
-              icon={session.config.mode === 'single-player' ? 'user' : 'group'}
-              value={StringToolbox.toTitleCase(session.config.mode)}
-              description={constructBadgeDescription(
-                'Mode',
-                StringToolbox.toTitleCase(session.config.mode),
-                {
-                  'Single Player':
-                    'Each participant is assigned to a dedicated realm without any interaction with other participants.',
-                  'Multiplayer':
-                    'All participants interact within a shared realm.',
-                },
-              )}
-            />
-            <PropertyBadge
-              active={
-                session.config.mode === 'single-player' &&
-                session.member.isAuthorized('completeVisibility')
-              }
-              icon={sessionForceIcon}
-              value={sessionForceName}
-              description={constructBadgeDescription(
-                'Single Player Force',
-                sessionForceName,
-                'The force being used for single-player mode. This force is auto-assigned to each participant in this mode.',
-              )}
-              color={singlePlayerForceColor}
-            />
-          </PropertyBadges>
         </div>
         {startInitiated && (
           <div className='StatusSection Section'>
             <div className={startStatusClasses.value}>{startStatus}</div>
           </div>
         )}
-        <Panel transparent>
+        <Panel transparent selectView={selectView}>
           <PanelView title={'Members'}>
             <div className='MembersSection Section'>
               <SessionMemberList session={session} />
@@ -336,6 +277,20 @@ export default function LobbyPage({
               </div>
             </PanelView>
           )}
+          {startInitiated &&
+            session.member.isAuthorized('viewTargetEnvironmentTasks') && (
+              <PanelView
+                title={'Setup'}
+                description={
+                  'Setup status of target environments used by this mission.'
+                }
+                highlighted={setupFailed}
+              >
+                <div className='SetupSection Section'>
+                  <TargetEnvironmentTaskList tasks={setupTasks} />
+                </div>
+              </PanelView>
+            )}
         </Panel>
       </DefaultPageLayout>
     </div>

@@ -16,6 +16,7 @@ import type { ClientSessionMember } from "@client/sessions/ClientSessionMember";
 import type { ClientSessionRealm } from "@client/sessions/ClientSessionRealm";
 import type { SessionClient } from "@client/sessions/SessionClient";
 import type { ClientTarget } from "@client/target-environments/ClientTarget";
+import type { ClientEnvironmentTask } from "@client/target-environments/ClientEnvironmentTask";
 import type { ClientTargetEnvironment } from "@client/target-environments/ClientTargetEnvironment";
 import type { ClientUser } from "@client/users/ClientUser";
 import type { TEffectType } from "@shared/missions/effects/Effect";
@@ -71,6 +72,7 @@ export type TMetisClientComponents = {
   realm: ClientSessionRealm;
   user: ClientUser;
   targetEnv: ClientTargetEnvironment;
+  environmentTask: ClientEnvironmentTask;
   target: ClientTarget;
   fileReference: ClientFileReference;
   mission: ClientMission;

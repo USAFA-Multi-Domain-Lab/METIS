@@ -11,7 +11,7 @@ import { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
 import { ClientOutput } from '@client/missions/forces/ClientOutput'
 import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import { ClientSessionRealm } from '@client/sessions/ClientSessionRealm'
-import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
+import { ClientEnvironmentTask } from '@client/target-environments/ClientEnvironmentTask'
 import { Logging } from '@client/toolbox/Logging'
 import { ClientUser } from '@client/users/ClientUser'
 import type {
@@ -39,7 +39,8 @@ import type {
   TSessionJson,
 } from '@shared/sessions/MissionSession'
 import { MissionSession } from '@shared/sessions/MissionSession'
-import { EnvScriptResults } from '@shared/target-environments/EnvScriptResults'
+import type { TSessionRealmJson } from '@shared/sessions/SessionRealm'
+import type { TEnvironmentTaskJson } from '@shared/target-environments/TargetEnvironmentTask'
 import type { TInstanceOrArray } from '@shared/toolbox/arrays/ArrayToolbox'
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import axios from 'axios'
@@ -208,26 +209,16 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       realms: realmData,
       members: memberData,
       config,
-      setupResults: setupResultData,
-      teardownResults: teardownResultData,
-      liveResults: liveResultData,
+      environmentTasks: environmentTaskData,
       chatChannels,
       unreadChatChannelMessages,
       pendingSessionPanelAlerts,
     } = data
 
-    // Parse setup, teardown, and live results.
-    let setupResults = setupResultData.map((datum) =>
-      EnvScriptResults.fromJson(datum, ClientTargetEnvironment.REGISTRY),
-    )
-    let teardownResults = teardownResultData.map((datum) =>
-      EnvScriptResults.fromJson(datum, ClientTargetEnvironment.REGISTRY),
-    )
-    let liveResults = liveResultData.map((datum) =>
-      EnvScriptResults.fromJson(datum, ClientTargetEnvironment.REGISTRY),
-    )
-
-    // Call super constructor with base data.
+    // Call super constructor with base data. Realms, members, environment
+    // tasks, and chat channels are deserialized by the base constructor
+    // through the parseX hooks implemented below, each of which binds the
+    // parsed objects to this session.
     super(
       _id,
       name,
@@ -238,10 +229,9 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       new Date(launchedAt),
       config,
       mission,
+      realmData,
       memberData,
-      setupResults,
-      teardownResults,
-      liveResults,
+      environmentTaskData,
       chatChannels,
     )
 
@@ -250,11 +240,6 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     this.memberId = memberId
     this._state = state
 
-    // Deserialize realms from the JSON. The server sends only the realms
-    // visible to this member (subscribed realm, or empty if unassigned).
-    this._realms = realmData.map((realm) =>
-      ClientSessionRealm.fromJson(realm, this),
-    )
     this._activeExecutions = []
     this._unreadChatMessageCount = new Map(
       Object.entries(unreadChatChannelMessages),
@@ -269,9 +254,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       ['session-reset', this.onReset],
       ['session-config-updated', this.onConfigUpdate],
       ['session-members-updated', this.onMembersUpdate],
-      ['session-setup-update', this.onSetupUpdate],
-      ['session-teardown-update', this.onTeardownUpdate],
-      ['session-live-update', this.onLiveUpdate],
+      ['session-task-update', this.onTaskUpdate],
       ['force-assigned', this.onForceAssigned],
       ['role-assigned', this.onRoleAssigned],
       ['node-opened', this.onNodeOpenedResponse],
@@ -302,6 +285,13 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   // Implemented
+  protected parseRealmData(data: TSessionRealmJson[]): ClientSessionRealm[] {
+    // The server sends only the realms visible to this member (their
+    // subscribed realm, or none if unassigned).
+    return data.map((realm) => ClientSessionRealm.fromJson(realm, this))
+  }
+
+  // Implemented
   protected parseMemberData(data: TSessionMemberJson[]): ClientSessionMember[] {
     return data.map(
       ({
@@ -323,6 +313,13 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         )
       },
     )
+  }
+
+  // Implemented
+  protected parseEnvironmentTaskData(
+    data: TEnvironmentTaskJson[],
+  ): ClientEnvironmentTask[] {
+    return data.map((datum) => ClientEnvironmentTask.fromJson(datum, this))
   }
 
   // Implemented
@@ -377,9 +374,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       }),
       realms: this._realms.map((realm) => realm.toJson()),
       members: this.members.map((member) => member.toJson()),
-      setupResults: this.setupResults.map((result) => result.toJson()),
-      teardownResults: this.teardownResults.map((result) => result.toJson()),
-      liveResults: this.liveResults.map((result) => result.toJson()),
+      environmentTasks: this.environmentTasks.map((task) => task.toJson()),
       config: this.config,
       chatChannels: this._chatChannels.map((chat) => chat.toJson()),
       unreadChatChannelMessages: {},
@@ -1446,120 +1441,87 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
-   * Handles when new results from the session setup
-   * process are available.
+   * Handles an update to a target-environment task (a hook or an effect)
+   * across the setup, teardown, and live phases. The task is reconciled
+   * by ID, so an existing entry transitions in place to its new state
+   * rather than being duplicated.
    * @param event The event emitted by the server.
    */
-  private onSetupUpdate = (
-    event: TServerEvents['session-setup-update'],
+  private onTaskUpdate = (
+    event: TServerEvents['session-task-update'],
   ): void => {
-    let newResults = event.data.results.map((data) =>
-      EnvScriptResults.fromJson(data, ClientTargetEnvironment.REGISTRY),
-    )
-    this.setupResults.push(...newResults)
-    this.logScriptResults(newResults)
+    let task = ClientEnvironmentTask.fromJson(event.data.task, this)
+    this.upsertTask(task)
+    this.logTask(task)
   }
 
   /**
-   * Handles when new results from the session teardown
-   * process are available.
-   * @param event The event emitted by the server.
+   * Logs a target-environment task (hook or effect) to the console at
+   * the session level, so managers can monitor and diagnose it as it
+   * occurs.
+   * @param task The task to log.
+   * @note Unresolved tasks (queued, running) are not logged; only
+   * resolved states (success, failure, skipped) are.
    */
-  private onTeardownUpdate = (
-    event: TServerEvents['session-teardown-update'],
-  ): void => {
-    let newResults = event.data.results.map((data) =>
-      EnvScriptResults.fromJson(data, ClientTargetEnvironment.REGISTRY),
-    )
-    this.teardownResults.push(...newResults)
-    this.logScriptResults(newResults)
-  }
-
-  /**
-   * Handles when new target script results (effects) occur
-   * live, while the session is in the `started` state.
-   * @param event The event emitted by the server.
-   */
-  private onLiveUpdate = (
-    event: TServerEvents['session-live-update'],
-  ): void => {
-    let newResults = event.data.results.map((data) =>
-      EnvScriptResults.fromJson(data, ClientTargetEnvironment.REGISTRY),
-    )
-    this.liveResults.push(...newResults)
-    this.logScriptResults(newResults)
-  }
-
-  /**
-   * Logs target script results (hooks and effects) to the
-   * console at the session level, so managers can monitor and diagnose
-   * them as they occur.
-   * @param results The newly realized results to log.
-   */
-  private logScriptResults(results: EnvScriptResults[]): void {
+  private logTask(task: ClientEnvironmentTask): void {
     let context = 'TE'
+    let { source, status, environment, error } = task
 
-    for (let result of results) {
-      let { source, status, environment, error } = result
-      let errorMessage =
-        error?.message || error?.code || error?.name || 'Unknown error'
+    // Only resolved tasks are worth logging.
+    if (status === 'queued' || status === 'running') return
 
-      switch (source.kind) {
-        case 'hook': {
-          let label =
-            source.method === 'environment-setup' ? 'setup' : 'teardown'
-          let properties = [environment.name, source.method]
-          let message = undefined
+    let errorMessage =
+      error?.message || error?.code || error?.name || 'Unknown error'
 
-          if (status === 'success') {
-            message = `${environment.name} ${label} hook succeeded.`
-            Logging.info(message, { context, properties })
-          } else if (status === 'skipped') {
-            message = `${environment.name} ${label} hook was skipped (a prior hook in this environment failed).`
-            Logging.warning(message, { context, properties })
-          } else {
-            message = `${environment.name} ${label} hook failed: ${errorMessage}`
-            Logging.error(message, { context, properties })
-          }
+    switch (source.kind) {
+      case 'hook': {
+        let label = source.method === 'environment-setup' ? 'setup' : 'teardown'
+        let properties = [environment.name, source.method]
+        let message = undefined
 
-          continue
+        if (status === 'success') {
+          message = `${environment.name} ${label} hook succeeded.`
+          Logging.info(message, { context, properties })
+        } else if (status === 'skipped') {
+          message = `${environment.name} ${label} hook was skipped (a prior hook in this environment failed).`
+          Logging.warning(message, { context, properties })
+        } else {
+          message = `${environment.name} ${label} hook failed: ${errorMessage}`
+          Logging.error(message, { context, properties })
         }
+        break
+      }
+      case 'effect': {
+        let properties = [environment.name, source.trigger]
+        let message = undefined
 
-        case 'effect': {
-          let properties = [environment.name, source.trigger]
-          let message = undefined
-
-          if (status === 'success') {
-            message = `Effect "${source.effectName}" on "${source.targetName}" succeeded.`
-            Logging.info(message, { context, properties })
-          } else if (status === 'skipped') {
-            message = `Effect "${source.effectName}" on "${source.targetName}" was skipped (has unresolved issues).`
-            Logging.warning(message, { context, properties })
-          } else {
-            message = `Effect "${source.effectName}" on "${source.targetName}" failed: ${errorMessage}`
-            Logging.error(message, { context, properties })
-          }
-
-          continue
+        if (status === 'success') {
+          message = `Effect "${source.effectName}" on "${source.targetName}" succeeded.`
+          Logging.info(message, { context, properties })
+        } else if (status === 'skipped') {
+          message = `Effect "${source.effectName}" on "${source.targetName}" was skipped (has unresolved issues).`
+          Logging.warning(message, { context, properties })
+        } else {
+          message = `Effect "${source.effectName}" on "${source.targetName}" failed: ${errorMessage}`
+          Logging.error(message, { context, properties })
         }
+        break
+      }
+      default: {
+        let properties = [environment.name, status]
+        let message = undefined
 
-        default: {
-          let properties = [environment.name, status]
-          let message = undefined
-
-          if (status === 'failure') {
-            message = `Target script failed: ${errorMessage}`
-            Logging.error(message, { context, properties })
-          } else if (status === 'skipped') {
-            message = `Target script was skipped.`
-            Logging.warning(message, { context, properties })
-          } else {
-            message = `Target script ${status}.`
-            Logging.info(message, { context, properties })
-          }
-
-          continue
+        if (status === 'failure') {
+          message = `Task failed: ${errorMessage}`
+          Logging.error(message, { context, properties })
+        } else if (status === 'skipped') {
+          message = `Task was skipped.`
+          Logging.warning(message, { context, properties })
+        } else {
+          message = `Task ${status}.`
+          Logging.info(message, { context, properties })
         }
+        break
       }
     }
   }

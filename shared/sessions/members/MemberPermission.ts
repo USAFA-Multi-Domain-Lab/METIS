@@ -1,6 +1,5 @@
 /* -- CONSTANTS -- */
 
-
 export const AVAILABLE_PERMISSIONS_RAW = [
   {
     _id: 'forceAssignable',
@@ -40,6 +39,12 @@ export const AVAILABLE_PERMISSIONS_RAW = [
     _id: 'completeVisibility',
     name: 'Complete Visibility',
     description: 'The member can view all forces and all nodes in the mission.',
+  } as const,
+  {
+    _id: 'viewTargetEnvironmentTasks',
+    name: 'View Target Environment Tasks',
+    description:
+      'The member can view the tasks initiated within target environments and receive live updates as the status of tasks update.',
   } as const,
   {
     _id: 'cheats',
@@ -216,7 +221,6 @@ export class MemberPermission implements TGenericMemberPermission {
 }
 
 /* -- TYPES -- */
-
 
 /**
  * Generic type for a member permission.

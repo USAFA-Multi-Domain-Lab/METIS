@@ -1,0 +1,62 @@
+@use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
+
+.TargetEnvironmentTaskList {
+  &,
+  .List {
+    .ListItems {
+      // The status column is always shown italicized.
+      .ListItemCell.ListItemCell_statusDescription {
+        font-style: italic;
+      }
+
+      // Failed results are highlighted in red across their name,
+      // status, and details cells.
+      .ListItem.SetupStatus_Failure {
+        .ListItemCell_name,
+        .ListItemCell_statusDescription {
+          color: $color-failure-light;
+        }
+      }
+
+      // Successful results are highlighted in green on their
+      // status cell.
+      .ListItem.SetupStatus_Success {
+        .ListItemCell_name,
+        .ListItemCell_statusDescription {
+          color: $color-success-light;
+        }
+      }
+
+      // Skipped results are faded.
+      .ListItem.SetupStatus_Skipped {
+        .ListItemCell_name,
+        .ListItemCell_statusDescription {
+          color: $color-faded;
+        }
+      }
+
+      // Queued executions are faded while awaiting initiation.
+      .ListItem.SetupStatus_Queued {
+        .ListItemCell_statusDescription {
+          color: $color-faded;
+        }
+      }
+
+      // Running executions pulse to signal they are still executing.
+      .ListItem.SetupStatus_Running {
+        .ListItemCell_statusDescription {
+          color: $color-faded;
+          @include pulse;
+        }
+      }
+    }
+  }
+
+  .NoResultsMessage {
+    font-style: italic;
+    color: $color-faded;
+    padding: 1em;
+    text-align: center;
+  }
+}

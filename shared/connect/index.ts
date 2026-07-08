@@ -4,7 +4,7 @@ import type {
 } from '@shared/missions/Mission'
 import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
 import type { TSessionRealmJson } from '@shared/sessions/SessionRealm'
-import type { TEnvScriptResultJson } from '@shared/target-environments/EnvScriptResults'
+import type { TEnvironmentTaskJson } from '@shared/target-environments/TargetEnvironmentTask'
 import type { MetisComponent } from '../MetisComponent'
 import type {
   TActionExecutionJson,
@@ -502,48 +502,21 @@ export type TGenericServerEvents = {
     request?: TRequestOfResponse
   }
   /**
-   * Provides feedback to managers of a session during
-   * the setup process.
+   * Provides feedback to members of a session authorized to view target
+   * environment tasks about a single task (a hook or an effect),
+   * across the setup, teardown, and live phases.
+   * @note Emitted when a task is announced (`queued`), when it begins
+   * (`running`), and when it resolves. Recipients reconcile by the
+   * task's `_id`, updating an existing entry rather than appending a
+   * duplicate.
    */
-  'session-setup-update': TConnectEvent<
-    'session-setup-update',
+  'session-task-update': TConnectEvent<
+    'session-task-update',
     {
       /**
-       * A list of newly realized results for the setup process.
-       * @note This does not include any previously existing results.
+       * The task that was announced or updated.
        */
-      results: TEnvScriptResultJson[]
-    }
-  >
-  /**
-   * Provides feedback to managers of a session during
-   * the teardown process.
-   */
-  'session-teardown-update': TConnectEvent<
-    'session-teardown-update',
-    {
-      /**
-       * A list of newly realized results for the teardown process.
-       * @note This does not include any previously existing results.
-       */
-      results: TEnvScriptResultJson[]
-    }
-  >
-  /**
-   * Provides feedback to authorized users about the results of target scripts
-   * tied to effects that occur while the session is in the `started`
-   * state, captured live as they happen.
-   * @note Mirrors `session-setup-update` and `session-teardown-update`
-   * for the live phase of the session.
-   */
-  'session-live-update': TConnectEvent<
-    'session-live-update',
-    {
-      /**
-       * A list of newly realized results during the live session.
-       * @note This does not include any previously existing results.
-       */
-      results: TEnvScriptResultJson[]
+      task: TEnvironmentTaskJson
     }
   >
   /**

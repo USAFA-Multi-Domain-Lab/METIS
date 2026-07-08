@@ -185,20 +185,23 @@ export abstract class TargetEnvContext<
   protected abstract expose(): TExposedContext
 
   /**
-   * Executes the provided operation within the context.
-   * @param operation The operation to execute.
+   * Runs the provided operation within the context, resolving once it
+   * settles. This owns only the execution machinery (single-settle
+   * guarding and early-resolution on session cleanup); the surrounding
+   * task lifecycle (queued -> running -> resolved) and its broadcasting
+   * are managed by {@link ServerEnvironmentTask}.
+   * @param operation The operation to run.
    * @resolves After the operation has been executed.
    * @rejects If the operation fails.
-   * @note This should only ever be called once per context
-   * instance.
+   * @note This should only ever be called once per context instance.
    */
-  public execute(
+  public run(
     operation: (context: TExposedContext) => Promise<void>,
   ): Promise<void> {
-    // Execute should only be called once.
+    // Run should only be called once.
     if (this.operationPromise) {
       throw new Error(
-        'Cannot execute operation: Another operation has already been initiated within this context.',
+        'Cannot run operation: Another operation has already been initiated within this context.',
       )
     }
 

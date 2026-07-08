@@ -30,13 +30,6 @@ export class MissionComponentIssueRegistry implements TListenerTargetEmittable<T
   > = new Map()
 
   /**
-   * Cached result of {@link groupedIssueEntries}. Null when stale.
-   */
-  private _groupedIssueEntriesCache:
-    | [MissionComponent<any, any>, MissionComponentIssue<any>[]][]
-    | null = null
-
-  /**
    * All issues currently in the registry across all components.
    */
   public get allIssues(): MissionComponentIssue<any>[] {

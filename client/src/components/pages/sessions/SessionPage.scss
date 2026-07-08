@@ -114,13 +114,16 @@
       }
     }
 
-    .PanelView {
-      .OutputPanel,
-      .SessionMembersPanel,
-      .List {
-        width: 100%;
-        height: 100%;
+    .PanelView_Outputs .OutputPanel,
+    .PanelView_Members .List,
+    .PanelView_Files .List {
+      &:not(.OutputPanel) {
+        background: none;
+        border: none;
       }
+
+      width: 100%;
+      height: 100%;
     }
   }
 

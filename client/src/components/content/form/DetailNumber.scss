@@ -6,14 +6,19 @@
     @include detail-field-styling();
 
     grid-row: 2 / 3;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
     pointer-events: none;
     border-color: transparent;
-    height: 43px;
-    padding-right: 15px;
-    text-align: right;
-    font-size: 14px;
-    font-weight: bold;
+    padding-right: 1em;
     background: none;
+
+    .UnitText {
+      font-size: 0.75em;
+      font-weight: bold;
+      color: $detail-field-text-color;
+    }
   }
 
   .Unit,

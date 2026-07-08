@@ -55,10 +55,9 @@ export const onRequestResetSession =
 
       this.resetRealms()
 
-      // Reset setup and teardown results for the
-      // new instance.
-      this.setupResults = []
-      this.teardownResults = []
+      // Clear all tasks (setup, teardown, and live) for the new
+      // instance.
+      this._environmentTasks = []
 
       // Perform setup.
       await this.setUp()

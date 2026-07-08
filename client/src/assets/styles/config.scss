@@ -15,6 +15,7 @@ $color-accent-light: color.adjust($color-accent, $lightness: 30%);
 $color-accent-dark: color.adjust($color-accent, $lightness: -54.5%);
 
 $color-success: #65eb59;
+$color-success-light: color.adjust($color-success, $lightness: 18%);
 $color-success-dark: color.adjust($color-success, $lightness: -53%);
 
 $color-failure: #ff4359;

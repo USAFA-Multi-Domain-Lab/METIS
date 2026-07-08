@@ -1,4 +1,4 @@
-import type { TTargetEnvMethods } from '@shared/target-environments/EnvScriptResults'
+import type { TTargetEnvironmentMethods } from '@shared/target-environments/TargetEnvironmentTask'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { TEnvHookExposedContext } from '../context/EnvHookContext'
 import type { TargetEnvSchema } from '../schema/TargetEnvSchema'
@@ -41,7 +41,7 @@ export class TargetEnvironmentHook {
      * The method which defines when the hook
      * will be invoked.
      */
-    public readonly method: TTargetEnvMethods,
+    public readonly method: TTargetEnvironmentMethods,
     /**
      * The target-environment schema that created this hook.
      */

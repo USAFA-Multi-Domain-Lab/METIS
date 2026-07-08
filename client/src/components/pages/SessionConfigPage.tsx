@@ -259,7 +259,7 @@ export default function SessionConfigPage({
   })
 
   // Handle session setup failures.
-  useEventListener(server, 'session-setup-update', () => {
+  useEventListener(server, 'session-task-update', () => {
     if (session.setupFailed) {
       cancel()
       handleError({

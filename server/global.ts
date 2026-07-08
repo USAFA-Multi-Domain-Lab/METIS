@@ -22,6 +22,7 @@ import type { ServerSessionMember } from "./sessions/ServerSessionMember";
 import type { ServerSessionRealm } from "./sessions/ServerSessionRealm";
 import type { SessionServer } from "./sessions/SessionServer";
 import type { ServerTargetArgument } from "./target-environments/arguments/ServerTargetArgument";
+import type { ServerEnvironmentTask } from "./target-environments/ServerEnvironmentTask";
 import type { ServerTarget } from "./target-environments/ServerTarget";
 import type { ServerTargetEnvironment } from "./target-environments/ServerTargetEnvironment";
 import type { ServerUser } from "./users/ServerUser";
@@ -47,6 +48,7 @@ declare global {
     realm: ServerSessionRealm;
     user: ServerUser;
     targetEnv: ServerTargetEnvironment;
+    environmentTask: ServerEnvironmentTask;
     target: ServerTarget;
     fileReference: ServerFileReference;
     mission: ServerMission;

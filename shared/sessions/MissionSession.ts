@@ -1,8 +1,8 @@
 import type { ActionResourceCost } from '@shared/missions/actions/ActionResourceCost'
 import type {
-  EnvScriptResults,
-  TEnvScriptResultJson,
-} from '@shared/target-environments/EnvScriptResults'
+  TargetEnvironmentTask,
+  TEnvironmentTaskJson,
+} from '@shared/target-environments/TargetEnvironmentTask'
 import type { TSessionPanelAlert } from '../connect'
 import { MetisComponent } from '../MetisComponent'
 import type { TExecutionCheats } from '../missions/actions/ActionExecution'
@@ -175,29 +175,48 @@ export abstract class MissionSession<
   }
 
   /**
-   * Outcome of operations performed during the setup process.
-   * @note This is per instance. Therefore, if the session is reset,
-   * this will be cleared during the reset process after teardown
-   * and before setup.
+   * @see {@link MissionSession.environmentTasks}
    */
-  protected setupResults: EnvScriptResults[]
+  protected _environmentTasks: T['environmentTask'][]
+  /**
+   * The master list of every target-environment task (hooks and
+   * effects) captured for this session instance, across the setup,
+   * teardown, and live phases.
+   * @note This is per instance. Therefore, if the session is reset,
+   * this will be cleared during the reset process.
+   * @note Use {@link setupTasks}, {@link teardownTasks}, or
+   * {@link liveTasks} to obtain a phase-specific view.
+   */
+  public get environmentTasks(): T['environmentTask'][] {
+    return [...this._environmentTasks]
+  }
 
   /**
-   * Outcome of operations performed during the teardown process.
-   * @note This is per instance. Therefore, if the session is reset,
-   * this will be cleared during the reset process after teardown
-   * and before setup.
+   * The tasks that run while the session is in its setup phase, either
+   * while the session is starting or while it is resetting.
+   * @see {@link TargetEnvironmentTask.phase}
    */
-  protected teardownResults: EnvScriptResults[]
+  public get setupTasks(): T['environmentTask'][] {
+    return this._environmentTasks.filter((task) => task.phase === 'setup')
+  }
 
   /**
-   * Outcome of target scripts tied to effects that run while the
-   * session is in the `started` state, captured live as they occur.
-   * @note This is per instance. Therefore, if the session is reset,
-   * this will be cleared during the reset process after teardown
-   * and before setup.
+   * The tasks that run while the session is in its teardown phase,
+   * either while the session is ending or while it is resetting.
+   * @see {@link TargetEnvironmentTask.phase}
    */
-  protected liveResults: EnvScriptResults[]
+  public get teardownTasks(): T['environmentTask'][] {
+    return this._environmentTasks.filter((task) => task.phase === 'teardown')
+  }
+
+  /**
+   * The tasks tied to effects that run while the session is in the
+   * `'started'` state, captured live as they occur.
+   * @see {@link TargetEnvironmentTask.phase}
+   */
+  public get liveTasks(): T['environmentTask'][] {
+    return this._environmentTasks.filter((task) => task.phase === 'live')
+  }
 
   /**
    * Chat channels active in this session.
@@ -205,7 +224,7 @@ export abstract class MissionSession<
   protected _chatChannels: TChatChannel<T>[]
 
   /**
-   * Based upon {@link MissionSession.setupResults}, indicates
+   * Based upon {@link MissionSession.setupTasks}, indicates
    * whether the setup process, if initiated, encountered any
    * failures.
    * @note This is per instance. Therefore, if the session is reset,
@@ -213,10 +232,10 @@ export abstract class MissionSession<
    * and before setup.
    */
   public get setupFailed(): boolean {
-    return this.setupResults.some((result) => result.status === 'failure')
+    return this.setupTasks.some((task) => task.status === 'failure')
   }
   /**
-   * Based upon {@link MissionSession.teardownResults}, indicates
+   * Based upon {@link MissionSession.teardownTasks}, indicates
    * whether the teardown process, if initiated, encountered any
    * failures.
    * @note This is per instance. Therefore, if the session is reset,
@@ -224,7 +243,7 @@ export abstract class MissionSession<
    * and before setup.
    */
   public get teardownFailed(): boolean {
-    return this.teardownResults.some((result) => result.status === 'failure')
+    return this.teardownTasks.some((task) => task.status === 'failure')
   }
 
   /**
@@ -240,10 +259,9 @@ export abstract class MissionSession<
     launchedAt: Date,
     config: Partial<TSessionConfig>,
     mission: TMission<T>,
+    realmData: TSessionRealmJson[],
     memberData: TSessionMemberJson[],
-    setupResults: EnvScriptResults[],
-    teardownResults: EnvScriptResults[],
-    liveResults: EnvScriptResults[],
+    environmentTaskData: TEnvironmentTaskJson[],
     chatChannelData: TChatChannelJson[],
   ) {
     super(_id, name, false)
@@ -259,10 +277,9 @@ export abstract class MissionSession<
     }
     this._mission = mission
     this._state = 'unstarted'
+    this._realms = this.parseRealmData(realmData)
     this._members = this.parseMemberData(memberData)
-    this.setupResults = setupResults
-    this.teardownResults = teardownResults
-    this.liveResults = liveResults
+    this._environmentTasks = this.parseEnvironmentTaskData(environmentTaskData)
     this._chatChannels = this.parseChatChannelData(chatChannelData)
   }
 
@@ -340,11 +357,27 @@ export abstract class MissionSession<
   }
 
   /**
+   * Parses realm JSON data into `SessionRealm` objects.
+   * @param data The JSON data of the realms.
+   * @returns The parsed realms.
+   */
+  protected abstract parseRealmData(data: TSessionRealmJson[]): TRealm<T>[]
+
+  /**
    * Parses member JSON data into `MemberSession` objects.
    * @param data The JSON data of the members.
    * @returns The parsed members.
    */
   protected abstract parseMemberData(data: TSessionMemberJson[]): TMember<T>[]
+
+  /**
+   * Parses environment-task JSON data into `TargetEnvironmentTask` objects.
+   * @param data The JSON data of the environment tasks.
+   * @returns The parsed environment tasks.
+   */
+  protected abstract parseEnvironmentTaskData(
+    data: TEnvironmentTaskJson[],
+  ): T['environmentTask'][]
 
   /**
    * Parses channel JSON data into `ChatChannel` objects.
@@ -412,6 +445,24 @@ export abstract class MissionSession<
     channelId: TChatChannel<T>['_id'] | null | undefined,
   ): TChatChannel<T> | undefined {
     return this._chatChannels.find((channel) => channel._id === channelId)
+  }
+
+  /**
+   * Adds a task to the master list, or replaces the existing entry that
+   * shares its ID. Replacement is what lets a task transition from one
+   * state to the next (e.g. queued to running) without producing a
+   * duplicate.
+   * @param task The task to record.
+   */
+  protected upsertTask(task: T['environmentTask']): void {
+    let index = this._environmentTasks.findIndex(
+      (existing) => existing._id === task._id,
+    )
+    if (index === -1) {
+      this._environmentTasks.push(task)
+    } else {
+      this._environmentTasks[index] = task
+    }
   }
 
   /**
@@ -621,17 +672,9 @@ export type TSessionJson = {
    */
   members: TSessionMemberJson[]
   /**
-   * @see {@link MissionSession.setupResults}
+   * @see {@link MissionSession.environmentTasks}
    */
-  setupResults: TEnvScriptResultJson[]
-  /**
-   * @see {@link MissionSession.teardownResults}
-   */
-  teardownResults: TEnvScriptResultJson[]
-  /**
-   * @see {@link MissionSession.liveResults}
-   */
-  liveResults: TEnvScriptResultJson[]
+  environmentTasks: TEnvironmentTaskJson[]
   /**
    * The chat channels in the session, each with their messages.
    */
@@ -728,7 +771,7 @@ export type TSessionBasicJson = {
 export type TSession<T extends TMetisBaseComponents> = T['session']
 
 /**
- * The state of a session.
+ * Describes the current position of a session in its lifecycle.
  */
 // ! If you add a new session state, make sure to
 // ! update the AVAILABLE_STATES static getter in

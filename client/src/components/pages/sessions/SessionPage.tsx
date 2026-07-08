@@ -29,7 +29,6 @@ import Panel from '../../content/general-layout/panels/Panel'
 import PanelLayout from '../../content/general-layout/panels/PanelLayout'
 import PanelView from '../../content/general-layout/panels/PanelView'
 import SessionMembersPanel from '../../content/session/members/SessionMembersPanel'
-import MessengerPanel from '../../content/session/messenger/MessengerPanel'
 import MissionMap from '../../content/session/mission-map/MissionMap'
 import NodeAlertIndicator from '../../content/session/mission-map/ui/indicators/NodeAlertIndicator'
 import ActionExecModal from '../../content/session/mission-map/ui/overlay/modals/action-execution/ActionExecModal'
@@ -627,15 +626,11 @@ export default function SessionPage(
     notify('All progress has been reset by a manager.')
   })
 
-  // On setup updates, detect whether the process has failed.
-  useEventListener(
-    server,
-    ['session-setup-update', 'session-teardown-update'],
-    () => {
-      setResetSetupFailed(session.setupFailed)
-      setResetTeardownFailed(session.teardownFailed)
-    },
-  )
+  // On script executions, detect whether setup or teardown has failed.
+  useEventListener(server, 'session-task-update', () => {
+    setResetSetupFailed(session.setupFailed)
+    setResetTeardownFailed(session.teardownFailed)
+  })
 
   // Update the list of local files when file access is granted or revoked.
   useEventListener(subscribedMission, 'file-access-granted', () => {
@@ -770,7 +765,7 @@ export default function SessionPage(
                   <OutputPanel force={selectedForce!} />
                 )}
               </PanelView>
-              <PanelView
+              {/** <PanelView
                 title={RIGHT_PANEL.MESSENGER}
                 highlighted={messengerHasUnreadMessages}
                 description={
@@ -780,7 +775,7 @@ export default function SessionPage(
                 }
               >
                 <MessengerPanel session={session} />
-              </PanelView>
+              </PanelView> **/}
               <PanelView
                 title={RIGHT_PANEL.FILES}
                 highlighted={filesHasNew}

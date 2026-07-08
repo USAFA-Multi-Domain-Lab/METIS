@@ -19,6 +19,7 @@ import type { MissionSession } from './sessions/MissionSession'
 import type { SessionRealm } from './sessions/SessionRealm'
 import type { TargetArgument } from './target-environments/arguments/TargetArgument'
 import type { TargetEnvironment } from './target-environments/TargetEnvironment'
+import type { TargetEnvironmentTask } from './target-environments/TargetEnvironmentTask'
 import type { Target } from './target-environments/targets/Target'
 import type { User } from './users/User'
 
@@ -202,6 +203,7 @@ export type TMetisBaseComponents = {
   realm: SessionRealm
   user: User
   targetEnv: TargetEnvironment
+  environmentTask: TargetEnvironmentTask<TMetisBaseComponents>
   target: Target
   fileReference: FileReference
   mission: Mission

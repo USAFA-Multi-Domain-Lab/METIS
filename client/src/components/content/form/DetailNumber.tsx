@@ -224,7 +224,11 @@ export function DetailNumber({
           }
         }}
       />
-      {unit && <div className='Unit'>{unit}</div>}
+      {unit && (
+        <div className='Unit'>
+          <div className='UnitText'>{unit}</div>
+        </div>
+      )}
       <div className={fieldErrorClasses.value}>{activeErrorMessage}</div>
     </div>
   )

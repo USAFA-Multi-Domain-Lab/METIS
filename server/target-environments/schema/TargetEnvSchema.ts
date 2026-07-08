@@ -1,7 +1,7 @@
 import { TargetEnvironmentHook } from '@server/target-environments/hooks/TargetEnvironmentHook'
 import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
-import type { TTargetEnvMethods } from '@shared/target-environments/EnvScriptResults'
 import type { TTargetEnvJson } from '@shared/target-environments/TargetEnvironment'
+import type { TTargetEnvironmentMethods } from '@shared/target-environments/TargetEnvironmentTask'
 import type { TEnvHookExposedContext } from '../context/EnvHookContext'
 
 /**
@@ -71,7 +71,7 @@ export class TargetEnvSchema {
   /**
    * @param options Options for creating the target environment.
    */
-  public constructor(options: TTargetEnvOptions) {
+  public constructor(options: TTargetEnvironmentOptions) {
     this._id = ServerFileToolbox.getCallerFolder()
     this._name = options.name
     this._description = options.description
@@ -88,7 +88,7 @@ export class TargetEnvSchema {
    * @param callback The handler function to call when the method is invoked.
    */
   public on(
-    method: TTargetEnvMethods,
+    method: TTargetEnvironmentMethods,
     callback: (context: TEnvHookExposedContext) => Promise<void>,
   ) {
     this._hooks.push(new TargetEnvironmentHook(method, this, callback))
@@ -105,5 +105,7 @@ export class TargetEnvSchema {
 /**
  * Options passed to the TargetEnvSchema constructor.
  */
-interface TTargetEnvOptions
-  extends Omit<TTargetEnvJson, 'targets' | '_id' | 'configs'> {}
+interface TTargetEnvironmentOptions extends Omit<
+  TTargetEnvJson,
+  'targets' | '_id' | 'configs'
+> {}
