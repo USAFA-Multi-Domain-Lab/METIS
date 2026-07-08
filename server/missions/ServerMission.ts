@@ -1,6 +1,7 @@
 import { generateValidationError } from '@server/database/validation'
 import type { TTargetEnvExposedMission } from '@server/target-environments/context/TargetEnvContext'
 import type { ServerTarget } from '@server/target-environments/ServerTarget'
+import type { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
 import { ServerUser } from '@server/users/ServerUser'
 import { targetArgumentJsonSchema } from '@shared/target-environments/arguments/TargetArgument'
 import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
@@ -15,6 +16,7 @@ import type {
   TEffectSessionTriggered,
   TEffectSessionTriggeredJson,
   TEffectTrigger,
+  TEffectType,
 } from '../../shared/missions/effects/Effect'
 import type { TMissionFileJson } from '../../shared/missions/files/MissionFile'
 import type { TMissionForceSaveJson } from '../../shared/missions/forces/MissionForce'
@@ -117,6 +119,19 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   }
 
   /**
+   * Selects this mission's session-triggered effects according to the
+   * provided options.
+   * @param options The selection options.
+   * @returns The matching effects.
+   * @see {@link ServerMission.selectEffects} for the shared implementation.
+   */
+  public selectEffects(
+    options: TMissionSelectEffectsOptions = {},
+  ): ServerEffect<'sessionTriggeredEffect'>[] {
+    return ServerMission.selectEffects(this.effects, options)
+  }
+
+  /**
    * @returns The properties from the mission that are
    * safe to expose in target-environment code.
    */
@@ -213,6 +228,53 @@ export class ServerMission extends Mission<TMetisServerComponents> {
       ServerMission.DEFAULT_PROPERTIES.files,
       ServerMission.DEFAULT_PROPERTIES.effects,
     )
+  }
+
+  /**
+   * Filters (and optionally sorts) the given effects according to the
+   * provided options. This is the shared implementation behind the
+   * instance-level {@link ServerMission.selectEffects} and its
+   * action-level counterpart, since action effects are selected the same
+   * way session effects are.
+   * @param effects The effects to select from.
+   * @param options The selection options.
+   * @returns The matching effects.
+   */
+  public static selectEffects<TType extends TEffectType>(
+    effects: ServerEffect<TType>[],
+    options: TMissionSelectEffectsOptions = {},
+  ): ServerEffect<TType>[] {
+    const {
+      triggers,
+      environmentPresence = 'all',
+      excludeEnvironments,
+      sort = false,
+    } = options
+    let results = [...effects]
+
+    if (triggers) {
+      results = results.filter(({ trigger }) => triggers.includes(trigger))
+    }
+    if (environmentPresence === 'with-environment') {
+      results = results.filter(({ environment }) => environment)
+    } else if (environmentPresence === 'without-environment') {
+      results = results.filter(({ environment }) => !environment)
+    }
+    if (excludeEnvironments) {
+      let normalizedEnvironments = excludeEnvironments.map((environment) => {
+        if (typeof environment === 'object') environment = environment._id
+        return environment
+      })
+      results = results.filter(
+        ({ environment }) =>
+          !environment || !normalizedEnvironments.includes(environment._id),
+      )
+    }
+    if (sort) {
+      results.sort((a, b) => a.order - b.order)
+    }
+
+    return results
   }
 
   /**
@@ -735,3 +797,48 @@ export type TMissionValidationResults = {
    */
   structureKeys?: TMissionPrototypeJson['structureKey'][]
 }
+
+/**
+ * Options for conditionally selecting effects from
+ * a mission via the {@link ServerMission.selectEffects}
+ * method.
+ */
+export type TMissionSelectEffectsOptions = {
+  /**
+   * Only selects effects that have one of the
+   * specified triggers. If unspecified, any trigger
+   * is valid.
+   */
+  triggers?: TEffectTrigger[]
+  /**
+   * Filters effects based on what {@link ServerEffect.environment}
+   * resolves into.
+   * @default 'all'
+   */
+  environmentPresence?: TSelectEffectsEnvironmentPresence
+  /**
+   * Filters out any effects with the specified target environments.
+   * @note This can be an array of {@link ServerTargetEnvironment}
+   * objects or it can be an array of `string`s with each `string`
+   * being the `_id` of a target environment.
+   */
+  excludeEnvironments?: Array<ServerTargetEnvironment | string>
+  /**
+   * If `true`, the selected effects will be sorted before
+   * they are returned using the following algorithm:
+   * `effects.sort((a, b) => a.order - b.order)`
+   * @default false
+   */
+  sort?: boolean
+}
+
+/**
+ * Valid options for {@link TMissionSelectEffectsOptions.environmentPresence}.
+ * @option 'all' Don't filter effects based on whether they have an environment.
+ * @option 'without-environment' Only include effects whose environment resolves to `null`.
+ * @option 'with-environment' Only include effects whose environment does not resolve to `null`.
+ */
+export type TSelectEffectsEnvironmentPresence =
+  | 'all'
+  | 'without-environment'
+  | 'with-environment'

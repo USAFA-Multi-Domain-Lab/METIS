@@ -2,16 +2,13 @@ import type { ClientConnection } from '@server/connect/ClientConnection'
 import type { ServerActionExecution } from '@server/missions/actions/ServerActionExecution'
 import type { ServerExecutionOutcome } from '@server/missions/actions/ServerExecutionOutcome'
 import type { ServerMissionAction } from '@server/missions/actions/ServerMissionAction'
-import type { ServerEffect } from '@server/missions/effects/ServerEffect'
 import type { ServerMissionForce } from '@server/missions/forces/ServerMissionForce'
 import type { ServerMission } from '@server/missions/ServerMission'
-import { OutdatedContextError } from '@server/target-environments/context/OutdatedContextError'
 import type {
   TargetEnvContext,
   TTargetEnvExposedSession,
   TTargetEnvExposedSessionConfig,
 } from '@server/target-environments/context/TargetEnvContext'
-import { TargetScriptContext } from '@server/target-environments/context/TargetScriptContext'
 import { ServerEnvironmentTask } from '@server/target-environments/ServerEnvironmentTask'
 import type { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
 import type { ServerUser } from '@server/users/ServerUser'
@@ -28,7 +25,6 @@ import type {
   TEffectExecutionTriggered,
   TEffectSessionTriggered,
   TEffectTrigger,
-  TEffectType,
 } from '@shared/missions/effects/Effect'
 import type { TMissionJsonOptions } from '@shared/missions/Mission'
 import type { TChatChannelJson } from '@shared/sessions/chat/ChatChannel'
@@ -48,7 +44,7 @@ import { MissionSession } from '@shared/sessions/MissionSession'
 import type { TSessionRealmJson } from '@shared/sessions/SessionRealm'
 import type {
   TEnvironmentTaskJson,
-  TEnvironmentTaskSource,
+  TEnvironmentTaskStatus,
 } from '@shared/target-environments/TargetEnvironmentTask'
 import type { TInstanceOrArray } from '@shared/toolbox/arrays/ArrayToolbox'
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
@@ -139,7 +135,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * teardown to ensure all effects resolve before
    * performing teardown operations.
    */
-  private effectHistory: Promise<void>[]
+  private effectHistory: Promise<TEnvironmentTaskStatus>[]
 
   /**
    * Tracks which session panel tabs have pending (unacknowledged) alerts
@@ -573,29 +569,45 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Get the target environments that the
     // mission of the given session uses.
     let environments = this.mission.targetEnvironments
-    let setUpPromises: Promise<void>[] = []
 
+    // Phase 1 — build every setup task: the setup hooks for each realm
+    // and environment, then the session-setup effects. Announce them all
+    // up front so authorized members see the complete list awaiting
+    // initiation before any task begins running.
+    let hookBatches: ServerEnvironmentTask[][] = []
     for (let realm of this.realms) {
-      // For each target environment in the registry, set it up.
       for (let environment of environments) {
         if (this.config.disabledTargetEnvs.includes(environment._id)) {
           continue
         }
-        // Run the target-environment setup hooks. Each execution
-        // records and broadcasts itself as it progresses.
-        let promise = environment.setUp(realm)
-        // Store the promise, for awaiting later.
-        setUpPromises.push(promise)
+        hookBatches.push(environment.buildSetUpTasks(realm))
       }
     }
+    let effectTasks = this.buildSessionEffectTasks('session-setup')
 
-    // Await all environment setups.
-    await Promise.all(setUpPromises)
+    for (let batch of hookBatches) {
+      for (let task of batch) task.announce()
+    }
+    for (let task of effectTasks) task.announce()
 
-    // If there were setup errors, do not proceed.
-    if (this.setupFailed) return
+    // Phase 2 — run the hooks. Each environment's hooks run in sequence
+    // (the remaining ones skipped once one fails, since a failed hook may
+    // leave the environment unusable), while environments run in parallel.
+    await Promise.all(
+      hookBatches.map((batch) =>
+        ServerEnvironmentTask.runInSequence(batch, { stopOnFailure: true }),
+      ),
+    )
 
-    await this.applyMissionEffects('session-setup')
+    // If a setup hook failed, skip the queued effects and do not proceed;
+    // the environment may be in an unusable state.
+    if (this.setupFailed) {
+      for (let task of effectTasks) task.markSkipped()
+      return
+    }
+
+    // Phase 3 — run the setup effects now that the environments are ready.
+    await this.runEffectTasks(effectTasks)
   }
 
   /**
@@ -1301,108 +1313,17 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
-   * Builds a queued {@link ServerEnvironmentTask} for an effect, binding
-   * the effect's target script and context to it. The task is announced
-   * and run later, as part of a batch, by {@link runEffectTasks}.
-   * @param effect The effect to apply.
-   * @param context The context for the target script.
-   * @param locationMessage A message indicating the location of the
-   * effect, used when reporting a stale-context error.
-   * @returns The queued effect task, paired with the context needed to
-   * run it.
-   * @throws If the effect has no target environment or target.
+   * Runs a predefined batch of already-announced effect tasks one by one.
+   * Each task settles itself as it runs (queued -> running -> resolved),
+   * skipping when its effect has unresolved issues or the session has left
+   * a state that permits its trigger.
+   * @param tasks The announced effect tasks to run.
    */
-  private buildEffectTask<TType extends TEffectType>(
-    effect: ServerEffect<TType>,
-    context: TargetScriptContext<TType>,
-    locationMessage: string,
-  ): TQueuedEffectTask {
-    // A target environment and target are required to run the effect.
-    if (effect.environment === null) {
-      throw new Error(
-        `"${effect.name}" doesn't have a target environment or the target environment doesn't exist.`,
-      )
-    }
-    if (effect.target === null) {
-      throw new Error(
-        `"${effect.name}" doesn't have a target or the target doesn't exist.`,
-      )
-    }
-
-    // Describe the source of this execution so managers can review
-    // and diagnose the effect application.
-    let source: TEnvironmentTaskSource = {
-      kind: 'effect',
-      effectName: effect.name,
-      targetName: effect.target.name,
-      trigger: effect.trigger,
-    }
-
-    // Captured here so the narrowed (non-null) target is bound into the
-    // deferred script, which runs later as part of the batch.
-    let script = effect.target.script
-    let task = ServerEnvironmentTask.create(
-      this,
-      effect.environment,
-      source,
-      () => context.run(script),
-    )
-
-    return { effect, task, locationMessage }
-  }
-
-  /**
-   * Runs a predefined batch of effect tasks one by one. The whole batch
-   * is first announced as `queued`; each task is then either skipped
-   * (unresolved issues, or the session left a permitted state) or run
-   * (queued -> running -> resolved).
-   * @param entries The queued effect tasks to run.
-   * @param isStatePermitted Whether the session is still in a state that
-   * permits these effects to run. Re-checked before each task, since the
-   * state can change while an earlier task is running.
-   */
-  private async runEffectTasks(
-    entries: TQueuedEffectTask[],
-    isStatePermitted: () => boolean,
-  ): Promise<void> {
-    // Announce the whole batch up front so authorized members see the
-    // full list awaiting initiation before any of it runs.
-    for (let { task } of entries) task.announce()
-
-    let stopped = false
-    for (let { effect, task, locationMessage } of entries) {
-      // Once the session leaves a permitted state, skip the remainder.
-      if (stopped || !isStatePermitted()) {
-        stopped = true
-        task.skip()
-        continue
-      }
-
-      // Effects with unresolved issues are never executed; skip them so
-      // authorized members can see they were bypassed.
-      if (effect.hasIssues) {
-        task.skip()
-        continue
-      }
-
-      // Apply the effect. The task records and broadcasts itself
-      // (queued -> running -> success/failure) as it progresses.
-      try {
-        let promise = task.run()
-        this.effectHistory.push(promise)
-        await promise
-      } catch (error: any) {
-        // The failure is already recorded and logged by the task. Add
-        // effect-location context for stale-context errors, which
-        // typically stem from delayed async work in a prior instance.
-        if (error instanceof OutdatedContextError) {
-          let message =
-            `Failed to apply effect - "${effect.name}" - to target - "${effect.target?.name}" - found in the environment - "${effect.environment?.name}".\n` +
-            `The effect - "${effect.name}" - can be found here:\n` +
-            `${locationMessage}\n`
-          targetEnvLogger.error(message, error)
-        }
-      }
+  private async runEffectTasks(tasks: ServerEnvironmentTask[]): Promise<void> {
+    for (let task of tasks) {
+      let promise = task.run()
+      this.effectHistory.push(promise)
+      await promise
     }
   }
 
@@ -1414,50 +1335,50 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   public async applyMissionEffects(
     trigger: TEffectSessionTriggered,
   ): Promise<void> {
-    // Map of triggers to valid session states.
-    const triggerToStateMap: Record<TEffectSessionTriggered, TSessionState[]> =
-      {
-        'session-start': ['started'],
-        'session-setup': ['starting', 'resetting'],
-        'session-teardown': ['ending', 'resetting'],
-      }
+    // Phase 1 — build and announce the batch so authorized members see
+    // the full list awaiting initiation before any of it runs.
+    let tasks = this.buildSessionEffectTasks(trigger)
+    for (let task of tasks) task.announce()
 
-    let permittedStates = triggerToStateMap[trigger]
+    // Phase 2 — run the batch one by one. Each task skips itself if the
+    // session has left a state that permits this trigger (e.g. it ended
+    // mid-run).
+    await this.runEffectTasks(tasks)
+  }
 
-    // Phase 1 — enumerate the effects for this trigger and bind each to a
-    // queued task. Each realm runs its own copy of the mission's effects
-    // on its own mission, so a single-player session queues effects once
-    // per participant realm. In multiplayer there is a single shared
-    // realm, so this runs exactly once. Disabled environments are
-    // excluded here, so they never enter the queue.
-    let entries: TQueuedEffectTask[] = []
+  /**
+   * Builds the queued effect tasks for the given session trigger across
+   * every realm, without announcing or running them. Each realm runs its
+   * own copy of the mission's effects on its own mission, so a
+   * single-player session builds effects once per participant realm; in
+   * multiplayer there is a single shared realm, so this builds exactly
+   * one set. Disabled environments are excluded here, so they never enter
+   * the queue.
+   * @param trigger The trigger whose effects to build tasks for.
+   * @returns The queued effect tasks.
+   */
+  private buildSessionEffectTasks(
+    trigger: TEffectSessionTriggered,
+  ): ServerEnvironmentTask[] {
+    let entries: ServerEnvironmentTask[] = []
     for (let realm of this._realms) {
-      let effects = realm.mission.effects
-        .filter((effect) => effect.trigger === trigger)
-        .filter((effect) => effect.environment)
-        .filter(
-          (effect) =>
-            !this.config.disabledTargetEnvs.includes(effect.environment!._id),
-        )
-        .sort((a, b) => a.order - b.order)
+      let effects = realm.mission.selectEffects({
+        triggers: [trigger],
+        environmentPresence: 'with-environment',
+        excludeEnvironments: this.config.disabledTargetEnvs,
+      })
 
       for (let effect of effects) {
-        let context = TargetScriptContext.createSessionContext(realm, effect)
         entries.push(
-          this.buildEffectTask(
+          ServerEnvironmentTask.forEffect({
+            effectType: 'sessionTriggeredEffect',
+            realm,
             effect,
-            context,
-            `mission - "${realm.mission.name}" - effect - "${effect.name}".`,
-          ),
+          }),
         )
       }
     }
-
-    // Phase 2 — run the batch one by one, stopping if the session leaves
-    // a state that permits this trigger (e.g. it ended mid-run).
-    await this.runEffectTasks(entries, () =>
-      permittedStates.includes(this.state),
-    )
+    return entries
   }
 
   /**
@@ -1477,31 +1398,26 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Phase 1 — enumerate the effects for this trigger and bind each to a
     // queued task. Disabled environments are excluded here, so they never
     // enter the queue.
-    let entries: TQueuedEffectTask[] = action.effects
-      .filter((effect) => effect.trigger === trigger)
-      .filter((effect) => effect.environment)
-      .filter(
-        (effect) =>
-          !this.config.disabledTargetEnvs.includes(effect.environment!._id),
-      )
-      .sort((a, b) => a.order - b.order)
-      .map((effect) => {
-        let context = TargetScriptContext.createExecutionContext(
-          effect,
-          member,
-          execution,
-        )
-        return this.buildEffectTask(
-          effect,
-          context,
-          `force - "${effect.sourceForce.name}" - node - "${effect.sourceNode.name}" - action - "${effect.sourceAction.name}" - effect - "${effect.name}".`,
-        )
-      })
+    let effects = action.selectEffects({
+      triggers: [trigger],
+      environmentPresence: 'with-environment',
+      excludeEnvironments: this.config.disabledTargetEnvs,
+      sort: true,
+    })
+    let tasks = effects.map((effect) =>
+      ServerEnvironmentTask.forEffect({
+        effectType: 'executionTriggeredEffect',
+        effect,
+        member,
+        execution,
+      }),
+    )
+    for (let task of tasks) task.announce()
 
     // Phase 2 — run the batch one by one. These effects should only run
     // while the session is 'started'; if it leaves that state mid-run,
     // the remainder are skipped.
-    await this.runEffectTasks(entries, () => this.state === 'started')
+    await this.runEffectTasks(tasks)
   }
 
   /**
@@ -1687,29 +1603,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 }
 
 /* -- TYPES -- */
-
-/**
- * A queued effect task paired with the effect it applies and a message
- * describing that effect's location. Produced by
- * {@link SessionServer.buildEffectTask} and consumed as a batch by
- * {@link SessionServer.runEffectTasks}.
- */
-type TQueuedEffectTask = {
-  /**
-   * The effect being applied.
-   */
-  effect: ServerEffect
-  /**
-   * The runnable task that drives the effect's script through its
-   * lifecycle (queued -> running -> resolved, or queued -> skipped).
-   */
-  task: ServerEnvironmentTask
-  /**
-   * A message describing where the effect lives, used when reporting a
-   * stale-context error.
-   */
-  locationMessage: string
-}
 
 /**
  * Options for converting a session to JSON.

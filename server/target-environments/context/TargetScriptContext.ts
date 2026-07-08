@@ -64,6 +64,23 @@ export class TargetScriptContext<
   protected readonly data: TSelectTargetEnvData[TType]
 
   /**
+   * The effect for which this context was built.
+   */
+  public get effect() {
+    return this.data.effect
+  }
+
+  /**
+   * @returns Whether the session's current state permits this effect to
+   * run. Effects triggered by a session-lifecycle event may only apply
+   * while the session is in one of the states associated with their
+   * trigger.
+   * @see {@link permittedStates}
+   */
+  public get currentStatePermitted(): boolean {
+    return this.permittedStates.includes(this.session.state)
+  }
+  /**
    * @param realm The realm where this effect is being applied.
    * @param variedContext The context data that varies based on the type of effect.
    */
@@ -562,12 +579,34 @@ export class TargetScriptContext<
   }
 
   /**
+   * Builds the context for an effect, selecting the appropriate context
+   * shape from the trigger-specific {@link options}.
+   * @param options The effect and its trigger-specific inputs.
+   * @returns The context for the effect's target script.
+   */
+  public static forEffect(options: TEffectContextOptions): TargetScriptContext {
+    switch (options.effectType) {
+      case 'sessionTriggeredEffect':
+        return TargetScriptContext.createSessionContext(
+          options.realm,
+          options.effect,
+        )
+      case 'executionTriggeredEffect':
+        return TargetScriptContext.createExecutionContext(
+          options.effect,
+          options.member,
+          options.execution,
+        )
+    }
+  }
+
+  /**
    * Creates context for a session-triggered effect.
    * @param effect The effect for which the context is purposed.
    * @param session The session where the effect was triggered.
    * @returns The new context.
    */
-  public static createSessionContext(
+  private static createSessionContext(
     realm: ServerSessionRealm,
     effect: ServerEffect<'sessionTriggeredEffect'>,
   ): TargetScriptContext<'sessionTriggeredEffect'> {
@@ -634,7 +673,7 @@ export class TargetScriptContext<
    * @param execution The execution responsible for triggering the effect.
    * @returns The new context.
    */
-  public static createExecutionContext(
+  private static createExecutionContext(
     effect: ServerEffect<'executionTriggeredEffect'>,
     member: ServerSessionMember,
     execution: ServerActionExecution,
@@ -1179,3 +1218,29 @@ export type TSelectTargetEnvData = {
   sessionTriggeredEffect: TContextDataSession
   executionTriggeredEffect: TContextDataExecution
 }
+
+/**
+ * An effect together with the trigger-specific inputs needed to build its
+ * {@link TargetScriptContext} (and, in turn, its effect task). The
+ * `effectType` discriminant determines which further inputs are required.
+ * @see {@link TargetScriptContext.forEffect}
+ */
+export type TEffectContextOptions =
+  | {
+      /** Marks the effect as session-triggered. */
+      effectType: 'sessionTriggeredEffect'
+      /** The realm within which the effect is applied. */
+      realm: ServerSessionRealm
+      /** The session-triggered effect to apply. */
+      effect: ServerEffect<'sessionTriggeredEffect'>
+    }
+  | {
+      /** Marks the effect as execution-triggered. */
+      effectType: 'executionTriggeredEffect'
+      /** The execution-triggered effect to apply. */
+      effect: ServerEffect<'executionTriggeredEffect'>
+      /** The member responsible for triggering the effect. */
+      member: ServerSessionMember
+      /** The execution that triggered the effect. */
+      execution: ServerActionExecution
+    }

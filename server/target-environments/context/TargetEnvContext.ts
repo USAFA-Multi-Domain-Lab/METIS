@@ -59,34 +59,34 @@ export abstract class TargetEnvContext<
   /**
    * The realm within which this context operates.
    */
-  protected readonly realm: ServerSessionRealm
+  public readonly realm: ServerSessionRealm
 
   /**
    * The mission for the current context, rooted
    * in the provided realm.
    */
-  protected get mission() {
+  public get mission() {
     return this.realm.mission
   }
 
   /**
    * The ID of the mission for the current context.
    */
-  protected get missionId() {
+  public get missionId() {
     return this.mission._id
   }
 
   /**
    * The session for the current context.
    */
-  protected get session(): SessionServer {
+  public get session(): SessionServer {
     return this.realm.session
   }
 
   /**
    * The ID of the session for the current context.
    */
-  protected get sessionId() {
+  public get sessionId() {
     return this.session._id
   }
 
@@ -100,21 +100,21 @@ export abstract class TargetEnvContext<
    * generated. This is not necessarily the same as the
    * current session instance ID.
    */
-  protected get instanceId() {
+  public get instanceId() {
     return this._instanceId
   }
 
   /**
    * The ID of the target environment for the current context.
    */
-  protected get environmentId(): string {
+  public get environmentId(): string {
     return this.environment._id
   }
 
   /**
    * The target environment for the current context.
    */
-  protected readonly environment: ServerTargetEnvironment
+  public readonly environment: ServerTargetEnvironment
 
   /**
    * A store that is unique to the session and target environment.

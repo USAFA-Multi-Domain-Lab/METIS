@@ -36,6 +36,14 @@ export abstract class MissionComponent<
   public abstract get path(): [...MissionComponent<any, any>[], Self]
 
   /**
+   * The {@link path} rendered as a human-readable string, with each
+   * component's name separated by ` > `.
+   */
+  public get pathFormatted(): string {
+    return this.path.map(({ name }) => name).join(' > ')
+  }
+
+  /**
    * The component from which this component descends in the
    * mission hierarchy.
    * @note This will be `null` for the mission root.

@@ -13,6 +13,8 @@ import type {
 } from '@shared/missions/effects/Effect'
 import type { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import { ServerEffect } from '../effects/ServerEffect'
+import { ServerMission } from '../ServerMission'
+import type { TMissionSelectEffectsOptions } from '../ServerMission'
 import type { ServerMissionNode } from '../nodes/ServerMissionNode'
 import { ServerActionCost } from './ServerActionCost'
 import type { TExecuteOptions } from './ServerActionExecution'
@@ -47,6 +49,19 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
     let effect = ServerEffect.createBlankExecutionEffect(target, this, trigger)
     this.effects.push(effect)
     return effect
+  }
+
+  /**
+   * Selects effects from this action according to the provided options,
+   * mirroring {@link ServerMission.selectEffects} for mission-level
+   * effects.
+   * @param options The selection options.
+   * @returns The matching effects.
+   */
+  public selectEffects(
+    options: TMissionSelectEffectsOptions = {},
+  ): ServerEffect<'executionTriggeredEffect'>[] {
+    return ServerMission.selectEffects(this.effects, options)
   }
 
   /**

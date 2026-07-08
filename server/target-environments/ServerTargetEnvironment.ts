@@ -121,27 +121,23 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   }
 
   /**
-   * Invokes the given method, by calling all registered
-   * hook callbacks for that method.
-   * @param method The method to invoke.
+   * Builds queued hook tasks for the given method and realm, one per
+   * registered hook, without announcing or running them.
+   * @param method The lifecycle method whose hooks to build tasks for.
    * @param realm The realm being used for the invocation. For
    * realm-compatible target environments, this can be used to
    * setup realm-dedicated instances on their end.
-   * @resolves When all callbacks have been invoked and resolved.
-   * @rejects If any callback throws an error.
+   * @returns The queued hook tasks.
    */
-  private async invoke(
+  private buildTasks(
     method: TTargetEnvironmentMethods,
     realm: ServerSessionRealm,
-  ): Promise<void> {
+  ): ServerEnvironmentTask[] {
     // Describes the source of these executions so managers can review
     // and diagnose hook executions.
     let source: TEnvironmentTaskSource = { kind: 'hook', method }
 
-    // Phase 1 — enumerate the hooks for this method, binding each to a
-    // queued task, and announce the batch so authorized members see the
-    // full list awaiting initiation before any of it runs.
-    let tasks = this.hooks
+    return this.hooks
       .filter((hook) => hook.method === method)
       .map((hook) => {
         let context = EnvHookContext.create(realm, this)
@@ -152,38 +148,37 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
           () => context.run((exposedContext) => hook.invoke(exposedContext)),
         )
       })
-    for (let task of tasks) task.announce()
-
-    // Phase 2 — run the tasks one by one. Once one fails, the remaining
-    // hooks in this environment are skipped, since a failed hook may
-    // leave the environment in an unusable state.
-    let failed = false
-    for (let task of tasks) {
-      if (failed) {
-        task.skip()
-        continue
-      }
-
-      try {
-        // The task transitions and broadcasts itself
-        // (queued -> running -> success/failure) as it progresses.
-        await task.run()
-      } catch {
-        // The failure is already recorded by the task; flag it so the
-        // remaining hooks in this environment are skipped.
-        failed = true
-      }
-    }
   }
 
   /**
-   * Sets up the target environment for the given realm.
-   * @param realm The realm used for setup.
-   * @resolves When setup is complete.
-   * @rejects If setup fails.
+   * Builds the queued setup hook tasks for the given realm, without
+   * announcing or running them. The session orchestrates the wider setup
+   * so that every setup task (hooks and effects) is announced before any
+   * of them begins running.
+   * @param realm The realm being set up.
+   * @returns The queued setup hook tasks.
    */
-  public setUp(realm: ServerSessionRealm): Promise<void> {
-    return this.invoke('environment-setup', realm)
+  public buildSetUpTasks(realm: ServerSessionRealm): ServerEnvironmentTask[] {
+    return this.buildTasks('environment-setup', realm)
+  }
+
+  /**
+   * Invokes the given method by building its hook tasks, announcing the
+   * batch so authorized members see the full list awaiting initiation,
+   * and then running it. Once a hook fails, the remaining hooks in this
+   * environment are skipped, since a failed hook may leave the
+   * environment in an unusable state.
+   * @param method The method to invoke.
+   * @param realm The realm being used for the invocation.
+   * @resolves When all hooks have been invoked and resolved.
+   */
+  private async invoke(
+    method: TTargetEnvironmentMethods,
+    realm: ServerSessionRealm,
+  ): Promise<void> {
+    let tasks = this.buildTasks(method, realm)
+    for (let task of tasks) task.announce()
+    await ServerEnvironmentTask.runInSequence(tasks, { stopOnFailure: true })
   }
 
   /**
