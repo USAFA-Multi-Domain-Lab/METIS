@@ -76,6 +76,7 @@ export function createDefaultListProps<
 >(): TDefaultProps<TList_P<TItem>> {
   return {
     columns: [],
+    embedded: false,
     itemsPerPageMin: 10,
     minNameColumnWidth: '14em',
     listButtonIcons: [],
@@ -137,6 +138,7 @@ export default function List<TItem extends MetisComponent>(
   // component.
   const {
     items,
+    embedded,
     itemsPerPageMin,
     ordering,
     listButtonIcons,
@@ -373,6 +375,13 @@ export default function List<TItem extends MetisComponent>(
   >(() => (listButtons ?? []).concat(itemButtons ?? []))
 
   /**
+   * The CSS classes to apply to the list's root element.
+   */
+  const classes = compute<ClassList>(() =>
+    new ClassList('List').set('Embedded', embedded),
+  )
+
+  /**
    * @see {@link TListContextData.aggregateButtonLayout}
    */
   const aggregateButtonLayout = compute<TSvgLayout>(() => {
@@ -585,7 +594,7 @@ export default function List<TItem extends MetisComponent>(
   return (
     <Provider value={contextValue}>
       <div
-        className='List'
+        className={classes.toString()}
         ref={elements.root}
         onDrop={onDrop}
         onDragOver={onDragOver}
@@ -653,6 +662,12 @@ export type TList_P<TItem extends MetisComponent> = {
    * @default []
    */
   columns?: TListColumnType<TItem>[]
+  /**
+   * Removes the list's border and background so it can be
+   * embedded seamlessly within another container.
+   * @default false
+   */
+  embedded?: boolean
   /**
    * The minimum number of items to display per page.
    * @note More items will be displayed if there is

@@ -9,6 +9,12 @@
   border: 2px solid $color-primary-light;
   border-radius: 1em;
 
+  &.Embedded {
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+  }
+
   &:not(.Resizing) {
     transition: 0.5s opacity;
   }

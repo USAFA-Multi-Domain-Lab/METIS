@@ -250,6 +250,7 @@ export default function MissionPage(
       ),
       () => {},
     ],
+    embedded: true,
     getListButtonPermissions: () => ['missions_write'],
     getItemButtonPermissions: () => ['missions_write'],
     onSelect: (file) => {
@@ -268,6 +269,7 @@ export default function MissionPage(
     files: [globalFiles, setGlobalFiles],
     itemButtonIcons: ['link'],
     itemsPerPageMin: 4,
+    embedded: true,
     getListButtonPermissions: () => ['missions_write'],
     getItemButtonPermissions: () => ['missions_write'],
     getItemButtonLabel: (button) => {
