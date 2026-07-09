@@ -7,13 +7,13 @@ import type { TTargetEnvConfig } from '@shared/target-environments/types'
 import { useEffect, useState } from 'react'
 import { DetailToggle } from '../../form/DetailToggle'
 import { DetailDropdown } from '../../form/dropdowns/standard/DetailDropdown'
-import './TargetEnvConfig.scss'
+import './TargetEnvironmentConfig.scss'
 
 /**
  * Allows the modification of target environment settings
  * within a session config.
  */
-export default function TargetEnvConfig({
+export default function TargetEnviromentConfig({
   sessionConfig,
   mission,
   disabled = false,
@@ -21,6 +21,7 @@ export default function TargetEnvConfig({
   onCommit = () => {},
 }: TTargetEnvConfig_P): TReactElement | null {
   /* -- STATE -- */
+
   const [disabledTargetEnvs, setDisabledTargetEnvs] = useState<string[]>(
     sessionConfig.disabledTargetEnvs,
   )
@@ -138,12 +139,12 @@ export default function TargetEnvConfig({
       // Determine the selected configuration for the target environment.
       const configId = targetEnvConfigs[targetEnv._id]
       const selectedConfig =
-        targetEnv.configs.find((cfg) => cfg._id === configId) ??
+        targetEnv.configs.find((config) => config._id === configId) ??
         targetEnv.configs[0]
 
       // Render
       return (
-        <div key={targetEnv._id} className='EnvConfig'>
+        <div key={targetEnv._id} className='EnvironmentConfigContent'>
           <DetailToggle
             label={`${targetEnv.name}`}
             value={!targetEnvironmentDisabled}
@@ -177,7 +178,7 @@ export default function TargetEnvConfig({
   return (
     <>
       {mounted && mission.targetEnvironments.length && (
-        <div className='TargetEnvConfig'>
+        <div className='TargetEnvironmentConfig'>
           <div className='EnvTitle'>Target Environments</div>
           <div className='EnvDescription'>
             Enable or disable effects for each target environment. When enabled,

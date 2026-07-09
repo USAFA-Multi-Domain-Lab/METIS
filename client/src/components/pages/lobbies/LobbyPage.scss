@@ -1,4 +1,4 @@
-@use '../../assets/styles/config.scss' as *;
+@use '@client/assets/styles/config.scss' as *;
 @use '@client/assets/styles/util.scss' as *;
 
 .Page.LobbyPage {
@@ -18,12 +18,13 @@
     height: $content-height;
     padding: 2em $content-padding-horizontal 0;
 
-    .PanelView {
+    > .Panel .PanelView {
       box-sizing: border-box;
       padding-top: 1.5em;
     }
 
     .Section {
+      box-sizing: border-box;
       padding: 0 0 1.75em;
 
       &.DetailSection {
@@ -31,11 +32,6 @@
           margin: 0 0 1em;
           font-size: 1.5em;
           font-weight: bold;
-        }
-
-        .PropertyBadges {
-          align-items: start;
-          font-size: 0.75rem;
         }
 
         @media (min-width: 800px) {
@@ -86,26 +82,12 @@
       &.ConfigurationSection {
         height: 100%;
 
-        .SessionConfigMenu {
+        .SessionLobbyConfig {
           height: 100%;
 
-          .MenuContent {
-            overflow: auto;
-            box-sizing: border-box;
-            height: 100%;
-            padding-bottom: 2em;
+          .Panel {
+            border-radius: 1em;
           }
-        }
-      }
-
-      &.ButtonSection {
-        display: flex;
-        column-gap: 1em;
-        justify-content: center;
-        margin: 3em 0 0;
-
-        .ButtonText {
-          margin: 0;
         }
       }
     }

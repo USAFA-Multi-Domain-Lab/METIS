@@ -1,0 +1,20 @@
+@use '@client/assets/styles/config.scss' as *;
+@use '@client/components/content/form/index.scss' as *;
+
+.SessionLobbyConfig {
+  .Panel {
+    .PanelView {
+      overflow-y: auto;
+      display: flex;
+      padding: 1.5em 2em 3em;
+      justify-content: center;
+
+      .PanelContent {
+        @include form-container;
+        width: 100%;
+        max-width: 40em;
+        height: max-content;
+      }
+    }
+  }
+}

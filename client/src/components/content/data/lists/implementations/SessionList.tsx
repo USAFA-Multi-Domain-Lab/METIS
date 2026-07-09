@@ -129,7 +129,7 @@ export default function SessionList({
       case 'accessibility':
         return '9em'
       case 'state':
-        return '6em'
+        return '8em'
       case 'runtimeFormatted':
         return '7em'
       case 'launchedAt':

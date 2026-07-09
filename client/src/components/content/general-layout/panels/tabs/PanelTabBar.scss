@@ -1,4 +1,5 @@
 @use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
 
 .PanelTabBar {
   overflow: hidden;
@@ -36,6 +37,26 @@
 
     .PanelTab:not(:last-child) {
       border-right: 2px solid $color-secondary;
+    }
+  }
+
+  // Tabs stacked vertically down one side of the panel.
+  &.Vertical {
+    border-right: 2px solid $color-secondary;
+
+    .Tabs {
+      flex-direction: column;
+      overflow-x: hidden;
+      overflow-y: auto;
+
+      .PanelTab {
+        border-right: none;
+        border-bottom: 2px solid $color-secondary;
+
+        &.Selected {
+          border-bottom: 2px solid $color-primary-light;
+        }
+      }
     }
   }
 }

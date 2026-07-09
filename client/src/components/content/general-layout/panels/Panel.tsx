@@ -30,6 +30,7 @@ export const usePanelContext = () => {
 export default function Panel({
   children,
   transparent = false,
+  tabPosition = 'top',
   selectView: externalSelectView,
   onViewSelected,
 }: TPanel_P): TReactElement | null {
@@ -74,6 +75,7 @@ export default function Panel({
     let result = new ClassList('Panel')
     result.set('Tabbed', viewElements.length > 1)
     result.set('Transparent', transparent)
+    result.add(`Tabs${tabPosition[0].toUpperCase()}${tabPosition.slice(1)}`)
     return result
   })
 
@@ -89,6 +91,7 @@ export default function Panel({
     return {
       state,
       views,
+      tabPosition,
       onViewSelected,
     }
   })
@@ -130,6 +133,12 @@ export interface TPanel_P {
    */
   transparent?: boolean
   /**
+   * Where the tab bar is positioned relative to the
+   * panel's views.
+   * @default 'top'
+   */
+  tabPosition?: TPanelTabPosition
+  /**
    * Optional ref to pass to externally set the panel view.
    * @param title The title of the view to select.
    */
@@ -141,6 +150,11 @@ export interface TPanel_P {
    */
   onViewSelected?: (title: string) => void
 }
+
+/**
+ * The side of the panel on which the tab bar is displayed.
+ */
+export type TPanelTabPosition = 'top' | 'left'
 
 /**
  * Comprehensive state type for the `Panel` component.
@@ -165,6 +179,11 @@ export type TPanelContextData = {
    * All views in the panel.
    */
   views: TPanelView_P[]
+  /**
+   * Where the tab bar is positioned relative to the
+   * panel's views.
+   */
+  tabPosition: TPanelTabPosition
   /**
    * Optional callback invoked when the active view changes.
    * @param title The title of the newly selected view.

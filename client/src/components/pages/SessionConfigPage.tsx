@@ -16,7 +16,6 @@ import { DefaultPageLayout } from '.'
 import Prompt from '../content/communication/Prompt'
 import { ESortByMethod } from '../content/general-layout/ListOld'
 import type { TNavigation_P } from '../content/general-layout/Navigation'
-import SessionConfig from '../content/session/config/SessionConfig'
 import ButtonSvgPanel from '../content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
 import './SessionConfigPage.scss'
@@ -298,8 +297,8 @@ export default function SessionConfigPage({
           sessionId={session._id}
           saveButtonText={saveButtonText}
           disabled={isStarting}
-          onSave={save}
-          onCancel={cancel}
+          onRequestLaunch={save}
+          onRequestCancel={cancel}
         />
       </DefaultPageLayout>
     </div>

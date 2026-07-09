@@ -5,13 +5,13 @@ import { compute } from '@client/toolbox'
 import { useMountHandler, useRequireLogin } from '@client/toolbox/hooks'
 import type { MissionComponentIssue } from '@shared/missions/MissionComponentIssue'
 import { useState } from 'react'
-import { DefaultPageLayout } from '.'
-import { ESortByMethod } from '../content/general-layout/ListOld'
-import type { TNavigation_P } from '../content/general-layout/Navigation'
-import SessionConfig from '../content/session/config/SessionConfig'
-import ButtonSvgPanel from '../content/user-controls/buttons/panels/ButtonSvgPanel'
-import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
+import { DefaultPageLayout } from '..'
+import { ESortByMethod } from '../../content/general-layout/ListOld'
+import type { TNavigation_P } from '../../content/general-layout/Navigation'
+import ButtonSvgPanel from '../../content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '../../content/user-controls/buttons/panels/hooks'
 import './LaunchPage.scss'
+import SessionConfig from './subcomponents/SessionLaunchConfig'
 
 /**
  * Page responsible for launching a session with the given
@@ -236,10 +236,9 @@ export default function LaunchPage({
           <SessionConfig
             sessionConfig={sessionConfig}
             mission={mission}
-            saveButtonText={'Launch'}
             disabled={isLaunching}
-            onSave={launch}
-            onCancel={cancel}
+            onRequestLaunch={launch}
+            onRequestCancel={cancel}
           />
         </DefaultPageLayout>
       </div>

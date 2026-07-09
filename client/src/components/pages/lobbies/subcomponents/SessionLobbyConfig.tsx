@@ -1,12 +1,11 @@
+import Panel from '@client/components/content/general-layout/panels/Panel'
+import PanelView from '@client/components/content/general-layout/panels/PanelView'
+import SessionGeneralConfig from '@client/components/content/session/config/SessionGeneralConfig'
+import TargetEnviromentConfig from '@client/components/content/session/config/TargetEnvironmentConfig'
 import { useGlobalContext } from '@client/context/global'
 import type { SessionClient } from '@client/sessions/SessionClient'
-import { compute } from '@client/toolbox'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
-import { ClassList } from '@shared/toolbox/html/ClassList'
-import { useState } from 'react'
-import './SessionConfigMenu.scss'
-import SessionGeneralConfig from './SessionGeneralConfig'
-import TargetEnvConfig from './TargetEnvConfig'
+import './SessionLobbyConfig.scss'
 
 /**
  * Auto-saving session configuration with an inner side menu
@@ -22,21 +21,6 @@ export default function SessionConfigMenu({
   const { mission } = session
   const globalContext = useGlobalContext()
   const { handleError } = globalContext.actions
-  const [section, setSection] = useState<TConfigSectionKey>('general')
-
-  /* -- COMPUTED -- */
-
-  /**
-   * The sections available in the side menu. Target environments
-   * are only configurable when the mission defines them.
-   */
-  const sections = compute<TConfigSection[]>(() => {
-    const result: TConfigSection[] = [{ key: 'general', label: 'General' }]
-    if (mission.targetEnvironments.length) {
-      result.push({ key: 'target-environments', label: 'Target Environments' })
-    }
-    return result
-  })
 
   /* -- FUNCTIONS -- */
 
@@ -58,27 +42,10 @@ export default function SessionConfigMenu({
   /* -- RENDER -- */
 
   return (
-    <div className='SessionConfigMenu'>
-      <div className='MenuOptions'>
-        {sections.map(({ key, label }) => {
-          let classes = new ClassList('MenuOption').set(
-            'Selected',
-            section === key,
-          )
-          return (
-            <div
-              key={key}
-              className={classes.value}
-              onClick={() => setSection(key)}
-            >
-              {label}
-            </div>
-          )
-        })}
-      </div>
-      <div className='MenuContentWrapper'>
-        <div className='MenuContent'>
-          {section === 'general' && (
+    <div className='SessionLobbyConfig'>
+      <Panel>
+        <PanelView title='Session'>
+          <div className='PanelContent'>
             <SessionGeneralConfig
               sessionConfig={session.config}
               mission={mission}
@@ -86,17 +53,19 @@ export default function SessionConfigMenu({
               disabled={disabled}
               onCommit={commit}
             />
-          )}
-          {section === 'target-environments' && (
-            <TargetEnvConfig
+          </div>
+        </PanelView>
+        <PanelView title='Target Environments'>
+          <div className='PanelContent'>
+            <TargetEnviromentConfig
               sessionConfig={session.config}
               mission={mission}
               disabled={disabled}
               onCommit={commit}
             />
-          )}
-        </div>
-      </div>
+          </div>
+        </PanelView>
+      </Panel>
     </div>
   )
 }

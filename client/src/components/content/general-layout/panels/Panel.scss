@@ -9,20 +9,37 @@
   background: $color-primary;
   border: 2px solid $color-primary-light;
 
-  &.Tabbed {
-    grid-template-rows: auto 1fr;
-  }
-
   .PanelView {
     grid-row: -2 / -1;
     grid-column: -2 / -1;
+  }
+
+  // Tab bar across the top of the panel (default).
+  &.Tabbed.TabsTop {
+    grid-template-rows: auto 1fr;
+  }
+
+  // Tab bar stacked down the left side of the panel.
+  &.Tabbed.TabsLeft {
+    grid-template-rows: 1fr;
+    grid-template-columns: auto 1fr;
+
+    .PanelTabBar {
+      grid-row: 1 / -1;
+      grid-column: 1 / 2;
+    }
+
+    .PanelView {
+      grid-row: 1 / -1;
+      grid-column: 2 / -1;
+    }
   }
 
   &.Transparent {
     background: none;
     border: none;
 
-    .PanelTabBar {
+    > .PanelTabBar {
       border: none;
 
       .Tabs {

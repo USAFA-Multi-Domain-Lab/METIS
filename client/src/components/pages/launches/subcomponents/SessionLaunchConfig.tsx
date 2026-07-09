@@ -1,29 +1,28 @@
 import Panel from '@client/components/content/general-layout/panels/Panel'
 import PanelView from '@client/components/content/general-layout/panels/PanelView'
+import SessionGeneralConfig from '@client/components/content/session/config/SessionGeneralConfig'
+import TargetEnviromentConfig from '@client/components/content/session/config/TargetEnvironmentConfig'
+import { ButtonText } from '@client/components/content/user-controls/buttons/ButtonText'
 import type { ClientMission } from '@client/missions/ClientMission'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
-import { ButtonText } from '../../user-controls/buttons/ButtonText'
-import './SessionConfig.scss'
-import SessionGeneralConfig from './SessionGeneralConfig'
-import TargetEnvSettings from './TargetEnvConfig'
+import './SessionLaunchConfig.scss'
 
 /**
- * Allows the modification of the given session config.
+ * Allows the modification of the given session config before
+ * launching a session.
  */
 export default function SessionConfig({
   sessionConfig,
   mission,
-  sessionId = null,
-  saveButtonText = 'Save',
   disabled = false,
   onChange = () => {},
-  onSave,
-  onCancel,
+  onRequestLaunch,
+  onRequestCancel,
 }: TSessionConfig_P): TReactElement | null {
   /* -- RENDER -- */
 
   return (
-    <div className='SessionConfig'>
+    <div className='SessionLaunchConfig'>
       <div className='Title'>Session Configuration</div>
       <Panel>
         <PanelView title='Session'>
@@ -31,14 +30,13 @@ export default function SessionConfig({
             <SessionGeneralConfig
               sessionConfig={sessionConfig}
               mission={mission}
-              sessionId={sessionId}
               onChange={onChange}
             />
           </div>
         </PanelView>
         <PanelView title='Target Environments'>
           <div className='PanelContent'>
-            <TargetEnvSettings
+            <TargetEnviromentConfig
               sessionConfig={sessionConfig}
               mission={mission}
               onChange={onChange}
@@ -48,13 +46,13 @@ export default function SessionConfig({
       </Panel>
       <div className='Buttons'>
         <ButtonText
-          text={saveButtonText}
-          onClick={onSave}
+          text={'Launch'}
+          onClick={onRequestLaunch}
           disabled={disabled ? 'full' : 'none'}
         />
         <ButtonText
           text={'Cancel'}
-          onClick={onCancel}
+          onClick={onRequestCancel}
           disabled={disabled ? 'full' : 'none'}
         />
       </div>
@@ -65,7 +63,7 @@ export default function SessionConfig({
 /* -- types -- */
 
 /**
- * Props for `SessionConfig` component.
+ * Props for {@link SessionLaunchConfig} component.
  */
 export type TSessionConfig_P = {
   /**
@@ -73,18 +71,9 @@ export type TSessionConfig_P = {
    */
   sessionConfig: TSessionConfig
   /**
-   * The mission to which the session belongs.
+   * The mission from which the session will be launched
    */
   mission: ClientMission
-  /**
-   * The ID of the session being configured, or null if creating a new session.
-   */
-  sessionId?: string | null
-  /**
-   * The text for the save button.
-   * @default 'Save'
-   */
-  saveButtonText?: string
   /**
    * Whether the save/cancel buttons are disabled.
    * @default false
@@ -96,11 +85,11 @@ export type TSessionConfig_P = {
    */
   onChange?: () => void
   /**
-   * Callback for when the session config is saved.
+   * Callback for when the user clicks the launch button.
    */
-  onSave: () => void
+  onRequestLaunch: () => void
   /**
-   * Callback for when the session configuration is cancelled.
+   * Callback for when the user clicks the cancel button.
    */
-  onCancel: () => void
+  onRequestCancel: () => void
 }

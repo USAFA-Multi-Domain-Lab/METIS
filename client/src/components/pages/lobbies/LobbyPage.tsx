@@ -13,17 +13,16 @@ import {
 import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useEffect, useRef, useState } from 'react'
-import { DefaultPageLayout } from '.'
-import Prompt from '../content/communication/Prompt'
-import SessionMemberList from '../content/data/lists/implementations/members/SessionMemberList'
-import TargetEnvironmentTaskList from '../content/data/lists/implementations/target-environments/TargetEnvironmentTaskList'
-import type { TNavigation_P } from '../content/general-layout/Navigation'
-import { HomeButton } from '../content/general-layout/Navigation'
-import Panel from '../content/general-layout/panels/Panel'
-import PanelView from '../content/general-layout/panels/PanelView'
-import SessionConfigMenu from '../content/session/config/SessionConfigMenu'
-import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
+import { DefaultPageLayout } from '..'
+import Prompt from '../../content/communication/Prompt'
+import SessionMemberList from '../../content/data/lists/implementations/members/SessionMemberList'
+import type { TNavigation_P } from '../../content/general-layout/Navigation'
+import { HomeButton } from '../../content/general-layout/Navigation'
+import Panel from '../../content/general-layout/panels/Panel'
+import PanelView from '../../content/general-layout/panels/PanelView'
+import { useButtonSvgEngine } from '../../content/user-controls/buttons/panels/hooks'
 import './LobbyPage.scss'
+import SessionLobbyConfig from './subcomponents/SessionLobbyConfig'
 
 /**
  * Page responsible for viewing/managing participants before
@@ -89,32 +88,6 @@ export default function LobbyPage({
     return new ClassList('StartStatus').set('StartStatusFailure', setupFailed)
   })
 
-  /**
-   * The icon used to represent a single-player force in
-   * the property badges.
-   */
-  const sessionForceIcon = compute<TMetisIcon>(() => {
-    let force = session.mission.getForceById(session.config.singlePlayerForceId)
-    return force?.outlineIcon ?? '_blank'
-  })
-
-  /**
-   * The name of the force assigned for single-player mode,
-   * or an error string if not configured.
-   */
-  const sessionForceName = compute<string>(() => {
-    let force = session.mission.getForceById(session.config.singlePlayerForceId)
-    return force?.name ?? 'Error: Not configured'
-  })
-
-  /**
-   * The color of the force assigned for single-player mode,
-   * or an error string if not configured.
-   */
-  const singlePlayerForceColor = session.mission.getForceById(
-    session.config.singlePlayerForceId,
-  )?.color
-
   /* -- FUNCTIONS -- */
 
   /**
@@ -147,32 +120,6 @@ export default function LobbyPage({
         notifyMethod: 'bubble',
       })
     }
-  }
-
-  /**
-   * Creates a description for a property badge in a
-   * standardized format.
-   * @param label Short identifier for the purpose for the badge.
-   * @param value The current state of the property for the badge,
-   * preformatted in a readable format.
-   * @param explanations Gives a more detailed explanation of the property.
-   * If a string is provided, it will be used as the explanation for all values.
-   * If an object is provided, the keys should be the possible values of the property,
-   * and the values should be the corresponding explanations.
-   * @returns The formatted badge description.
-   */
-  const constructBadgeDescription = (
-    label: string,
-    value: string,
-    explanations?: string | { [key: string]: string },
-  ) => {
-    let description = `**${label}:** ${value}`
-    if (typeof explanations === 'string') {
-      description += `\n\t\n*${explanations}*`
-    } else if (explanations && explanations[value]) {
-      description += `\n\t\n*${explanations[value]}*`
-    }
-    return description
   }
 
   /* -- EFFECTS -- */
@@ -236,16 +183,17 @@ export default function LobbyPage({
     navigationButtonEngine.setDisabled('start-session', startInitiated)
   }, [startInitiated])
 
+  // todo: Uncomment this when task-management system is overhauled.
   // Once session start is initiated, auto-select the setup view
   // so authorized members can monitor target environment setup.
-  useEffect(() => {
-    if (
-      startInitiated &&
-      session.member.isAuthorized('viewTargetEnvironmentTasks')
-    ) {
-      selectView.current('Setup')
-    }
-  }, [startInitiated])
+  // useEffect(() => {
+  //   if (
+  //     startInitiated &&
+  //     session.member.isAuthorized('viewTargetEnvironmentTasks')
+  //   ) {
+  //     selectView.current('Setup')
+  //   }
+  // }, [startInitiated])
 
   /* -- RENDER -- */
 
@@ -270,14 +218,15 @@ export default function LobbyPage({
           {session.member.isAuthorized('configureSessions') && (
             <PanelView title={'Configuration'}>
               <div className='ConfigurationSection Section'>
-                <SessionConfigMenu
+                <SessionLobbyConfig
                   session={session}
                   disabled={startInitiated}
                 />
               </div>
             </PanelView>
           )}
-          {startInitiated &&
+          {/* todo: Uncomment this when task management system is overhauled.
+           {startInitiated &&
             session.member.isAuthorized('viewTargetEnvironmentTasks') && (
               <PanelView
                 title={'Setup'}
@@ -290,7 +239,7 @@ export default function LobbyPage({
                   <TargetEnvironmentTaskList tasks={setupTasks} />
                 </div>
               </PanelView>
-            )}
+            )} */}
         </Panel>
       </DefaultPageLayout>
     </div>

@@ -1,4 +1,6 @@
+import { compute } from '@client/toolbox'
 import { usePostRenderEffect } from '@client/toolbox/hooks'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useEffect, useRef } from 'react'
 import { usePanelContext } from '../Panel'
 import PanelTab from './PanelTab'
@@ -11,7 +13,7 @@ import './PanelTabBar.scss'
 export default function PanelTabBar({}: TPanelTabBar_P): TReactElement | null {
   /* -- STATE -- */
 
-  const { state, views, onViewSelected } = usePanelContext()
+  const { state, views, tabPosition, onViewSelected } = usePanelContext()
   const [selectedView, select] = state.selectedView
 
   /* -- REFS -- */
@@ -21,6 +23,19 @@ export default function PanelTabBar({}: TPanelTabBar_P): TReactElement | null {
   /* -- COMPUTED -- */
 
   const titlesKey = views.map((view) => view.title).join(',')
+
+  /**
+   * Whether the tab bar is stacked vertically along one
+   * side of the panel rather than across the top.
+   */
+  const isVertical = tabPosition !== 'top'
+
+  /**
+   * The class names of the root element of the component.
+   */
+  const rootClasses = compute<ClassList>(() =>
+    new ClassList('PanelTabBar').set('Vertical', isVertical),
+  )
 
   /* -- EFFECTS -- */
 
@@ -46,8 +61,10 @@ export default function PanelTabBar({}: TPanelTabBar_P): TReactElement | null {
   }, [selectedView])
 
   // Redirect vertical wheel events to horizontal scroll so the user
-  // doesn't need to hold Shift.
+  // doesn't need to hold Shift. Only needed when the tabs are laid
+  // out horizontally across the top; vertical tab bars scroll natively.
   useEffect(() => {
+    if (isVertical) return
     let el = tabsElm.current
     if (!el) return
 
@@ -59,7 +76,7 @@ export default function PanelTabBar({}: TPanelTabBar_P): TReactElement | null {
 
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el!.removeEventListener('wheel', onWheel)
-  }, [])
+  }, [isVertical])
 
   /* -- RENDER -- */
 
@@ -67,7 +84,7 @@ export default function PanelTabBar({}: TPanelTabBar_P): TReactElement | null {
   if (views.length < 2) return null
 
   return (
-    <div className='PanelTabBar'>
+    <div className={rootClasses.value}>
       <div className='Tabs' ref={tabsElm}>
         {views.map((view) => (
           <PanelTab key={view.title} view={view} />
