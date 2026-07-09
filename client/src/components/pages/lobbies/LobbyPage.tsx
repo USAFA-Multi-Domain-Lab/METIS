@@ -203,6 +203,7 @@ export default function LobbyPage({
       <DefaultPageLayout navigation={navigation}>
         <div className='DetailSection Section'>
           <div className='Title'>Lobby</div>
+          <div className='Subtitle'>{session.name}</div>
         </div>
         {startInitiated && (
           <div className='StatusSection Section'>

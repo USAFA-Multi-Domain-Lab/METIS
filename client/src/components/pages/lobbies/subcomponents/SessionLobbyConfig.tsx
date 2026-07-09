@@ -44,7 +44,7 @@ export default function SessionConfigMenu({
   return (
     <div className='SessionLobbyConfig'>
       <Panel>
-        <PanelView title='Session'>
+        <PanelView title='General'>
           <div className='PanelContent'>
             <SessionGeneralConfig
               sessionConfig={session.config}

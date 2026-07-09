@@ -14,4 +14,39 @@
     // component.
     @include background-mask($color: $color-primary-dark, $opacity: 0.4);
   }
+
+  .Section {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 0 1em;
+
+    &.DetailSection {
+      display: flex;
+      flex-direction: row;
+      justify-content: start;
+      align-items: center;
+      column-gap: 0.5em;
+
+      .Title {
+        font-size: 1.2em;
+        font-weight: bold;
+      }
+
+      .Subtitle {
+        font-size: 0.9em;
+        font-style: italic;
+        color: $color-faded;
+
+        &:before {
+          content: '·';
+          padding-right: 0.5em;
+          color: $color-primary-light;
+          font-size: 1.2em;
+          line-height: 0;
+          font-weight: bold;
+          font-style: italic;
+        }
+      }
+    }
+  }
 }

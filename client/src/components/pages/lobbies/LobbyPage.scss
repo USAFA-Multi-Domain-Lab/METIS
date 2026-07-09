@@ -16,7 +16,7 @@
     align-items: left;
     width: 100%;
     height: $content-height;
-    padding: 2em $content-padding-horizontal 0;
+    padding: 1em $content-padding-horizontal 0;
 
     > .Panel .PanelView {
       box-sizing: border-box;
@@ -25,24 +25,8 @@
 
     .Section {
       box-sizing: border-box;
-      padding: 0 0 1.75em;
-
-      &.DetailSection {
-        .Title {
-          margin: 0 0 1em;
-          font-size: 1.5em;
-          font-weight: bold;
-        }
-
-        @media (min-width: 800px) {
-          display: grid;
-          grid-template-columns: 1fr auto;
-
-          .Title {
-            margin: 0;
-          }
-        }
-      }
+      width: 100%;
+      padding: 0 0 1em;
 
       &.StatusSection {
         display: flex;
@@ -90,11 +74,6 @@
           }
         }
       }
-    }
-
-    .Title,
-    .Section {
-      width: 100%;
     }
   }
 }

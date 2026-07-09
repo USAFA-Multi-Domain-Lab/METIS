@@ -233,6 +233,10 @@ export default function LaunchPage({
     return (
       <div className='LaunchPage Page'>
         <DefaultPageLayout navigation={navigation}>
+          <div className='DetailSection Section'>
+            <div className='Title'>Launch</div>
+            <div className='Subtitle'>{mission.name}</div>
+          </div>
           <SessionConfig
             sessionConfig={sessionConfig}
             mission={mission}

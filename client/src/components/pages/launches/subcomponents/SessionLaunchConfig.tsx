@@ -23,9 +23,8 @@ export default function SessionConfig({
 
   return (
     <div className='SessionLaunchConfig'>
-      <div className='Title'>Session Configuration</div>
       <Panel>
-        <PanelView title='Session'>
+        <PanelView title='General'>
           <div className='PanelContent'>
             <SessionGeneralConfig
               sessionConfig={sessionConfig}

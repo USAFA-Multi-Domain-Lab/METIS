@@ -3,7 +3,7 @@
 .Page.LaunchPage {
   $page-width: 100vw;
   $page-height: 100vh;
-  $page-row-1-height: 82px;
+  $page-row-1-height: $nav-height;
   $page-row-3-height: 50px;
   $page-row-2-height: calc(
     $page-height - $page-row-1-height - $page-row-3-height
@@ -15,17 +15,20 @@
   height: $page-height;
 
   .Content {
-    $content-vertical-padding: 10px;
-    $content-horizontal-padding: 15px;
+    $content-padding-horizontal: 2em;
 
     display: flex;
     box-sizing: border-box;
     flex-direction: column;
-    margin: 0 auto;
-    height: calc(100% - #{$content-vertical-padding * 2});
-    padding: $content-vertical-padding $content-horizontal-padding;
-    width: calc(#{$page-width} - #{$content-horizontal-padding * 2});
-    max-width: 800px;
+    align-items: left;
+    row-gap: 1em;
+    width: 100%;
+    height: $page-row-2-height;
+    padding: 1em $content-padding-horizontal 0;
     overflow: hidden;
+
+    .DetailSection {
+      padding-bottom: 0;
+    }
   }
 }
