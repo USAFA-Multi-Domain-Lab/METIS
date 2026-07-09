@@ -516,28 +516,26 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * Handles any actions that are executing on a node.
    */
   private async abortExecutions(): Promise<void> {
-    return new Promise<void>(async (resolve) => {
-      let allExecutions: Promise<void>[] = []
+    let allExecutions: Promise<void>[] = []
 
-      this.mission.allNodes.forEach((node) => {
-        if (node.executing) {
-          let execution = node.latestExecution!
-          execution.abort()
+    this.mission.allNodes.forEach((node) => {
+      if (!node.executing) return
 
-          // Once the execution is aborted, push a promise
-          // to the array of all executions.
-          execution.addEventListener('aborted', () => {
-            allExecutions.push(new Promise((resolve) => resolve()))
-          })
-        }
-      })
-
-      // If there are no executions, resolve.
-      if (allExecutions.length === 0) resolve()
-      // Resolve all executions.
-      await Promise.all(allExecutions)
-      resolve()
+      let execution = node.latestExecution!
+      // Register the listener (and capture its promise) before aborting, so
+      // a synchronous 'aborted' emission can't be missed and the promise is
+      // in the array before we await it.
+      allExecutions.push(
+        new Promise<void>((resolve) => {
+          execution.addEventListener('aborted', () => resolve())
+        }),
+      )
+      execution.abort()
     })
+
+    // Wait for every aborted execution to settle. Resolves immediately when
+    // there are none.
+    await Promise.all(allExecutions)
   }
 
   /**
@@ -627,33 +625,46 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // ! the effects in terms of order of operations
     // ! for setup and teardown.
 
-    // Apply mission effects purposed for session teardown.
-    await this.applyMissionEffects('session-teardown')
-
-    // If there were teardown errors, do not proceed.
-    if (this.teardownFailed) return
-
     // Get the target environments that the
     // mission of the given session uses.
     let environments = this.mission.targetEnvironments
-    let tearDownPromises: Promise<void>[] = []
 
+    // Phase 1 — build every teardown task: the session-teardown effects,
+    // then the teardown hooks for each realm and environment. Announce
+    // them all up front so authorized members see the complete list
+    // awaiting initiation before any task begins running.
+    let effectTasks = this.buildSessionEffectTasks('session-teardown')
+    let hookBatches: ServerEnvironmentTask[][] = []
     for (let realm of this.realms) {
-      // For each target environment in the registry, tear it down.
       for (let environment of environments) {
         if (this.config.disabledTargetEnvs.includes(environment._id)) {
           continue
         }
-        // Run the target-environment teardown hooks. Each execution
-        // records and broadcasts itself as it progresses.
-        let promise = environment.tearDown(realm)
-        // Store the promise, for awaiting later.
-        tearDownPromises.push(promise)
+        hookBatches.push(environment.buildTearDownTasks(realm))
       }
     }
 
-    // Await all environment teardowns.
-    await Promise.all(tearDownPromises)
+    for (let task of effectTasks) task.announce()
+    for (let batch of hookBatches) {
+      for (let task of batch) task.announce()
+    }
+
+    // Phase 2 — run the teardown effects first, since the hooks sandwich
+    // them in the order of operations.
+    await this.runEffectTasks(effectTasks)
+
+    // Phase 3 — run the teardown hooks, whether or not the effects
+    // succeeded. Unlike setup (where a failed hook aborts the dependent
+    // effects), teardown hooks are the cleanup: they release the
+    // environment's resources, so they must run regardless to avoid
+    // leaking it. Each environment's hooks run in sequence (the remaining
+    // ones skipped once one fails, since a failed hook may leave the
+    // environment unusable), while environments run in parallel.
+    await Promise.all(
+      hookBatches.map((batch) =>
+        ServerEnvironmentTask.runInSequence(batch, { stopOnFailure: true }),
+      ),
+    )
   }
 
   /**

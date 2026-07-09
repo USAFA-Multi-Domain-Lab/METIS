@@ -163,32 +163,17 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
   }
 
   /**
-   * Invokes the given method by building its hook tasks, announcing the
-   * batch so authorized members see the full list awaiting initiation,
-   * and then running it. Once a hook fails, the remaining hooks in this
-   * environment are skipped, since a failed hook may leave the
-   * environment in an unusable state.
-   * @param method The method to invoke.
-   * @param realm The realm being used for the invocation.
-   * @resolves When all hooks have been invoked and resolved.
-   */
-  private async invoke(
-    method: TTargetEnvironmentMethods,
-    realm: ServerSessionRealm,
-  ): Promise<void> {
-    let tasks = this.buildTasks(method, realm)
-    for (let task of tasks) task.announce()
-    await ServerEnvironmentTask.runInSequence(tasks, { stopOnFailure: true })
-  }
-
-  /**
-   * Tears down the target environment for the given realm.
+   * Builds the queued teardown hook tasks for the given realm, without
+   * announcing or running them. The session orchestrates the wider
+   * teardown so that every teardown task (effects and hooks) is announced
+   * before any of them begins running.
    * @param realm The realm being torn down.
-   * @resolves When teardown is complete.
-   * @rejects If teardown fails.
+   * @returns The queued teardown hook tasks.
    */
-  public tearDown(realm: ServerSessionRealm): Promise<void> {
-    return this.invoke('environment-teardown', realm)
+  public buildTearDownTasks(
+    realm: ServerSessionRealm,
+  ): ServerEnvironmentTask[] {
+    return this.buildTasks('environment-teardown', realm)
   }
 
   /**

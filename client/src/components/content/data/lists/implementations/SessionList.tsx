@@ -6,6 +6,7 @@ import { compute } from '@client/toolbox'
 import { usePeriodicRerender, useRequireLogin } from '@client/toolbox/hooks'
 import type { MetisComponent } from '@shared/MetisComponent'
 import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { TGetListButtonLabel, TOnListButtonClick } from '../List'
 import List from '../List'
 import type {
@@ -103,6 +104,14 @@ export default function SessionList({
     switch (column) {
       case 'launchedAt':
         return DateToolbox.format(session.launchedAt, 'yyyy-mm-dd HH:MM')
+      case 'state':
+        let { state, setupFailed, teardownFailed } = session
+        if (state === 'ending' && teardownFailed) return 'Failed to End'
+        if (state === 'starting' && setupFailed) return 'Failed to Start'
+        if (state === 'resetting' && (setupFailed || teardownFailed)) {
+          return 'Failed to Reset'
+        }
+        return StringToolbox.toTitleCase(state)
       default:
         return session[column].toString()
     }

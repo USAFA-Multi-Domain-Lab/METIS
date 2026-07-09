@@ -28,9 +28,11 @@ export const onRequestResetSession =
           ),
         )
       }
-      // If the session has not been started
-      // then emit an error.
-      if (this._state === 'unstarted') {
+      // Resets are only permitted from a settled, running session. This
+      // rejects transitional states ('starting', 'ending', 'resetting'),
+      // which prevents a reset from racing an in-flight setup/teardown, as
+      // well as 'unstarted' and 'ended'.
+      if (this._state !== 'started') {
         return member.emitError(
           new ServerEmittedError(
             ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
