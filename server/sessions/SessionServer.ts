@@ -13,8 +13,10 @@ import { ServerEnvironmentTask } from '@server/target-environments/ServerEnviron
 import type { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
 import type { ServerUser } from '@server/users/ServerUser'
 import type {
+  TClientEvent,
   TClientEvents,
   TRequestEvents,
+  TRequestMethod,
   TRequestOfResponse,
   TServerEvents,
   TServerMethod,
@@ -50,7 +52,7 @@ import type { TInstanceOrArray } from '@shared/toolbox/arrays/ArrayToolbox'
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { User } from '@shared/users/User'
-import { targetEnvLogger } from '../logging'
+import { sessionLogger, targetEnvLogger } from '../logging'
 import type { ServerChatChannel } from './chat/ServerChatChannel'
 import { ServerSessionMember } from './ServerSessionMember'
 import type { TServerRealmJsonOptions } from './ServerSessionRealm'
@@ -977,10 +979,63 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    */
   private addListeners(member: ServerSessionMember): void {
     this.listenerInputRegistry.forEach(([method, handler]) => {
-      member.connection?.addEventListener(method, (event: any) =>
-        handler(member, event),
-      )
+      member.connection?.addEventListener(method, (event: any) => {
+        // Controllers may run synchronously or asynchronously. Route a
+        // synchronous throw and an async rejection through the same
+        // backstop so one member's request can never escalate into an
+        // unhandled rejection — which, under Node's default policy, would
+        // surface as an uncaught exception and take down the whole process.
+        try {
+          let result = handler(member, event) as unknown
+          if (result instanceof Promise) {
+            result.catch((error) =>
+              this.handleControllerError(member, event, error),
+            )
+          }
+        } catch (error) {
+          this.handleControllerError(member, event, error)
+        }
+      })
     })
+  }
+
+  /**
+   * Backstop for errors escaping a session traffic controller. Expected
+   * failures throw a {@link ServerEmittedError}, which the controller has
+   * already surfaced to the requesting member — those are ignored here.
+   * Anything else is an unexpected error (a bug, a null deref, etc.): it is
+   * logged for diagnosis and reported to the requesting member as a generic
+   * server error, keeping the failure scoped to the offending request
+   * instead of crashing the process.
+   * @param member The member whose request was being handled.
+   * @param event The client event being handled when the error occurred.
+   * @param error The error thrown (or rejected) by the controller.
+   */
+  private handleControllerError(
+    member: ServerSessionMember,
+    event: TClientEvent,
+    error: unknown,
+  ): void {
+    // A ServerEmittedError is an expected failure the controller has
+    // already emitted to the member; nothing more to do.
+    if (error instanceof ServerEmittedError) return
+
+    sessionLogger.error(
+      `Unexpected error in session traffic controller for "${event.method}" ` +
+        `(session ${this._id}, member ${member.userId}):`,
+      error,
+    )
+
+    // Correlate the error with the originating request when possible; the
+    // two non-request listeners (panel-alert ack/fetch) carry no requestId.
+    let request =
+      'requestId' in event
+        ? member.buildResponseRequestData(event as TClientEvents[TRequestMethod])
+        : undefined
+
+    member.emitError(
+      new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, { request }),
+    )
   }
 
   /**

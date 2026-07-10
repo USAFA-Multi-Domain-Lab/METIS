@@ -578,6 +578,15 @@ export class MetisServer {
         }
       })
 
+      // Defense-in-depth: log unhandled promise rejections rather than let
+      // them escalate. Without this handler, Node's default policy promotes
+      // an unhandled rejection to an uncaught exception, tripping the handler
+      // above and exiting the process. A single stray async rejection (e.g.
+      // from a request handler) should not take the whole server down.
+      process.on('unhandledRejection', (reason: any) => {
+        console.error('Unhandled promise rejection:', reason)
+      })
+
       // Initialize web socket server.
       wsServer.initialize()
 
