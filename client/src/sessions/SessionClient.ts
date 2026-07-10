@@ -1,32 +1,19 @@
-import type {
-  ServerConnection,
-  TServerHandler,
-} from '@client/connect/ServerConnection'
+import type { ServerConnection } from '@client/connect/ServerConnection'
 import { ClientActionCost } from '@client/missions/actions/ClientActionCost'
-import { ClientActionExecution } from '@client/missions/actions/ClientActionExecution'
-import { ClientExecutionOutcome } from '@client/missions/actions/ClientExecutionOutcome'
+import type { ClientActionExecution } from '@client/missions/actions/ClientActionExecution'
 import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
 import { ClientMission } from '@client/missions/ClientMission'
-import { ClientMissionFile } from '@client/missions/files/ClientMissionFile'
-import { ClientOutput } from '@client/missions/forces/ClientOutput'
 import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import { ClientSessionRealm } from '@client/sessions/ClientSessionRealm'
 import { ClientEnvironmentTask } from '@client/target-environments/ClientEnvironmentTask'
 import { Logging } from '@client/toolbox/Logging'
 import { ClientUser } from '@client/users/ClientUser'
 import type {
-  TGenericServerEvents,
   TNodeOpenStateData,
   TResponseEvents,
-  TServerEvents,
-  TServerMethod,
   TSessionPanelAlert,
 } from '@shared/connect'
-import type {
-  TActionExecutionJson,
-  TExecutionCheats,
-} from '@shared/missions/actions/ActionExecution'
-import type { TExecutionOutcomeJson } from '@shared/missions/actions/ExecutionOutcome'
+import type { TExecutionCheats } from '@shared/missions/actions/ActionExecution'
 import type { TChatChannelJson } from '@shared/sessions/chat/ChatChannel'
 import type {
   MemberRole,
@@ -46,9 +33,36 @@ import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import axios from 'axios'
 import type { TMetisClientComponents } from '..'
 import { ClientChatChannel } from './chat/ClientChatChannel'
-import { ClientChatMessage } from './chat/ClientChatMessage'
 import { ClientSessionMember } from './ClientSessionMember'
 import { SessionBasic } from './SessionBasic'
+import { onActionExecutionCompleted } from './traffic-controllers/onActionExecutionCompleted'
+import { onActionExecutionInitiated } from './traffic-controllers/onActionExecutionInitiated'
+import { onActionModifierUpdated } from './traffic-controllers/onActionModifierUpdated'
+import { onBanned } from './traffic-controllers/onBanned'
+import { onChatMessageReceived } from './traffic-controllers/onChatMessageReceived'
+import { onConfigUpdate } from './traffic-controllers/onConfigUpdate'
+import { onDestroyed } from './traffic-controllers/onDestroyed'
+import { onDismissed } from './traffic-controllers/onDismissed'
+import { onEnd } from './traffic-controllers/onEnd'
+import { onEnding } from './traffic-controllers/onEnding'
+import { onFileAccessUpdated } from './traffic-controllers/onFileAccessUpdated'
+import { onForceAssigned } from './traffic-controllers/onForceAssigned'
+import { onKicked } from './traffic-controllers/onKicked'
+import { onMembersUpdate } from './traffic-controllers/onMembersUpdate'
+import { onNodeAlertAcknowledged } from './traffic-controllers/onNodeAlertAcknowledged'
+import { onNodeAlertAdded } from './traffic-controllers/onNodeAlertAdded'
+import { onNodeBlockStatusUpdated } from './traffic-controllers/onNodeBlockStatusUpdated'
+import { onNodeOpenedResponse } from './traffic-controllers/onNodeOpenedResponse'
+import { onNodeOpenStateUpdated } from './traffic-controllers/onNodeOpenStateUpdated'
+import { onOutputSent } from './traffic-controllers/onOutputSent'
+import { onQuit } from './traffic-controllers/onQuit'
+import { onReset } from './traffic-controllers/onReset'
+import { onResourcePoolUpdated } from './traffic-controllers/onResourcePoolUpdated'
+import { onRoleAssigned } from './traffic-controllers/onRoleAssigned'
+import { onSendOutput } from './traffic-controllers/onSendOutput'
+import { onStart } from './traffic-controllers/onStart'
+import { onStarting } from './traffic-controllers/onStarting'
+import { onTaskUpdate } from './traffic-controllers/onTaskUpdate'
 
 /**
  * Client instance for sessions. Handles client-side logic for sessions. Communicates with server to conduct a session.
@@ -129,7 +143,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   /**
    * Unread chat message count per chat channel.
    */
-  private _unreadChatMessageCount: Map<string, number>
+  protected _unreadChatMessageCount: Map<string, number>
 
   /**
    * Pending session panel alerts at the time the session was joined or fetched.
@@ -146,7 +160,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   /**
    * @see {@link activeExecutions}
    */
-  private _activeExecutions: ClientActionExecution[]
+  protected _activeExecutions: ClientActionExecution[]
 
   /**
    * Executions that are currently active in this session.
@@ -180,6 +194,50 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * Tracks the timeout which ticks active executions.
    */
   private activeExecutionTimeout: number | null = null
+
+  /**
+   * This is a registry, not of active listeners, but the
+   * methods and corresponding traffic controllers for all
+   * listeners that should be added and removed via the
+   * {@link addListeners} and {@link removeListeners} methods.
+   * This helps ensure there is no mismatch in adding and
+   * removing listeners, such as adding a listener and
+   * forgetting to remove it, or vice versa.
+   */
+  private get listenerInputRegistry() {
+    return [
+      ['session-starting', onStarting],
+      ['session-started', onStart],
+      ['session-ending', onEnding],
+      ['session-ended', onEnd],
+      ['session-reset', onReset],
+      ['session-config-updated', onConfigUpdate],
+      ['session-members-updated', onMembersUpdate],
+      ['session-task-update', onTaskUpdate],
+      ['force-assigned', onForceAssigned],
+      ['role-assigned', onRoleAssigned],
+      ['node-opened', onNodeOpenedResponse],
+      ['action-execution-initiated', onActionExecutionInitiated],
+      ['action-execution-completed', onActionExecutionCompleted],
+      ['node-open-state-updated', onNodeOpenStateUpdated],
+      ['node-block-status-updated', onNodeBlockStatusUpdated],
+      ['file-access-updated', onFileAccessUpdated],
+      ['resource-pool-updated', onResourcePoolUpdated],
+      ['send-output', onSendOutput],
+      ['output-sent', onOutputSent],
+      ['node-alert-acknowledged', onNodeAlertAcknowledged],
+      ['node-alert-added', onNodeAlertAdded],
+      ['action-process-time-updated', onActionModifierUpdated],
+      ['action-success-chance-updated', onActionModifierUpdated],
+      ['action-resource-cost-updated', onActionModifierUpdated],
+      ['kicked', onKicked],
+      ['banned', onBanned],
+      ['dismissed', onDismissed],
+      ['session-destroyed', onDestroyed],
+      ['session-quit', onQuit],
+      ['chat-message-received', onChatMessageReceived],
+    ] as const
+  }
 
   /**
    * @param data Core data used to build the session object.
@@ -246,39 +304,6 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     )
     this._initialPendingSessionPanelAlerts = pendingSessionPanelAlerts
 
-    this.listeners = [
-      ['session-starting', this.onStarting],
-      ['session-started', this.onStart],
-      ['session-ending', this.onEnding],
-      ['session-ended', this.onEnd],
-      ['session-reset', this.onReset],
-      ['session-config-updated', this.onConfigUpdate],
-      ['session-members-updated', this.onMembersUpdate],
-      ['session-task-update', this.onTaskUpdate],
-      ['force-assigned', this.onForceAssigned],
-      ['role-assigned', this.onRoleAssigned],
-      ['node-opened', this.onNodeOpenedResponse],
-      ['action-execution-initiated', this.onActionExecutionInitiated],
-      ['action-execution-completed', this.onActionExecutionCompleted],
-      ['node-open-state-updated', this.onNodeOpenStateUpdated],
-      ['node-block-status-updated', this.onNodeBlockStatusUpdated],
-      ['file-access-updated', this.onFileAccessUpdated],
-      ['resource-pool-updated', this.onResourcePoolUpdated],
-      ['send-output', this.onSendOutput],
-      ['output-sent', this.onOutputSent],
-      ['node-alert-acknowledged', this.onNodeAlertAcknowledged],
-      ['node-alert-added', this.onNodeAlertAdded],
-      ['action-process-time-updated', this.onActionModifierUpdated],
-      ['action-success-chance-updated', this.onActionModifierUpdated],
-      ['action-resource-cost-updated', this.onActionModifierUpdated],
-      ['kicked', this.onKicked],
-      ['banned', this.onBanned],
-      ['dismissed', this.onDismissed],
-      ['session-destroyed', this.onDestroyed],
-      ['session-quit', this.onQuit],
-      ['chat-message-received', this.onChatMessageReceived],
-    ]
-
     // Add listeners to detect events that are
     // emitted to the client.
     this.addListeners()
@@ -330,26 +355,23 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
-   * Cache for event listeners added by this SessionClient instance.
-   */
-  private listeners: [TServerMethod, TServerHandler<any>][]
-
-  /**
-   * Creates session-specific listeners.
+   * Creates session-specific listeners for the client's member.
    */
   private addListeners(): void {
-    this.listeners.forEach(([event, handler]) => {
-      this.server.addEventListener(event, handler)
+    this.listenerInputRegistry.forEach(([method, handler]) => {
+      this.server.addEventListener(method, (event: any) =>
+        handler(this.member, event),
+      )
     })
   }
 
   /**
-   * Removes session-specific listeners.
+   * Removes session-specific listeners for the client's member.
    */
   private removeListeners(): void {
-    this.listeners.forEach(([event, handler]) => {
-      this.server.removeEventListener(event, handler)
-    })
+    this.server.clearEventListeners(
+      this.listenerInputRegistry.map(([method]) => method),
+    )
   }
 
   // Implemented
@@ -596,7 +618,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * executions for as long as there is time remaining for
    * any active execution.
    */
-  private tickActiveExecutions = (): void => {
+  protected tickActiveExecutions = (): void => {
     // If there is already an active timeout, return.
     if (this.activeExecutionTimeout !== null) return
 
@@ -1152,7 +1174,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * is started or reset.
    * @param event The event emitted by the server.
    */
-  private importStartData(
+  protected importStartData(
     event: TResponseEvents['session-started' | 'session-reset'],
   ): void {
     let { subscribedRealm: realmData, chatChannels } = event.data
@@ -1227,30 +1249,9 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * Handles clean-up when a session is quitted, ended,
    * or destroyed.
    */
-  private cleanUp(): void {
+  protected cleanUp(): void {
     this.removeListeners()
     this.server.clearUnfulfilledRequests()
-  }
-
-  /**
-   * Handles when a chat message is received from the server.
-   * @param event The event emitted by the server.
-   */
-  private onChatMessageReceived = (
-    event: TServerEvents['chat-message-received'],
-  ): void => {
-    let msgData = event.data.message
-
-    let channel = this.getChatChannel(msgData.channelId)
-    if (!channel) return
-
-    let message = ClientChatMessage.fromJson(channel, msgData)
-    channel.messages.push(message)
-
-    if (message.senderId !== this.memberId) {
-      let count = this._unreadChatMessageCount.get(message.channelId) ?? 0
-      this._unreadChatMessageCount.set(message.channelId, count + 1)
-    }
   }
 
   /**
@@ -1318,144 +1319,6 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
-   * Handles when the session is starting.
-   * @param event The event emitted by the server.
-   */
-  private onStarting = (event: TResponseEvents['session-starting']): void => {
-    this._state = 'starting'
-  }
-
-  /**
-   * Handles when the session is started.
-   * @param event The event emitted by the server.
-   */
-  private onStart = (event: TResponseEvents['session-started']): void => {
-    this.importStartData(event)
-  }
-
-  /**
-   * Handles when the session is ending.
-   * @param event The event emitted by the server.
-   */
-  private onEnding = (event: TResponseEvents['session-ending']): void => {
-    this._state = 'ending'
-    this.cleanUp()
-  }
-
-  /**
-   * Handles when the session is ended.
-   * @param event The event emitted by the server.
-   */
-  private onEnd = (): void => {
-    this._state = 'ended'
-    this.cleanUp()
-  }
-
-  /**
-   * Handles when the session is reset.
-   * @param event The event emitted by the server.
-   */
-  private onReset = (event: TResponseEvents['session-reset']): void => {
-    this.importStartData(event)
-  }
-
-  /**
-   * Handles when the member is kicked from the session.
-   */
-  private onKicked = (event: TServerEvents['kicked']): void => {
-    if (event.data.memberId === this.memberId) {
-      this.cleanUp()
-    }
-  }
-
-  /**
-   * Handles when the member is banned from the session.
-   */
-  private onBanned = (event: TServerEvents['banned']): void => {
-    if (event.data.memberId === this.memberId) {
-      this.cleanUp()
-    }
-  }
-
-  /**
-   * Handles when the member is dismissed from the session.
-   */
-  private onDismissed = (event: TServerEvents['dismissed']): void => {
-    this.cleanUp()
-  }
-
-  /**
-   * Handles when the session is destroyed.
-   */
-  private onDestroyed = (event: TServerEvents['session-destroyed']): void => {
-    this._state = 'ended'
-    this.cleanUp()
-  }
-
-  /**
-   * Handles when the member quits the session.
-   */
-  private onQuit = (event: TServerEvents['session-quit']): void => {
-    this.cleanUp()
-  }
-
-  /**
-   * Handles when the session configuration is updated.
-   * @param event The event emitted by the server.
-   */
-  private onConfigUpdate = (
-    event: TServerEvents['session-config-updated'],
-  ): void => {
-    this._config = event.data.config
-  }
-
-  /**
-   * Handles when the lists of members joined in the session
-   * changes, due to a join, quit, kick, or ban.
-   * @param event The event emitted by the server.
-   */
-  private onMembersUpdate = (
-    event: TGenericServerEvents['session-members-updated'],
-  ): void => {
-    let { members } = event.data
-    this._members = members.map(
-      ({
-        _id,
-        user: userData,
-        assignment,
-        subscribedRealmId,
-        joined,
-        banned,
-      }) => {
-        return new ClientSessionMember(
-          _id,
-          ClientUser.fromExistingJson(userData),
-          assignment,
-          this,
-          subscribedRealmId,
-          joined,
-          banned,
-        )
-      },
-    )
-  }
-
-  /**
-   * Handles an update to a target-environment task (a hook or an effect)
-   * across the setup, teardown, and live phases. The task is reconciled
-   * by ID, so an existing entry transitions in place to its new state
-   * rather than being duplicated.
-   * @param event The event emitted by the server.
-   */
-  private onTaskUpdate = (
-    event: TServerEvents['session-task-update'],
-  ): void => {
-    let task = ClientEnvironmentTask.fromJson(event.data.task, this)
-    this.upsertTask(task)
-    this.logTask(task)
-  }
-
-  /**
    * Logs a target-environment task (hook or effect) to the console at
    * the session level, so managers can monitor and diagnose it as it
    * occurs.
@@ -1463,7 +1326,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @note Unresolved tasks (queued, running) are not logged; only
    * resolved states (success, failure, skipped) are.
    */
-  private logTask(task: ClientEnvironmentTask): void {
+  protected logTask(task: ClientEnvironmentTask): void {
     let context = 'TE'
     let { source, status, environment, error } = task
 
@@ -1527,306 +1390,12 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
-   * Handles when a force is assigned to a member.
-   * @param event The event emitted by the server.
-   */
-  private onForceAssigned = (event: TServerEvents['force-assigned']): void => {
-    let { memberId, forceId } = event.data
-    let member = this.getMember(memberId)
-    if (member === undefined) {
-      return console.warn(
-        `Event "force-assigned" was triggered, but the member with the given memberId ("${memberId}") could not be found.`,
-      )
-    }
-    member.assignToForce(forceId)
-  }
-
-  /**
-   * Handles when a role is assigned to a member.
-   * @param event The event emitted by the server.
-   */
-  private onRoleAssigned = (event: TServerEvents['role-assigned']): void => {
-    let { memberId, roleId } = event.data
-    let member = this.getMember(memberId)
-    if (member === undefined) {
-      return console.warn(
-        `Event "role-assigned" was triggered, but the member with the given memberId ("${memberId}") could not be found.`,
-      )
-    }
-    member.assignToRole(roleId)
-  }
-
-  /**
-   * Handles when the open state of one or more nodes is updated.
-   * @param event The event emitted by the server.
-   */
-  private onNodeOpenStateUpdated = (
-    event: TServerEvents['node-open-state-updated'],
-  ): void => {
-    let { nodes, opened } = event.data
-    this.onChangeNodeOpenState(nodes, opened)
-  }
-
-  /**
-   * Handles when an action modifier is applied to one or more actions.
-   * @param event The event emitted by the server.
-   */
-  private onActionModifierUpdated = (
-    event:
-      | TServerEvents['action-process-time-updated']
-      | TServerEvents['action-resource-cost-updated']
-      | TServerEvents['action-success-chance-updated'],
-  ): void => {
-    let { lookUpData, modifier } = event.data
-
-    for (let lookUpDatum of lookUpData) {
-      let action = this.subscribedMission.lookUpAction(lookUpDatum)
-      action?.onModify(modifier)
-    }
-  }
-
-  /**
-   * Handles the blocking and unblocking of nodes.
-   * @param event The event emitted by the server.
-   */
-  private onNodeBlockStatusUpdated = (
-    event: TServerEvents['node-block-status-updated'],
-  ): void => {
-    const { lookUpData, blocked } = event.data
-    for (let lookUpDatum of lookUpData) {
-      let node = this.subscribedMission.lookUpNode(lookUpDatum)
-      if (node) node.blocked = blocked
-    }
-  }
-
-  /**
-   * Handles when a resource pool is modified.
-   * @param event The event emitted by the server.
-   */
-  private onResourcePoolUpdated = (
-    event: TServerEvents['resource-pool-updated'],
-  ): void => {
-    let { lookUpData, operand } = event.data
-    for (let lookUpDatum of lookUpData) {
-      let pool = this.subscribedMission.lookUpPool(lookUpDatum)
-      pool?.onModify(operand)
-    }
-  }
-
-  /**
-   * Handles the granting/revoking of access to a file.
-   * @param event The event emitted by the server.
-   */
-  private onFileAccessUpdated = (
-    event: TServerEvents['file-access-updated'],
-  ): void => {
-    let { data } = event
-    let files = data.files
-      .map((fileJson) => {
-        let file = this.subscribedMission.getFileById(fileJson._id)
-        // Create a new file instance from the JSON,
-        // only if access is being granted. Otherwise,
-        // there is no need.
-        if (!file && data.granted) {
-          file = ClientMissionFile.fromJson(fileJson, this.subscribedMission)
-          this.subscribedMission.files.push(file)
-        }
-        return file
-      })
-      .filter((file) => file !== undefined)
-
-    // Update access per force.
-    for (let forceId of data.forceIds) {
-      let force = this.subscribedMission.getForceById(forceId)
-
-      if (!force) {
-        console.warn(
-          `Event "file-access-updated" was triggered with granted=true, but the force with the given forceId ("${forceId}") could not be found.`,
-        )
-        continue
-      }
-
-      // If the following conditions are met, remove
-      // the files from the mission entirely:
-      // 1. Access is being revoked.
-      // 2. The member is assigned to the force in question.
-      // 3. The member does not have complete visibility, which
-      //    would otherwise negate file-access restrictions.
-      if (
-        !data.granted &&
-        this.member.assignedForceId === forceId &&
-        !this.member.isAuthorized('completeVisibility')
-      ) {
-        let revokedIds = new Set(data.files.map((fileJson) => fileJson._id))
-        this.subscribedMission.files = this.subscribedMission.files.filter(
-          (file) => !revokedIds.has(file._id),
-        )
-      }
-
-      force.updateFileAccess(files, data.granted)
-    }
-  }
-
-  /**
-   * Handles when an output has been sent.
-   * @param event The event emitted by the server.
-   */
-  private onSendOutput = (event: TServerEvents['send-output']): void => {
-    let { outputData } = event.data
-    let { forceId } = outputData
-    let force = this.subscribedMission.getForceById(forceId)
-    if (force) {
-      let output = new ClientOutput(force, outputData)
-      force.storeOutput(output)
-    }
-  }
-
-  /**
-   * Handles when an output has been sent.
-   * @param event The event emitted by the server.
-   */
-  private onOutputSent = (event: TServerEvents['output-sent']): void => {
-    // Extract data.
-    let { key } = event.data
-
-    switch (key) {
-      case 'pre-execution':
-        let { nodeId } = event.data
-        let node = this.subscribedMission.getNodeById(nodeId)
-        node?.onOutput()
-    }
-  }
-
-  /**
-   * Handles when a node-opened response is received from the server.
-   * @param event The event emitted by the server.
-   */
-  private onNodeOpenedResponse = (
-    event: TServerEvents['node-opened'],
-  ): void => {
-    return this.onChangeNodeOpenState(event.data, event.data.opened)
-  }
-
-  /**
-   * Handles when action execution has been initiated.
-   * @param event The event emitted by the server.'
-   */
-  private onActionExecutionInitiated = (
-    event: TServerEvents['action-execution-initiated'],
-  ): void => {
-    // Extract data.
-    const { resourcePools } = event.data
-    // Type is defined here below because for some reason
-    // there are type issues when I extract it using
-    // the destructuring syntax above.
-    const executionData: TActionExecutionJson = event.data.execution
-    const { actionId } = executionData
-
-    // Find the action and node, given the action ID.
-    let action: ClientMissionAction | undefined =
-      this.subscribedRealm.getAction(actionId)
-    let node: ClientMissionNode
-
-    // Handle action not found.
-    if (action === undefined) {
-      return console.error(
-        `Event "action-execution-initiated" was triggered, but the action with the given actionId ("${actionId}") could not be found.`,
-      )
-    }
-
-    // Handle action found.
-    node = action.node
-    // Create a new execution object.
-    let execution = new ClientActionExecution(
-      executionData._id,
-      action,
-      executionData.start,
-      executionData.end,
-    )
-
-    // Handle execution on the node.
-    node.onExecution(execution)
-
-    // Update the resource pools for the force.
-    for (let updatedPool of resourcePools) {
-      let pool = action.force.getPoolByResourceId(updatedPool.resourceId)
-      if (pool && updatedPool.balance !== undefined) {
-        pool.balance = updatedPool.balance
-      }
-    }
-    action.force.emitEvent('modify-forces')
-
-    // Add execution to active executions.
-    this._activeExecutions.push(execution)
-    this.tickActiveExecutions()
-  }
-
-  /**
-   * Handles when action execution has been completed.
-   * @param event The event emitted by the server.
-   */
-  private onActionExecutionCompleted = (
-    event: TServerEvents['action-execution-completed'],
-  ): void => {
-    // Gather data.
-    const { structure, revealedDescendants, revealedDescendantPrototypes } =
-      event.data
-
-    const outcomeData: TExecutionOutcomeJson = event.data.outcome
-    const { executionId } = outcomeData
-    const execution = this.subscribedMission.getExecution(executionId)
-    if (!execution) {
-      return console.error(`Execution "${executionId}" could not be found.`)
-    }
-    const { node } = execution
-    const { prototype } = node
-
-    const outcome = new ClientExecutionOutcome(
-      outcomeData._id,
-      outcomeData.state,
-      execution,
-    )
-
-    // Handle outcome on different levels.
-    execution.onOutcome(outcome)
-    prototype.onOpen(revealedDescendantPrototypes, structure)
-    node.onOpen(revealedDescendants)
-
-    node.emitEvent('exec-state-change')
-
-    // Remap actions if there are revealed nodes, since
-    // those revealed nodes may contain new actions.
-    if (revealedDescendants) this.subscribedRealm.mapActions()
-
-    // Remove execution from active executions.
-    this._activeExecutions = this._activeExecutions.filter(
-      ({ _id }) => executionId !== _id,
-    )
-  }
-
-  /**
-   * Handles an event from the server indicating that a
-   * node alert has been acknowledged.
-   * @param data The event data containing the alert details.
-   */
-  private onNodeAlertAcknowledged = (
-    event: TServerEvents['node-alert-acknowledged'],
-  ): void => {
-    const { nodeId, alertId } = event.data
-    const node = this.subscribedMission.getNodeById(nodeId)
-    if (!node) {
-      return console.warn(`Node "${nodeId}" was not found.`)
-    }
-    node.onAlertAcknowledgement(alertId)
-  }
-
-  /**
    * Handles node open/close state change events from the server.
    * @param data The event data containing the node ID, new state, and revealed descendants.
    * @note This coordinates updates at both the prototype (template) and node (instance) levels.
    * @note If the node hasn't been revealed to this member yet, the event is ignored with a warning.
    */
-  private onChangeNodeOpenState = (
+  protected onChangeNodeOpenState = (
     nodes: TInstanceOrArray<Omit<TNodeOpenStateData, 'opened'>>,
     opened: boolean,
   ): void => {
@@ -1863,33 +1432,6 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
 
     // Rebuild the action map once if any node revealed new descendants.
     if (hasRevealedDescendants) this.subscribedRealm.mapActions()
-  }
-
-  /**
-   * Handles an event from the server indicating a new alert
-   * was created for a node.
-   * @param event The event emitted by the server.
-   */
-  private onNodeAlertAdded = (
-    event: TServerEvents['node-alert-added'],
-  ): void => {
-    const { message, severityLevel, ids: alerts } = event.data
-    for (const { nodeId, alertId } of alerts) {
-      let node = this.subscribedMission.getNodeById(nodeId)
-      if (!node) {
-        console.warn(
-          `Node "${nodeId}" was not found. This is likely due to an effect being applied to a node that has not yet been revealed to the user.`,
-        )
-        continue
-      }
-      node.onAlert({
-        _id: alertId,
-        nodeId,
-        message,
-        severityLevel,
-        acknowledged: false,
-      })
-    }
   }
 
   /**
