@@ -771,6 +771,121 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
+   * Runs the full start sequence for the session: initializes the mode,
+   * dismisses members without any visibility, transitions through
+   * `'starting'`, performs full setup, and transitions to `'started'`.
+   * @param member The member whose request drives the start.
+   * @param event The request event being fulfilled.
+   * @param options Additional options to customize how the start is processed.
+   * @returns `true` if the session started successfully; `false` if it was
+   * rejected (unauthorized/conflicting state — an error is emitted to the
+   * member) or setup failed.
+   */
+  public async start(
+    member: ServerSessionMember,
+    event: TClientEvents['request-start-session' | 'request-play-test'],
+    options: TSessionStartOptions = {},
+  ): Promise<boolean> {
+    const { fulfillOnStarted = true } = options
+
+    // Build request for response data.
+    let fulfilledRequest = member.buildResponseRequestData(event, {
+      fulfilled: true,
+    })
+    let unfulfilledRequest = member.buildResponseRequestData(event, {
+      fulfilled: false,
+    })
+
+    // If the member does not have the correct permissions
+    // to start the session, then emit an error.
+    if (!member.isAuthorized('startEndSessions')) {
+      member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+          { request: fulfilledRequest },
+        ),
+      )
+      return false
+    }
+    // If the session has already previously started,
+    // then emit an error.
+    if (this._state !== 'unstarted') {
+      member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
+          {
+            request: fulfilledRequest,
+          },
+        ),
+      )
+      return false
+    }
+
+    this.initializeMode()
+
+    // Loop through all members and find any
+    // that have no force availability, and
+    // mark them for dismissal.
+    let toDismiss: ServerSessionMember[] = []
+    for (let member of this.joinedMembers) {
+      if (
+        (!member.isAssignedToForce || !member.isAssignedToRealm) &&
+        !member.isAuthorized('completeVisibility')
+      ) {
+        toDismiss.push(member)
+      }
+    }
+
+    // Dismiss members found.
+    for (let member of toDismiss) {
+      // Emit an event to the member that they have
+      // been dismissed.
+      member.emit('dismissed', { data: {} })
+      member.leave()
+    }
+
+    // Emit an event to all users that the user list
+    // has changed.
+    this.emitToAll('session-members-updated', {
+      data: {
+        members: this.members.map((member) => member.toJson()),
+      },
+    })
+
+    // Emit starting event. Then, once set up is complete,
+    // emit started event.
+    this._state = 'starting'
+    this.emitToAll('session-starting', {
+      data: {},
+      request: unfulfilledRequest,
+    })
+
+    // Perform setup.
+    await this.setUp()
+
+    // If the setup failed...
+    if (this.setupFailed) {
+      // ...and it is a test session, then destroy it.
+      if (this.config.isTest) {
+        this._state = 'ended'
+        this.destroy()
+      }
+      // ...do not proceed.
+      return false
+    }
+
+    // Mark the session as started.
+    this._state = 'started'
+    this.emitStartResponses(event, member, 'session-started', {
+      fulfilled: fulfillOnStarted,
+    })
+    // Perform any effect triggered by session start.
+    this.applyMissionEffects('session-start')
+
+    return true
+  }
+
+  /**
    * Handles a new connection by an existing member.
    * @param newConnection The new connection for a member of the session.
    * @returns True if connection was replaced, false if the member wasn't found.
@@ -812,7 +927,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     if (!member) return
 
     // If the session is for testing, then tear it down and destroy it.
-    if (this.config.accessibility === 'testing') {
+    if (this.config.isTest) {
       this._state = 'ending'
       this.tearDown().then(() => {
         // If there were teardown errors, do not proceed.
@@ -1030,7 +1145,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // two non-request listeners (panel-alert ack/fetch) carry no requestId.
     let request =
       'requestId' in event
-        ? member.buildResponseRequestData(event as TClientEvents[TRequestMethod])
+        ? member.buildResponseRequestData(
+            event as TClientEvents[TRequestMethod],
+          )
         : undefined
 
     member.emitError(
@@ -1101,13 +1218,21 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * @param member The member that emitted the initial request.
    * @param event The associated request event.
    * @param responseMethod The method of the event to emit (start or reset).
+   * @param options Additional options controlling the responses.
    */
   protected emitStartResponses(
-    event: TClientEvents['request-start-session' | 'request-reset-session'],
+    event: TClientEvents[
+      | 'request-start-session'
+      | 'request-reset-session'
+      | 'request-play-test'],
     member: ServerSessionMember,
     responseMethod: 'session-started' | 'session-reset',
+    options: TEmitStartResponsesOptions = {},
   ): void {
-    let request = member.buildResponseRequestData(event)
+    const { fulfilled = true } = options
+    let request = member.buildResponseRequestData(event, {
+      fulfilled,
+    })
 
     for (let member of this.joinedMembers) {
       let hasCompleteVisibility = member.isAuthorized('completeVisibility')
@@ -1723,4 +1848,29 @@ export type TMembersForForceOptions = {
    * @default false
    */
   limitedVisibilityOnly?: boolean
+}
+
+/**
+ * Additional options for the {@link SessionServer.start} method.
+ */
+export type TSessionStartOptions = {
+  /**
+   * Whether the emitted `session-started` response marks the request as
+   * fulfilled. Defaults to `true` for a normal start (where `session-started`
+   * is the terminal response). The play-test flow passes `false` so its
+   * request stays open for a following `play-test-started` terminal response.
+   * @default true
+   */
+  fulfillOnStarted?: boolean
+}
+
+/**
+ * Additional options for the {@link SessionServer.emitStartResponses} method.
+ */
+export type TEmitStartResponsesOptions = {
+  /**
+   * Whether the emitted responses mark the request as fulfilled.
+   * @default true
+   */
+  fulfilled?: boolean
 }

@@ -847,6 +847,25 @@ export type TResponseEvents = {
     {},
     TClientEvents['request-quit-session']
   >
+  /**
+   * Occurs when a play-test has been launched, auto-joined, and started
+   * on the server, carrying the fully-started session so the client can
+   * navigate straight into it.
+   */
+  'play-test-started': TResponseEvent<
+    'play-test-started',
+    {
+      /**
+       * The started play-test session.
+       */
+      session: TSessionJson
+      /**
+       * The ID of the owner's member in the session.
+       */
+      memberId: MetisComponent['_id']
+    },
+    TClientEvents['request-play-test']
+  >
 }
 
 /**
@@ -1094,6 +1113,27 @@ export type TRequestEvents = {
    * Occurs when the client requests to quit a session.
    */
   'request-quit-session': TRequestEvent<'request-quit-session'>
+  /**
+   * Occurs when the client (a mission author) requests to launch a
+   * disposable play-test of a mission. The server launches, auto-joins
+   * the owner, and auto-starts the session, then responds with
+   * `play-test-started`.
+   */
+  'request-play-test': TRequestEvent<
+    'request-play-test',
+    {
+      /**
+       * The ID of the mission to play-test.
+       */
+      missionId: string
+      /**
+       * Optional configuration overrides for the play-test. Merged over
+       * the default config; `isTest` and `accessibility` are always
+       * forced by the server regardless of what is provided here.
+       */
+      config?: Partial<TSessionConfig>
+    }
+  >
 }
 
 /**

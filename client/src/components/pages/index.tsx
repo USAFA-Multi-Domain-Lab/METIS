@@ -8,7 +8,6 @@ import './index.scss'
 import LaunchPage from './launches/LaunchPage'
 import LobbyPage from './lobbies/LobbyPage'
 import MissionPage from './missions/MissionPage'
-import SessionConfigPage from './SessionConfigPage'
 import SessionPage from './sessions/SessionPage'
 import UserPage from './UserPage'
 import UserResetPage from './UserResetPage'
@@ -24,7 +23,6 @@ export const PAGE_REGISTRY = {
   HomePage,
   LaunchPage,
   LobbyPage,
-  SessionConfigPage,
   SessionPage,
   UserResetPage,
   MissionPage,

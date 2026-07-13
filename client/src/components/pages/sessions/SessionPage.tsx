@@ -143,7 +143,7 @@ export default function SessionPage(
    * based on the context for which it is being used.
    */
   const initializeNavigation = () => {
-    let { accessibility } = session.config
+    let { isTest } = session.config
     let canStartEndSessions = session.member.isAuthorized('startEndSessions')
 
     /**
@@ -195,23 +195,20 @@ export default function SessionPage(
       })
     }
 
-    // Add links based on the session accessibility.
-    switch (accessibility) {
-      case 'testing':
-        // Add reset link and a quit link that
-        // navigates back to the mission page.
-        if (canStartEndSessions) addResetSession('Reset play-test')
-        addQuit('Quit play-test')
-        break
-      default:
-        // Add reset and end session links if the member
-        // is authorized. Then add the quit link.
-        if (canStartEndSessions) {
-          addEndSession()
-          addResetSession()
-        }
-        addQuit()
-        break
+    // Add links based on whether this is a play-test session.
+    if (isTest) {
+      // Add reset link and a quit link that
+      // navigates back to the mission page.
+      if (canStartEndSessions) addResetSession('Reset play-test')
+      addQuit('Quit play-test')
+    } else {
+      // Add reset and end session links if the member
+      // is authorized. Then add the quit link.
+      if (canStartEndSessions) {
+        addEndSession()
+        addResetSession()
+      }
+      addQuit()
     }
   }
 

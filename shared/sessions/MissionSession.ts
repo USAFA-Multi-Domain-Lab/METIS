@@ -499,6 +499,7 @@ export abstract class MissionSession<
     return {
       accessibility: 'public',
       mode: 'multiplayer',
+      isTest: false,
       infiniteResources: false,
       disabledTargetEnvs: [],
       targetEnvConfigs: {},
@@ -528,7 +529,7 @@ export abstract class MissionSession<
    * Options for the accessibility of the session.
    */
   public static get ACCESSIBILITY_OPTIONS(): TSessionAccessibility[] {
-    return ['public', 'id-required', 'invite-only', 'testing']
+    return ['public', 'id-required', 'invite-only', 'owner-only']
   }
 
   /**
@@ -546,14 +547,14 @@ export abstract class MissionSession<
  * @option 'public' The session is accessible to all students.
  * @option 'id-required' The session is accessible to students with the session ID.
  * @option 'invite-only' The session is accessible to students with an invite.
- * @option 'testing' The session is only accessible to the owner for testing,
- * and it is destroyed after the owner leaves.
+ * @option 'owner-only' The session is only joinable by its owner and is not
+ * listed to other users.
  */
 export type TSessionAccessibility =
   | 'public'
   | 'id-required'
   | 'invite-only'
-  | 'testing'
+  | 'owner-only'
 
 /**
  * The play mode of a session.
@@ -589,6 +590,16 @@ export type TSessionConfig = {
    * @default null
    */
   singlePlayerForceId?: string
+  /**
+   * Whether the session is a throwaway play-test launched by its
+   * owner to try out a mission.
+   * @note When true, `accessibility` is forced to `'owner-only'`, the
+   * session auto-starts on launch (it enters `'starting'` and runs
+   * setup normally, without a manual lobby Start), the owner is auto-joined,
+   * and the session auto-destroys once the owner quits.
+   * @default false
+   */
+  isTest: boolean
   /**
    * Whether resources will be infinite in the session.
    * @default false

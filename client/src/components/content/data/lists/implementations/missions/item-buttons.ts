@@ -2,7 +2,6 @@ import Prompt from '@client/components/content/communication/Prompt'
 import ButtonSvg from '@client/components/content/user-controls/buttons/panels/elements/ButtonSvg'
 import { useGlobalContext } from '@client/context/global'
 import { ClientMission } from '@client/missions/ClientMission'
-import { SessionClient } from '@client/sessions/SessionClient'
 import { useRequireLogin } from '@client/toolbox/hooks'
 
 /**
@@ -38,7 +37,7 @@ export function useMissionItemButtonCallbacks(
         navigateTo('MissionPage', { missionId: mission._id })
       }
     },
-    onPlayTestRequest: async (mission, cancelPage, options = {}) => {
+    onPlayTestRequest: async (mission, returnPage, options = {}) => {
       const { bypassNavigationMiddleware = false } = options
 
       // Prevent multiple simultaneous play-test launches
@@ -58,20 +57,15 @@ export function useMissionItemButtonCallbacks(
         // Set launching flag
         isLaunchingPlayTest = true
 
-        // Launch the session with testing accessibility
+        // Launch, auto-join, and auto-start the play-test in one call.
+        // The server returns the fully-started session.
         beginLoading('Launching play-test session...')
-        const sessionId = await SessionClient.$launch(mission._id, {
-          accessibility: 'testing',
-        })
+        const session = await server.$playTest(mission._id)
 
-        // Join the session
-        const session = await server.$joinSession(sessionId)
-        if (!session) throw new Error('Failed to join test session.')
-
-        // Navigate to session config page to let user configure before starting
+        // Navigate straight into the running play-test session.
         navigateTo(
-          'SessionConfigPage',
-          { session, cancelPage: cancelPage },
+          'SessionPage',
+          { session, returnPage: returnPage },
           { bypassMiddleware: bypassNavigationMiddleware },
         )
         finishLoading()
@@ -184,12 +178,13 @@ export type TMissionItemButtonCallbacks = {
   /**
    * Callback for when the user requests to play-test a mission.
    * @param mission The mission to play-test.
-   * @param cancelPage The page to return to once the user quits
+   * @param returnPage Page The page to return to once the user quits
    * from their play-test session.
+   * @param options Additonal options to customize the resuling play test.
    */
   onPlayTestRequest: (
     mission: ClientMission,
-    cancelPage: 'HomePage' | 'MissionPage',
+    returnPage: 'HomePage' | 'MissionPage',
     options?: TLaunchRelatedOptions,
   ) => Promise<void>
   /**

@@ -101,6 +101,15 @@ export class SessionBasic
     return this.config.accessibility
   }
 
+  /**
+   * Whether the session is a throwaway play-test, defined in
+   * `config.isTest`.
+   * @default false
+   */
+  public get isTest(): boolean {
+    return this.config.isTest
+  }
+
   // Implemented
   public participantIds: string[]
 
@@ -184,6 +193,7 @@ export class SessionBasic
       config: {
         accessibility: 'id-required',
         mode: 'multiplayer',
+        isTest: false,
         infiniteResources: false,
         disabledTargetEnvs: [],
         targetEnvConfigs: {},

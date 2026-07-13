@@ -17,6 +17,7 @@ import type {
 } from '@shared/connect'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import type { TListenerTarget } from '@shared/events/EventManager'
+import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import type { TSingleTypeObject } from '@shared/toolbox/objects/ObjectToolbox'
 import type { Socket } from 'socket.io-client'
 import { io } from 'socket.io-client'
@@ -394,6 +395,58 @@ export class ServerConnection implements TListenerTarget<TServerMethod> {
           }
         },
       })
+    })
+  }
+
+  /**
+   * Launches a disposable play-test of a mission. The server launches,
+   * auto-joins this owner, and auto-starts the session, then responds with
+   * the fully-started session.
+   * @param missionId The ID of the mission to play-test.
+   * @param config Optional configuration overrides for the play-test.
+   * @resolves The session client for the started play-test session.
+   * @rejects If the play-test failed to launch or start.
+   */
+  public $playTest(
+    missionId: string,
+    config?: Partial<TSessionConfig>,
+  ): Promise<SessionClient> {
+    return new Promise((resolve, reject) => {
+      this.request(
+        'request-play-test',
+        { missionId, config },
+        'Launching play-test...',
+        {
+          onResponse: (event) => {
+            switch (event.method) {
+              // Intermediate start broadcasts echoed back to the owner —
+              // ignore; the started session arrives via `play-test-started`.
+              case 'session-starting':
+              case 'session-started':
+                break
+              case 'play-test-started':
+                resolve(
+                  new SessionClient(
+                    event.data.session,
+                    this,
+                    event.data.memberId,
+                  ),
+                )
+                break
+              case 'error':
+                reject(new Error(event.message))
+                break
+              default:
+                let error: Error = new Error(
+                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+                )
+                console.log(error)
+                console.log(event)
+                reject(error)
+            }
+          },
+        },
+      )
     })
   }
 

@@ -43,48 +43,11 @@ export function useSessionRedirects(
   const verifyNavigation = useRef(() => {
     switch (session.state) {
       // Ensure that the user is on the lobby page
-      // or the session-config page if the session
-      // is unstarted.
+      // while the session is unstarted or starting.
       case 'unstarted':
-        if (!['LobbyPage', 'SessionConfigPage'].includes(currentPageKey)) {
-          // For testing sessions, redirect to SessionConfigPage
-          // For normal sessions, redirect to LobbyPage
-          if (session.config.accessibility === 'testing') {
-            navigateTo(
-              'SessionConfigPage',
-              { session, cancelPage: returnPage },
-              { bypassMiddleware: true },
-            )
-          } else {
-            navigateTo('LobbyPage', { session }, { bypassMiddleware: true })
-          }
-        }
-        break
-      // Once starting, ensure the user is on the
-      // lobby page (or session config page for testing sessions).
       case 'starting':
-        // For testing sessions, allow SessionConfigPage
-        if (session.config.accessibility === 'testing') {
-          if (!['LobbyPage', 'SessionConfigPage'].includes(currentPageKey)) {
-            navigateTo(
-              'SessionConfigPage',
-              { session, cancelPage: returnPage },
-              { bypassMiddleware: true },
-            )
-          }
-        } else {
-          if (currentPageKey !== 'LobbyPage') {
-            navigateTo('LobbyPage', { session }, { bypassMiddleware: true })
-
-            // In case one manager starts the session
-            // while another manager is configuring it,
-            // notify of why the configuration was aborted.
-            if (currentPageKey === 'SessionConfigPage') {
-              notify(
-                'Session configuration aborted. Session start was initiated by another manager.',
-              )
-            }
-          }
+        if (currentPageKey !== 'LobbyPage') {
+          navigateTo('LobbyPage', { session }, { bypassMiddleware: true })
         }
         break
       // Once started, ensure the user is on the

@@ -134,7 +134,7 @@ export default function MissionPage(
         onClick: () => save(),
       },
       {
-        key: 'play',
+        key: 'test',
         type: 'button',
         icon: 'play',
         description: 'Play-test mission.',

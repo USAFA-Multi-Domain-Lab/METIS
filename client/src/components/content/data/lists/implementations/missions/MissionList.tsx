@@ -49,7 +49,7 @@ export default function MissionList(
       // If the user has the proper authorization, add
       // the launch button.
       if (login.user.isAuthorized('sessions_write_native')) {
-        results.push('test')
+        results.push('play')
         results.push('launch')
       }
 
@@ -115,7 +115,7 @@ export default function MissionList(
           else if (login.user.isAuthorized('missions_read'))
             return 'View mission'
           else return ''
-        case 'test':
+        case 'play':
           return 'Play-test mission'
         case 'launch':
           return 'Launch mission into a session'
@@ -165,7 +165,7 @@ export default function MissionList(
         case 'open':
           onOpenRequest(mission)
           break
-        case 'test':
+        case 'play':
           onPlayTestRequest(mission, 'HomePage')
           break
         case 'launch':

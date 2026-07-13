@@ -12,6 +12,7 @@ import type {
   TServerMethod,
 } from '@shared/connect'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
+import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible'
 import type { Socket } from 'socket.io'
 import type { ServerLogin } from '../logins/ServerLogin'
@@ -301,6 +302,73 @@ export class ClientConnection {
         data: {},
         request: this.buildResponseRequestData(event),
       })
+    })
+
+    // Add a `request-play-test` listener. Launches a disposable play-test
+    // of a mission bound to this owner's connection: launch + auto-join +
+    // auto-start, then respond with the fully-started session.
+    this.addEventListener('request-play-test', async (event) => {
+      // Only users who can launch native sessions and read missions may
+      // play-test (mirrors the REST `/launch` route's permissions).
+      if (
+        !this.login.user.isAuthorized(['sessions_write_native', 'missions_read'])
+      ) {
+        return this.emitError(
+          new ServerEmittedError(
+            ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+            { request: this.buildResponseRequestData(event) },
+          ),
+        )
+      }
+
+      try {
+        // Build the config from defaults + optional overrides, then force
+        // the test-only invariants regardless of what was requested.
+        let config: TSessionConfig = {
+          ...SessionServer.DEFAULT_CONFIG,
+          ...event.data.config,
+          isTest: true,
+          accessibility: 'owner-only',
+        }
+
+        // Loaded lazily so the WS connection module does not pull the
+        // database-model graph into its boot-time initialization (which
+        // would change module init order and trip a circular import).
+        let { launchSessionCore } = await import(
+          '../sessions/launchSessionCore.js'
+        )
+
+        // Launch the session, auto-join the owner, and auto-start it.
+        let session = await launchSessionCore(
+          event.data.missionId,
+          config,
+          this.login.user,
+        )
+        let member = session.join(this)
+        let started = await session.start(member, event, {
+          fulfillOnStarted: false,
+        })
+
+        // If setup failed, the session has already been torn down; the
+        // request stays unfulfilled with no launched response.
+        if (!started) return
+
+        // Return the fully-started session so the client can navigate
+        // straight into it.
+        this.emit('play-test-started', {
+          data: {
+            session: session.toJson({ requester: member }),
+            memberId: member._id,
+          },
+          request: this.buildResponseRequestData(event),
+        })
+      } catch (error: any) {
+        this.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
+            request: this.buildResponseRequestData(event),
+          }),
+        )
+      }
     })
   }
 

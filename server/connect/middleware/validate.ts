@@ -45,6 +45,29 @@ function zodRequestEvent<TMethod extends TRequestMethod>(
 }
 
 /**
+ * Zod schema for a partial session configuration, shared by
+ * multiple schemas.
+ */
+const zodPartialSessionConfig = zod.object({
+  name: zod.string().optional(),
+  accessibility: zod
+    .enum([
+      'public',
+      'id-required',
+      'invite-only',
+      'owner-only',
+    ] as TNonEmptyArray<TSessionAccessibility>)
+    .optional(),
+  mode: zod
+    .enum(['multiplayer', 'single-player'] as TNonEmptyArray<TSessionMode>)
+    .optional(),
+  singlePlayerForceId: zod.string().optional(),
+  infiniteResources: zod.boolean().optional(),
+  disabledTargetEnvs: zod.array(zod.string()).optional(),
+  targetEnvConfigs: zod.record(zod.string(), zod.string()).optional(),
+})
+
+/**
  * All Zod schemas for client emitted web-socket events.
  */
 export const clientEventSchemas: TClientEventSchemas = {
@@ -67,27 +90,7 @@ export const clientEventSchemas: TClientEventSchemas = {
   'request-config-update': zodRequestEvent(
     'request-config-update',
     zod.object({
-      config: zod.object({
-        name: zod.string().optional(),
-        accessibility: zod
-          .enum([
-            'public',
-            'id-required',
-            'invite-only',
-            'testing',
-          ] as TNonEmptyArray<TSessionAccessibility>)
-          .optional(),
-        mode: zod
-          .enum([
-            'multiplayer',
-            'single-player',
-          ] as TNonEmptyArray<TSessionMode>)
-          .optional(),
-        singlePlayerForceId: zod.string().optional(),
-        infiniteResources: zod.boolean().optional(),
-        disabledTargetEnvs: zod.array(zod.string()).optional(),
-        targetEnvConfigs: zod.record(zod.string(), zod.string()).optional(),
-      }),
+      config: zodPartialSessionConfig,
     }),
   ),
   'request-kick': zodRequestEvent(
@@ -186,6 +189,13 @@ export const clientEventSchemas: TClientEventSchemas = {
   'request-quit-session': zodRequestEvent(
     'request-quit-session',
     zod.object({}),
+  ),
+  'request-play-test': zodRequestEvent(
+    'request-play-test',
+    zod.object({
+      missionId: zod.string(),
+      config: zodPartialSessionConfig.optional(),
+    }),
   ),
   'acknowledge-session-panel-alert': zodGenericEvent(
     'acknowledge-session-panel-alert',

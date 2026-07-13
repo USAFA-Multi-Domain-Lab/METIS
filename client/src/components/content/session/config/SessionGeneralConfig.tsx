@@ -121,13 +121,13 @@ export default function SessionGeneralConfig({
    * JSX for accessibility selection.
    */
   const accessibilityJsx = compute<TReactElement>(() => {
-    if (accessibility === 'testing') {
-      return <DetailLocked label='Accessibility' value='Testing' />
+    if (sessionConfig.isTest) {
+      return <DetailLocked label='Accessibility' value='Owner Only' />
     } else {
       return (
         <DetailDropdown<TSessionConfig['accessibility']>
           label='Accessibility'
-          options={['public', 'id-required']}
+          options={['public', 'id-required', 'owner-only']}
           value={accessibility}
           setValue={changeAccessibility}
           disabled={disabled}
@@ -141,6 +141,8 @@ export default function SessionGeneralConfig({
                 return 'ID Required'
               case 'invite-only':
                 return 'Invite Only'
+              case 'owner-only':
+                return 'Owner Only'
               default:
                 return 'Unknown Option'
             }

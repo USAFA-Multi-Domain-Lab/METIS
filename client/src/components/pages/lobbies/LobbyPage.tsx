@@ -151,13 +151,7 @@ export default function LobbyPage({
   // quit the session before the user navigates
   // away.
   useNavigationMiddleware(async (to, next) => {
-    // If the user is navigating to the session configuration
-    // page, permit navigation.
-    if (to === 'SessionConfigPage') {
-      return next()
-    }
-
-    // Otherwise, prompt the user for confirmation.
+    // Prompt the user for confirmation before quitting.
     let { choice } = await prompt(
       'Are you sure you want to quit?',
       Prompt.YesNoChoices,
