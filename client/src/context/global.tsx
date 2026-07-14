@@ -350,9 +350,13 @@ const initializeActions = (
             'kicked': (event) => {
               const { handleError } = initialState.actions
               const { login } = refs.current
+              const {
+                userId,
+                reason = 'You have been kicked from the session.',
+              } = event.data
 
-              if (login?.user._id === event.data.userId) {
-                handleError('You have been kicked from the session.')
+              if (login?.user._id === userId) {
+                handleError(reason)
               }
             },
             'banned': (event) => {

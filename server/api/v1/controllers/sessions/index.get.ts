@@ -23,9 +23,10 @@ export const getSessions: TExpressHandler = (request, response) => {
       session.ownerUsername === user.username
 
     if (
-      session.config.accessibility === 'public' ||
-      hasAccess ||
-      hasNativeAccess
+      (session.config.accessibility === 'public' ||
+        hasAccess ||
+        hasNativeAccess) &&
+      !session.config.isTest
     ) {
       sessions.push(session.toBasicJson({ requester: user }))
     }

@@ -5,12 +5,13 @@ import type {
   TSessionConfig,
   TSessionMode,
 } from '@shared/sessions/MissionSession'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { DetailLocked } from '../../form/DetailLocked'
 import { DetailString } from '../../form/DetailString'
 import { DetailToggle } from '../../form/DetailToggle'
 import { DetailDropdown } from '../../form/dropdowns/standard/DetailDropdown'
 import './SessionGeneralConfig.scss'
+import { useConfigUpdater } from './useConfigUpdater'
 
 /**
  * Renders the general session settings (name, accessibility,
@@ -21,8 +22,8 @@ export default function SessionGeneralConfig({
   mission,
   sessionId = null,
   disabled = false,
+  approveChange = () => true,
   onChange = () => {},
-  onCommit = () => {},
 }: TSessionGeneralConfig_P): TReactElement | null {
   /* -- STATE -- */
   const [accessibility, setAccessibility] = useState<TSessionAccessibility>(
@@ -36,84 +37,33 @@ export default function SessionGeneralConfig({
   const [singlePlayerForceId, setSinglePlayerForceId] = useState<string>(
     sessionConfig.singlePlayerForceId ?? mission.forces[0]?._id ?? '',
   )
+  const { processUpdate, useProcessUpdater } = useConfigUpdater(
+    sessionConfig,
+    approveChange,
+    onChange,
+  )
 
   /* -- EFFECTS -- */
 
-  // componentDidUpdate
-  useEffect(() => {
-    sessionConfig.accessibility = accessibility
-    sessionConfig.infiniteResources = infiniteResources
-    sessionConfig.name = name
-    sessionConfig.mode = mode
-    sessionConfig.singlePlayerForceId = singlePlayerForceId || undefined
-    onChange()
-  }, [accessibility, infiniteResources, name, mode, singlePlayerForceId])
-
-  /* -- FUNCTIONS -- */
-
-  /**
-   * Resolves a React setter argument, which may be a value or
-   * an updater function, into a concrete value.
-   * @param next The value or updater function.
-   * @param previous The current value to apply an updater against.
-   */
-  const resolveValue = <Type,>(
-    next: TReactSetterArg<Type>,
-    previous: Type,
-  ): Type =>
-    typeof next === 'function'
-      ? (next as (value: Type) => Type)(previous)
-      : next
-
-  /**
-   * Updates the accessibility and commits the change.
-   * @param next The new accessibility value or updater.
-   */
-  const changeAccessibility = (
-    next: TReactSetterArg<TSessionAccessibility>,
-  ) => {
-    const value = resolveValue(next, accessibility)
-    setAccessibility(value)
-    onCommit({ accessibility: value })
-  }
-
-  /**
-   * Updates the infinite-resources setting and commits the change.
-   * @param next The new value or updater.
-   */
-  const changeInfiniteResources = (next: TReactSetterArg<boolean>) => {
-    const value = resolveValue(next, infiniteResources)
-    setInfiniteResources(value)
-    onCommit({ infiniteResources: value })
-  }
-
-  /**
-   * Updates the session mode and commits the change.
-   * @param next The new mode value or updater.
-   */
-  const changeMode = (next: TReactSetterArg<TSessionMode>) => {
-    const value = resolveValue(next, mode)
-    setMode(value)
-    onCommit({ mode: value })
-  }
-
-  /**
-   * Updates the single-player force and commits the change.
-   * @param next The new force ID value or updater.
-   */
-  const changeSinglePlayerForceId = (next: TReactSetterArg<string>) => {
-    const value = resolveValue(next, singlePlayerForceId)
-    setSinglePlayerForceId(value)
-    onCommit({ singlePlayerForceId: value || undefined })
-  }
-
-  /**
-   * Commits the session name on blur, falling back to the
-   * mission name when left blank.
-   */
-  const commitName = () => {
-    onCommit({ name: name.trim() || mission.name })
-  }
+  // Register a process updater for all fields that
+  // immediately commit their changes, to keep config
+  // in sync with the internal state.
+  useProcessUpdater('accessibility', accessibility, setAccessibility)
+  useProcessUpdater(
+    'infiniteResources',
+    infiniteResources,
+    setInfiniteResources,
+  )
+  useProcessUpdater('mode', mode, setMode)
+  useProcessUpdater(
+    'singlePlayerForceId',
+    singlePlayerForceId || undefined,
+    (value) => {
+      const resolvedValue =
+        typeof value === 'function' ? value(singlePlayerForceId) : value
+      setSinglePlayerForceId(resolvedValue ?? '')
+    },
+  )
 
   /* -- PRE-RENDER PROCESSING -- */
 
@@ -129,7 +79,7 @@ export default function SessionGeneralConfig({
           label='Accessibility'
           options={['public', 'id-required', 'owner-only']}
           value={accessibility}
-          setValue={changeAccessibility}
+          setValue={setAccessibility}
           disabled={disabled}
           isExpanded={false}
           getKey={(value) => value}
@@ -180,20 +130,24 @@ export default function SessionGeneralConfig({
         fieldType='required'
         defaultValue={mission.name}
         disabled={disabled}
-        onBlur={commitName}
+        onBlur={() =>
+          processUpdate('name', name.trim() || mission.name, (revert) =>
+            setName(typeof revert === 'string' ? revert : mission.name),
+          )
+        }
       />
       {accessibilityJsx}
       <DetailToggle
         label='Infinite Resources'
         value={infiniteResources}
-        setValue={changeInfiniteResources}
+        setValue={setInfiniteResources}
         disabled={disabled}
       />
       <DetailDropdown<TSessionMode>
         label='Mode'
         options={['multiplayer', 'single-player']}
         value={mode}
-        setValue={changeMode}
+        setValue={setMode}
         disabled={disabled}
         isExpanded={false}
         getKey={(value) => value}
@@ -211,7 +165,7 @@ export default function SessionGeneralConfig({
           label='Force'
           options={mission.forces.map((force) => force._id)}
           value={singlePlayerForceId || (mission.forces[0]?._id ?? '')}
-          setValue={changeSinglePlayerForceId}
+          setValue={setSinglePlayerForceId}
           disabled={disabled}
           isExpanded={false}
           getKey={(forceId) => forceId}
@@ -253,14 +207,20 @@ export type TSessionGeneralConfig_P = {
    */
   disabled?: boolean
   /**
-   * Callback for when the session config is changed.
-   * @default () => {}
+   * Callback to approve or veto a pending config change before it is
+   * committed. Return `false` (or a promise resolving to `false`) to
+   * reject the change and revert the field to its committed value.
+   * Non-text fields are processed as they change; the session name is
+   * processed on blur.
+   * @default () => true
    */
-  onChange?: () => void
+  approveChange?: (
+    updates: Partial<TSessionConfig>,
+  ) => boolean | Promise<boolean>
   /**
-   * Callback to persist a config change. Non-text fields commit on
-   * change; the session name commits on blur. Can be used for auto-save.
+   * Callback invoked after an approved change has been committed to the
+   * session config, with the applied updates. Can be used for auto-save.
    * @default () => {}
    */
-  onCommit?: (updates: Partial<TSessionConfig>) => void
+  onChange?: (updates: Partial<TSessionConfig>) => void
 }

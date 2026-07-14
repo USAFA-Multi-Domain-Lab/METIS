@@ -1,13 +1,13 @@
 import type { ClientMission } from '@client/missions/ClientMission'
 import type { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
 import { compute } from '@client/toolbox'
-import { useMountHandler } from '@client/toolbox/hooks'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import type { TTargetEnvConfig } from '@shared/target-environments/types'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { DetailToggle } from '../../form/DetailToggle'
 import { DetailDropdown } from '../../form/dropdowns/standard/DetailDropdown'
 import './TargetEnvironmentConfig.scss'
+import { useConfigUpdater } from './useConfigUpdater'
 
 /**
  * Allows the modification of target environment settings
@@ -17,38 +17,40 @@ export default function TargetEnviromentConfig({
   sessionConfig,
   mission,
   disabled = false,
+  approveChange = () => true,
   onChange = () => {},
-  onCommit = () => {},
 }: TTargetEnvConfig_P): TReactElement | null {
   /* -- STATE -- */
 
   const [disabledTargetEnvs, setDisabledTargetEnvs] = useState<string[]>(
     sessionConfig.disabledTargetEnvs,
   )
-  const [targetEnvConfigs, setTargetEnvConfigs] = useState(
-    sessionConfig.targetEnvConfigs,
-  )
-
-  /* -- EFFECTS -- */
-
-  const [mounted] = useMountHandler((done) => {
-    // Initialize with first config for each target environment if not already set
-    const configs = { ...targetEnvConfigs }
+  const [targetEnvConfigs, setTargetEnvConfigs] = useState(() => {
+    // Default each target environment to its first configuration
+    // when the session config does not already specify one.
+    const configs = { ...sessionConfig.targetEnvConfigs }
     for (const targetEnv of mission.targetEnvironments) {
       if (targetEnv.configs.length && !configs[targetEnv._id]) {
         configs[targetEnv._id] = targetEnv.configs[0]._id
       }
     }
-    setTargetEnvConfigs(configs)
-    done()
+    return configs
   })
 
-  // componentDidUpdate
-  useEffect(() => {
-    sessionConfig.disabledTargetEnvs = disabledTargetEnvs
-    sessionConfig.targetEnvConfigs = targetEnvConfigs
-    onChange()
-  }, [disabledTargetEnvs, targetEnvConfigs])
+  const { useProcessUpdater } = useConfigUpdater(
+    sessionConfig,
+    approveChange,
+    onChange,
+  )
+
+  /* -- EFFECTS -- */
+
+  useProcessUpdater(
+    'disabledTargetEnvs',
+    disabledTargetEnvs,
+    setDisabledTargetEnvs,
+  )
+  useProcessUpdater('targetEnvConfigs', targetEnvConfigs, setTargetEnvConfigs)
 
   /* -- COMPUTED -- */
 
@@ -78,7 +80,6 @@ export default function TargetEnviromentConfig({
       ? [...disabledTargetEnvs, targetEnv._id]
       : disabledTargetEnvs.filter((id) => id !== targetEnv._id)
     setDisabledTargetEnvs(next)
-    onCommit({ disabledTargetEnvs: next })
   }
 
   /**
@@ -88,7 +89,6 @@ export default function TargetEnviromentConfig({
     if (allTargetEnvsDisabled) return
     const allIds = mission.targetEnvironments.map((env) => env._id)
     setDisabledTargetEnvs(allIds)
-    onCommit({ disabledTargetEnvs: allIds })
   }
 
   /**
@@ -97,7 +97,6 @@ export default function TargetEnviromentConfig({
   const enableAll = () => {
     if (allTargetEnvsEnabled) return
     setDisabledTargetEnvs([])
-    onCommit({ disabledTargetEnvs: [] })
   }
 
   /**
@@ -122,7 +121,6 @@ export default function TargetEnviromentConfig({
       [targetEnv._id]: config._id,
     }
     setTargetEnvConfigs(next)
-    onCommit({ targetEnvConfigs: next })
   }
 
   /* -- PRE-RENDER PROCESSING -- */
@@ -177,7 +175,7 @@ export default function TargetEnviromentConfig({
 
   return (
     <>
-      {mounted && mission.targetEnvironments.length && (
+      {mission.targetEnvironments.length > 0 && (
         <div className='TargetEnvironmentConfig'>
           <div className='EnvTitle'>Target Environments</div>
           <div className='EnvDescription'>
@@ -229,14 +227,21 @@ type TTargetEnvConfig_P = {
    */
   disabled?: boolean
   /**
-   * Callback for when the session config is changed.
-   * @default () => {}
+   * Callback to approve or veto a pending config change before it is
+   * committed.
+   * @param updates The pending config updates.
+   * @returns `true` or a promise resolving to `true` if the change is
+   * approved, `false` or a promise resolving to `false` otherwise.
+   * @default () => true
    */
-  onChange?: () => void
+  approveChange?: (
+    updates: Partial<TSessionConfig>,
+  ) => boolean | Promise<boolean>
   /**
-   * Callback to persist a config change as it happens. Used for
-   * auto-save.
+   * Callback invoked after an approved change has been committed to the
+   * session config, with the applied updates. Can be used for auto-save.
+   * @param updates The applied config updates.
    * @default () => {}
    */
-  onCommit?: (updates: Partial<TSessionConfig>) => void
+  onChange?: (updates: Partial<TSessionConfig>) => void
 }

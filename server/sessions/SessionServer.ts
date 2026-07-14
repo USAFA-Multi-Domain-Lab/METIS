@@ -727,6 +727,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     if (member.banned) {
       throw ServerEmittedError.CODE_SESSION_BANNED
     }
+    // If the session is owner-only, only the owner may join.
+    if (this.config.accessibility === 'owner-only' && userId !== this.ownerId) {
+      throw ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN
+    }
     // If the member has been assigned a role that denies
     // access, throw an error.
     if (member.roleId === 'access_denied') {

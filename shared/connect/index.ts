@@ -651,6 +651,12 @@ export type TResponseEvents = {
        * The ID of the user who was kicked.
        */
       userId: string
+      /**
+       * A server-generated message explaining why the member was kicked,
+       * shown to the kicked member in place of the default message.
+       * @default 'You have been kicked from the session.'
+       */
+      reason?: string
     },
     TClientEvents['request-kick']
   >

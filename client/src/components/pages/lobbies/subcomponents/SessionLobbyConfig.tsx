@@ -1,3 +1,4 @@
+import Prompt from '@client/components/content/communication/Prompt'
 import Panel from '@client/components/content/general-layout/panels/Panel'
 import PanelView from '@client/components/content/general-layout/panels/PanelView'
 import SessionGeneralConfig from '@client/components/content/session/config/SessionGeneralConfig'
@@ -20,9 +21,45 @@ export default function SessionConfigMenu({
 
   const { mission } = session
   const globalContext = useGlobalContext()
-  const { handleError } = globalContext.actions
+  const { handleError, prompt } = globalContext.actions
 
   /* -- FUNCTIONS -- */
+
+  /**
+   * Approves a pending config change before it is committed. Switching
+   * to owner-only kicks every non-owner member (performed server-side),
+   * so confirm with the actor first.
+   * @param updates The pending config updates.
+   * @resolves to `true` if approved, `false` if rejected.
+   * @rejects Never.
+   */
+  const approveChange = async (
+    updates: Partial<TSessionConfig>,
+  ): Promise<boolean> => {
+    if (
+      updates.accessibility === 'owner-only' &&
+      session.config.accessibility !== 'owner-only'
+    ) {
+      let membersToKick = session.joinedMembers.filter(
+        (member) => member.userId !== session.ownerId,
+      )
+
+      if (membersToKick.length) {
+        let isActorOwner = session.member.userId === session.ownerId
+        let memberCount = `${membersToKick.length} ${
+          membersToKick.length === 1 ? 'member' : 'members'
+        }`
+        let confirmation = isActorOwner
+          ? `Switching to \`Owner Only\` will kick ${memberCount} from the lobby. Continue?`
+          : `Switching to \`Owner Only\` will kick ${memberCount} from the lobby, including you. Continue?`
+
+        let { choice } = await prompt(confirmation, Prompt.ConfirmationChoices)
+        if (choice === 'Cancel') return false
+      }
+    }
+
+    return true
+  }
 
   /**
    * Persists a config change to the server.
@@ -51,7 +88,8 @@ export default function SessionConfigMenu({
               mission={mission}
               sessionId={session._id}
               disabled={disabled}
-              onCommit={commit}
+              approveChange={approveChange}
+              onChange={commit}
             />
           </div>
         </PanelView>
@@ -61,7 +99,8 @@ export default function SessionConfigMenu({
               sessionConfig={session.config}
               mission={mission}
               disabled={disabled}
-              onCommit={commit}
+              approveChange={approveChange}
+              onChange={commit}
             />
           </div>
         </PanelView>

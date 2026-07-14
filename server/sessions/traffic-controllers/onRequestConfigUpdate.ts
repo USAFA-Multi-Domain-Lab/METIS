@@ -36,6 +36,13 @@ export const onRequestConfigUpdate =
         )
       }
 
+      // Determine whether the session is transitioning into the
+      // owner-only accessibility, in which case every member other
+      // than the owner must be kicked.
+      let becomingOwnerOnly =
+        configUpdates.accessibility === 'owner-only' &&
+        this._config.accessibility !== 'owner-only'
+
       // Assign the new configuration to the session.
       Object.assign(this._config, configUpdates)
       // Update the session name if it has changed.
@@ -49,5 +56,39 @@ export const onRequestConfigUpdate =
         data: { config: this.config },
         request,
       })
+
+      // If the session became owner-only, kick every joined member
+      // other than the owner.
+      if (becomingOwnerOnly) {
+        let membersToKick = this.joinedMembers.filter(
+          (joinedMember) => joinedMember.userId !== this.ownerId,
+        )
+
+        for (let memberToKick of membersToKick) {
+          memberToKick.emit('kicked', {
+            data: {
+              sessionId: this._id,
+              memberId: memberToKick._id,
+              userId: memberToKick.userId,
+              reason:
+                'The session has been changed to owner-only. Only the owner may remain.',
+            },
+            request,
+          })
+          memberToKick.leave()
+        }
+
+        // Emit an event to all remaining users that the member
+        // list has changed.
+        if (membersToKick.length) {
+          this.emitToAll('session-members-updated', {
+            data: {
+              members: this.members.map((sessionMember) =>
+                sessionMember.toJson(),
+              ),
+            },
+          })
+        }
+      }
     },
   )
