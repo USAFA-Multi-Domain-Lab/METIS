@@ -35,6 +35,7 @@ import type { TMetisClientComponents } from '..'
 import { ClientChatChannel } from './chat/ClientChatChannel'
 import { ClientSessionMember } from './ClientSessionMember'
 import { SessionBasic } from './SessionBasic'
+import { SessionRealmBasic } from './SessionRealmBasic'
 import { onActionExecutionCompleted } from './traffic-controllers/onActionExecutionCompleted'
 import { onActionExecutionInitiated } from './traffic-controllers/onActionExecutionInitiated'
 import { onActionModifierUpdated } from './traffic-controllers/onActionModifierUpdated'
@@ -114,6 +115,18 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    */
   public get subscribedRealm(): ClientSessionRealm {
     return this.member.subscribedRealm
+  }
+
+  /**
+   * Shallow, mission-free summaries of every realm in the session. Present
+   * only for members with complete visibility; empty otherwise. Used to
+   * populate realm-switching UI without loading each realm's full mission.
+   * @note The member's own realm is held in full via {@link subscribedRealm};
+   * this list is purely for listing and switching between realms.
+   */
+  protected _realmBasics: SessionRealmBasic[] = []
+  public get realmBasics(): SessionRealmBasic[] {
+    return [...this._realmBasics]
   }
 
   /**
@@ -265,6 +278,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       ownerLastName,
       launchedAt,
       realms: realmData,
+      realmBasics: realmBasicData,
       members: memberData,
       config,
       environmentTasks: environmentTaskData,
@@ -297,6 +311,9 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     this.server = server
     this.memberId = memberId
     this._state = state
+    this._realmBasics = realmBasicData.map(
+      (realm) => new SessionRealmBasic(realm),
+    )
 
     this._activeExecutions = []
     this._unreadChatMessageCount = new Map(
@@ -395,6 +412,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         rootEffectsExposure: { expose: 'none' },
       }),
       realms: this._realms.map((realm) => realm.toJson()),
+      realmBasics: this._realmBasics.map((realm) => realm.toJson()),
       members: this.members.map((member) => member.toJson()),
       environmentTasks: this.environmentTasks.map((task) => task.toJson()),
       config: this.config,

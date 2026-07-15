@@ -16,6 +16,7 @@ import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible'
 import type { Socket } from 'socket.io'
 import type { ServerLogin } from '../logins/ServerLogin'
+import { LaunchSessionError } from '../sessions/LaunchSessionError'
 import { SessionServer } from '../sessions/SessionServer'
 import { clientEventSchemas, looseEventSchema } from './middleware/validate'
 
@@ -363,11 +364,23 @@ export class ClientConnection {
           request: this.buildResponseRequestData(event),
         })
       } catch (error: any) {
-        this.emitError(
-          new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
-            request: this.buildResponseRequestData(event),
-          }),
-        )
+        // A `LaunchSessionError` means the client's request was bad (unknown
+        // mission or invalid config), so surface it as invalid data with its
+        // message; anything else is a genuine server fault.
+        if (error instanceof LaunchSessionError) {
+          this.emitError(
+            new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
+              message: error.message,
+              request: this.buildResponseRequestData(event),
+            }),
+          )
+        } else {
+          this.emitError(
+            new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {
+              request: this.buildResponseRequestData(event),
+            }),
+          )
+        }
       }
     })
   }

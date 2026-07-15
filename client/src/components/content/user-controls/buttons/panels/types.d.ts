@@ -79,6 +79,12 @@ interface TSvgPanelElementBase {
    * Whether the SVG panel element is hidden.
    */
   hidden: boolean
+  /**
+   * Whether to show the label in the tooltip before the description
+   * or whether to omit the label entirely (useful when the label is
+   * also displayed outside the tooltip beside the icon).
+   */
+  labelsInTooltip: boolean
 }
 
 /**
@@ -282,6 +288,10 @@ export type TButtonSvgPanelOptions = {
    * @see {@link ButtonSvgEngine.labelsRevealed}
    */
   revealLabels?: boolean
+  /**
+   * @see {@link ButtonSvgEngine.labelsInTooltip}
+   */
+  labelsInTooltip?: boolean
 }
 
 /**

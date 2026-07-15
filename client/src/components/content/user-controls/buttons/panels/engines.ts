@@ -507,6 +507,7 @@ export class ButtonSvgEngine {
       uniqueClassList: new ClassList(),
       disabled: false,
       hidden: false,
+      labelsInTooltip: true,
     }
   }
 

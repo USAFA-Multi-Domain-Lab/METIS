@@ -13,7 +13,11 @@ import { User } from '../users/User'
 import type { TChatChannel, TChatChannelJson } from './chat/ChatChannel'
 import type { TMemberRoleId } from './members/MemberRole'
 import type { TMember, TSessionMemberJson } from './members/SessionMember'
-import type { TRealm, TSessionRealmJson } from './SessionRealm'
+import type {
+  TRealm,
+  TSessionRealmBasicJson,
+  TSessionRealmJson,
+} from './SessionRealm'
 
 /**
  * Base class for sessions. Represents a session of a mission being executed by users.
@@ -678,6 +682,12 @@ export type TSessionJson = {
    * or is empty if the member has no subscribed realm.
    */
   realms: TSessionRealmJson[]
+  /**
+   * Shallow, mission-free summaries of every realm in the session, for
+   * building a realm switcher. Populated only for members with complete
+   * visibility; empty for everyone else.
+   */
+  realmBasics: TSessionRealmBasicJson[]
   /**
    * The members of the session in the mission.
    */

@@ -19,6 +19,7 @@ export default function ({
   icon,
   description,
   label,
+  labelsInTooltip,
   uniqueClassList,
   disabled,
   hidden,
@@ -100,7 +101,7 @@ export default function ({
    */
   const tooltipDescription = compute((): string => {
     let result: string = ''
-    result += label
+    if (labelsInTooltip) result += label
     if (result) result += '\n'
     result += description
     return result

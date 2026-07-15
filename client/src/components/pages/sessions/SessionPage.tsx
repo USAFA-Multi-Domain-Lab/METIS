@@ -15,7 +15,6 @@ import {
   useMountHandler,
   useRequireLogin,
 } from '@client/toolbox/hooks'
-import { useSessionRedirects } from '@client/toolbox/hooks/sessions'
 import type { TSessionPanelAlert } from '@shared/connect'
 import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { useEffect, useState } from 'react'
@@ -24,7 +23,6 @@ import { DefaultPageLayout } from '..'
 import PendingPageModal from '../../content/communication/PendingPageModal'
 import Prompt from '../../content/communication/Prompt'
 import MissionFileList from '../../content/data/lists/implementations/MissionFileList'
-import type { TNavigation_P } from '../../content/general-layout/Navigation'
 import Panel from '../../content/general-layout/panels/Panel'
 import PanelLayout from '../../content/general-layout/panels/PanelLayout'
 import PanelView from '../../content/general-layout/panels/PanelView'
@@ -39,6 +37,7 @@ import { useButtonSvgEngine } from '../../content/user-controls/buttons/panels/h
 import { sessionPageContext } from './context'
 import './SessionPage.scss'
 import SessionTopBar from './subcomponents/SessionTopBar'
+import { useSessionPageNavigation } from './subcomponents/useSessionPageNavigation'
 
 /* -- CONSTANTS -- */
 
@@ -75,9 +74,7 @@ export default function SessionPage(
   const { subscribedMission } = session
 
   /* -- BUTTON ENGINE(S) -- */
-  const navButtonEngine = useButtonSvgEngine({
-    elements: [],
-  })
+
   const mapButtonEngine = useButtonSvgEngine({})
 
   /* -- STATE -- */
@@ -99,6 +96,8 @@ export default function SessionPage(
     handleError,
     beginLoading,
   } = globalContext.actions
+  const { navigation, navigationButtonEngine, initializeNavigation } =
+    useSessionPageNavigation(defaultedProps)
   const [nodeToExecute, setNodeToExecute] = useState<ClientMissionNode | null>(
     null,
   )
@@ -107,10 +106,6 @@ export default function SessionPage(
   const {} = useRequireLogin()
   const [localFiles, setLocalFiles] = useState<ClientMissionFile[]>(
     subscribedMission.files,
-  )
-  const { verifyNavigation, navigateToReturnPage } = useSessionRedirects(
-    session,
-    { returnPage },
   )
   const [resetInitiated, setResetInitiated] = useState<boolean>(
     session.state === 'resetting',
@@ -137,80 +132,6 @@ export default function SessionPage(
   const [activeRightPanel, setActiveRightPanel] = state.activeRightPanel
 
   /* -- FUNCTIONS -- */
-
-  /**
-   * Initializes the navigation for the session page
-   * based on the context for which it is being used.
-   */
-  const initializeNavigation = () => {
-    let { isTest } = session.config
-    let canStartEndSessions = session.member.isAuthorized('startEndSessions')
-
-    /**
-     * Adds a button to the navigation that will reset the progress
-     * in the session.
-     * @param description The text to display on the button when
-     * hovered over.
-     */
-    const addResetSession = (description: string = 'Reset session') => {
-      navButtonEngine.add({
-        key: 'reset',
-        type: 'button',
-        icon: 'reset',
-        description,
-        onClick: onClickResetSession,
-      })
-    }
-
-    /**
-     *  Adds a button to the navigation to end the session.
-     * @param description The text to display on the button when
-     * hovered over.
-     */
-    const addEndSession = (description: string = 'End Session') => {
-      navButtonEngine.add({
-        key: 'stop',
-        type: 'button',
-        icon: 'stop',
-        description,
-        onClick: onClickEndSession,
-      })
-    }
-
-    /**
-     * Adds a button to the navigation to quit the session.
-     * @param description The text to display on the button when
-     * hovered over.
-     * @param destination The destination to navigate to when quitting.
-     */
-    const addQuit = (description: string = 'Quit') => {
-      navButtonEngine.add({
-        key: 'quit',
-        type: 'button',
-        icon: 'quit',
-        description,
-        onClick: () => {
-          navigateToReturnPage()
-        },
-      })
-    }
-
-    // Add links based on whether this is a play-test session.
-    if (isTest) {
-      // Add reset link and a quit link that
-      // navigates back to the mission page.
-      if (canStartEndSessions) addResetSession('Reset play-test')
-      addQuit('Quit play-test')
-    } else {
-      // Add reset and end session links if the member
-      // is authorized. Then add the quit link.
-      if (canStartEndSessions) {
-        addEndSession()
-        addResetSession()
-      }
-      addQuit()
-    }
-  }
 
   /**
    * Syncs the resources remaining state with
@@ -276,96 +197,6 @@ export default function SessionPage(
     // If the node is ready to execute...
     else if (node.readyToExecute) {
       setNodeToExecute(node)
-    }
-  }
-
-  /**
-   * Callback for the end session button.
-   */
-  const onClickEndSession = async () => {
-    // If the session is not started, verify navigation.
-    if (session.state !== 'started') {
-      verifyNavigation.current()
-      return
-    }
-
-    // Confirm the user wants to end the session.
-    let { choice } = await prompt(
-      'Please confirm ending the session.',
-      Prompt.ConfirmationChoices,
-    )
-
-    // If the user cancels, return.
-    if (choice === 'Cancel') {
-      return
-    }
-
-    try {
-      // Clear verify navigation function to prevent double
-      // redirect.
-      verifyNavigation.current = () => {}
-      // Begin loading.
-      beginLoading('Ending session...')
-      // End the session.
-      await session.$end({
-        onInit: () => {
-          // Go to return page once the session
-          // end has been initiated. Tear down
-          // does not need to hold up navigation.
-          navigateToReturnPage({ bypassMiddleware: true })
-        },
-      })
-      notify(
-        `"${session.name}" teardown complete. Session will now be deleted.`,
-      )
-    } catch (error) {
-      handleError({
-        message: 'Failed to end session.',
-        notifyMethod: 'bubble',
-      })
-    }
-  }
-
-  /**
-   * Callback for the reset session button.
-   */
-  const onClickResetSession = async () => {
-    // If the session is not started, verify navigation.
-    if (session.state !== 'started') {
-      verifyNavigation.current()
-      return
-    }
-
-    // Confirm the user wants to reset the session.
-    let { choice } = await prompt(
-      'Please confirm resetting the session.',
-      Prompt.ConfirmationChoices,
-    )
-
-    // If the user cancels, return.
-    if (choice === 'Cancel') {
-      return
-    }
-
-    try {
-      // Clear verify navigation function to prevent double
-      // redirect.
-      verifyNavigation.current = () => {}
-      // Start the session.
-      await session.$reset()
-      // Refresh page.
-      navigateTo(
-        'SessionPage',
-        { session, returnPage },
-        { bypassMiddleware: true },
-      )
-      // Finish loading.
-      finishLoading()
-    } catch (error) {
-      handleError({
-        message: 'Failed to reset session.',
-        notifyMethod: 'bubble',
-      })
     }
   }
 
@@ -476,16 +307,6 @@ export default function SessionPage(
   }
 
   /* -- COMPUTED  -- */
-
-  /**
-   * Props for navigation.
-   */
-  const navigation = compute<TNavigation_P>(() => {
-    return {
-      buttonEngine: navButtonEngine,
-      logoLinksHome: false,
-    }
-  })
 
   /**
    * Class for root element.
@@ -609,7 +430,7 @@ export default function SessionPage(
 
   useEventListener(server, 'session-resetting', () => {
     setResetInitiated(true)
-    navButtonEngine.disable('stop').disable('reset')
+    navigationButtonEngine.disable('stop').disable('reset')
   })
 
   useEventListener(server, 'session-reset', () => {
@@ -689,7 +510,7 @@ export default function SessionPage(
 
   useEffect(() => {
     if (resetInitiated) {
-      navButtonEngine.disable('stop').disable('reset')
+      navigationButtonEngine.disable('stop').disable('reset')
     }
   }, [resetInitiated])
 

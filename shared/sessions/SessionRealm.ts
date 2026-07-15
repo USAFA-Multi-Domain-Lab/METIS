@@ -97,6 +97,23 @@ export abstract class SessionRealm<
    * @returns A JSON representation of the realm.
    */
   public abstract toJson(): TSessionRealmJson
+
+  /**
+   * Converts the realm to a shallow JSON representation carrying only
+   * display metadata — notably no mission. Used to give complete-visibility
+   * members a listing of every realm they can switch into without shipping
+   * a full mission copy for each one.
+   * @returns A basic JSON representation of the realm.
+   */
+  public toBasicJson(): TSessionRealmBasicJson {
+    return {
+      _id: this._id,
+      name: this.name,
+      memberCount: this.session.members.filter(
+        (member) => member.subscribedRealmId === this._id,
+      ).length,
+    }
+  }
 }
 
 /* -- TYPES -- */
@@ -127,4 +144,24 @@ export interface TSessionRealmJson {
    * database-identity fields (createdAt, createdBy, etc.) will be absent.
    */
   mission: TMissionJson
+}
+
+/**
+ * A shallow, mission-free JSON representation of a {@link SessionRealm},
+ * carrying only what a realm-switcher UI needs to list and identify realms.
+ * Parallels {@link TSessionBasicJson} for sessions.
+ */
+export interface TSessionRealmBasicJson {
+  /**
+   * The ID of the realm.
+   */
+  _id: string
+  /**
+   * A human-readable name for the realm.
+   */
+  name: string
+  /**
+   * The number of members currently subscribed to the realm.
+   */
+  memberCount: number
 }

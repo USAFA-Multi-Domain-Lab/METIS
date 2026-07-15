@@ -43,7 +43,10 @@ import type {
   TSessionState,
 } from '@shared/sessions/MissionSession'
 import { MissionSession } from '@shared/sessions/MissionSession'
-import type { TSessionRealmJson } from '@shared/sessions/SessionRealm'
+import type {
+  TSessionRealmBasicJson,
+  TSessionRealmJson,
+} from '@shared/sessions/SessionRealm'
 import type {
   TEnvironmentTaskJson,
   TEnvironmentTaskStatus,
@@ -371,6 +374,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let pendingSessionPanelAlerts: TSessionPanelAlert[] = []
     let unreadChatChannelMessages: Record<string, number> = {}
     let realms: TSessionRealmJson[] = []
+    let realmBasics: TSessionRealmBasicJson[] = []
 
     // Handler a requester being passed.
     if (requester) {
@@ -400,10 +404,12 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
       // If the requester has complete visibility,
       // then update the mission options to expose
-      // all force data and file data.
+      // all force data and file data, and hand them a shallow
+      // listing of every realm so they can switch between them.
       if (requester.isAuthorized('completeVisibility')) {
         realmOptions.forceExposure = { expose: 'all' }
         realmOptions.fileExposure = { expose: 'all' }
+        realmBasics = this.realms.map((realm) => realm.toBasicJson())
       }
 
       // If the requester is authorized to view target environment
@@ -445,6 +451,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       launchedAt: this.launchedAt.toISOString(),
       mission: this.mission.toExistingJson(realmOptions),
       realms,
+      realmBasics,
       members: this._members.map((member) => member.toJson()),
       config: this.config,
       environmentTasks,
@@ -1620,24 +1627,26 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * which panels have pending alerts.
    * @param members The session member(s) to alert.
    * @param panel The panel tab that has new activity.
+   * @note THIS HAS BEEN DISABLED UNTIL 2.6. Also see
+   * {@link ServerSessionRealm.updateFileAccess} for more disabled panel-alert code.
    */
   public emitSessionPanelAlert(
     members: TInstanceOrArray<ServerSessionMember>,
     panel: TSessionPanelAlert,
   ): void {
-    members = ArrayToolbox.toArray(members)
-
-    for (let member of members) {
-      let panels = this._pendingSessionPanelAlerts.get(member._id)
-
-      if (!panels) {
-        panels = new Set()
-        this._pendingSessionPanelAlerts.set(member._id, panels)
-      }
-
-      panels.add(panel)
-      member.emit('session-panel-alert', { data: { panels: [...panels] } })
-    }
+    //     members = ArrayToolbox.toArray(members)
+    //
+    //     for (let member of members) {
+    //       let panels = this._pendingSessionPanelAlerts.get(member._id)
+    //
+    //       if (!panels) {
+    //         panels = new Set()
+    //         this._pendingSessionPanelAlerts.set(member._id, panels)
+    //       }
+    //
+    //       panels.add(panel)
+    //       member.emit('session-panel-alert', { data: { panels: [...panels] } })
+    //     }
   }
 
   /**

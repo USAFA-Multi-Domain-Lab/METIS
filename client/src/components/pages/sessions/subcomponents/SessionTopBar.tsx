@@ -1,6 +1,8 @@
 import Tooltip from '@client/components/content/communication/Tooltip'
 import PropertyBadges from '@client/components/content/general-layout/property-badges/PropertyBadges'
 import StatusBar from '@client/components/content/session/StatusBar'
+import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
+import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { compute } from '@client/toolbox'
 import SessionPage from '../SessionPage'
 import { useSessionPageContext } from '../context'
@@ -18,19 +20,46 @@ export default function SessionTopBar({}: TSessionTopBar_P): TReactElement | nul
   const { session, state } = useSessionPageContext()
   const [resourcePools] = state.resourcePools
 
+  // Engine for the realm switcher button. Rendered only for members with
+  // complete visibility (see `canSwitchRealm` below). The click handler is a
+  // placeholder until the realm-selection modal is built.
+  const realmSwitcherEngine = useButtonSvgEngine({
+    elements: [
+      {
+        key: 'switch-realm',
+        type: 'button',
+        icon: 'switch',
+        label: session.subscribedRealm.name,
+        labelsInTooltip: false,
+        description: '**Switch realm**',
+        onClick: () => {
+          // TODO: open the realm-selection modal.
+        },
+      },
+    ],
+    options: {
+      revealLabels: true,
+    },
+  })
+
   /* -- COMPUTED -- */
+
+  let canSwitchRealm =
+    session.member.isAuthorized('completeVisibility') &&
+    session.realmBasics.length > 1
 
   let titleTooltipDescription = compute<string>(() => {
     return (
       `###### Session:\n` +
       `${session.name}\n\t\n` +
+      `###### Realm:\n` +
+      `${session.subscribedRealm.name}\n\t\n` +
       `###### Session ID:\n` +
       `${session._id}\n\t\n` +
       `###### Mission:\n` +
-      `${session.mission.name}`
+      `${session.subscribedMission.name}`
     )
   })
-  let rowCount = Math.ceil(resourcePools.length / 4)
 
   /* -- RENDER -- */
 
@@ -38,8 +67,15 @@ export default function SessionTopBar({}: TSessionTopBar_P): TReactElement | nul
     <div className='SessionTopBar'>
       <StatusBar />
       <div className='Title'>
-        Session: <span className='SessionName'>{session.name} </span>
-        <Tooltip description={titleTooltipDescription} />
+        <span className='SessionName'>
+          {session.name}
+          <Tooltip description={titleTooltipDescription} />
+        </span>
+        <span className='TitleSeparator'>{'·'}</span>
+        <span className='RealmName'>
+          {!canSwitchRealm && session.subscribedRealm.name}
+          {canSwitchRealm && <ButtonSvgPanel engine={realmSwitcherEngine} />}
+        </span>
       </div>
       <div className='Resources'>
         <PropertyBadges>

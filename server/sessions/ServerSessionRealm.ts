@@ -372,15 +372,16 @@ export class ServerSessionRealm extends SessionRealm<TMetisServerComponents> {
     }))
 
     if (granted) {
-      batchMap.emitMemberSpecific('session-panel-alert', (forces, member) => {
-        let panels = this.session.getSessionPanelAlerts(member)
-        panels.add('Files')
-        return {
-          data: {
-            panels: [...panels],
-          },
-        }
-      })
+      // !! DISABLED UNTIL 2.6
+      // batchMap.emitMemberSpecific('session-panel-alert', (forces, member) => {
+      //   let panels = this.session.getSessionPanelAlerts(member)
+      //   panels.add('Files')
+      //   return {
+      //     data: {
+      //       panels: [...panels],
+      //     },
+      //   }
+      // })
     }
   }
 

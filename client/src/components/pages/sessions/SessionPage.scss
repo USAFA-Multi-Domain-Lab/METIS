@@ -48,16 +48,53 @@
       font-size: 0.8em;
 
       .Title {
-        cursor: help;
+        display: flex;
+        align-items: center;
+        gap: 0.4em;
         overflow: hidden;
         min-width: 13em;
         line-height: 1.6em;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
 
-      .Title .SessionName {
-        color: rgba($color-primary-light, 0.7);
+        // Session name is the ambient container — it may ellipsis if space
+        // runs short. The help cursor lives here (and on the tooltip), not on
+        // the switcher button.
+        .SessionName {
+          cursor: help;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .TitleSeparator {
+          flex-shrink: 0;
+          color: $color-accent-light;
+          font-weight: bold;
+          font-size: 1.5em;
+        }
+
+        .RealmName {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          flex-shrink: 0;
+
+          .RealmNameText {
+            white-space: nowrap;
+          }
+
+          .ButtonSvg {
+            flex-direction: row-reverse;
+
+            .ButtonLabel {
+              margin: 0 0.4em 0 0;
+            }
+          }
+        }
+
+        .ButtonSvgPanel {
+          flex-shrink: 0;
+        }
       }
 
       .Resources {

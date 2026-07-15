@@ -114,6 +114,7 @@ declare global {
     | 'shown'
     | 'strike'
     | 'stop'
+    | 'switch'
     | 'test'
     | 'text-cursor'
     | 'timer'

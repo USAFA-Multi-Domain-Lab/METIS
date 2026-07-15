@@ -1,5 +1,6 @@
 import type { ClientMission } from '@client/missions/ClientMission'
 import { compute } from '@client/toolbox'
+import { usePostInitEffect } from '@client/toolbox/hooks'
 import type {
   TSessionAccessibility,
   TSessionConfig,
@@ -34,14 +35,18 @@ export default function SessionGeneralConfig({
   )
   const [name, setName] = useState(sessionConfig.name ?? mission.name)
   const [mode, setMode] = useState<TSessionMode>(sessionConfig.mode)
-  const [singlePlayerForceId, setSinglePlayerForceId] = useState<string>(
-    sessionConfig.singlePlayerForceId ?? mission.forces[0]?._id ?? '',
-  )
+  const [singlePlayerForceId, setSinglePlayerForceId] = useState<
+    string | undefined
+  >(sessionConfig.singlePlayerForceId)
   const { processUpdate, useProcessUpdater } = useConfigUpdater(
     sessionConfig,
     approveChange,
     onChange,
   )
+
+  /* -- COMPUTED -- */
+
+  let defaultForceId = mission.forces[0]._id
 
   /* -- EFFECTS -- */
 
@@ -57,13 +62,17 @@ export default function SessionGeneralConfig({
   useProcessUpdater('mode', mode, setMode)
   useProcessUpdater(
     'singlePlayerForceId',
-    singlePlayerForceId || undefined,
-    (value) => {
-      const resolvedValue =
-        typeof value === 'function' ? value(singlePlayerForceId) : value
-      setSinglePlayerForceId(resolvedValue ?? '')
-    },
+    singlePlayerForceId,
+    setSinglePlayerForceId,
   )
+
+  // When the mode switches, the single-player
+  // force ID needs to be updated accordingly.
+  usePostInitEffect(() => {
+    setSinglePlayerForceId(
+      mode === 'single-player' ? defaultForceId : undefined,
+    )
+  }, [mode])
 
   /* -- PRE-RENDER PROCESSING -- */
 
@@ -160,12 +169,12 @@ export default function SessionGeneralConfig({
           defaultValue: 'multiplayer',
         }}
       />
-      {mode === 'single-player' && (
+      {mode === 'single-player' && singlePlayerForceId && (
         <DetailDropdown<string>
           label='Force'
           options={mission.forces.map((force) => force._id)}
-          value={singlePlayerForceId || (mission.forces[0]?._id ?? '')}
-          setValue={setSinglePlayerForceId}
+          value={singlePlayerForceId}
+          setValue={setSinglePlayerForceId as TReactSetter<string>}
           disabled={disabled}
           isExpanded={false}
           getKey={(forceId) => forceId}
@@ -175,7 +184,7 @@ export default function SessionGeneralConfig({
           fieldType='required'
           handleInvalidOption={{
             method: 'setToDefault',
-            defaultValue: mission.forces[0]?._id ?? '',
+            defaultValue: defaultForceId,
           }}
         />
       )}

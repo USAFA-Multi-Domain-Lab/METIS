@@ -1,3 +1,4 @@
+import { LaunchSessionError } from '@server/sessions/LaunchSessionError'
 import { SessionServer } from '@server/sessions/SessionServer'
 import { launchSessionCore } from '@server/sessions/launchSessionCore'
 import type { ServerUser } from '@server/users/ServerUser'
@@ -65,6 +66,12 @@ export const launchSession: TExpressHandler = async (request, response) => {
   } catch (error: any) {
     // Log the error.
     sessionLogger.error('Failed to launch session.\n', error)
+    // Translate a launch rejection into the matching HTTP status; anything
+    // else falls through to `ApiResponse.error`'s server-error handling.
+    if (error instanceof LaunchSessionError) {
+      let status = error.reason === 'mission-not-found' ? 404 : 400
+      return ApiResponse.error(new StatusError(error.message, status), response)
+    }
     // Handle the error.
     return ApiResponse.error(error, response)
   }
