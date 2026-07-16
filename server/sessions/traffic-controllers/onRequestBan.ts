@@ -63,12 +63,7 @@ export const onRequestBan = createServerSessionController<'request-ban'>(
 
     targetMember.ban()
 
-    // Emit an event to all users that the user list
-    // has changed.
-    this.emitToAll('session-members-updated', {
-      data: {
-        members: this.members.map((member) => member.toJson()),
-      },
-    })
+    // Notify all members that the member list has changed.
+    this.emitMembersUpdated()
   },
 )

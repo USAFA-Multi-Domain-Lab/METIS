@@ -81,13 +81,7 @@ export const onRequestConfigUpdate =
         // Emit an event to all remaining users that the member
         // list has changed.
         if (membersToKick.length) {
-          this.emitToAll('session-members-updated', {
-            data: {
-              members: this.members.map((sessionMember) =>
-                sessionMember.toJson(),
-              ),
-            },
-          })
+          this.emitMembersUpdated()
         }
       }
     },

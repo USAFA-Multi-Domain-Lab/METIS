@@ -1,0 +1,133 @@
+@use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
+
+.RealmSwitcherModal {
+  position: absolute;
+  z-index: $z-index-confirmation;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100%;
+  font-size: 0.8em;
+
+  .Backing {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba($color-primary-dark, 0.85);
+  }
+
+  .SearchPanel {
+    position: fixed;
+    top: 15vh;
+    left: 50%;
+    transform: translateX(-50%);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    border: 2px solid $color-faded;
+    border-radius: 1em;
+    width: min(35em, 90vw);
+    max-height: min(30em, 70vh);
+    background-color: $color-primary;
+
+    .SearchField {
+      box-sizing: border-box;
+      border: none;
+      border-radius: 1em;
+      width: 100%;
+      padding: 1em 1em 0.5em 2.75em;
+      background-color: transparent;
+      background-image: url('@client/assets/images/icons/search.svg');
+      background-position: 1em 1.1em;
+      background-size: 1em;
+      background-repeat: no-repeat;
+
+      &::placeholder {
+        color: $color-faded;
+      }
+
+      &,
+      &:focus {
+        outline: none;
+      }
+    }
+
+    .RealmList {
+      overflow-y: auto;
+      margin-top: 0.75em;
+
+      .RealmRow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75em;
+        box-sizing: border-box;
+        padding: 0.625em 1.5em;
+        color: $color-primary-light;
+        cursor: pointer;
+
+        &.Highlighted {
+          @include background-mask($opacity: 0.15);
+        }
+
+        &.Current {
+          $column-gap: 0.5em;
+          $indicator-size: 0.35em;
+
+          .RealmName {
+            position: relative;
+            right: $indicator-size + $column-gap;
+            color: $color-accent;
+            column-gap: $column-gap;
+
+            &::before {
+              content: '';
+              display: inline-block;
+              background: $color-accent;
+              border-radius: 100%;
+              width: $indicator-size;
+              height: $indicator-size;
+            }
+          }
+        }
+
+        &:last-child {
+          padding-bottom: 1em;
+        }
+
+        .RealmName {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .PropertyBadge {
+          flex-shrink: 0;
+
+          .PropertyIcon {
+            font-size: 1.5em;
+          }
+        }
+      }
+
+      .NoMatches {
+        padding: 1em;
+        color: $color-faded;
+        text-align: center;
+      }
+    }
+  }
+
+  &.Switching {
+    .SearchPanel {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+  }
+}

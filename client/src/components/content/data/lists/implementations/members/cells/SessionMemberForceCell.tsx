@@ -49,6 +49,15 @@ export default function SessionMemberForceCell({
     member.isAuthorized('forceAssignable')
 
   /**
+   * Whether the target member is effectively assigned to a force.
+   * @note In single-player mode, force-assignable members are always
+   * routed to the configured single-player force, so they read as
+   * assigned even before an explicit assignment lands.
+   */
+  const targetEffectivelyAssigned: boolean =
+    member.assignedForceId != null || (isSinglePlayer && targetIsForceAssignable)
+
+  /**
    * Whether the target member has complete visibility.
    */
   const targetCompleteVisibility: boolean =
@@ -127,9 +136,9 @@ export default function SessionMemberForceCell({
     } else if (targetCompleteVisibility) {
       text = targetManipulatesNodes ? 'Complete control' : 'Complete visibility'
     } else if (!currentCompleteVisibility && !currentLimitedVisibility) {
-      text = member.assignedForceId ? 'Assigned' : 'Not assigned'
+      text = targetEffectivelyAssigned ? 'Assigned' : 'Not assigned'
     } else if (!currentCompleteVisibility && currentLimitedVisibility) {
-      text = member.assignedForceId ? 'Assigned (view only)' : 'Not assigned'
+      text = targetEffectivelyAssigned ? 'Assigned (view only)' : 'Not assigned'
     } else if (assignedForce) {
       delete style.fontStyle
       style.color = assignedForce.color

@@ -109,7 +109,7 @@ export abstract class SessionRealm<
     return {
       _id: this._id,
       name: this.name,
-      memberCount: this.session.members.filter(
+      memberCount: this.session.joinedMembers.filter(
         (member) => member.subscribedRealmId === this._id,
       ).length,
     }

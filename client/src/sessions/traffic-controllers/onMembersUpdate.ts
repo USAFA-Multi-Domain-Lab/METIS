@@ -32,5 +32,6 @@ export const onMembersUpdate =
           )
         },
       )
+      this.refreshMemberCounts()
     },
   )

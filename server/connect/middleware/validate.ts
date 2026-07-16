@@ -197,6 +197,12 @@ export const clientEventSchemas: TClientEventSchemas = {
       config: zodPartialSessionConfig.optional(),
     }),
   ),
+  'request-switch-realm': zodRequestEvent(
+    'request-switch-realm',
+    zod.object({
+      realmId: zod.string(),
+    }),
+  ),
   'acknowledge-session-panel-alert': zodGenericEvent(
     'acknowledge-session-panel-alert',
     zod.union([

@@ -76,6 +76,7 @@ import { onRequestResetSession } from './traffic-controllers/onRequestResetSessi
 import { onRequestSendChatMessage } from './traffic-controllers/onRequestSendChatMessage'
 import { onRequestSendOutput } from './traffic-controllers/onRequestSendOutput'
 import { onRequestStartSession } from './traffic-controllers/onRequestStartSession'
+import { onRequestSwitchRealm } from './traffic-controllers/onRequestSwitchRealm'
 import { onRequestUnban } from './traffic-controllers/onRequestUnban'
 
 /**
@@ -185,6 +186,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       ['request-send-output', onRequestSendOutput],
       ['request-acknowledge-node-alert', onRequestAcknowledgeNodeAlert],
       ['request-send-chat-message', onRequestSendChatMessage],
+      ['request-switch-realm', onRequestSwitchRealm],
       ['acknowledge-session-panel-alert', onAcknowledgeSessionPanelAlert],
       ['fetch-session-panel-alerts', onFetchSessionPanelAlerts],
     ] as const
@@ -769,13 +771,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Handle joining the session for the client.
     client.login.onMetisSessionJoin(this._id)
 
-    // Emit an event to all users that the user list
-    // has changed.
-    this.emitToAll('session-members-updated', {
-      data: {
-        members: this.members.map((member) => member.toJson()),
-      },
-    })
+    // Notify all members that the member list has changed.
+    this.emitMembersUpdated()
 
     // Return the new member.
     return member
@@ -855,13 +852,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       member.leave()
     }
 
-    // Emit an event to all users that the user list
-    // has changed.
-    this.emitToAll('session-members-updated', {
-      data: {
-        members: this.members.map((member) => member.toJson()),
-      },
-    })
+    // Notify all members that the member list has changed.
+    this.emitMembersUpdated()
 
     // Emit starting event. Then, once set up is complete,
     // emit started event.
@@ -950,13 +942,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     member.leave()
 
-    // Emit an event to all users that the user list
-    // has changed.
-    this.emitToAll('session-members-updated', {
-      data: {
-        members: this.members.map((member) => member.toJson()),
-      },
-    })
+    // Notify all members that the member list has changed.
+    this.emitMembersUpdated()
   }
 
   /**
@@ -1188,6 +1175,19 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
+   * Notifies all members that the session's member list has changed, sending
+   * the current serialized members so clients can refresh their lists (and any
+   * derived state, such as per-realm member counts).
+   */
+  public emitMembersUpdated(): void {
+    this.emitToAll('session-members-updated', {
+      data: {
+        members: this.members.map((member) => member.toJson()),
+      },
+    })
+  }
+
+  /**
    * Emits an event to all members with the given role.
    * @param roleId The ID of the role to emit to.
    * @param method The method of the event to emit.
@@ -1278,11 +1278,18 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
           sessionDataExposure: { expose: 'all' },
         }
       }
+
+      let subscribedRealmJson = subscribedRealm.toJson(realmJsonOptions)
+      let realmBasicsJson = hasCompleteVisibility
+        ? this.realms.map((realm) => realm.toBasicJson())
+        : []
+
       member.emit(responseMethod, {
         method: responseMethod,
         data: {
-          subscribedRealm: subscribedRealm.toJson(realmJsonOptions),
+          subscribedRealm: subscribedRealmJson,
           chatChannels: [],
+          realmBasics: realmBasicsJson,
         },
         request,
       })

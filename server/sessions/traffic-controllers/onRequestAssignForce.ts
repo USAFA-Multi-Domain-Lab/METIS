@@ -68,11 +68,7 @@ export const onRequestAssignForce =
         request,
       })
 
-      // Emit to all members that the user list has changed.
-      this.emitToAll('session-members-updated', {
-        data: {
-          members: this.members.map((member) => member.toJson()),
-        },
-      })
+      // Notify all members that the member list has changed.
+      this.emitMembersUpdated()
     },
   )

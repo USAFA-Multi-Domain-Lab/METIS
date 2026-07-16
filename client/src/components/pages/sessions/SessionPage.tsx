@@ -36,6 +36,7 @@ import { OutputPanel } from '../../content/session/output'
 import { useButtonSvgEngine } from '../../content/user-controls/buttons/panels/hooks'
 import { sessionPageContext } from './context'
 import './SessionPage.scss'
+import RealmSwitcherModal from './subcomponents/RealmSwitcherModal'
 import SessionTopBar from './subcomponents/SessionTopBar'
 import { useSessionPageNavigation } from './subcomponents/useSessionPageNavigation'
 
@@ -86,6 +87,7 @@ export default function SessionPage(
       session.pendingSessionPanelAlerts.includes(RIGHT_PANEL.MESSENGER),
     ),
     activeRightPanel: useState<TSessionPanelAlert | null>(null),
+    realmSwitcherOpened: useState<boolean>(false),
   }
   const [server] = globalContext.server
   const {
@@ -444,6 +446,18 @@ export default function SessionPage(
     notify('All progress has been reset by a manager.')
   })
 
+  // When the member switches realms, remount the page so everything
+  // re-derives from the newly subscribed realm's mission. The loading state
+  // was begun when the switch was requested (see RealmSwitcherModal), and
+  // navigateTo finishes it.
+  useEventListener(server, 'realm-switched', () => {
+    navigateTo(
+      'SessionPage',
+      { session, returnPage },
+      { bypassMiddleware: true },
+    )
+  })
+
   // On script executions, detect whether setup or teardown has failed.
   useEventListener(server, 'session-task-update', () => {
     setResetSetupFailed(session.setupFailed)
@@ -639,6 +653,7 @@ export default function SessionPage(
             active={resetInitiated}
             erroneous={resetSetupFailed || resetTeardownFailed}
           />
+          <RealmSwitcherModal />
         </DefaultPageLayout>
       </div>
     </LocalContextProvider>
@@ -683,6 +698,10 @@ export type TSessionPage_S = {
    * The right-panel tab that's currently active.
    */
   activeRightPanel: TReactState<TSessionPanelAlert | null>
+  /**
+   * Whether the realm-switcher modal is currently open.
+   */
+  realmSwitcherOpened: TReactState<boolean>
 }
 
 /**

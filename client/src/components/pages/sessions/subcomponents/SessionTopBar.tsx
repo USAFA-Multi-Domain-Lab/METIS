@@ -19,10 +19,11 @@ export default function SessionTopBar({}: TSessionTopBar_P): TReactElement | nul
 
   const { session, state } = useSessionPageContext()
   const [resourcePools] = state.resourcePools
+  const [, setRealmSwitcherOpened] = state.realmSwitcherOpened
 
   // Engine for the realm switcher button. Rendered only for members with
-  // complete visibility (see `canSwitchRealm` below). The click handler is a
-  // placeholder until the realm-selection modal is built.
+  // complete visibility (see `canSwitchRealm` below). Clicking it opens the
+  // realm-switcher modal.
   const realmSwitcherEngine = useButtonSvgEngine({
     elements: [
       {
@@ -33,7 +34,7 @@ export default function SessionTopBar({}: TSessionTopBar_P): TReactElement | nul
         labelsInTooltip: false,
         description: '**Switch realm**',
         onClick: () => {
-          // TODO: open the realm-selection modal.
+          setRealmSwitcherOpened(true)
         },
       },
     ],
@@ -45,6 +46,7 @@ export default function SessionTopBar({}: TSessionTopBar_P): TReactElement | nul
   /* -- COMPUTED -- */
 
   let canSwitchRealm =
+    session.state === 'started' &&
     session.member.isAuthorized('completeVisibility') &&
     session.realmBasics.length > 1
 

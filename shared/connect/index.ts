@@ -3,7 +3,10 @@ import type {
   TNodeHostedLookUpData,
 } from '@shared/missions/Mission'
 import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
-import type { TSessionRealmJson } from '@shared/sessions/SessionRealm'
+import type {
+  TSessionRealmBasicJson,
+  TSessionRealmJson,
+} from '@shared/sessions/SessionRealm'
 import type { TEnvironmentTaskJson } from '@shared/target-environments/TargetEnvironmentTask'
 import type { MetisComponent } from '../MetisComponent'
 import type {
@@ -575,6 +578,11 @@ export type TResponseEvents = {
        * The chat channels available in this session.
        */
       chatChannels: TChatChannelJson[]
+      /**
+       * Shallow summaries of every realm in the session, for members with
+       * complete visibility; this is empty otherwise.
+       */
+      realmBasics: TSessionRealmBasicJson[]
     },
     TClientEvents['request-start-session']
   >
@@ -617,6 +625,11 @@ export type TResponseEvents = {
        * The chat channels available in this session.
        */
       chatChannels: TChatChannelJson[]
+      /**
+       * Shallow summaries of every realm in the session, for members with
+       * complete visibility; this is empty otherwise.
+       */
+      realmBasics: TSessionRealmBasicJson[]
     },
     TClientEvents['request-reset-session']
   >
@@ -871,6 +884,21 @@ export type TResponseEvents = {
       memberId: MetisComponent['_id']
     },
     TClientEvents['request-play-test']
+  >
+  /**
+   * Occurs when a complete-visibility member has switched the realm they
+   * are subscribed to.
+   */
+  'realm-switched': TResponseEvent<
+    'realm-switched',
+    {
+      /**
+       * The realm the member is now subscribed to, containing the filtered
+       * mission data they are permitted to see.
+       */
+      subscribedRealm: TSessionRealmJson
+    },
+    TClientEvents['request-switch-realm']
   >
 }
 
@@ -1138,6 +1166,19 @@ export type TRequestEvents = {
        * forced by the server regardless of what is provided here.
        */
       config?: Partial<TSessionConfig>
+    }
+  >
+  /**
+   * Occurs when a complete-visibility member requests to switch the realm
+   * they are subscribed to.
+   */
+  'request-switch-realm': TRequestEvent<
+    'request-switch-realm',
+    {
+      /**
+       * The ID of the realm to subscribe the requesting member to.
+       */
+      realmId: string
     }
   >
 }

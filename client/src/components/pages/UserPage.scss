@@ -37,6 +37,7 @@
       form {
         display: grid;
         row-gap: $content-spacing;
+        font-size: 0.85em;
 
         .DetailToggle {
           grid-template-columns: auto 1fr;

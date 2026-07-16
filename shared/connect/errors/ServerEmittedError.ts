@@ -179,6 +179,10 @@ export class ServerEmittedError extends WsEmittedError {
    */
   public static readonly CODE_CHAT_CHANNEL_NOT_FOUND: number = 20500
   /**
+   * Code for a client requesting to perform an action on a realm that cannot be found.
+   */
+  public static readonly CODE_REALM_NOT_FOUND: number = 20600
+  /**
    * Code for a client request failing due to a server-side general error.
    */
   public static readonly CODE_SERVER_ERROR: number = 30000
@@ -220,6 +224,7 @@ export class ServerEmittedError extends WsEmittedError {
     [ServerEmittedError.CODE_EFFECT_FAILED]:
       'An effect attempted to apply itself to its target but it failed.',
     [ServerEmittedError.CODE_CHAT_CHANNEL_NOT_FOUND]: 'Chat channel not found.',
+    [ServerEmittedError.CODE_REALM_NOT_FOUND]: 'Realm not found.',
     [ServerEmittedError.CODE_SERVER_ERROR]: 'Server error.',
   }
 

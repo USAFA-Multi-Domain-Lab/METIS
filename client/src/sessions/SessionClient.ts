@@ -57,6 +57,7 @@ import { onNodeOpenedResponse } from './traffic-controllers/onNodeOpenedResponse
 import { onNodeOpenStateUpdated } from './traffic-controllers/onNodeOpenStateUpdated'
 import { onOutputSent } from './traffic-controllers/onOutputSent'
 import { onQuit } from './traffic-controllers/onQuit'
+import { onRealmSwitched } from './traffic-controllers/onRealmSwitched'
 import { onReset } from './traffic-controllers/onReset'
 import { onResourcePoolUpdated } from './traffic-controllers/onResourcePoolUpdated'
 import { onRoleAssigned } from './traffic-controllers/onRoleAssigned'
@@ -249,6 +250,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       ['session-destroyed', onDestroyed],
       ['session-quit', onQuit],
       ['chat-message-received', onChatMessageReceived],
+      ['realm-switched', onRealmSwitched],
     ] as const
   }
 
@@ -845,6 +847,55 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
+   * Switches the realm the member is subscribed to.
+   * @param realmId The ID of the realm to switch to.
+   * @resolves When the member has been subscribed to the realm.
+   * @rejects If the switch failed, or if the session has not yet started.
+   */
+  public async $switchRealm(realmId: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      // Callback for errors.
+      const onError = (message: string) => {
+        let error: Error = new Error(message)
+        console.error(message)
+        console.error(error)
+        reject(error)
+      }
+
+      // Realms only exist once the session has started.
+      if (this.state !== 'started') {
+        return onError('Session has not yet started.')
+      }
+
+      // If already subscribed to the requested realm, there is nothing to do.
+      if (this.member.subscribedRealmId === realmId) {
+        return resolve()
+      }
+
+      // Emit a request to switch realms.
+      this.server.request(
+        'request-switch-realm',
+        { realmId },
+        'Switching realm.',
+        {
+          onResponse: (event) => {
+            switch (event.method) {
+              case 'realm-switched':
+                return resolve()
+              case 'error':
+                return onError(event.message)
+              default:
+                return onError(
+                  `Unknown response method for ${event.request.event.method}: '${event.method}'.`,
+                )
+            }
+          },
+        },
+      )
+    })
+  }
+
+  /**
    * Updates the session config.
    * @param configUpdates The updates to the session config.
    * @resolves When the session config has been updated.
@@ -1195,7 +1246,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   protected importStartData(
     event: TResponseEvents['session-started' | 'session-reset'],
   ): void {
-    let { subscribedRealm: realmData, chatChannels } = event.data
+    let { subscribedRealm: realmData, chatChannels, realmBasics } = event.data
     let realm = ClientSessionRealm.fromJson(realmData, this)
 
     // Reset session state.
@@ -1204,8 +1255,37 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     this._chatChannels = this.parseChatChannelData(chatChannels)
     this._unreadChatMessageCount = new Map()
 
-    // Add new realm and subscribe the member to it.
+    // Import realm data.
     this._realms.push(realm)
+    this._realmBasics = realmBasics.map((basic) => new SessionRealmBasic(basic))
+    this.refreshMemberCounts()
+  }
+
+  /**
+   * Imports the realm a member has switched to, replacing the previously
+   * subscribed realm. The client only ever holds the member's subscribed
+   * realm, so the old realm is discarded.
+   * @param event The event emitted by the server.
+   */
+  protected importSwitchedRealmData(
+    event: TResponseEvents['realm-switched'],
+  ): void {
+    let realm = ClientSessionRealm.fromJson(event.data.subscribedRealm, this)
+    this._realms = [realm]
+    this.member.subscribeToRealm(realm)
+  }
+
+  /**
+   * Recomputes the cached member counts on each realm basic from the
+   * current member list, excluding ghost members. Called whenever the
+   * member list changes so realm-switching UI stays accurate.
+   */
+  public refreshMemberCounts(): void {
+    for (let realmBasic of this._realmBasics) {
+      realmBasic.memberCount = this.joinedMembers.filter(
+        (member) => member.subscribedRealmId === realmBasic._id,
+      ).length
+    }
   }
 
   /**
