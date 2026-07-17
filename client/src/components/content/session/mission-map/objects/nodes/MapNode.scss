@@ -73,15 +73,21 @@
     }
 
     &.Blocked {
-      @include blocked-node('red');
+      .BlockOverlay {
+        @include blocked-node('red');
+      }
     }
 
     &.CutOff {
-      @include blocked-node('faded');
+      .BlockOverlay {
+        @include blocked-node('faded');
+      }
     }
 
     &.BlockResolved {
-      @include blocked-node-resolved;
+      .BlockOverlay {
+        @include blocked-node-resolved;
+      }
     }
 
     &.Alert {

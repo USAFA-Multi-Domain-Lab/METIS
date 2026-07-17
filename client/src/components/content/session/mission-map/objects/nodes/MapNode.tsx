@@ -205,6 +205,12 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
     let backgroundColor: string | undefined = undefined
     let borderColor: string | undefined = color
 
+    // Fade border color slightly if the node
+    // is blocked or cut off.
+    if (blocked || cutOff) {
+      borderColor += '55'
+    }
+
     // If the camera is zoomed out too far,
     // make the background color the node's color.
     if (!nodeContentVisible && !blocked && !cutOff) {
@@ -425,6 +431,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
   return (
     <div key={node._id} className={rootClasses.value} style={rootStyle}>
       <div className='ProgressBar' style={progressBarStyle}></div>
+      <div className='BlockOverlay'></div>
       <div
         className='PrimaryContent'
         style={primaryContentStyle}

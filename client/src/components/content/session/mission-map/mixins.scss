@@ -50,9 +50,14 @@
 
 @mixin block-node-context {
   $cursor-scale: 2px;
-  $background-size-min: 100% 100%, 0 0, 0 0;
-  $background-size-max: 100% 100%, 100% 100%, 100% 100%;
-  $border-color-faded: $color-faded;
+  $background-size-min:
+    100% 100%,
+    0 0,
+    0 0;
+  $background-size-max:
+    100% 100%,
+    100% 100%,
+    100% 100%;
   $background-faded: linear-gradient(rgba($color-faded, 0.05));
   $x-fill-step-1: transparent 0% fromMiddle(-$cursor-scale);
   $x-fill-step-2-red: rgba($color-failure-light, 0.35)
@@ -62,21 +67,21 @@
   $x-fill-step-3: transparent fromMiddle($cursor-scale) 100%;
   $x-fill-red: $x-fill-step-1, $x-fill-step-2-red, $x-fill-step-3;
   $x-fill-faded: $x-fill-step-1, $x-fill-step-2-faded, $x-fill-step-3;
-  $x-red: linear-gradient(to bottom right, $x-fill-red),
+  $x-red:
+    linear-gradient(to bottom right, $x-fill-red),
     linear-gradient(to bottom left, $x-fill-red);
-  $x-faded: linear-gradient(to bottom right, $x-fill-faded),
+  $x-faded:
+    linear-gradient(to bottom right, $x-fill-faded),
     linear-gradient(to bottom left, $x-fill-faded);
 
   @keyframes block-with-red-x {
     0% {
       background-image: $background-faded, $x-red;
       background-size: $background-size-min;
-      border-color: $border-color-faded;
     }
     100% {
       background-image: $background-faded, $x-red;
       background-size: $background-size-max;
-      border-color: $border-color-faded;
     }
   }
 
@@ -84,12 +89,10 @@
     0% {
       background-image: $background-faded, $x-faded;
       background-size: $background-size-min;
-      border-color: $border-color-faded;
     }
     100% {
       background-image: $background-faded, $x-faded;
       background-size: $background-size-max;
-      border-color: $border-color-faded;
     }
   }
 
