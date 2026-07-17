@@ -105,6 +105,7 @@ export abstract class Target<
     BLOCK_STATUS: 'block-status',
     DELAY: 'delay',
     FILE_ACCESS: 'file-access',
+    NODE_ALERT: 'node-alert',
     OPEN_NODE_STATE: 'open-state',
     OUTPUT: 'output',
     PROCESS_TIME_MOD: 'process-time-mod',
