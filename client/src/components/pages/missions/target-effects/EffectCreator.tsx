@@ -1,4 +1,3 @@
-import Tooltip from '@client/components/content/communication/Tooltip'
 import { DetailDropdown } from '@client/components/content/form/dropdowns/standard/DetailDropdown'
 import { ButtonText } from '@client/components/content/user-controls/buttons/ButtonText'
 import type {
@@ -12,24 +11,22 @@ import { usePostInitEffect } from '@client/toolbox/hooks'
 import type { TEffectType } from '@shared/missions/effects/Effect'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useState } from 'react'
-import type { TModalBasic_P } from '.'
-import { useModalDisplayLogic } from '.'
-import './CreateEffect.scss'
+import './EffectCreator.scss'
 
 /**
- * Prompt modal for creating an effect to apply to a target.
- * @throws If this component is used outside of a {@link MissionMap} context.
+ * A form for creating a new effect. A user will select
+ * a target-environment and target, and once created, the
+ * new effect will be selected in the mission for configuration.
  */
-export default function CreateEffect<
+export default function EffectCreator<
   TType extends TEffectType = 'sessionTriggeredEffect',
->(props: TCreateEffect_P<TType>): TReactElement | null {
+>(props: TEffectCreator_P<TType>): TReactElement | null {
   /* -- PROPS -- */
 
-  const { host, trigger, onChange } = props
+  const { host, trigger, onChange, onCancel } = props
 
   /* -- STATE -- */
 
-  const [active, setActive] = props.active
   const [targetEnvironments] = useState<ClientTargetEnvironment[]>(
     ClientTargetEnvironment.REGISTRY.getAll(),
   )
@@ -42,7 +39,7 @@ export default function CreateEffect<
 
   /* -- COMPUTED -- */
 
-  const rootClasses = new ClassList('CreateEffect', 'MapModal')
+  const rootClasses = new ClassList('EffectCreator')
 
   /**
    * The current mission.
@@ -86,8 +83,6 @@ export default function CreateEffect<
 
   /* -- EFFECTS -- */
 
-  useModalDisplayLogic(active, rootClasses)
-
   // Reset the target when the target environment changes.
   usePostInitEffect(() => {
     setTarget(ClientTarget.createBlank(targetEnv))
@@ -96,7 +91,9 @@ export default function CreateEffect<
   /* -- FUNCTIONS -- */
 
   /**
-   * Handles creating a new effect.
+   * Handles creating a new effect. Selecting the new effect
+   * causes the mission page to dismiss this view and switch
+   * to the inspector so the effect can be configured.
    */
   const createEffect = () => {
     let effect = host.createEffect(target, trigger)
@@ -106,77 +103,74 @@ export default function CreateEffect<
     onChange(effect)
   }
 
-  /**
-   * Handles when the user requests to close the modal.
-   */
-  const onCloseRequest = (): void => {
-    setActive(false)
-  }
-
   /* -- RENDER -- */
 
   return (
     <div className={rootClasses.value}>
-      {/* -- TOP OF BOX -- */}
-      <div className='Heading'>Create Effect:</div>
-      <div className='Close'>
-        <div className='CloseButton' onClick={onCloseRequest}>
-          x
-          <Tooltip description='Close window.' />
-        </div>
+      {/* -- TOP OF VIEW -- */}
+      <div className='EffectCreatorHeading'>Create Effect</div>
+      <div className='EffectCreatorDescription'>
+        Choose a target environment and target for the new effect. Once created,
+        the effect will be selected in the inspector for configuration.
       </div>
 
       {/* -- MAIN CONTENT -- */}
-      <DetailDropdown<ClientTargetEnvironment>
-        fieldType='required'
-        label='Target Environment'
-        options={targetEnvironments}
-        value={targetEnv}
-        setValue={setTargetEnv}
-        isExpanded={false}
-        getKey={({ _id }) => _id}
-        render={(targetEnv: ClientTargetEnvironment) => targetEnv.name}
-        handleInvalidOption={{
-          method: 'setToDefault',
-          defaultValue: ClientTargetEnvironment.createBlank(),
-        }}
-      />
-      <DetailDropdown<ClientTarget>
-        fieldType='required'
-        label='Target'
-        options={targetEnv.targets}
-        value={target}
-        setValue={setTarget}
-        isExpanded={false}
-        getKey={({ _id }) => _id}
-        render={(target: ClientTarget) => target.name}
-        uniqueClassName={targetClassName}
-        handleInvalidOption={{
-          method: 'setToDefault',
-          defaultValue: ClientTarget.createBlank(
-            ClientTargetEnvironment.createBlank(),
-          ),
-        }}
-      />
-
+      <div className='EffectCreatorForm'>
+        <DetailDropdown<ClientTargetEnvironment>
+          fieldType='required'
+          label='Target Environment'
+          options={targetEnvironments}
+          value={targetEnv}
+          setValue={setTargetEnv}
+          isExpanded={false}
+          getKey={({ _id }) => _id}
+          render={(targetEnv: ClientTargetEnvironment) => targetEnv.name}
+          handleInvalidOption={{
+            method: 'setToDefault',
+            defaultValue: ClientTargetEnvironment.createBlank(),
+          }}
+        />
+        <DetailDropdown<ClientTarget>
+          fieldType='required'
+          label='Target'
+          options={targetEnv.targets}
+          value={target}
+          setValue={setTarget}
+          isExpanded={false}
+          getKey={({ _id }) => _id}
+          render={(target: ClientTarget) => target.name}
+          uniqueClassName={targetClassName}
+          handleInvalidOption={{
+            method: 'setToDefault',
+            defaultValue: ClientTarget.createBlank(
+              ClientTargetEnvironment.createBlank(),
+            ),
+          }}
+        />
+      </div>
       {/* -- BUTTON(S) -- */}
-      <ButtonText
-        text='Create Effect'
-        onClick={createEffect}
-        uniqueClassName={createEffectButtonClassName}
-      />
+      <div className='EffectCreatorButtons'>
+        <ButtonText
+          text='Create Effect'
+          onClick={createEffect}
+          uniqueClassName={createEffectButtonClassName}
+        />
+        <ButtonText
+          text='Cancel'
+          onClick={() => onCancel()}
+          tooltipDescription='Discard and return to the inspector.'
+        />
+      </div>
     </div>
   )
 }
 
-/* ---------------------------- TYPES FOR CREATE EFFECT ---------------------------- */
+/* ---------------------------- TYPES FOR EFFECT CREATOR ---------------------------- */
 
 /**
- * Props for {@link CreateEffect} component.
+ * Props for {@link EffectCreator} component.
  */
-export interface TCreateEffect_P<
-  TType extends TEffectType = any,
-> extends TModalBasic_P {
+export interface TEffectCreator_P<TType extends TEffectType = any> {
   /**
    * The host for which to create the effect.
    */
@@ -190,4 +184,9 @@ export interface TCreateEffect_P<
    * @param effect The effect that was changed.
    */
   onChange: (effect: ClientEffect) => void
+  /**
+   * Handles when the user cancels effect creation, dismissing
+   * this view without creating an effect.
+   */
+  onCancel: () => void
 }

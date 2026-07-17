@@ -1,5 +1,4 @@
 import MissionMap from '@client/components/content/session/mission-map/MissionMap'
-import CreateEffect from '@client/components/content/session/mission-map/ui/overlay/modals/CreateEffect'
 import type { TTabBarTab } from '@client/components/content/session/mission-map/ui/tabs/TabBar'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import type { TSvgPanelElement_Input } from '@client/components/content/user-controls/buttons/panels/types'
@@ -32,9 +31,6 @@ export default function MissionPageMap(): TReactElement {
   } = useMissionPageContext()
   const [mission] = missionPageState.mission
   const [selection, setSelection] = missionPageState.selection
-  const [effectModalActive, setEffectModalActive] =
-    missionPageState.effectModalActive
-  const [effectModalArgs] = missionPageState.effectModalArgs
   const {
     onDuplicateRequest: onDuplicateForceRequest,
     onDeleteRequest: onDeleteForceRequest,
@@ -172,117 +168,111 @@ export default function MissionPageMap(): TReactElement {
 
   // Add event listener to watch for node selection
   // changes, updating the state accordingly.
-  useEventListener(
-    mission,
-    ['selection', 'set-transformation'],
-    () => {
-      // Get previous and next selections.
-      let prevSelection = selection
-      let nextSelection = mission.selection
-      let prevNode: ClientMissionNode | null =
-        ClientMission.getNodeFromSelection(prevSelection)
-      let nextNode: ClientMissionNode | null =
-        ClientMission.getNodeFromSelection(nextSelection)
+  useEventListener(mission, ['selection', 'set-transformation'], () => {
+    // Get previous and next selections.
+    let prevSelection = selection
+    let nextSelection = mission.selection
+    let prevNode: ClientMissionNode | null =
+      ClientMission.getNodeFromSelection(prevSelection)
+    let nextNode: ClientMissionNode | null =
+      ClientMission.getNodeFromSelection(nextSelection)
 
-      // If there is a previous node, clear its buttons.
-      if (prevNode) {
-        nodeSvgEngine.removeAll()
-        prevNode.buttons = nodeSvgEngine.buttons
-      }
+    // If there is a previous node, clear its buttons.
+    if (prevNode) {
+      nodeSvgEngine.removeAll()
+      prevNode.buttons = nodeSvgEngine.buttons
+    }
 
-      // If there is a next node, then add the buttons.
-      if (nextNode) {
-        nodeSvgEngine.add(
+    // If there is a next node, then add the buttons.
+    if (nextNode) {
+      nodeSvgEngine.add(
+        {
+          key: 'cancel',
+          type: 'button',
+          icon: 'cancel',
+          description: 'Deselect this node (Closes panel view also).',
+          onClick: () => mission.select(nextNode!.force),
+        },
+        {
+          key: 'divider',
+          type: 'button',
+          icon: 'divider',
+          description:
+            'Exclude this node from the force (Closes panel view also).',
+          permissions: ['missions_write'],
+          onClick: () => {
+            nextNode!.exclude = true
+            mission.select(nextNode!.force)
+          },
+        },
+      )
+
+      nextNode.buttons = nodeSvgEngine.buttons
+    }
+
+    // If there is a previous prototype, clear its buttons.
+    if (prevSelection instanceof ClientMissionPrototype) {
+      prototypeSvgEngine.removeAll()
+      prevSelection.buttons = prototypeSvgEngine.buttons
+    }
+
+    // If there is a next prototype, then add the buttons.
+    if (nextSelection instanceof ClientMissionPrototype) {
+      if (mission.transformation) {
+        prototypeSvgEngine.add({
+          key: 'cancel',
+          type: 'button',
+          icon: 'cancel',
+          description: 'Cancel action.',
+          permissions: ['missions_write'],
+          onClick: () => (mission.transformation = null),
+        })
+      } else {
+        prototypeSvgEngine.add(
           {
             key: 'cancel',
             type: 'button',
             icon: 'cancel',
-            description: 'Deselect this node (Closes panel view also).',
-            onClick: () => mission.select(nextNode!.force),
+            description: 'Deselect this prototype (Closes panel view also).',
+            onClick: () => mission.deselect(),
           },
           {
-            key: 'divider',
+            key: 'add',
             type: 'button',
-            icon: 'divider',
-            description:
-              'Exclude this node from the force (Closes panel view also).',
+            icon: 'add',
+            description: 'Create an adjacent prototype on the map.',
             permissions: ['missions_write'],
-            onClick: () => {
-              nextNode!.exclude = true
-              mission.select(nextNode!.force)
-            },
+            onClick: () =>
+              onPrototypeAddRequest(nextSelection as ClientMissionPrototype),
+          },
+          // todo: Reimplement this once node structure panel
+          // todo: is removed.
+          // {
+          //   type: 'button',
+          //   icon: 'reorder',
+          //   description: 'Move this prototype to another location.',
+          //   permissions: ['missions_write'],
+          //   onClick: () => onPrototypeMoveRequest(nextSelection),
+          // },
+          {
+            key: 'remove',
+            type: 'button',
+            icon: 'remove',
+            description: 'Delete this prototype.',
+            permissions: ['missions_write'],
+            disabled: mission.prototypes.length < 2,
+            onClick: () =>
+              onPrototypeDeleteRequest(nextSelection as ClientMissionPrototype),
           },
         )
-
-        nextNode.buttons = nodeSvgEngine.buttons
       }
 
-      // If there is a previous prototype, clear its buttons.
-      if (prevSelection instanceof ClientMissionPrototype) {
-        prototypeSvgEngine.removeAll()
-        prevSelection.buttons = prototypeSvgEngine.buttons
-      }
+      nextSelection.buttons = prototypeSvgEngine.buttons
+    }
 
-      // If there is a next prototype, then add the buttons.
-      if (nextSelection instanceof ClientMissionPrototype) {
-        if (mission.transformation) {
-          prototypeSvgEngine.add({
-            key: 'cancel',
-            type: 'button',
-            icon: 'cancel',
-            description: 'Cancel action.',
-            permissions: ['missions_write'],
-            onClick: () => (mission.transformation = null),
-          })
-        } else {
-          prototypeSvgEngine.add(
-            {
-              key: 'cancel',
-              type: 'button',
-              icon: 'cancel',
-              description: 'Deselect this prototype (Closes panel view also).',
-              onClick: () => mission.deselect(),
-            },
-            {
-              key: 'add',
-              type: 'button',
-              icon: 'add',
-              description: 'Create an adjacent prototype on the map.',
-              permissions: ['missions_write'],
-              onClick: () =>
-                onPrototypeAddRequest(nextSelection as ClientMissionPrototype),
-            },
-            // todo: Reimplement this once node structure panel
-            // todo: is removed.
-            // {
-            //   type: 'button',
-            //   icon: 'reorder',
-            //   description: 'Move this prototype to another location.',
-            //   permissions: ['missions_write'],
-            //   onClick: () => onPrototypeMoveRequest(nextSelection),
-            // },
-            {
-              key: 'remove',
-              type: 'button',
-              icon: 'remove',
-              description: 'Delete this prototype.',
-              permissions: ['missions_write'],
-              disabled: mission.prototypes.length < 2,
-              onClick: () =>
-                onPrototypeDeleteRequest(
-                  nextSelection as ClientMissionPrototype,
-                ),
-            },
-          )
-        }
-
-        nextSelection.buttons = prototypeSvgEngine.buttons
-      }
-
-      // Update the selection state.
-      setSelection(mission.selection)
-    },
-  )
+    // Update the selection state.
+    setSelection(mission.selection)
+  })
 
   /* -- RENDER -- */
 
@@ -295,13 +285,6 @@ export default function MissionPageMap(): TReactElement {
       onPrototypeSelect={onPrototypeSelect}
       onNodeSelect={onNodeSelect}
       selectedForce={selectedForceState}
-    >
-      <CreateEffect
-        active={missionPageState.effectModalActive}
-        host={effectModalArgs.host}
-        trigger={effectModalArgs.trigger}
-        onChange={onChange}
-      />
-    </MissionMap>
+    />
   )
 }

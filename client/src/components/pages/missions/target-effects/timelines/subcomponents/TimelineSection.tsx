@@ -30,7 +30,7 @@ export function TimelineSection<TType extends TEffectType>({
   const { showButtonMenu } = globalContext.actions
   const {
     onChange,
-    activateEffectModal,
+    activateEffectCreator,
     state: pageState,
   } = useMissionPageContext()
   const [localFiles] = pageState.localFiles
@@ -116,9 +116,9 @@ export function TimelineSection<TType extends TEffectType>({
   const createEffect = (targetId?: string) => {
     // If no target ID is provided, one must be
     // selected, therefore activate the effect
-    // modal.
+    // creator.
     if (!targetId) {
-      activateEffectModal(host, trigger)
+      activateEffectCreator(host, trigger)
       return
     }
 

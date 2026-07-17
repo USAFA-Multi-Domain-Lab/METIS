@@ -11,7 +11,6 @@ import {
 import Panel from '@client/components/content/general-layout/panels/Panel'
 import PanelLayout from '@client/components/content/general-layout/panels/PanelLayout'
 import PanelView from '@client/components/content/general-layout/panels/PanelView'
-import type { TCreateEffect_P } from '@client/components/content/session/mission-map/ui/overlay/modals/CreateEffect'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import {
   useGlobalContext,
@@ -59,6 +58,8 @@ import Issues from './issues/Issues'
 import MissionPageMap from './map/MissionPageMap'
 import './MissionPage.scss'
 import NodeStructuring from './structures/NodeStructuring'
+import type { TEffectCreator_P } from './target-effects/EffectCreator'
+import EffectCreator from './target-effects/EffectCreator'
 
 /**
  * The description for the structure view in the
@@ -73,6 +74,12 @@ const STRUCTURE_DESCRIPTION =
  */
 const OUTLINE_DESCRIPTION =
   'A read-only overview of the full mission structure, including prototypes, forces, nodes, and actions.'
+
+/**
+ * The title for the temporary effect-creator view in the
+ * secondary panel of the mission page.
+ */
+const CREATE_EFFECT_VIEW_TITLE = 'Create Effect'
 
 /**
  * This will render page that allows the user to
@@ -105,8 +112,8 @@ export default function MissionPage(
     ),
     globalFiles: useState<ClientFileReference[]>([]),
     localFiles: useState<ClientMissionFile[]>([]),
-    effectModalActive: useState<boolean>(false),
-    effectModalArgs: useState<Pick<TCreateEffect_P<any>, 'host' | 'trigger'>>({
+    effectCreatorActive: useState<boolean>(false),
+    effectCreatorProps: useState<Pick<TEffectCreator_P, 'host' | 'trigger'>>({
       host: missionState[0],
       trigger: 'session-setup',
     }),
@@ -119,8 +126,12 @@ export default function MissionPage(
     props.missionId === null ? true : false,
   )
   const [selection, setSelection] = state.selection
-  const [, setEffectModalActive] = state.effectModalActive
-  const [, setEffectModalArgs] = state.effectModalArgs
+  const [effectCreatorActive, setEffectCreatorActive] =
+    state.effectCreatorActive
+  const [effectCreatorProps, setEffectCreatorProps] = state.effectCreatorProps
+  // Bumped on each activation so the effect-creator view remounts
+  // with a fresh form, even if it is reactivated while still mounted.
+  const [effectCreatorKey, setEffectCreatorKey] = useState<number>(0)
   const root = useRef<HTMLDivElement>(null)
   const navButtonEngine = useButtonSvgEngine({
     elements: [
@@ -394,8 +405,9 @@ export default function MissionPage(
 
   // Handle selection changes.
   useEffect(() => {
-    // Cleanup when a new effect is created.
-    setEffectModalActive(false)
+    // Dismiss the effect creator when the selection
+    // changes (e.g. when a new effect is created).
+    setEffectCreatorActive(false)
     // Auto-switch to the files tab if a file
     // is ever selected.
     if (selection instanceof ClientMissionFile) {
@@ -405,6 +417,14 @@ export default function MissionPage(
     // the selection changes.
     selectSecondaryView.current(inspectorTabTitle)
   }, [selection])
+
+  // Focus the effect-creator view whenever it is activated
+  // (or reactivated for a different host/trigger).
+  useEffect(() => {
+    if (effectCreatorActive) {
+      selectSecondaryView.current(CREATE_EFFECT_VIEW_TITLE)
+    }
+  }, [effectCreatorActive, effectCreatorKey])
 
   // Guards against refreshing or navigating away
   // with unsaved changes.
@@ -598,14 +618,35 @@ export default function MissionPage(
   }
 
   /**
-   * @see {@link TMissionPageContextData.activateEffectModal}
+   * @see {@link TMissionPageContextData.activateEffectCreator}
    */
-  const activateEffectModal = <TType extends TEffectType>(
+  const activateEffectCreator = <TType extends TEffectType>(
     host: TClientEffectHost<TType>,
     trigger: TEffectTrigger,
   ) => {
-    setEffectModalActive(true)
-    setEffectModalArgs({ host, trigger })
+    setEffectCreatorProps({ host, trigger })
+    setEffectCreatorActive(true)
+    setEffectCreatorKey((key) => key + 1)
+  }
+
+  /**
+   * Dismisses the effect creator without creating an effect,
+   * returning the user to the inspector view.
+   */
+  const dismissEffectCreator = () => {
+    setEffectCreatorActive(false)
+  }
+
+  /**
+   * Handles when a view in the secondary panel is selected.
+   * Dismisses the transient effect creator when the user
+   * navigates to a different view without creating an effect.
+   * @param title The title of the newly selected view.
+   */
+  const onSecondaryViewSelected = (title: string) => {
+    if (effectCreatorActive && title !== CREATE_EFFECT_VIEW_TITLE) {
+      setEffectCreatorActive(false)
+    }
   }
 
   /**
@@ -726,7 +767,7 @@ export default function MissionPage(
     state,
     viewMode,
     onChange,
-    activateEffectModal,
+    activateEffectCreator,
   }
 
   // Don't render if the mount hasn't yet been handled.
@@ -769,7 +810,21 @@ export default function MissionPage(
                 />
               </PanelView> */}
             </Panel>
-            <Panel selectView={selectSecondaryView}>
+            <Panel
+              selectView={selectSecondaryView}
+              onViewSelected={onSecondaryViewSelected}
+            >
+              {effectCreatorActive && (
+                <PanelView title={CREATE_EFFECT_VIEW_TITLE}>
+                  <EffectCreator
+                    key={effectCreatorKey}
+                    host={effectCreatorProps.host}
+                    trigger={effectCreatorProps.trigger}
+                    onChange={onChange}
+                    onCancel={dismissEffectCreator}
+                  />
+                </PanelView>
+              )}
               <PanelView title={inspectorTabTitle}>
                 {renderInspector()}
               </PanelView>
@@ -832,13 +887,13 @@ export type TMissionPage_S = {
    */
   issues: TReactState<MissionComponentIssue<any>[]>
   /**
-   * Whether the effect modal is currently active.
+   * Whether the effect creator view is currently active.
    */
-  effectModalActive: TReactState<boolean>
+  effectCreatorActive: TReactState<boolean>
   /**
-   * Arguments to pass to the effect modal when active.
+   * Arguments to pass to the effect creator when active.
    */
-  effectModalArgs: TReactState<Pick<TCreateEffect_P, 'host' | 'trigger'>>
+  effectCreatorProps: TReactState<Pick<TEffectCreator_P, 'host' | 'trigger'>>
 }
 
 /**

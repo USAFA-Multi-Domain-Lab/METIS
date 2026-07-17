@@ -61,13 +61,14 @@ export type TMissionPageContextData = {
       ...components: TNonEmptyArray<MissionComponent<TMetisClientComponents>>
     ) => void
     /**
-     * Allows the creation of a custom effect by
-     * opening a modal on the mission map which will
-     * allow the user to create an effect from scratch.
+     * Allows the creation of a custom effect by opening
+     * the effect creator as a temporary view in the
+     * secondary panel, allowing the user to create an
+     * effect from scratch.
      * @param host The host for which to create the effect.
      * @param trigger The trigger for the new effect.
      */
-    activateEffectModal: <TType extends TEffectType>(
+    activateEffectCreator: <TType extends TEffectType>(
       host: TClientEffectHost<TType>,
       trigger: TEffectTrigger,
     ) => void
