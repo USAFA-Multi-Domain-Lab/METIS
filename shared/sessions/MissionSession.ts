@@ -168,6 +168,26 @@ export abstract class MissionSession<
   }
 
   /**
+   * Members with the 'forceAssignable' permission who are not banned.
+   * Only these members can be assigned to a force and a realm during
+   * session start.
+   */
+  public get forceAssignableMembers(): TMember<T>[] {
+    return this._members.filter(
+      (member) => member.isAuthorized('forceAssignable') && !member.banned,
+    )
+  }
+
+  /**
+   * Whether the session has members with the 'forceAssignable' permission
+   * who are not banned.
+   * @see {@link forceAssignableMembers}
+   */
+  public get hasForceAssignableMembers(): boolean {
+    return this.forceAssignableMembers.length > 0
+  }
+
+  /**
    * Protected cache for `state`.
    */
   protected _state: TSessionState
@@ -541,6 +561,26 @@ export abstract class MissionSession<
    */
   public static get AVAILABLE_MODES(): TSessionMode[] {
     return ['multiplayer', 'single-player']
+  }
+
+  /**
+   * Coerces a session configuration so its interdependent options remain
+   * self-consistent, returning a corrected copy. Currently this enforces
+   * that an owner-only session is always multiplayer: because only the
+   * owner (a complete-visibility manager, never a participant) may join
+   * such a session, single-player would have no participants to mint
+   * realms for and would start blank. The single-player force is cleared
+   * alongside the mode so no stale selection is retained.
+   * @param config The configuration to normalize.
+   * @returns A normalized copy of the configuration.
+   */
+  public static normalizeConfig(config: TSessionConfig): TSessionConfig {
+    let normalized = { ...config }
+    if (normalized.accessibility === 'owner-only') {
+      normalized.mode = 'multiplayer'
+      normalized.singlePlayerForceId = undefined
+    }
+    return normalized
   }
 }
 

@@ -829,6 +829,22 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       return false
     }
 
+    // A single-player session mints one realm per participant, so
+    // starting one with no participants would produce a blank session
+    // with nothing to play. Reject the start rather than allow that.
+    if (
+      this.config.mode === 'single-player' &&
+      !this.hasForceAssignableMembers
+    ) {
+      member.emitError(
+        new ServerEmittedError(
+          ServerEmittedError.CODE_SESSION_NO_PARTICIPANTS,
+          { request: fulfilledRequest },
+        ),
+      )
+      return false
+    }
+
     this.initializeMode()
 
     // Loop through all members and find any
@@ -961,12 +977,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     this._realms = []
 
-    for (let member of this.members) {
-      // Only participants and participant-observers are
-      // assigned to a dedicated realm. Other members
-      // observe everything.
-      if (!member.isAuthorized('forceAssignable') || member.banned) continue
-
+    // Only force-assignable members are assigned to realms in
+    // single-player mode.
+    for (let member of this.forceAssignableMembers) {
       let realm = ServerSessionRealm.createNew(member.username, this, {
         missionMintOptions: {
           forceExposure: {
@@ -999,12 +1012,11 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let realm = ServerSessionRealm.createNew(this.name, this)
     this._realms = [realm]
 
-    // Participants are assigned to and share the single realm.
-    for (let member of this.members) {
-      if (member.isAuthorized('forceAssignable') && !member.banned) {
-        member.assignToRealm(realm)
-        member.subscribeToRealm(realm)
-      }
+    // Force-assignable members are assigned to and share
+    // the single realm in multiplayer mode.
+    for (let member of this.forceAssignableMembers) {
+      member.assignToRealm(realm)
+      member.subscribeToRealm(realm)
     }
 
     // Managers and other complete-visibility members observe it.

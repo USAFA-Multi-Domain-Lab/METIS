@@ -2,7 +2,10 @@ import { LaunchSessionError } from '@server/sessions/LaunchSessionError'
 import { SessionServer } from '@server/sessions/SessionServer'
 import { launchSessionCore } from '@server/sessions/launchSessionCore'
 import type { ServerUser } from '@server/users/ServerUser'
-import type { TSessionConfig } from '@shared/sessions/MissionSession'
+import {
+  MissionSession,
+  type TSessionConfig,
+} from '@shared/sessions/MissionSession'
 import { sessionLogger } from '../../../../logging'
 import { ApiResponse } from '../../library/ApiResponse'
 import { StatusError } from '../../library/StatusError'
@@ -39,8 +42,9 @@ export const launchSession: TExpressHandler = async (request, response) => {
       )
     }
 
-    // Define the session configuration.
-    let sessionConfig: TSessionConfig = {
+    // Define the session configuration, normalizing it so interdependent
+    // options (e.g. owner-only forcing multiplayer) stay self-consistent.
+    let sessionConfig: TSessionConfig = MissionSession.normalizeConfig({
       name: name ?? SessionServer.DEFAULT_CONFIG.name,
       accessibility:
         accessibility ?? SessionServer.DEFAULT_CONFIG.accessibility,
@@ -53,7 +57,7 @@ export const launchSession: TExpressHandler = async (request, response) => {
         disabledTargetEnvs ?? SessionServer.DEFAULT_CONFIG.disabledTargetEnvs,
       targetEnvConfigs:
         targetEnvConfigs ?? SessionServer.DEFAULT_CONFIG.targetEnvConfigs,
-    }
+    })
 
     // Get the user who is launching the session.
     let owner: ServerUser = response.locals.user

@@ -133,6 +133,13 @@ export class ServerEmittedError extends WsEmittedError {
    */
   public static readonly CODE_SESSION_CLOSED: number = 20007
   /**
+   * Code for a client requesting to start a single-player session that
+   * has no participants assigned. Single-player mints one realm per
+   * participant, so with none there would be nothing to play, and the
+   * start is rejected rather than producing a blank session.
+   */
+  public static readonly CODE_SESSION_NO_PARTICIPANTS: number = 20008
+  /**
    * Code for a client requesting to modify the state of a node that cannot be found.
    */
   public static readonly CODE_NODE_NOT_FOUND: number = 20100
@@ -211,6 +218,8 @@ export class ServerEmittedError extends WsEmittedError {
       'The session has already started, and you have not been assigned to a force.',
     [ServerEmittedError.CODE_SESSION_CLOSED]:
       'The session has been closed and can no longer be joined.',
+    [ServerEmittedError.CODE_SESSION_NO_PARTICIPANTS]:
+      'A single-player session cannot be started without any participants.',
     [ServerEmittedError.CODE_NODE_NOT_FOUND]: 'Node not found.',
     [ServerEmittedError.CODE_NODE_NOT_OPENABLE]: 'Node not openable.',
     [ServerEmittedError.CODE_NODE_NOT_EXECUTABLE]: 'Node not executable.',

@@ -1,4 +1,5 @@
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
+import { MissionSession } from '@shared/sessions/MissionSession'
 import { createServerSessionController } from './createServerSessionController'
 
 /**
@@ -43,8 +44,11 @@ export const onRequestConfigUpdate =
         configUpdates.accessibility === 'owner-only' &&
         this._config.accessibility !== 'owner-only'
 
-      // Assign the new configuration to the session.
+      // Assign the new configuration to the session, then normalize so
+      // interdependent options stay self-consistent (e.g. switching to
+      // owner-only forces the mode back to multiplayer).
       Object.assign(this._config, configUpdates)
+      Object.assign(this._config, MissionSession.normalizeConfig(this._config))
       // Update the session name if it has changed.
       if (this.name !== configUpdates.name && configUpdates.name) {
         this.name = configUpdates.name

@@ -74,6 +74,16 @@ export default function SessionGeneralConfig({
     )
   }, [mode])
 
+  // An owner-only session admits no participants (only the owner, a
+  // manager), so single-player would have no realms to mint. Force the
+  // mode back to multiplayer whenever the session becomes owner-only
+  // and the config is set to single-player mode.
+  usePostInitEffect(() => {
+    if (accessibility === 'owner-only' && mode !== 'single-player') {
+      setMode('multiplayer')
+    }
+  }, [accessibility])
+
   /* -- PRE-RENDER PROCESSING -- */
 
   /**
@@ -116,6 +126,37 @@ export default function SessionGeneralConfig({
     }
   })
 
+  /**
+   * JSX for mode selection. Owner-only sessions are locked to
+   * multiplayer, since single-player requires participants and an
+   * owner-only session admits none.
+   */
+  const modeJsx = compute<TReactElement>(() => {
+    if (accessibility === 'owner-only') {
+      return <DetailLocked label='Mode' value='Multiplayer' />
+    } else {
+      return (
+        <DetailDropdown<TSessionMode>
+          label='Mode'
+          options={['multiplayer', 'single-player']}
+          value={mode}
+          setValue={setMode}
+          disabled={disabled}
+          isExpanded={false}
+          getKey={(value) => value}
+          render={(value) =>
+            value === 'single-player' ? 'Single-player' : 'Multiplayer'
+          }
+          fieldType='required'
+          handleInvalidOption={{
+            method: 'setToDefault',
+            defaultValue: 'multiplayer',
+          }}
+        />
+      )
+    }
+  })
+
   /* -- RENDER -- */
 
   return (
@@ -152,23 +193,7 @@ export default function SessionGeneralConfig({
         setValue={setInfiniteResources}
         disabled={disabled}
       />
-      <DetailDropdown<TSessionMode>
-        label='Mode'
-        options={['multiplayer', 'single-player']}
-        value={mode}
-        setValue={setMode}
-        disabled={disabled}
-        isExpanded={false}
-        getKey={(value) => value}
-        render={(value) =>
-          value === 'single-player' ? 'Single-player' : 'Multiplayer'
-        }
-        fieldType='required'
-        handleInvalidOption={{
-          method: 'setToDefault',
-          defaultValue: 'multiplayer',
-        }}
-      />
+      {modeJsx}
       {mode === 'single-player' && singlePlayerForceId && (
         <DetailDropdown<string>
           label='Force'

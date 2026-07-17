@@ -12,7 +12,10 @@ import type {
   TServerMethod,
 } from '@shared/connect'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
-import type { TSessionConfig } from '@shared/sessions/MissionSession'
+import {
+  MissionSession,
+  type TSessionConfig,
+} from '@shared/sessions/MissionSession'
 import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible'
 import type { Socket } from 'socket.io'
 import type { ServerLogin } from '../logins/ServerLogin'
@@ -312,7 +315,10 @@ export class ClientConnection {
       // Only users who can launch native sessions and read missions may
       // play-test (mirrors the REST `/launch` route's permissions).
       if (
-        !this.login.user.isAuthorized(['sessions_write_native', 'missions_read'])
+        !this.login.user.isAuthorized([
+          'sessions_write_native',
+          'missions_read',
+        ])
       ) {
         return this.emitError(
           new ServerEmittedError(
@@ -323,21 +329,18 @@ export class ClientConnection {
       }
 
       try {
-        // Build the config from defaults + optional overrides, then force
-        // the test-only invariants regardless of what was requested.
-        let config: TSessionConfig = {
+        let config: TSessionConfig = MissionSession.normalizeConfig({
           ...SessionServer.DEFAULT_CONFIG,
           ...event.data.config,
           isTest: true,
           accessibility: 'owner-only',
-        }
+        })
 
         // Loaded lazily so the WS connection module does not pull the
         // database-model graph into its boot-time initialization (which
         // would change module init order and trip a circular import).
-        let { launchSessionCore } = await import(
-          '../sessions/launchSessionCore.js'
-        )
+        let { launchSessionCore } =
+          await import('../sessions/launchSessionCore.js')
 
         // Launch the session, auto-join the owner, and auto-start it.
         let session = await launchSessionCore(
