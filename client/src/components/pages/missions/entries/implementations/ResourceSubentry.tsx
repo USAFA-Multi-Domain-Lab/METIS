@@ -5,7 +5,11 @@ import { useButtonSvgEngine } from '@client/components/content/user-controls/but
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import { ClientMission } from '@client/missions/ClientMission'
 import { ClientMissionResource } from '@client/missions/ClientMissionResource'
-import { useObjectFormSync, usePostInitEffect } from '@client/toolbox/hooks'
+import {
+  useMountHandler,
+  useObjectFormSync,
+  usePostInitEffect,
+} from '@client/toolbox/hooks'
 import { MissionResource } from '@shared/missions/MissionResource'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useRef, useState } from 'react'
@@ -20,6 +24,7 @@ export default function ResourceSubentry({
   resource,
   mission,
   onClickDelete,
+  onMount,
 }: TResourceSubentry_P): TReactElement {
   /* -- STATE -- */
 
@@ -74,6 +79,11 @@ export default function ResourceSubentry({
   }
 
   /* -- EFFECTS -- */
+
+  useMountHandler((done) => {
+    onMount?.()
+    done()
+  })
 
   // This will update the resource's name when
   // the icon changes, but only if the default
@@ -152,4 +162,8 @@ type TResourceSubentry_P = {
    * Called when the user requests to remove this resource.
    */
   onClickDelete: (resource: ClientMissionResource) => void
+  /**
+   * Called when the component mounts.
+   */
+  onMount?: () => void
 }

@@ -6,7 +6,7 @@ import { ClientMission } from '@client/missions/ClientMission'
 import type { ClientMissionResource } from '@client/missions/ClientMissionResource'
 import { useEventListener, useObjectFormSync } from '@client/toolbox/hooks'
 import { Mission } from '@shared/missions/Mission'
-import { Fragment, useState } from 'react'
+import { Fragment, useRef, useState } from 'react'
 import { DetailString } from '../../../../content/form/DetailString'
 import { EffectTimeline } from '../../target-effects/timelines'
 import Entry from '../Entry'
@@ -29,6 +29,12 @@ export default function MissionEntry({
   } = useObjectFormSync(mission, ['name'], {
     onChange: () => onChange(mission),
   })
+  // When a new resource is created, this element will be
+  // scrolled into view so the user can see the new subentry.
+  const resourceAnchorElementRef = useRef<HTMLDivElement>(null)
+  // Tracks the resource most recently added via the "add" button, so
+  // its subentry can scroll itself into view once it mounts.
+  const newResourceId = useRef<string | null>(null)
 
   const addResourceEngine = useButtonSvgEngine({
     elements: [
@@ -53,6 +59,7 @@ export default function MissionEntry({
    */
   function onClickAdd(): void {
     let newResource = mission.addResource()
+    newResourceId.current = newResource._id
     onChange(newResource)
   }
 
@@ -96,10 +103,23 @@ export default function MissionEntry({
               resource={resource}
               mission={mission}
               onClickDelete={onClickDelete}
+              onMount={() => {
+                if (resource._id === newResourceId.current) {
+                  resourceAnchorElementRef.current?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                  })
+                  newResourceId.current = null
+                }
+              }}
             />
             <Divider key={`${mission._id}_divider_${resource._id}`} />
           </Fragment>
         ))}
+        <div
+          className='ResourceScrollAnchor'
+          ref={resourceAnchorElementRef}
+        ></div>
       </div>
       <EffectTimeline<'sessionTriggeredEffect'> host={mission} />
       {/* todo: Fully implement or remove this. */}
