@@ -272,7 +272,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
 
     // If the node has an icon, reduce
     // the width of the name.
-    if (icon !== '_blank') {
+    if (icon !== '_blank' || node.hasPendingAlerts) {
       width = ClientMissionNode.NAME_WIDTH_RATIO * 100
     }
 

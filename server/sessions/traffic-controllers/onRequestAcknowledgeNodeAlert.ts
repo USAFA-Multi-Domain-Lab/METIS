@@ -28,6 +28,17 @@ export const onRequestAcknowledgeNodeAlert =
           )
         }
 
+        // An alert on a non-revealed node must not be dismissible by
+        // any member.
+        if (!node.revealed) {
+          return member.emitError(
+            new ServerEmittedError(
+              ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+              { request },
+            ),
+          )
+        }
+
         // Ensure the member belongs to the node's force or has complete
         // visibility before allowing the acknowledgement.
         if (

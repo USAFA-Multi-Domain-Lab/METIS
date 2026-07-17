@@ -148,10 +148,13 @@ export abstract class MissionForce<
 
   /**
    * The list of all pending alerts for nodes within the force.
+   * @note Alerts on non-revealed nodes are excluded; they must not
+   * surface until the node is revealed to the player.
    */
   public get pendingAlerts(): NodeAlert[] {
     let alerts: NodeAlert[] = []
     for (let node of this.nodes) {
+      if (!node.revealed) continue
       alerts.push(...node.pendingAlerts)
     }
     return alerts
@@ -160,19 +163,23 @@ export abstract class MissionForce<
   /**
    * Whether there are any nodes within the force that have
    * pending alerts.
+   * @note Non-revealed nodes are ignored; see {@link pendingAlerts}.
    */
   public get hasPendingAlerts(): boolean {
-    return this.nodes.some((node) => node.hasPendingAlerts)
+    return this.nodes.some((node) => node.revealed && node.hasPendingAlerts)
   }
 
   /**
    * The next pending alert of highest priority in the force that
    * has not yet been acknowledged.
+   * @note Non-revealed nodes are skipped; see {@link pendingAlerts}.
    */
   public get nextPendingAlert(): NodeAlert | null {
     let result: NodeAlert | null = null
 
     for (let node of this.nodes) {
+      if (!node.revealed) continue
+
       let alert = node.nextPendingAlert
       if (!alert) continue
 
