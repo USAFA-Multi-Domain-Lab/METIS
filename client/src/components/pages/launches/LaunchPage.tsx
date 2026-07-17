@@ -132,8 +132,9 @@ export default function LaunchPage({
       setIsLaunching(true)
 
       try {
+        let issues = mission.getIssuesForConfig(sessionConfig)
         // If there are invalid objects and effects are enabled for any target env...
-        if (mission.getIssuesForConfig(sessionConfig).length) {
+        if (issues.length) {
           // Create a message for the user.
           let message =
             `**Warning:** The mission for this session has issues due to unresolved conflicts. If you proceed, the session may not function as expected.\n` +
@@ -153,7 +154,7 @@ export default function LaunchPage({
           // Prompt the user for a choice.
           let { choice } = await prompt(message, choices, {
             list: {
-              items: mission.allIssues,
+              items: issues,
               headingText: 'Issues',
               sortByMethods: [ESortByMethod.Name],
               searchableProperties: ['message'],

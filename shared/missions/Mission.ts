@@ -840,14 +840,11 @@ export abstract class Mission<
   ): MissionComponentIssue<MissionComponent<any, any>>[] {
     let { disabledTargetEnvs } = config
     return this.allIssues.filter(({ component }) => {
-      if (
-        component instanceof Effect &&
-        disabledTargetEnvs.includes(component.environmentId)
-      ) {
-        return false
-      } else {
-        return true
-      }
+      // Resolve the effect the issue belongs to, whether the issue is on the
+      // effect itself or on one of its target arguments, and drop it when that
+      // effect's target environment is disabled for this session.
+      let effect = component.getAssociatedComponentWithType(Effect)
+      return !(effect && disabledTargetEnvs.includes(effect.environmentId))
     })
   }
 
