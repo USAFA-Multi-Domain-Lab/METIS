@@ -1,6 +1,7 @@
 import { describe, expect, test } from '@jest/globals'
-import { MissionSession } from '@shared/sessions/MissionSession'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
+import { MissionSession } from '@shared/sessions/MissionSession'
+import type { TEnvironmentTaskPhase } from '@shared/target-environments/TargetEnvironmentTask'
 
 describe('MissionSession.areEnoughResources', () => {
   test('Allows execution when zeroCost cheat is enabled', () => {
@@ -62,6 +63,10 @@ describe('MissionSession setup/teardown flags', () => {
  * @note This class exists only to unit-test MissionSession logic without server dependencies.
  */
 class TestMissionSession extends MissionSession<any> {
+  public get defaultRealm() {
+    throw new Error('Method not implemented.')
+  }
+
   public constructor(options: Partial<TSessionConfig> = {}) {
     super(
       'session-1',
@@ -81,23 +86,26 @@ class TestMissionSession extends MissionSession<any> {
   }
 
   public setSetupTasks(results: TEnvironmentTaskStub[]): void {
-    this.addTasks(results, { kind: 'hook', method: 'environment-setup' })
+    this.addTasks(results, 'setup')
   }
 
   public setTeardownTasks(results: TEnvironmentTaskStub[]): void {
-    this.addTasks(results, {
-      kind: 'hook',
-      method: 'environment-teardown',
-    })
+    this.addTasks(results, 'teardown')
   }
 
   /**
-   * Pushes stub executions onto the master list with the given source,
+   * Pushes stub executions onto the master list under the given phase,
    * so the phase-specific getters route them correctly.
+   * @note The phase is stamped directly rather than derived from a task
+   * source, because deriving it is `TargetEnvironmentTask`'s own job and
+   * is covered by that class's tests.
    */
-  private addTasks(results: TEnvironmentTaskStub[], source: any): void {
+  private addTasks(
+    results: TEnvironmentTaskStub[],
+    phase: TEnvironmentTaskPhase,
+  ): void {
     for (let result of results) {
-      this._environmentTasks.push({ ...result, source } as any)
+      this._environmentTasks.push({ ...result, phase } as any)
     }
   }
 

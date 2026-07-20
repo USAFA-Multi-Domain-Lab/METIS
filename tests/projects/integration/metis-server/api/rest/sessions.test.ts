@@ -1,5 +1,6 @@
 import {
   afterAll,
+  afterEach,
   beforeAll,
   beforeEach,
   describe,
@@ -7,11 +8,11 @@ import {
   test,
 } from '@jest/globals'
 import { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
-import { SessionServer } from '@server/sessions/SessionServer'
+import type { ServerSessionMember } from '@server/sessions/ServerSessionMember'
 import type { TMissionFileJson } from '@shared/missions/files/MissionFile'
 import { Types } from 'mongoose'
 import type { TestHttpClient } from 'tests/helpers/TestHttpClient'
-import { TestSocketClient } from 'tests/helpers/TestSocketClient'
+import { TestSession } from 'tests/helpers/TestSession'
 import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
 import { TestToolbox } from 'tests/helpers/TestToolbox'
 
@@ -29,6 +30,10 @@ describe('/api/v1/sessions', () => {
 
   beforeEach(() => {
     username = `${suitePrefix}_${generateRandomId()}`
+  })
+
+  afterEach(() => {
+    TestSession.disposeAll()
   })
 
   beforeAll(async () => {
@@ -88,16 +93,21 @@ describe('/api/v1/sessions', () => {
     return response.data.sessionId
   }
 
-  function injectMissionFileIntoSession(
-    sessionId: string,
+  /**
+   * Adds a mission file to the realm a member plays in.
+   * @param member The member whose realm receives the file.
+   * @param file The file to add.
+   * @note The file goes into the realm's minted mission copy rather than
+   * the session's mission template, because the download route resolves
+   * files through the requester's subscribed realm.
+   */
+  function injectMissionFileIntoRealm(
+    member: ServerSessionMember,
     file: TMissionFileJson,
   ): void {
-    let sessionServer = SessionServer.get(sessionId)
-    expect(sessionServer).toBeTruthy()
+    let mission = member.subscribedRealm.mission
 
-    sessionServer!.mission.files.push(
-      ServerMissionFile.fromJson(file, sessionServer!.mission),
-    )
+    mission.files.push(ServerMissionFile.fromJson(file, mission))
   }
 
   test('Requires auth to list sessions', async () => {
@@ -264,38 +274,18 @@ describe('/api/v1/sessions', () => {
   })
 
   test('GET /api/v1/sessions/files/:_id/download requires in-session auth, 404s for missing, and 403s without access', async () => {
-    // Create client-server context.
-    let { server, client: ownerClient } = await createTestContext()
-    let { client: studentClient } = await createTestContext()
-
-    // Create session owner user.
-    let ownerCreateResult = await createTestUser({ username, password })
-    let ownerUsername = ownerCreateResult.username
-    let ownerPassword = ownerCreateResult.password ?? password
-
-    // Login owner user.
-    await loginUser(ownerClient, {
-      username: ownerUsername,
-      password: ownerPassword,
+    // The session is started so that a realm is minted for the student.
+    // Without one they fall back to the blank default realm, where every
+    // file lookup misses and the 404 pre-empts the check under test.
+    let context = await TestSession.launch({
+      namePrefix: `${suitePrefix}_file_dl`,
+      mission: { missionId: suiteMissionId },
+      members: [{ force: 0 }],
+      start: true,
     })
+    let [student] = context.members
 
-    // Create student user.
-    let studentCreateResult = await createTestUser({
-      username: `${suitePrefix}_student_${generateRandomId()}`,
-      password,
-      accessId: 'student',
-    })
-    let studentUsername = studentCreateResult.username
-    let studentPassword = studentCreateResult.password ?? password
-
-    // Launch session.
-    let sessionId = await launchSession(
-      ownerClient,
-      suiteMissionId,
-      `${suitePrefix}_file_dl_${generateRandomId()}`,
-    )
-
-    // Inject a mission file into the session.
+    // Inject a mission file no force has access to.
     let missionFileId = new Types.ObjectId().toHexString()
     let missionFileJson: TMissionFileJson = {
       _id: missionFileId,
@@ -304,38 +294,19 @@ describe('/api/v1/sessions', () => {
       initialAccess: [],
       reference: new Types.ObjectId().toHexString(),
     }
-    injectMissionFileIntoSession(sessionId, missionFileJson)
+    injectMissionFileIntoRealm(student.member, missionFileJson)
 
-    // Login student and connect to session socket.
-    let studentLoginResponse = await studentClient.post('/api/v1/logins/', {
-      username: studentUsername,
-      password: studentPassword,
-    })
-    expect(studentLoginResponse.status).toBe(200)
-    let cookieHeader = TestSocketClient.buildCookieHeader(
-      studentLoginResponse.headers['set-cookie'],
+    // Attempt to download missing file.
+    let missing = await student.client.get(
+      `/api/v1/sessions/files/${new Types.ObjectId().toHexString()}/download`,
     )
+    expect(missing.status).toBe(404)
 
-    // Connect to session socket.
-    let socket = await TestSocketClient.connect(server, cookieHeader)
-    try {
-      // Join the session.
-      await TestSocketClient.joinSession(socket, sessionId)
-
-      // Attempt to download missing file.
-      let missing = await studentClient.get(
-        `/api/v1/sessions/files/${new Types.ObjectId().toHexString()}/download`,
-      )
-      expect(missing.status).toBe(404)
-
-      // Attempt to download existing file without access.
-      let forbidden = await studentClient.get(
-        `/api/v1/sessions/files/${missionFileId}/download`,
-      )
-      expect(forbidden.status).toBe(403)
-    } finally {
-      socket.disconnect()
-    }
+    // Attempt to download existing file without access.
+    let forbidden = await student.client.get(
+      `/api/v1/sessions/files/${missionFileId}/download`,
+    )
+    expect(forbidden.status).toBe(403)
   })
 
   afterAll(async () => {

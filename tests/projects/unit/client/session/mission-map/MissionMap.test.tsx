@@ -112,6 +112,7 @@ class FakeForce {
 }
 
 class FakeMission extends FakeEventTarget {
+  public name = 'Test Mission'
   public files: any[] = []
   public resourceLabel = 'Resources'
   public forces: FakeForce[]
@@ -123,6 +124,21 @@ class FakeMission extends FakeEventTarget {
 
   public getForceById(forceId: string): FakeForce | undefined {
     return this.forces.find((force) => force._id === forceId)
+  }
+}
+
+/**
+ * The realm the member is subscribed to. Since the realm migration, the
+ * session page reads its mission from here rather than from the session's
+ * own mission template.
+ */
+class FakeRealm {
+  public _id = 'realm-1'
+  public name = 'Test Realm'
+  public mission: FakeMission
+
+  public constructor(mission: FakeMission) {
+    this.mission = mission
   }
 }
 
@@ -330,6 +346,7 @@ function createSessionPageHarness(alerts: NodeAlert[] = []) {
   node.alerts = alerts
   let force = new FakeForce([node])
   let mission = new FakeMission([force])
+  let realm = new FakeRealm(mission)
   mockServer = new FakeEventTarget()
 
   let acknowledgeAlertResolve: (() => void) | null = null
@@ -338,7 +355,14 @@ function createSessionPageHarness(alerts: NodeAlert[] = []) {
   })
 
   mockSession = {
+    _id: 'session-1',
     mission,
+    // The page derives everything from the realm the member is subscribed
+    // to, not from the session's own mission template.
+    subscribedRealm: realm,
+    subscribedMission: realm.mission,
+    // A lone realm, so the top bar offers no realm switcher.
+    realmBasics: [realm],
     state: 'started',
     setupFailed: false,
     teardownFailed: false,

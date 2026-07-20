@@ -1,13 +1,5 @@
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  describe,
-  expect,
-  test,
-} from '@jest/globals'
+import { afterEach, describe, expect, test } from '@jest/globals'
 import { MetisServer } from '@server/MetisServer'
-import { SessionServer } from '@server/sessions/SessionServer'
 import type {
   TRequestEvents,
   TResponseEvents,
@@ -16,18 +8,17 @@ import type {
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import type { TExecutionCheats } from '@shared/missions/actions/ActionExecution'
 import { Mission } from '@shared/missions/Mission'
+import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
 import { MemberRole } from '@shared/sessions/members/MemberRole'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import type { Socket } from 'socket.io-client'
 import {
-  createMissionPayload,
   FUEL_RESOURCE_POOL_DEFAULT_PROPERTIES,
   INTEL_RESOURCE_POOL_DEFAULT_PROPERTIES,
   type TMissionCreatePayload,
 } from 'tests/helpers/projects/integration/rest-api/missions/payload'
-import type { TestHttpClient } from 'tests/helpers/TestHttpClient'
+import { TestSession } from 'tests/helpers/TestSession'
 import { TestSocketClient } from 'tests/helpers/TestSocketClient'
-import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
 import { TestToolbox } from 'tests/helpers/TestToolbox'
 
 const SUITE_PREFIX = 'test_socket_resources'
@@ -35,44 +26,17 @@ const FUEL_RESOURCE_POOL_INDEX = FUEL_RESOURCE_POOL_DEFAULT_PROPERTIES.ORDER
 const INTEL_RESOURCE_POOL_INDEX = INTEL_RESOURCE_POOL_DEFAULT_PROPERTIES.ORDER
 const RESOURCE_POOL_AWARD_AMOUNT = 20
 
-let server: MetisServer
-let sessionIdsToCleanup: string[] = []
-let socketsToCleanup: Socket[] = []
-
-async function loginUser(
-  client: TestHttpClient,
-  username: string,
-  password: string,
-) {
-  let response = await client.post('/api/v1/logins/', { username, password })
-
-  expect(response.status).toBe(200)
-
-  return response
-}
-
-async function loginWithAccess(
-  client: TestHttpClient,
-  accessId: 'admin' | 'instructor' | 'student',
-  username: string,
-  password: string,
-) {
-  await TestSuiteSetup.createTestUser({
-    username,
-    password,
-    accessId,
-  })
-
-  return await loginUser(client, username, password)
-}
-
-function createSocketMissionPayload(
+/**
+ * Applies the customizations every test in this suite depends on, then
+ * hands the payload to the test's own customization.
+ * @note Files and session-start effects are stripped because they only
+ * slow the start phase, and the action under test is made instant and
+ * always-successful so executions resolve deterministically.
+ */
+function customizeSocketMission(
+  payload: TMissionCreatePayload,
   customize?: (payload: TMissionCreatePayload) => void,
-): TMissionCreatePayload {
-  let payload = createMissionPayload(
-    `${SUITE_PREFIX}_mission_${TestToolbox.generateRandomId()}`,
-  )
-
+): void {
   payload.files = []
   payload.effects = []
   payload.forces[0].nodes[1].actions[0] = {
@@ -83,129 +47,63 @@ function createSocketMissionPayload(
   payload.forces[0].nodes[1].actions[0].baseSuccessChance = 1
 
   customize?.(payload)
-
-  return payload
 }
 
-async function createMission(
-  client: TestHttpClient,
-  payload: TMissionCreatePayload,
-): Promise<string> {
-  let response = await client.post('/api/v1/missions/', payload)
-
-  expect(response.status).toBe(200)
-  expect(typeof response.data._id).toBe('string')
-
-  return response.data._id
-}
-
-async function launchSession(
-  missionId: string,
-  sessionConfig: Partial<TSessionConfig> = {},
-): Promise<string> {
-  let { client } = await TestSuiteSetup.createTestContext()
-  let ownerUsername = `${SUITE_PREFIX}_owner_${TestToolbox.generateRandomId()}`
-  let ownerPassword = TestToolbox.DEFAULT_PASSWORD
-  let sessionName =
-    sessionConfig.name ??
-    `${SUITE_PREFIX}_session_${TestToolbox.generateRandomId()}`
-
-  await loginWithAccess(client, 'instructor', ownerUsername, ownerPassword)
-
-  let response = await client.post('/api/v1/sessions/launch/', {
-    missionId,
-    name: sessionName,
-    ...sessionConfig,
-  })
-
-  expect(response.status).toBe(200)
-  expect(typeof response.data.sessionId).toBe('string')
-
-  sessionIdsToCleanup.push(response.data.sessionId)
-
-  return response.data.sessionId
-}
-
-async function joinParticipant(sessionId: string) {
-  let { client } = await TestSuiteSetup.createTestContext()
-  let username = `${SUITE_PREFIX}_participant_${TestToolbox.generateRandomId()}`
-  let password = TestToolbox.DEFAULT_PASSWORD
-  let createResult = await TestSuiteSetup.createTestUser({
-    username,
-    password,
-    accessId: 'student',
-  })
-
-  let loginResponse = await loginUser(client, username, password)
-  let cookieHeader = TestSocketClient.buildCookieHeader(
-    loginResponse.headers['set-cookie'],
-  )
-  let socket = await TestSocketClient.connect(server, cookieHeader)
-
-  socketsToCleanup.push(socket)
-  await TestSocketClient.joinSession(socket, sessionId)
-
-  return {
-    socket,
-    userId: createResult.user._id,
-  }
-}
-
+/**
+ * Launches and starts a session with a single member, then resolves the
+ * force, action, and resource pools that member plays with.
+ * @note Every returned mission object comes from the member's realm, not
+ * from the session's template mission, because the realm copy is what
+ * the server mutates during play.
+ */
 async function prepareExecutionSession(
   options: TPrepareExecutionSessionOptions = {},
 ) {
-  let {
-    customizeMission,
-    sessionConfig = {},
-    memberRole = MemberRole.AVAILABLE_ROLES.participant,
-  } = options
-  let { client: adminClient } = await TestSuiteSetup.createTestContext()
-  let adminUsername = `${SUITE_PREFIX}_admin_${TestToolbox.generateRandomId()}`
-  let adminPassword = TestToolbox.DEFAULT_PASSWORD
+  let { customizeMission, sessionConfig = {}, memberRoleId } = options
 
-  await loginWithAccess(adminClient, 'admin', adminUsername, adminPassword)
+  // A manager is not force-assignable, so it is left unassigned and
+  // observes the session through its complete-visibility subscription.
+  let managed = memberRoleId === MemberRole.AVAILABLE_ROLES.manager._id
 
-  let missionId = await createMission(
-    adminClient,
-    createSocketMissionPayload(customizeMission),
-  )
-  let sessionId = await launchSession(missionId, sessionConfig)
-  let participant = await joinParticipant(sessionId)
-  let session = SessionServer.get(sessionId)
+  let context = await TestSession.launch({
+    namePrefix: SUITE_PREFIX,
+    mission: {
+      customize: (payload) => customizeSocketMission(payload, customizeMission),
+    },
+    config: sessionConfig,
+    members: [{ force: managed ? undefined : 0, role: memberRoleId }],
+    start: true,
+    // The force is revealed below, once resolved, so that it is revealed
+    // for members that have no force of their own.
+    reveal: false,
+  })
 
-  expect(session).toBeTruthy()
+  let [participant] = context.members
+  let realm = participant.member.subscribedRealm
+  let force = participant.member.assignedForce ?? realm.mission.forces[0]
 
-  let force = session!.mission.forces[0]
+  expect(realm).toBeTruthy()
+  expect(force).toBeTruthy()
+
+  force.revealAllNodes = true
+
   let node = force.nodes[1]
   let action = Array.from(node.actions.values())[0]
   let fuelPool = force.resourcePools[0]
   let intelPool = force.resourcePools[1]
-  let member = session!.members.find(
-    (existingMember) => existingMember.userId === participant.userId,
-  )
 
-  expect(force).toBeTruthy()
   expect(node).toBeTruthy()
   expect(action).toBeTruthy()
   expect(fuelPool).toBeTruthy()
   expect(intelPool).toBeTruthy()
-  expect(member).toBeTruthy()
-
-  member!.forceId = force._id
-  member!.role = memberRole
-  force.revealAllNodes = true
-  ;(session as any)._state = 'started'
-
   expect(node.revealed).toBe(true)
 
   return {
     action,
     fuelPool,
     intelPool,
-    member: member!,
-    participant,
     socket: participant.socket,
-    session: session!,
+    realm,
   }
 }
 
@@ -291,7 +189,14 @@ function getCurrentSessionForceResourcePools(
 ) {
   let session = response.data.session
   expect(session).toBeTruthy()
-  let force = Mission.getForceById(session!.mission, forceId)
+
+  // Live gameplay state travels on the requester's subscribed realm.
+  // The session's own `mission` is only the template the realm was
+  // minted from, so its balances never move.
+  let realm = session!.realms[0]
+  expect(realm).toBeTruthy()
+
+  let force = Mission.getForceById(realm.mission, forceId)
   expect(force).toBeTruthy()
   return force!.resourcePools
 }
@@ -313,18 +218,8 @@ function createEventListeners<T extends keyof TServerEvents>(
 }
 
 describe('Action execution resource socket networking', () => {
-  beforeAll(async () => {
-    let context = await TestSuiteSetup.createTestContext()
-
-    server = context.server
-  })
-
   afterEach(() => {
-    for (let socket of socketsToCleanup) {
-      socket.disconnect()
-    }
-
-    socketsToCleanup = []
+    TestSession.disposeAll()
   })
 
   test('deducts included resource costs and emits updated resource pools on action initiation', async () => {
@@ -502,7 +397,7 @@ describe('Action execution resource socket networking', () => {
   test('does not deduct any pool balances when the zeroCost cheat is enabled', async () => {
     let { action, fuelPool, intelPool, socket } = await prepareExecutionSession(
       {
-        memberRole: MemberRole.AVAILABLE_ROLES.manager,
+        memberRoleId: MemberRole.AVAILABLE_ROLES.manager._id,
       },
     )
 
@@ -580,7 +475,7 @@ describe('Action execution resource socket networking', () => {
   test('applies modifyResourceCost changes to subsequent action execution and broadcasts the modifier event', async () => {
     const resourceCostOperand = 10
 
-    let { action, fuelPool, intelPool, session, socket } =
+    let { action, fuelPool, intelPool, realm, socket } =
       await prepareExecutionSession()
 
     let listeners = createEventListeners(socket, [
@@ -589,11 +484,7 @@ describe('Action execution resource socket networking', () => {
     ])
 
     // Triggers a modifier event.
-    session.realms[0].modifyResourceCost(
-      [action],
-      fuelPool.resourceId,
-      resourceCostOperand,
-    )
+    realm.modifyResourceCost([action], fuelPool.resourceId, resourceCostOperand)
 
     let modifierEvent = await listeners['action-resource-cost-updated']
 
@@ -750,24 +641,10 @@ describe('Action execution resource socket networking', () => {
       expectedIntelBalanceAfterDeduction,
     )
   })
-
-  afterAll(async () => {
-    if (sessionIdsToCleanup.length > 0) {
-      let { client } = await TestSuiteSetup.createTestContext()
-      let cleanupUsername = `${SUITE_PREFIX}_cleanup_${TestToolbox.generateRandomId()}`
-      let cleanupPassword = TestToolbox.DEFAULT_PASSWORD
-
-      await loginWithAccess(client, 'admin', cleanupUsername, cleanupPassword)
-
-      for (let sessionId of sessionIdsToCleanup) {
-        await client.delete(`/api/v1/sessions/${sessionId}/`)
-      }
-    }
-  })
 })
 
 type TPrepareExecutionSessionOptions = {
   customizeMission?: (payload: TMissionCreatePayload) => void
   sessionConfig?: Partial<TSessionConfig>
-  memberRole?: MemberRole
+  memberRoleId?: TMemberRoleId
 }
