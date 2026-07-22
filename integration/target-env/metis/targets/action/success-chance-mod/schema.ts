@@ -33,7 +33,7 @@ const SuccessChanceMod = TargetSchema.create({
       tooltipDescription:
         `This allows you to positively or negatively affect the chance of success for all actions within the node. A positive value increases the chance of success, while a negative value decreases the chance of success.\n` +
         `\t\n` +
-        `For example, if the chance of success is 50% and you set the chance of success to +10%, then the chance of success will be 60%.\n` +
+        `For example, entering 11 here will increase a success chance of 50% to 61%.\n` +
         `\t\n` +
         `*Note: If the result is less than 0%, then the chance of success will be 0%. If the result is greater than 100%, then the chance of success will be 100%.*`,
     },
