@@ -54,6 +54,15 @@ export const onRequestConfigUpdate =
         this.name = configUpdates.name
       }
 
+      // Tracks whether the list of members has changed in
+      // any way this update, so that the updated list can
+      // be sent to all of the clients, if so.
+      let membersChanged = false
+
+      // Force participant role in single player.
+      let membersWithNewRoles = this.enforceSinglePlayerRoles()
+      if (membersWithNewRoles.length) membersChanged = true
+
       // Emit an event to all users that the session configuration
       // has been updated.
       this.emitToAll('session-config-updated', {
@@ -82,11 +91,13 @@ export const onRequestConfigUpdate =
           memberToKick.leave()
         }
 
-        // Emit an event to all remaining users that the member
-        // list has changed.
-        if (membersToKick.length) {
-          this.emitMembersUpdated()
-        }
+        if (membersToKick.length) membersChanged = true
+      }
+
+      // Notify all remaining members once if the roster changed as a
+      // result of role coercion and/or owner-only kicks.
+      if (membersChanged) {
+        this.emitMembersUpdated()
       }
     },
   )

@@ -100,6 +100,10 @@
           .Field {
             align-items: start;
             column-gap: 0.5em;
+
+            .Lock {
+              cursor: unset;
+            }
           }
         }
       }

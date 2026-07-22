@@ -16,7 +16,7 @@ Together, these two documents form the complete handoff workflow:
 
 When a user says something like _"create a code handoff for this feature"_, you should:
 
-1. Inspect the recent git changes (staged, unstaged, and recent commits) to identify which files are relevant to the feature.
+1. Inspect the git changes (staged, unstaged, and commits) to identify which files are relevant to the feature. The changes may have been made very recently, or they may already be a couple of months old. Navigate as far back as deemed necessary to understand the full scope of the feature.
 2. Analyze the changed files to understand the shape of the feature.
 3. Produce a handoff document in the `handoffs/` directory at the project root.
 
@@ -214,6 +214,7 @@ The title should name the feature concisely followed by `— Code Handoff`.
 - Manual testing and automated testing may overlap, but the report should still document them separately. The Manual Tests section records execution of the handoff's manual QA checklist, and the Automatic Tests section records the status of the original handoff's requested automated coverage, any broken pre-existing suites affected by the feature, any new tests written, and any additional advisory test suggestions.
 - The Manual Tests section of a handoff report must copy the manual test checklist from the original handoff verbatim, with each item preserved as an unchecked checkbox for the reviewing engineer to work through. Do not replace the list with placeholder prose or a "reserved" note.
 - If the original handoff explicitly stated that no manual testing was required (e.g. "Manual UI validation is intentionally skipped for this feature"), the report's Manual Tests section must reflect that directly with a single sentence such as "No manual testing was required for this handoff." Do not use the generic reserved-section boilerplate in that case.
+- Likewise, if the original handoff explicitly stated that no automated tests were required, the report's Automatic Tests section must reflect that directly with a single sentence such as "No automated tests were required for this handoff." Do not treat the absence of requested tests as a coverage gap.
 - The report should be updated as work progresses. It does not need to be written only once at the end.
 - If both documents exist, the handoff remains the request for review work, and the handoff report becomes the record of completed review work.
 
@@ -226,6 +227,10 @@ The title should name the feature concisely followed by `— Code Handoff`.
 
 ## Automatic Tests - Write Repeatable Jest Tests
 
+- Automated tests are reserved for critical functionality — behavior whose failure would be a big problem: security boundaries (e.g. data leaking across permission or visibility lines), corruption or loss of persisted data, or server crashes. We minimize test overhead, so do not request a test for every behavior; keep the requested list scoped to the things that really matter.
+- Presentation-layer and convenience behavior (rendering, styling, ordering, expansion state, and similar) is verified through the manual test checklist, not through Jest tests.
+- If a feature has no critical surface, the section should state explicitly that no automated tests are required — with a brief reason — rather than listing low-value cases.
+- When tests are requested, a short note at the top of the section may explain what was deliberately left untested so the reviewer knows the narrow scope is intentional and not an oversight.
 - Group test cases under a `###` heading named after the class or component being tested.
 - Each bullet is a single concrete test case — specific enough that a developer can write it without guessing.
 - Focus on public API surface: constructors, static methods, public methods, props, rendered output, and user interactions.

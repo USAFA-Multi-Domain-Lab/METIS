@@ -494,6 +494,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       launchedAt: this.launchedAt.toISOString(),
       config: this.config,
       participantIds: this.participants.map(({ userId: userId }) => userId),
+      limitedObserverIds: this.limitedObservers.map(
+        ({ userId: userId }) => userId,
+      ),
       observerIds: this.observers.map(({ userId: userId }) => userId),
       managerIds: this.managers.map(({ userId: userId }) => userId),
       joinedMemberCount: this.joinedMembers.length,
@@ -1035,6 +1038,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // below treats them as assigned); in multiplayer it is the single
     // shared realm.
     if (this.config.mode === 'single-player') {
+      this.enforceSinglePlayerRoles()
       this.spawnSinglePlayerRealms()
       this.enforceSinglePlayerTargetEnvs()
     } else {
@@ -1097,6 +1101,26 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       }
     }
     this._config.disabledTargetEnvs = [...disabled]
+  }
+
+  /**
+   * In single-player mode, converts every limited observer into a
+   * participant. A limited observer is routed to a dedicated,
+   * do-nothing realm, which is meaningless in single-player where every
+   * participant already has their own isolated realm; rather than mint
+   * that dead realm, the member is switched to a playable participant.
+   * @returns The members whose role was changed, so callers can decide
+   * whether to notify clients of the updated roster.
+   * @note A no-op outside single-player mode.
+   */
+  protected enforceSinglePlayerRoles(): ServerSessionMember[] {
+    if (this.config.mode !== 'single-player') return []
+
+    let changed = this.limitedObservers
+    for (let member of changed) {
+      member.assignToRole('participant')
+    }
+    return changed
   }
 
   /**

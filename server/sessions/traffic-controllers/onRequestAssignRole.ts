@@ -49,6 +49,17 @@ export const onRequestAssignRole =
           ),
         )
       }
+      // Limited observer is not a valid role in a single-player
+      // session (its members would be routed to a dead, do-nothing
+      // realm), so reject the assignment. Guards against a manager's
+      // stale dropdown racing a switch to single-player mode.
+      if (this.config.mode === 'single-player' && roleId === 'observer_limited') {
+        return member.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
+            request,
+          }),
+        )
+      }
 
       targetMember.assignToRole(roleId)
 

@@ -49,6 +49,17 @@ export const onRequestAssignForce =
         )
       }
 
+      // A single-player session routes every participant to the
+      // configured force at start, so an explicit force assignment is
+      // not allowed.
+      if (this.config.mode === 'single-player') {
+        return member.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
+            request,
+          }),
+        )
+      }
+
       // If a force ID was provided but it does not correspond to
       // a force in the session's mission, then emit an error.
       if (forceId !== null && !this.mission.getForceById(forceId)) {

@@ -154,6 +154,13 @@ export abstract class MissionSession<
   }
 
   /**
+   * The session members with the 'observer_limited' role.
+   */
+  public get limitedObservers(): TMember<T>[] {
+    return this._members.filter(({ role }) => role._id === 'observer_limited')
+  }
+
+  /**
    * The session members with the 'observer' role.
    */
   public get observers(): TMember<T>[] {
@@ -801,6 +808,10 @@ export type TSessionBasicJson = {
    * The IDs of the participants of the session.
    */
   participantIds: string[]
+  /**
+   * The IDs of the limited-observers of the session.
+   */
+  limitedObserverIds: string[]
   /**
    * The IDs of the observers of the session.
    */

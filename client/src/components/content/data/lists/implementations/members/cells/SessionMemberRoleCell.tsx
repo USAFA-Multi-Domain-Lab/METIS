@@ -1,3 +1,4 @@
+import { DetailLocked } from '@client/components/content/form/DetailLocked'
 import { DetailDropdown } from '@client/components/content/form/dropdowns/standard/DetailDropdown'
 import { useGlobalContext } from '@client/context/global'
 import type { ClientSessionMember } from '@client/sessions/ClientSessionMember'
@@ -36,6 +37,21 @@ export default function SessionMemberRoleCell({
    * be shown.
    */
   const showRoleDropdown: boolean = shouldShowRoleDropdown(member, session)
+
+  /**
+   * Whether to render the member's role as a locked field,
+   * rather than a dropdown or plain text. This is true when
+   * the session is in single-player mode and the member is
+   * role-assignable.
+   */
+  const showLockedRole: boolean =
+    member.isAuthorized('roleAssignable') &&
+    currentMember.isAuthorized('manageSessionMembers') &&
+    session.state === 'unstarted' &&
+    !member.isAuthorized('completeVisibility') &&
+    currentMember.isAuthorized('completeVisibility') &&
+    session.config.mode === 'single-player' &&
+    !member.banned
 
   /* -- HOOKS -- */
 
@@ -98,6 +114,17 @@ export default function SessionMemberRoleCell({
       />
     )
   }
+  // In single-player mode, a role-assignable member is always a
+  // participant; show it as a locked field to the manager, matching
+  // the locked single-player force cell.
+  else if (showLockedRole) {
+    return (
+      <DetailLocked
+        label={null}
+        value={MemberRole.AVAILABLE_ROLES.participant.name}
+      />
+    )
+  }
 
   // Else, render the role name.
   return <span>{member.role.name}</span>
@@ -123,6 +150,7 @@ export function shouldShowRoleDropdown(
     session.state === 'unstarted' &&
     !member.isAuthorized('completeVisibility') &&
     currentMember.isAuthorized('completeVisibility') &&
+    session.config.mode !== 'single-player' &&
     !member.banned
   )
 }
