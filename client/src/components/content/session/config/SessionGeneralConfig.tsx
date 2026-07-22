@@ -47,6 +47,12 @@ export default function SessionGeneralConfig({
   /* -- COMPUTED -- */
 
   let defaultForceId = mission.forces[0]._id
+  let accessibilityOptions: TSessionConfig['accessibility'][] = [
+    'public',
+    'id-required',
+  ]
+  // Owner-only isn't currently available in the lobby, but it still can be theoretically set.
+  if (accessibility === 'owner-only') accessibilityOptions.push('owner-only')
 
   /* -- EFFECTS -- */
 
@@ -96,7 +102,7 @@ export default function SessionGeneralConfig({
       return (
         <DetailDropdown<TSessionConfig['accessibility']>
           label='Accessibility'
-          options={['public', 'id-required', 'owner-only']}
+          options={accessibilityOptions}
           value={accessibility}
           setValue={setAccessibility}
           disabled={disabled}
