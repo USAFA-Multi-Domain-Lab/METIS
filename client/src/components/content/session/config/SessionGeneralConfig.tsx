@@ -51,7 +51,11 @@ export default function SessionGeneralConfig({
     'public',
     'id-required',
   ]
-  // Owner-only isn't currently available in the lobby, but it still can be theoretically set.
+  // Owner-only isn't currently available in the lobby,
+  // but it still can be theoretically set. If reenabled,
+  // a bug will need to be fixed related to the single-player
+  // force dropdown not disappearing when the session is set
+  // to owner-only.
   if (accessibility === 'owner-only') accessibilityOptions.push('owner-only')
 
   /* -- EFFECTS -- */
