@@ -91,7 +91,6 @@ export function useSessionRedirects(
       'session-starting',
       'session-started',
       'session-ending',
-      'session-ended',
       'session-destroyed',
       'session-resetting',
       'session-reset',
