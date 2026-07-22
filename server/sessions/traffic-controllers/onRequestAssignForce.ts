@@ -49,10 +49,10 @@ export const onRequestAssignForce =
         )
       }
 
-      // A single-player session routes every participant to the
+      // A standalone session routes every participant to the
       // configured force at start, so an explicit force assignment is
       // not allowed.
-      if (this.config.mode === 'single-player') {
+      if (this.config.mode === 'standalone') {
         return member.emitError(
           new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
             request,

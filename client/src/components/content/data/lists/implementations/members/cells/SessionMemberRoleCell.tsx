@@ -41,7 +41,7 @@ export default function SessionMemberRoleCell({
   /**
    * Whether to render the member's role as a locked field,
    * rather than a dropdown or plain text. This is true when
-   * the session is in single-player mode and the member is
+   * the session is in standalone mode and the member is
    * role-assignable.
    */
   const showLockedRole: boolean =
@@ -50,7 +50,7 @@ export default function SessionMemberRoleCell({
     session.state === 'unstarted' &&
     !member.isAuthorized('completeVisibility') &&
     currentMember.isAuthorized('completeVisibility') &&
-    session.config.mode === 'single-player' &&
+    session.config.mode === 'standalone' &&
     !member.banned
 
   /* -- HOOKS -- */
@@ -114,9 +114,9 @@ export default function SessionMemberRoleCell({
       />
     )
   }
-  // In single-player mode, a role-assignable member is always a
+  // In standalone mode, a role-assignable member is always a
   // participant; show it as a locked field to the manager, matching
-  // the locked single-player force cell.
+  // the locked standalone force cell.
   else if (showLockedRole) {
     return (
       <DetailLocked
@@ -150,7 +150,7 @@ export function shouldShowRoleDropdown(
     session.state === 'unstarted' &&
     !member.isAuthorized('completeVisibility') &&
     currentMember.isAuthorized('completeVisibility') &&
-    session.config.mode !== 'single-player' &&
+    session.config.mode !== 'standalone' &&
     !member.banned
   )
 }

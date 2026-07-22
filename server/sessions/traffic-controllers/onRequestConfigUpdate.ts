@@ -59,8 +59,8 @@ export const onRequestConfigUpdate =
       // be sent to all of the clients, if so.
       let membersChanged = false
 
-      // Force participant role in single player.
-      let membersWithNewRoles = this.enforceSinglePlayerRoles()
+      // Force participant role in standalone.
+      let membersWithNewRoles = this.enforceStandaloneRoles()
       if (membersWithNewRoles.length) membersChanged = true
 
       // Emit an event to all users that the session configuration

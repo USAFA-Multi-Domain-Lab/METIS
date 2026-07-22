@@ -567,7 +567,7 @@ export abstract class MissionSession<
    * The available play modes for a session.
    */
   public static get AVAILABLE_MODES(): TSessionMode[] {
-    return ['multiplayer', 'single-player']
+    return ['multiplayer', 'standalone']
   }
 
   /**
@@ -575,8 +575,8 @@ export abstract class MissionSession<
    * self-consistent, returning a corrected copy. Currently this enforces
    * that an owner-only session is always multiplayer: because only the
    * owner (a complete-visibility manager, never a participant) may join
-   * such a session, single-player would have no participants to mint
-   * realms for and would start blank. The single-player force is cleared
+   * such a session, standalone would have no participants to mint
+   * realms for and would start blank. The standalone force is cleared
    * alongside the mode so no stale selection is retained.
    * @param config The configuration to normalize.
    * @returns A normalized copy of the configuration.
@@ -585,7 +585,7 @@ export abstract class MissionSession<
     let normalized = { ...config }
     if (normalized.accessibility === 'owner-only') {
       normalized.mode = 'multiplayer'
-      normalized.singlePlayerForceId = undefined
+      normalized.standaloneForceId = undefined
     }
     return normalized
   }
@@ -610,9 +610,9 @@ export type TSessionAccessibility =
 /**
  * The play mode of a session.
  * @option 'multiplayer' Participants share one realm.
- * @option 'single-player' Each participant gets their own realm.
+ * @option 'standalone' Each participant gets their own realm.
  */
-export type TSessionMode = 'multiplayer' | 'single-player'
+export type TSessionMode = 'multiplayer' | 'standalone'
 
 /**
  * Configuration options for a session, customizing the experience.
@@ -628,19 +628,19 @@ export type TSessionConfig = {
    * @option 'multiplayer' Every participant shares a single realm
    * (a full copy of the launched mission). This is the default and
    * matches the historical behavior.
-   * @option 'single-player' Each participant gets their own realm
+   * @option 'standalone' Each participant gets their own realm
    * containing only the selected force, isolating their play.
    * @default 'multiplayer'
    */
   mode: TSessionMode
   /**
    * The ID of the force each participant plays when the session is
-   * in single-player mode.
-   * @note Required when `mode` is `'single-player'`; ignored
+   * in standalone mode.
+   * @note Required when `mode` is `'standalone'`; ignored
    * otherwise.
    * @default null
    */
-  singlePlayerForceId?: string
+  standaloneForceId?: string
   /**
    * Whether the session is a throwaway play-test launched by its
    * owner to try out a mission.

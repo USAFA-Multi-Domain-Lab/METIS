@@ -60,7 +60,7 @@ export class TargetEnvSchema {
 
   /**
    * Whether the environment supports a session running multiple
-   * realms (single-player) against it simultaneously.
+   * realms (standalone) against it simultaneously.
    * @note Absent in the manifest means `false`.
    */
   private _multiRealmSupport: boolean

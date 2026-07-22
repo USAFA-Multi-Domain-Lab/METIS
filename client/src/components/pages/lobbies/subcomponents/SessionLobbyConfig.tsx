@@ -59,18 +59,18 @@ export default function SessionConfigMenu({
       }
     }
 
-    // Switching to single-player converts any limited observers into
-    // participants (single-player has no place for them), performed
+    // Switching to standalone converts any limited observers into
+    // participants (standalone has no place for them), performed
     // server-side; confirm with the actor first.
     if (
-      updates.mode === 'single-player' &&
-      session.config.mode !== 'single-player'
+      updates.mode === 'standalone' &&
+      session.config.mode !== 'standalone'
     ) {
       let { limitedObservers } = session
 
       if (limitedObservers.length) {
         let observerCount = `${limitedObservers.length} limited observer${s(limitedObservers.length)}`
-        let confirmation = `Switching to \`Single-player\` will change ${observerCount} to participants. Continue?`
+        let confirmation = `Switching to \`Standalone\` will change ${observerCount} to participants. Continue?`
 
         let { choice } = await prompt(confirmation, Prompt.ConfirmationChoices)
         if (choice === 'Cancel') return false

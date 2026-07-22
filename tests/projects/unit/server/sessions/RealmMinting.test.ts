@@ -19,7 +19,7 @@ jest.mock('@server/logging', () => ({
 
 /**
  * Builds a copy of the given mission containing only the given force,
- * mirroring the single-player realm-minting path in `SessionServer`.
+ * mirroring the standalone realm-minting path in `SessionServer`.
  */
 function mintForceMission(
   template: ServerMission,
@@ -38,7 +38,7 @@ let fixture = JSON.parse(
   readFileSync(join(__dirname, 'fixtures/tests-mission.import.json'), 'utf8'),
 )
 
-describe('Single-player realm minting (force stripping)', () => {
+describe('Standalone realm minting (force stripping)', () => {
   test('the fixture template has multiple forces', () => {
     let template = ServerMission.fromSaveJson(fixture)
     expect(template.forces.length).toBeGreaterThan(1)

@@ -41,7 +41,7 @@ export abstract class TargetEnvironment<
     public targets: T['target'][] = [],
     /**
      * Whether the environment supports a session running multiple
-     * realms (such as single-player) against it simultaneously.
+     * realms (such as standalone) against it simultaneously.
      * @note Absent in a manifest means `false`. Environments that do
      * not support this are automatically disabled in multi-realm
      * sessions so they cannot collide across realms.
@@ -156,7 +156,7 @@ export interface TTargetEnvJson {
   version: string
   /**
    * Whether the environment supports a session running multiple
-   * realms (single-player) against it simultaneously.
+   * realms (standalone) against it simultaneously.
    * @default false
    */
   multiRealmSupport?: boolean

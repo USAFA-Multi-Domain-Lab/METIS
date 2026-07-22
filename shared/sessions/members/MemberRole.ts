@@ -134,7 +134,7 @@ export class MemberRole implements TGenericMemberRole {
 
   /**
    * All member roles that a manager may assign in a session.
-   * @note In single-player mdode, this will be limited to
+   * @note In standalone mdode, this will be limited to
    * participant only.
    */
   public static readonly ASSIGNABLE_ROLES: MemberRole[] = [
