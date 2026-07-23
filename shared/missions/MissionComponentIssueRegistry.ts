@@ -192,13 +192,13 @@ export class MissionComponentIssueRegistry implements TListenerTargetEmittable<T
   }
 
   /**
-   * Returns all issues currently registered for the provided component.
    * @param component The component to retrieve issues for.
+   * @returns all issues currently registered for the provided component.
    */
   public getComponentIssues<TComponent extends MissionComponent<any, any>>(
     component: TComponent,
   ): MissionComponentIssue<TComponent>[] {
-    return this._issues.get(component) ?? []
+    return [...(this._issues.get(component) ?? [])]
   }
 
   /**

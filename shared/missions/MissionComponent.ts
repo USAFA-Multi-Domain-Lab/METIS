@@ -101,12 +101,21 @@ export abstract class MissionComponent<
     return false
   }
 
-  // Overridden
+  /**
+   * Overridden implementation of {@link MetisComponent.warningText}.
+   * @note Warning text will not only display the issues of this component,
+   * but also the issues of any sub-components that use subentries. This means
+   * that technically, this component may have no issues, but still show a
+   * warning text if one of its sub-components has an issue and uses a subentry.
+   */
   public override get warningText(): string {
     let superText = super.warningText
     if (superText) return superText
 
-    let issues = this.issues
+    let issues: MissionComponentIssue<any>[] = this.issues
+    for (let subComponent of this.subComponents) {
+      if (subComponent.usesSubentry) issues.push(...subComponent.issues)
+    }
     if (!issues.length) return ''
     let result = issues[0].message
     if (issues.length > 1) {
