@@ -34,6 +34,54 @@ const METADATA_KEY_SETS = [
   new Set(['fileId', 'fileName']),
 ]
 
+// Maximum number of unresolved references listed individually in the
+// migration output. mongosh stdout is captured through a fixed buffer by
+// the process that runs this build, so the detail list is capped while
+// the summary count stays complete.
+const UNRESOLVED_DETAIL_LIMIT = 50
+
+let unresolvedReferenceCount = 0
+let unresolvedReferenceDetails = []
+
+// Returns the component type the legacy metadata was pointing at, based on
+// the most specific key it carries. Used to detect when a lookup failed and
+// buildMissionComponentValue fell back to an ancestor component.
+function expectedComponentType(object) {
+  if (object.actionKey) return 'action'
+  else if (object.poolKey) return 'resourcePool'
+  else if (object.nodeKey) return 'node'
+  else if (object.forceKey) return 'force'
+  else if (object.fileId) return 'missionFile'
+  else if (object.resourceId) return 'resource'
+  else return null
+}
+
+// Records a mission component reference that did not resolve to the
+// component it named. The original metadata is included because the
+// effect's args record is deleted by this migration, leaving this output as
+// the only record of what the effect used to point at.
+function recordUnresolvedReference(
+  mission,
+  effect,
+  parameterId,
+  metadata,
+  expectedType,
+  resolvedType,
+) {
+  unresolvedReferenceCount++
+
+  if (unresolvedReferenceDetails.length < UNRESOLVED_DETAIL_LIMIT) {
+    let outcome = resolvedType
+      ? `expected ${expectedType}, resolved ${resolvedType} only`
+      : `expected ${expectedType}, nothing resolved`
+
+    unresolvedReferenceDetails.push(
+      `  mission ${mission._id} / effect ${effect._id} / ` +
+        `parameter "${parameterId}" - ${JSON.stringify(metadata)} - ${outcome}`,
+    )
+  }
+}
+
 // Returns true if value matches one of the 6 old mission-component
 // metadata shapes: non-null non-array object, at least one key, every
 // value a string, and every key present in a single known key set.
@@ -56,7 +104,11 @@ function inferArgumentType(value) {
 
 // Converts an old-style mission component metadata object into the new
 // TMissionComponentSerializedSelection[] format by resolving localKeys
-// against the mission document. Returns an empty array if any lookup fails.
+// against the mission document.
+//
+// Returns the selections alongside the most specific component that actually
+// resolved, so a failed lookup can report how far it got before running out
+// of matches.
 function buildMissionComponentValue(
   mission,
   object,
@@ -103,54 +155,72 @@ function buildMissionComponentValue(
     })
   }
 
-  // Format and return results.
-  if (action) {
-    return [
-      {
-        componentType: 'action',
-        lastKnownName: action.name,
-        ids: [force._id, node._id, action._id],
-      },
-    ]
-  }
-  if (pool) {
-    let resourceName =
-      mission.resources.find((resource) => {
-        return resource._id === pool.resourceId
-      })?.name ?? 'Unknown Resource'
-    return [
-      {
-        componentType: 'resourcePool',
-        lastKnownName: resourceName,
-        ids: [force._id, pool._id],
-      },
-    ]
-  }
-  if (node) {
-    return [
-      {
-        componentType: 'node',
-        lastKnownName: node.name,
-        ids: [force._id, node._id],
-      },
-    ]
-  }
-  if (force) {
-    return [
-      { componentType: 'force', lastKnownName: force.name, ids: [force._id] },
-    ]
-  }
-  if (object.fileId) {
-    return [
+  // The most specific component that resolved, regardless of which one the
+  // metadata actually named.
+  let resolvedType = null
+
+  if (action) resolvedType = 'action'
+  else if (pool) resolvedType = 'resourcePool'
+  else if (node) resolvedType = 'node'
+  else if (force) resolvedType = 'force'
+
+  // Format results. Each branch keys off the component the metadata named,
+  // and the guard for a missing match is nested inside it rather than folded
+  // into the condition. Folding it in would let a failed action lookup fall
+  // through to the nodeKey branch its own metadata also carries, silently
+  // retargeting the effect at a broader component than it pointed at before.
+  let selections = []
+
+  if (object.actionKey) {
+    if (action) {
+      selections = [
+        {
+          componentType: 'action',
+          lastKnownName: action.name,
+          ids: [force._id, node._id, action._id],
+        },
+      ]
+    }
+  } else if (object.poolKey) {
+    if (pool) {
+      let resourceName =
+        mission.resources.find((resource) => {
+          return resource._id === pool.resourceId
+        })?.name ?? 'Unknown Resource'
+      selections = [
+        {
+          componentType: 'resourcePool',
+          lastKnownName: resourceName,
+          ids: [force._id, pool._id],
+        },
+      ]
+    }
+  } else if (object.nodeKey) {
+    if (node) {
+      selections = [
+        {
+          componentType: 'node',
+          lastKnownName: node.name,
+          ids: [force._id, node._id],
+        },
+      ]
+    }
+  } else if (object.forceKey) {
+    if (force) {
+      selections = [
+        { componentType: 'force', lastKnownName: force.name, ids: [force._id] },
+      ]
+    }
+  } else if (object.fileId) {
+    selections = [
       {
         componentType: 'missionFile',
         lastKnownName: object.fileName ?? '',
         ids: [object.fileId],
       },
     ]
-  }
-  if (object.resourceId) {
-    return [
+  } else if (object.resourceId) {
+    selections = [
       {
         componentType: 'resource',
         lastKnownName: object.resourceName ?? '',
@@ -158,30 +228,8 @@ function buildMissionComponentValue(
       },
     ]
   }
-  return []
-}
 
-// Converts argument value to a new format,
-// if a new format is needed.
-function migrateArgumentValue(
-  mission,
-  type,
-  value,
-  sourceForce = null,
-  sourceNode = null,
-  sourceAction = null,
-) {
-  if (type === 'mission-component') {
-    return buildMissionComponentValue(
-      mission,
-      value,
-      sourceForce,
-      sourceNode,
-      sourceAction,
-    )
-  } else {
-    return value
-  }
+  return { selections, resolvedType }
 }
 
 // Converts effect args to the updated
@@ -196,18 +244,37 @@ function convertEffectArgs(
   let record = effect.args
   effect['arguments'] = Object.entries(record).map(([parameterId, value]) => {
     let type = inferArgumentType(value)
-    return {
-      _id: crypto.randomUUID(),
-      parameterId,
-      type,
-      value: migrateArgumentValue(
+    let migratedValue = value
+
+    if (isMissionComponentMetadata(value)) {
+      let resolution = buildMissionComponentValue(
         mission,
-        type,
         value,
         sourceForce,
         sourceNode,
         sourceAction,
-      ),
+      )
+      migratedValue = resolution.selections
+
+      // The effect targeted a component that no longer exists. Report it,
+      // since the args record naming it is deleted below.
+      if (resolution.selections.length === 0) {
+        recordUnresolvedReference(
+          mission,
+          effect,
+          parameterId,
+          value,
+          expectedComponentType(value),
+          resolution.resolvedType,
+        )
+      }
+    }
+
+    return {
+      _id: crypto.randomUUID(),
+      parameterId,
+      type,
+      value: migratedValue,
     }
   })
   delete effect.args
@@ -248,6 +315,26 @@ while (cursorMissions.hasNext()) {
 }
 
 print('Migration complete.')
+
+if (unresolvedReferenceCount > 0) {
+  print(
+    `Warning: ${unresolvedReferenceCount} mission component reference(s) did ` +
+      'not resolve to the component they named. The effects below now target ' +
+      'nothing and must be reconfigured by hand.',
+  )
+
+  for (let detail of unresolvedReferenceDetails) {
+    print(detail)
+  }
+
+  let truncatedCount =
+    unresolvedReferenceCount - unresolvedReferenceDetails.length
+
+  if (truncatedCount > 0) {
+    print(`  ...and ${truncatedCount} more (truncated).`)
+  }
+}
+
 print('Updating schema build number...')
 
 db.infos.updateOne({}, { $set: { schemaBuildNumber: 58 } })
