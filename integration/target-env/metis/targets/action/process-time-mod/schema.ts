@@ -59,9 +59,9 @@ const ProcessTimeMod = TargetSchema.create({
       tooltipDescription:
         `This allows you to offset the process time for all actions within the selected component range. A positive value increases the process time, while a negative value decreases the process time.\n` +
         `\t\n` +
-        `For example, if 1 is entered here and the process time for any given action is 1h, then the process time will be 2h.\n` +
+        `For example, entering 1 here will change a process time of 0h 3m 59s to 1h 3m 59s.\n` +
         `\t\n` +
-        `*Note: If the result is less than 0h, then the process time will be 0h. If the result is greater than 1h, then the process time will be 1h.*`,
+        `*Note: A guard is in place which prevents the resulting process time from becoming less than 0 or greater than 1h 59m 59s.*`,
     },
     {
       type: 'number',
@@ -76,9 +76,9 @@ const ProcessTimeMod = TargetSchema.create({
       tooltipDescription:
         `This allows you to positively or negatively affect the process time for all selected actions. A positive value increases the process time, while a negative value decreases the process time.\n` +
         `\t\n` +
-        `For example, if the process time is 1m and you set the process time to +10m, then the process time will be 11m.\n` +
+        `For example, entering 10 here will change a process time of 0h 3m 50s to 0h 13m 50s.\n` +
         `\t\n` +
-        `*Note: If the result is less than 0m, then the process time will be 0m. If the result is greater than 59m, then the process time will be 59m.*`,
+        `*Note: A guard is in place which prevents the resulting process time from becoming less than 0 or greater than 1h 59m 59s.*`,
     },
     {
       type: 'number',
@@ -93,9 +93,9 @@ const ProcessTimeMod = TargetSchema.create({
       tooltipDescription:
         `This allows you to positively or negatively affect the process time for all selected actions. A positive value increases the process time, while a negative value decreases the process time.\n` +
         `\t\n` +
-        `For example, if the process time is 60s and you set the process time to +10s, then the process time will be 70s.\n` +
+        `For example, entering 15 here will change a process time of 0h 3m 50s to 0h 4m 5s.\n` +
         `\t\n` +
-        `*Note: If the result is less than 0s, then the process time will be 0s. If the result is greater than 59s, then the process time will be 59s.*`,
+        `*Note: A guard is in place which prevents the resulting process time from becoming less than 0 or greater than 1h 59m 59s.*`,
     },
   ],
   migrations,

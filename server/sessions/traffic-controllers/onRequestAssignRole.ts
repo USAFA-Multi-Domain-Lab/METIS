@@ -49,6 +49,17 @@ export const onRequestAssignRole =
           ),
         )
       }
+      // Limited observer is not a valid role in a standalone
+      // session (its members would be routed to a dead, do-nothing
+      // realm), so reject the assignment. Guards against a manager's
+      // stale dropdown racing a switch to standalone mode.
+      if (this.config.mode === 'standalone' && roleId === 'observer_limited') {
+        return member.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
+            request,
+          }),
+        )
+      }
 
       targetMember.assignToRole(roleId)
 

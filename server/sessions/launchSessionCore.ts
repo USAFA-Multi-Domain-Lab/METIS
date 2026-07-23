@@ -36,20 +36,20 @@ export async function launchSessionCore(
   // Create mission and launch the session.
   let mission = ServerMission.fromSaveJson(missionDoc.toJSON())
 
-  // A single-player session must have a valid force configured, as
+  // A standalone session must have a valid force configured, as
   // each participant's realm is built from it. Reject the launch
   // rather than allowing a session that cannot be started.
-  if (config.mode === 'single-player') {
-    if (!config.singlePlayerForceId) {
+  if (config.mode === 'standalone') {
+    if (!config.standaloneForceId) {
       throw new LaunchSessionError(
         'invalid-config',
-        'A single-player session requires a configured force.',
+        'A standalone session requires a configured force.',
       )
     }
-    if (!mission.getForceById(config.singlePlayerForceId)) {
+    if (!mission.getForceById(config.standaloneForceId)) {
       throw new LaunchSessionError(
         'invalid-config',
-        `Force with ID "${config.singlePlayerForceId}" was not found in the mission.`,
+        `Force with ID "${config.standaloneForceId}" was not found in the mission.`,
       )
     }
   }

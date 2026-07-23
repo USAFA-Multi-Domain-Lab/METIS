@@ -114,6 +114,9 @@ export class SessionBasic
   public participantIds: string[]
 
   // Implemented
+  public limitedObserverIds: string[]
+
+  // Implemented
   public observerIds: string[]
 
   // Implemented
@@ -139,6 +142,7 @@ export class SessionBasic
   public get memberCount(): number {
     return (
       this.participantIds.length +
+      this.limitedObserverIds.length +
       this.observerIds.length +
       this.managerIds.length
     )
@@ -158,6 +162,7 @@ export class SessionBasic
     this.launchedAt = new Date(data.launchedAt)
     this.config = data.config
     this.participantIds = data.participantIds
+    this.limitedObserverIds = data.limitedObserverIds
     this.observerIds = data.observerIds
     this.managerIds = data.managerIds
     this.joinedMemberCount = data.joinedMemberCount
@@ -185,6 +190,7 @@ export class SessionBasic
       state: 'started',
       launchedAt: new Date().toISOString(),
       participantIds: [],
+      limitedObserverIds: [],
       observerIds: [],
       managerIds: [],
       joinedMemberCount: 0,

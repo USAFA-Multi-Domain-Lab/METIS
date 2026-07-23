@@ -4,31 +4,24 @@
   display: grid;
   grid-template-columns: auto 1fr;
   column-gap: 0.25em;
-  align-items: center;
+  align-items: start;
 
-  .BackButton {
-    border: 2px solid $color-primary-light;
-    border-radius: 50%;
-    background-color: $color-accent-dark;
-    text-align: center;
-    width: 22px;
-    height: 22px;
-    font-size: 1.1em;
-    font-weight: bold;
-    user-select: none;
-    cursor: pointer;
+  .ButtonSvgPanel,
+  .ButtonSvg {
+    // height: 100%;
+    .ButtonIcon {
+      position: relative;
+      bottom: 4px;
+    }
   }
 
   .Path {
+    display: grid;
+    grid-template-columns: 3.75em 1fr;
+    // align-items: center;
     margin: 0;
     font-size: 0.75em;
     width: 97%;
-    max-height: 50px;
-    display: -webkit-box;
-    display: block;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
     word-break: break-all;

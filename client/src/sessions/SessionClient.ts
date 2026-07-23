@@ -438,6 +438,9 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       launchedAt: this.launchedAt.toISOString(),
       config: this.config,
       participantIds: this.participants.map(({ _id: memberId }) => memberId),
+      limitedObserverIds: this.limitedObservers.map(
+        ({ _id: memberId }) => memberId,
+      ),
       observerIds: this.observers.map(({ _id: memberId }) => memberId),
       managerIds: this.managers.map(({ _id: memberId }) => memberId),
       joinedMemberCount: this.joinedMembers.length,

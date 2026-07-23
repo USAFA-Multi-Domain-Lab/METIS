@@ -494,6 +494,9 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       launchedAt: this.launchedAt.toISOString(),
       config: this.config,
       participantIds: this.participants.map(({ userId: userId }) => userId),
+      limitedObserverIds: this.limitedObservers.map(
+        ({ userId: userId }) => userId,
+      ),
       observerIds: this.observers.map(({ userId: userId }) => userId),
       managerIds: this.managers.map(({ userId: userId }) => userId),
       joinedMemberCount: this.joinedMembers.length,
@@ -829,11 +832,11 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       return false
     }
 
-    // A single-player session mints one realm per participant, so
+    // A standalone session mints one realm per participant, so
     // starting one with no participants would produce a blank session
     // with nothing to play. Reject the start rather than allow that.
     if (
-      this.config.mode === 'single-player' &&
+      this.config.mode === 'standalone' &&
       !this.hasForceAssignableMembers
     ) {
       member.emitError(
@@ -964,34 +967,34 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
   /**
    * Spawns one realm per participant/participant-observer for a
-   * single-player session, each containing only the configured
+   * standalone session, each containing only the configured
    * force, and assigns each member to their realm.
    */
-  private spawnSinglePlayerRealms(): void {
-    let singlePlayerForceId = this.config.singlePlayerForceId
-    if (!singlePlayerForceId) {
+  private spawnStandaloneRealms(): void {
+    let standaloneForceId = this.config.standaloneForceId
+    if (!standaloneForceId) {
       throw new Error(
-        'Cannot mint single-player realms without a configured force.',
+        'Cannot mint standalone realms without a configured force.',
       )
     }
 
     this._realms = []
 
     // Only force-assignable members are assigned to realms in
-    // single-player mode.
+    // standalone mode.
     for (let member of this.forceAssignableMembers) {
       let realm = ServerSessionRealm.createNew(member.username, this, {
         missionMintOptions: {
           forceExposure: {
             expose: 'force-with-all-nodes',
-            forceId: singlePlayerForceId,
+            forceId: standaloneForceId,
           },
           fileExposure: { expose: 'all' },
           rootEffectsExposure: { expose: 'all' },
         },
       })
 
-      member.assignToForce(singlePlayerForceId)
+      member.assignToForce(standaloneForceId)
       member.assignToRealm(realm._id)
       member.subscribeToRealm(realm)
 
@@ -1030,13 +1033,14 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    */
   protected initializeMode(): void {
     // Create the realms now that the participant roster is known. In
-    // single-player this is one realm per participant (which also
+    // standalone this is one realm per participant (which also
     // assigns every participant a force/realm, so the dismissal check
     // below treats them as assigned); in multiplayer it is the single
     // shared realm.
-    if (this.config.mode === 'single-player') {
-      this.spawnSinglePlayerRealms()
-      this.enforceSinglePlayerTargetEnvs()
+    if (this.config.mode === 'standalone') {
+      this.enforceStandaloneRoles()
+      this.spawnStandaloneRealms()
+      this.enforceStandaloneTargetEnvs()
     } else {
       this.spawnMultiplayerRealm()
     }
@@ -1081,14 +1085,14 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
-   * In single-player mode, locks every target environment used by the
+   * In standalone mode, locks every target environment used by the
    * mission that does not support multiple realms into the disabled
    * list. This prevents unsupported environments from colliding
    * across the per-participant realms running simultaneously.
-   * @note A no-op outside single-player mode.
+   * @note A no-op outside standalone mode.
    */
-  private enforceSinglePlayerTargetEnvs(): void {
-    if (this.config.mode !== 'single-player') return
+  private enforceStandaloneTargetEnvs(): void {
+    if (this.config.mode !== 'standalone') return
 
     let disabled = new Set(this._config.disabledTargetEnvs)
     for (let environment of this.mission.targetEnvironments) {
@@ -1097,6 +1101,26 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       }
     }
     this._config.disabledTargetEnvs = [...disabled]
+  }
+
+  /**
+   * In standalone mode, converts every limited observer into a
+   * participant. A limited observer is routed to a dedicated,
+   * do-nothing realm, which is meaningless in standalone where every
+   * participant already has their own isolated realm; rather than mint
+   * that dead realm, the member is switched to a playable participant.
+   * @returns The members whose role was changed, so callers can decide
+   * whether to notify clients of the updated roster.
+   * @note A no-op outside standalone mode.
+   */
+  protected enforceStandaloneRoles(): ServerSessionMember[] {
+    if (this.config.mode !== 'standalone') return []
+
+    let changed = this.limitedObservers
+    for (let member of changed) {
+      member.assignToRole('participant')
+    }
+    return changed
   }
 
   /**
@@ -1571,7 +1595,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * Builds the queued effect tasks for the given session trigger across
    * every realm, without announcing or running them. Each realm runs its
    * own copy of the mission's effects on its own mission, so a
-   * single-player session builds effects once per participant realm; in
+   * standalone session builds effects once per participant realm; in
    * multiplayer there is a single shared realm, so this builds exactly
    * one set. Disabled environments are excluded here, so they never enter
    * the queue.

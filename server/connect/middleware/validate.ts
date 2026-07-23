@@ -59,9 +59,9 @@ const zodPartialSessionConfig = zod.object({
     ] as TNonEmptyArray<TSessionAccessibility>)
     .optional(),
   mode: zod
-    .enum(['multiplayer', 'single-player'] as TNonEmptyArray<TSessionMode>)
+    .enum(['multiplayer', 'standalone'] as TNonEmptyArray<TSessionMode>)
     .optional(),
-  singlePlayerForceId: zod.string().optional(),
+  standaloneForceId: zod.string().optional(),
   infiniteResources: zod.boolean().optional(),
   disabledTargetEnvs: zod.array(zod.string()).optional(),
   targetEnvConfigs: zod.record(zod.string(), zod.string()).optional(),

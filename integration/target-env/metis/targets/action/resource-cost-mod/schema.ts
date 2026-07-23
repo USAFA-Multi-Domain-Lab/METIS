@@ -37,7 +37,7 @@ const ResourceCostMod = TargetSchema.create({
       tooltipDescription:
         `This allows you to positively or negatively affect the resource cost for the selected action(s). A positive value increases the resource cost, while a negative value decreases the resource cost.\n` +
         `\t\n` +
-        `For example, if the resource cost is 100 and you set the resource cost to +10, then the resource cost will be 110.\n` +
+        `For example, entering 10 here will increase a resource cost of 100 to 110.\n` +
         `\t\n` +
         `*Note: If the result is less than 0, then the resource cost will be 0.*`,
     },

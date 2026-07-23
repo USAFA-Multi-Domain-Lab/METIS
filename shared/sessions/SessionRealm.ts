@@ -9,7 +9,7 @@ import type { TSession } from './MissionSession'
  * A realm owns its own copy of the mission and all of the
  * mutable, mission-rooted session state derived from it. A
  * multiplayer session has exactly one realm (a full copy of
- * the launched mission), while a single-player session has one
+ * the launched mission), while a standalone session has one
  * realm per participant, each containing only that participant's
  * selected force.
  *

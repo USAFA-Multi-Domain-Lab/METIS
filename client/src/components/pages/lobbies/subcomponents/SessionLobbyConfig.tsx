@@ -6,6 +6,7 @@ import TargetEnviromentConfig from '@client/components/content/session/config/Ta
 import { useGlobalContext } from '@client/context/global'
 import type { SessionClient } from '@client/sessions/SessionClient'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
+import { s } from '@shared/toolbox/strings/StringToolbox'
 import './SessionLobbyConfig.scss'
 
 /**
@@ -52,6 +53,24 @@ export default function SessionConfigMenu({
         let confirmation = isActorOwner
           ? `Switching to \`Owner Only\` will kick ${memberCount} from the lobby. Continue?`
           : `Switching to \`Owner Only\` will kick ${memberCount} from the lobby, including you. Continue?`
+
+        let { choice } = await prompt(confirmation, Prompt.ConfirmationChoices)
+        if (choice === 'Cancel') return false
+      }
+    }
+
+    // Switching to standalone converts any limited observers into
+    // participants (standalone has no place for them), performed
+    // server-side; confirm with the actor first.
+    if (
+      updates.mode === 'standalone' &&
+      session.config.mode !== 'standalone'
+    ) {
+      let { limitedObservers } = session
+
+      if (limitedObservers.length) {
+        let observerCount = `${limitedObservers.length} limited observer${s(limitedObservers.length)}`
+        let confirmation = `Switching to \`Standalone\` will change ${observerCount} to participants. Continue?`
 
         let { choice } = await prompt(confirmation, Prompt.ConfirmationChoices)
         if (choice === 'Cancel') return false

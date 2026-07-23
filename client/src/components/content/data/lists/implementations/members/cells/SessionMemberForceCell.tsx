@@ -38,9 +38,9 @@ export default function SessionMemberForceCell({
   )
 
   /**
-   * Whether the session is in single-player mode.
+   * Whether the session is in standalone mode.
    */
-  const isSinglePlayer: boolean = session.config.mode === 'single-player'
+  const isStandalone: boolean = session.config.mode === 'standalone'
 
   /**
    * Whether the target member can be assigned a force.
@@ -50,12 +50,12 @@ export default function SessionMemberForceCell({
 
   /**
    * Whether the target member is effectively assigned to a force.
-   * @note In single-player mode, force-assignable members are always
-   * routed to the configured single-player force, so they read as
+   * @note In standalone mode, force-assignable members are always
+   * routed to the configured standalone force, so they read as
    * assigned even before an explicit assignment lands.
    */
   const targetEffectivelyAssigned: boolean =
-    member.assignedForceId != null || (isSinglePlayer && targetIsForceAssignable)
+    member.assignedForceId != null || (isStandalone && targetIsForceAssignable)
 
   /**
    * Whether the target member has complete visibility.
@@ -183,17 +183,17 @@ export default function SessionMemberForceCell({
     )
   }
 
-  // In single-player mode, show the configured force as a locked
+  // In standalone mode, show the configured force as a locked
   // field for force-assignable members visible to the manager.
-  if (isSinglePlayer && targetIsForceAssignable && currentCompleteVisibility) {
-    let singlePlayerForce = session.mission.getForceById(
-      session.config.singlePlayerForceId,
+  if (isStandalone && targetIsForceAssignable && currentCompleteVisibility) {
+    let standaloneForce = session.mission.getForceById(
+      session.config.standaloneForceId,
     )
     return (
       <DetailLocked
         label={null}
-        value={singlePlayerForce?.name ?? 'Not configured'}
-        color={`${singlePlayerForce?.color}77`}
+        value={standaloneForce?.name ?? 'Not configured'}
+        color={`${standaloneForce?.color}77`}
       />
     )
   }
@@ -222,7 +222,7 @@ export function shouldShowForceDropdown(
     session.state === 'unstarted' &&
     !member.isAuthorized('completeVisibility') &&
     currentMember.isAuthorized('completeVisibility') &&
-    session.config.mode !== 'single-player' &&
+    session.config.mode !== 'standalone' &&
     !member.banned
   )
 }

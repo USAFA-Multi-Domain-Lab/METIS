@@ -35,9 +35,9 @@ export default function SessionGeneralConfig({
   )
   const [name, setName] = useState(sessionConfig.name ?? mission.name)
   const [mode, setMode] = useState<TSessionMode>(sessionConfig.mode)
-  const [singlePlayerForceId, setSinglePlayerForceId] = useState<
+  const [standaloneForceId, setStandaloneForceId] = useState<
     string | undefined
-  >(sessionConfig.singlePlayerForceId)
+  >(sessionConfig.standaloneForceId)
   const { processUpdate, useProcessUpdater } = useConfigUpdater(
     sessionConfig,
     approveChange,
@@ -47,6 +47,16 @@ export default function SessionGeneralConfig({
   /* -- COMPUTED -- */
 
   let defaultForceId = mission.forces[0]._id
+  let accessibilityOptions: TSessionConfig['accessibility'][] = [
+    'public',
+    'id-required',
+  ]
+  // Owner-only isn't currently available in the lobby,
+  // but it still can be theoretically set. If reenabled,
+  // a bug will need to be fixed related to the standalone
+  // force dropdown not disappearing when the session is set
+  // to owner-only.
+  if (accessibility === 'owner-only') accessibilityOptions.push('owner-only')
 
   /* -- EFFECTS -- */
 
@@ -61,25 +71,25 @@ export default function SessionGeneralConfig({
   )
   useProcessUpdater('mode', mode, setMode)
   useProcessUpdater(
-    'singlePlayerForceId',
-    singlePlayerForceId,
-    setSinglePlayerForceId,
+    'standaloneForceId',
+    standaloneForceId,
+    setStandaloneForceId,
   )
 
-  // When the mode switches, the single-player
+  // When the mode switches, the standalone
   // force ID needs to be updated accordingly.
   usePostInitEffect(() => {
-    setSinglePlayerForceId(
-      mode === 'single-player' ? defaultForceId : undefined,
+    setStandaloneForceId(
+      mode === 'standalone' ? defaultForceId : undefined,
     )
   }, [mode])
 
   // An owner-only session admits no participants (only the owner, a
-  // manager), so single-player would have no realms to mint. Force the
+  // manager), so standalone would have no realms to mint. Force the
   // mode back to multiplayer whenever the session becomes owner-only
-  // and the config is set to single-player mode.
+  // and the config is set to standalone mode.
   usePostInitEffect(() => {
-    if (accessibility === 'owner-only' && mode !== 'single-player') {
+    if (accessibility === 'owner-only' && mode !== 'standalone') {
       setMode('multiplayer')
     }
   }, [accessibility])
@@ -96,7 +106,7 @@ export default function SessionGeneralConfig({
       return (
         <DetailDropdown<TSessionConfig['accessibility']>
           label='Accessibility'
-          options={['public', 'id-required', 'owner-only']}
+          options={accessibilityOptions}
           value={accessibility}
           setValue={setAccessibility}
           disabled={disabled}
@@ -128,7 +138,7 @@ export default function SessionGeneralConfig({
 
   /**
    * JSX for mode selection. Owner-only sessions are locked to
-   * multiplayer, since single-player requires participants and an
+   * multiplayer, since standalone requires participants and an
    * owner-only session admits none.
    */
   const modeJsx = compute<TReactElement>(() => {
@@ -138,14 +148,14 @@ export default function SessionGeneralConfig({
       return (
         <DetailDropdown<TSessionMode>
           label='Mode'
-          options={['multiplayer', 'single-player']}
+          options={['multiplayer', 'standalone']}
           value={mode}
           setValue={setMode}
           disabled={disabled}
           isExpanded={false}
           getKey={(value) => value}
           render={(value) =>
-            value === 'single-player' ? 'Single-player' : 'Multiplayer'
+            value === 'standalone' ? 'Standalone' : 'Multiplayer'
           }
           fieldType='required'
           handleInvalidOption={{
@@ -194,12 +204,12 @@ export default function SessionGeneralConfig({
         disabled={disabled}
       />
       {modeJsx}
-      {mode === 'single-player' && singlePlayerForceId && (
+      {mode === 'standalone' && standaloneForceId && (
         <DetailDropdown<string>
           label='Force'
           options={mission.forces.map((force) => force._id)}
-          value={singlePlayerForceId}
-          setValue={setSinglePlayerForceId as TReactSetter<string>}
+          value={standaloneForceId}
+          setValue={setStandaloneForceId as TReactSetter<string>}
           disabled={disabled}
           isExpanded={false}
           getKey={(forceId) => forceId}
