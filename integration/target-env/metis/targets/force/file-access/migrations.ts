@@ -5,8 +5,20 @@ let migrations = new TargetMigrationRegistry()
 
 // Migrates effects to be compatible with renamed parameter IDs in v2.5.0 of METIS.
 migrations.register('2.5.0', (effect) => {
-  MigrationToolbox.updateParameterId(effect, 'forceMetadata', 'applyTo')
-  MigrationToolbox.updateParameterId(effect, 'fileMetadata', 'files')
+  // Renames are wrapped for this update only. Args stored before the typed array
+  // format may omit an optional or dependency-gated parameter, so a rename can
+  // find nothing to update. A missing argument is backfilled with its default by
+  // the client on load, so skipping it here is safe.
+  try {
+    MigrationToolbox.updateParameterId(effect, 'forceMetadata', 'applyTo')
+  } catch {
+    // Argument absent; safe to skip.
+  }
+  try {
+    MigrationToolbox.updateParameterId(effect, 'fileMetadata', 'files')
+  } catch {
+    // Argument absent; safe to skip.
+  }
 })
 
 export { migrations }

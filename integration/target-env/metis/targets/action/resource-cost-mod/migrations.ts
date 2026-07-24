@@ -33,9 +33,25 @@ migrations.register('2.4.0', (effect) => {
 
 // Migrates effects to be compatible with renamed parameter IDs in v2.5.0 of METIS.
 migrations.register('2.5.0', (effect) => {
-  MigrationToolbox.updateParameterId(effect, 'actionMetadata', 'applyTo')
-  MigrationToolbox.updateParameterId(effect, 'resourceMetadata', 'resources')
-  MigrationToolbox.updateParameterId(effect, 'resourceCost', 'amount')
+  // Renames are wrapped for this update only. Legacy args predate the typed
+  // storage format and may omit an optional or dependency-gated parameter, so a
+  // rename can find nothing to update. A missing argument is backfilled with its
+  // default by the client on load, so skipping it here is safe.
+  try {
+    MigrationToolbox.updateParameterId(effect, 'actionMetadata', 'applyTo')
+  } catch {
+    // Legacy argument absent; safe to skip.
+  }
+  try {
+    MigrationToolbox.updateParameterId(effect, 'resourceMetadata', 'resources')
+  } catch {
+    // Legacy argument absent; safe to skip.
+  }
+  try {
+    MigrationToolbox.updateParameterId(effect, 'resourceCost', 'amount')
+  } catch {
+    // Legacy argument absent; safe to skip.
+  }
 })
 
 export { migrations }
