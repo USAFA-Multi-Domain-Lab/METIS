@@ -235,10 +235,11 @@ export class ServerEnvironmentTask extends TargetEnvironmentTask<TMetisServerCom
         }
       },
       {
-        // Skip the effect if it has unresolved issues, or if the session
-        // has left a state that permits this trigger (e.g. it ended before
-        // this task's turn in the batch came up).
-        shouldSkip: () => effect.hasIssues || !context.currentStatePermitted,
+        // Skip the effect if it (or any of its arguments) has unresolved
+        // issues, or if the session has left a state that permits this
+        // trigger (e.g. it ended before this task's turn in the batch came
+        // up).
+        shouldSkip: () => effect.shouldSkip || !context.currentStatePermitted,
       },
     )
   }

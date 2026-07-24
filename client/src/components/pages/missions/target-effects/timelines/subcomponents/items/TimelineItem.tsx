@@ -3,7 +3,6 @@ import { useButtonMenuEngine } from '@client/components/content/user-controls/bu
 import ButtonMenuController from '@client/components/content/user-controls/buttons/ButtonMenuController'
 import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
-import If from '@client/components/content/util/If'
 import { useMissionPageContext } from '@client/components/pages/missions/context'
 import useEffectItemButtonCallbacks from '@client/components/pages/missions/hooks/mission-components/effects'
 import { useGlobalContext } from '@client/context/global'
@@ -124,9 +123,15 @@ export function TimelineItem<TType extends TEffectType>({
   /* -- COMPUTED -- */
 
   /**
-   * The issues applicable to the given item.
+   * The issues applicable to the given item, including issues on its
+   * target arguments so the warning indicator reflects a stale argument
+   * value (e.g. a dropdown value that no longer matches any option) and
+   * not just issues keyed to the effect itself.
    */
-  const issues = item.issues
+  const issues = [
+    ...item.issues,
+    ...item.arguments.flatMap((argument) => argument.issues),
+  ]
 
   /**
    * Whether or not this item has issues.
@@ -410,9 +415,7 @@ export function TimelineItem<TType extends TEffectType>({
         trigger={'r-click'}
         onActivate={onButtonMenuActivate}
       />
-      <If condition={viewMode === 'edit'}>
-        <TimelineDragHandle item={item} />
-      </If>
+      {viewMode === 'edit' && <TimelineDragHandle item={item} />}
       <TimelineItemCell
         onClick={onNameClick}
         onDoubleClick={() => host.mission.select(item)}

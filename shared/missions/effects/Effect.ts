@@ -254,6 +254,19 @@ export abstract class Effect<
   }
 
   /**
+   * Whether this effect should be skipped rather than run during a
+   * session. An effect is skipped when it carries an unresolved issue of
+   * its own (e.g. a missing target or an outdated version) or when any of
+   * its arguments carries an unresolved issue (e.g. a dropdown value that
+   * no longer matches any option).
+   */
+  public get shouldSkip(): boolean {
+    return (
+      this.hasIssues || this.arguments.some((argument) => argument.hasIssues)
+    )
+  }
+
+  /**
    * @param data Additional information for the effect.
    */
   protected constructor(
