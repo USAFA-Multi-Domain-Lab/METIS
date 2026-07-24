@@ -6,8 +6,15 @@ import {
   TargetArgument,
   type TTargetArgumentJson,
 } from '@shared/target-environments/arguments/TargetArgument'
-import type { TBooleanTargetParameter } from '@shared/target-environments/parameters/BooleanTargetParameter'
+import {
+  BooleanTargetParameter,
+  type TBooleanTargetParameter,
+} from '@shared/target-environments/parameters/BooleanTargetParameter'
 import { DropdownTargetParameter } from '@shared/target-environments/parameters/DropdownTargetParameter'
+import type { TLargeStringTargetParameter } from '@shared/target-environments/parameters/LargeStringTargetParameter'
+import type { TMissionComponentSerializedSelection } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
+import type { TMissionComponentTargetParameter } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
+import type { TNumberTargetParameter } from '@shared/target-environments/parameters/NumberTargetParameter'
 import type { TStringTargetParameter } from '@shared/target-environments/parameters/StringTargetParameter'
 import { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
 import { TargetEnvRegistry } from '@shared/target-environments/TargetEnvRegistry'
@@ -256,6 +263,258 @@ describe('TargetArgument issues', () => {
     expect(choice?.dependenciesMet).toBe(true)
     expect(choice?.valueIsInvalidOption).toBe(false)
     expect(choice?.issues).toHaveLength(0)
+  })
+})
+
+describe('TargetArgument serialization', () => {
+  beforeEach(() => {
+    activeRegistry = new TargetEnvRegistry()
+  })
+
+  afterEach(() => {
+    activeRegistry.clear()
+  })
+
+  test('re-serializes an argument of each primitive type to identical JSON', () => {
+    // Each argument carries a concrete value, so default application is a no-op
+    // and the only thing under test is the serialize → load → serialize path.
+    let countParameter: TNumberTargetParameter = {
+      _id: 'count',
+      name: 'Count',
+      groupingId: 'group-1',
+      type: 'number',
+      required: true,
+      default: 5,
+    }
+    let labelParameter: TStringTargetParameter = {
+      _id: 'label',
+      name: 'Label',
+      groupingId: 'group-1',
+      type: 'string',
+      required: true,
+      default: 'X',
+    }
+    let notesParameter: TLargeStringTargetParameter = {
+      _id: 'notes',
+      name: 'Notes',
+      groupingId: 'group-1',
+      type: 'large-string',
+      required: false,
+    }
+    let enabledParameter: TBooleanTargetParameter = {
+      _id: 'enabled',
+      name: 'Enabled',
+      groupingId: 'group-1',
+      type: 'boolean',
+    }
+    let choiceParameter = DropdownTargetParameter.fromJson({
+      _id: 'choice',
+      name: 'Choice',
+      required: false,
+      groupingId: 'group-1',
+      type: 'dropdown',
+      options: [
+        { _id: 'opt-1', name: 'One', value: 1 },
+        { _id: 'opt-2', name: 'Two', value: 2 },
+      ],
+    })
+    registerTarget([
+      countParameter,
+      labelParameter,
+      notesParameter,
+      enabledParameter,
+      choiceParameter,
+    ])
+
+    let argsJson: TTargetArgumentJson[] = [
+      { _id: 'arg-count', parameterId: 'count', type: 'number', value: 42 },
+      {
+        _id: 'arg-label',
+        parameterId: 'label',
+        type: 'string',
+        value: 'hello',
+      },
+      {
+        _id: 'arg-notes',
+        parameterId: 'notes',
+        type: 'large-string',
+        value: 'multi\nline',
+      },
+      {
+        _id: 'arg-enabled',
+        parameterId: 'enabled',
+        type: 'boolean',
+        value: true,
+      },
+      { _id: 'arg-choice', parameterId: 'choice', type: 'dropdown', value: 2 },
+    ]
+
+    let effect = buildEffect(argsJson)
+
+    for (let json of argsJson) {
+      let argument = effect.getArgumentByParameterId(json.parameterId)
+      expect(argument?.json).toEqual(json)
+    }
+  })
+
+  test('serializes a mission-component selection and re-resolves it to the same live component', () => {
+    let applyToParameter: TMissionComponentTargetParameter = {
+      _id: 'applyTo',
+      name: 'Apply To',
+      groupingId: 'group-1',
+      type: 'mission-component',
+      validComponentTypes: ['mission'],
+    }
+    registerTarget([applyToParameter])
+
+    // The mission itself is the live selection; its serialized form is a
+    // component-type path with no ids.
+    let selection: TMissionComponentSerializedSelection[] = [
+      { componentType: 'mission', lastKnownName: 'Mission 1', ids: [] },
+    ]
+    let effect = buildEffect([
+      {
+        _id: 'arg-applyTo',
+        parameterId: 'applyTo',
+        type: 'mission-component',
+        value: selection,
+      },
+    ])
+
+    let argument = effect.getArgumentByParameterId('applyTo')
+    // The stored path resolves back to the live mission instance.
+    expect(argument?.value).toHaveLength(1)
+    expect(argument?.value).toContain(effect.mission)
+    // Re-serializing reproduces the same component-type path.
+    expect(argument?.json.value).toEqual(selection)
+  })
+
+  test('drops a selection whose component no longer exists on load, keeping the rest', () => {
+    let applyToParameter: TMissionComponentTargetParameter = {
+      _id: 'applyTo',
+      name: 'Apply To',
+      groupingId: 'group-1',
+      type: 'mission-component',
+      validComponentTypes: ['mission', 'force'],
+    }
+    registerTarget([applyToParameter])
+
+    // The mission still exists; the force id points at nothing in this mission.
+    let selection: TMissionComponentSerializedSelection[] = [
+      { componentType: 'mission', lastKnownName: 'Mission 1', ids: [] },
+      {
+        componentType: 'force',
+        lastKnownName: 'Deleted Force',
+        ids: ['ghost-force'],
+      },
+    ]
+    let effect = buildEffect([
+      {
+        _id: 'arg-applyTo',
+        parameterId: 'applyTo',
+        type: 'mission-component',
+        value: selection,
+      },
+    ])
+
+    let argument = effect.getArgumentByParameterId('applyTo')
+    // Resolving does not throw over the missing force...
+    expect(() => argument?.value).not.toThrow()
+    // ...and the surviving mission selection is preserved.
+    expect(argument?.value).toHaveLength(1)
+    expect(argument?.value).toContain(effect.mission)
+  })
+})
+
+describe('TargetArgument dependency resolution', () => {
+  beforeEach(() => {
+    activeRegistry = new TargetEnvRegistry()
+  })
+
+  afterEach(() => {
+    activeRegistry.clear()
+  })
+
+  test('treats a dependency cycle as unmet instead of recursing infinitely', () => {
+    // `alpha` depends on `beta`, which depends back on `alpha`.
+    let alphaParameter = BooleanTargetParameter.fromJson({
+      _id: 'alpha',
+      name: 'Alpha',
+      groupingId: 'group-1',
+      type: 'boolean',
+      dependencies: [TargetDependency.TRUTHY('beta')],
+    })
+    let betaParameter = BooleanTargetParameter.fromJson({
+      _id: 'beta',
+      name: 'Beta',
+      groupingId: 'group-1',
+      type: 'boolean',
+      dependencies: [TargetDependency.TRUTHY('alpha')],
+    })
+    registerTarget([alphaParameter, betaParameter])
+
+    let effect = buildEffect([
+      { _id: 'arg-alpha', parameterId: 'alpha', type: 'boolean', value: true },
+      { _id: 'arg-beta', parameterId: 'beta', type: 'boolean', value: true },
+    ])
+
+    // The getter returns rather than overflowing the stack.
+    let alpha = effect.getArgumentByParameterId('alpha')
+    expect(alpha?.dependenciesMet).toBe(false)
+  })
+})
+
+describe('TargetArgument default application', () => {
+  beforeEach(() => {
+    activeRegistry = new TargetEnvRegistry()
+  })
+
+  afterEach(() => {
+    activeRegistry.clear()
+  })
+
+  test('applies a required default only to an unset value and leaves every other case untouched', () => {
+    let countParameter: TNumberTargetParameter = {
+      _id: 'count',
+      name: 'Count',
+      groupingId: 'group-1',
+      type: 'number',
+      required: true,
+      default: 7,
+    }
+    registerTarget([countParameter])
+
+    // An unset required value is replaced by the parameter default.
+    let unsetEffect = buildEffect([
+      { _id: 'arg-count', parameterId: 'count', type: 'number', value: null },
+    ])
+    expect(unsetEffect.getArgumentByParameterId('count')?.value).toBe(7)
+
+    // A value the user actually entered is never overwritten.
+    let setEffect = buildEffect([
+      { _id: 'arg-count', parameterId: 'count', type: 'number', value: 3 },
+    ])
+    expect(setEffect.getArgumentByParameterId('count')?.value).toBe(3)
+
+    // With no matching parameter, the value is left as loaded.
+    let orphanEffect = buildEffect([
+      {
+        _id: 'arg-orphan',
+        parameterId: 'not-a-parameter',
+        type: 'number',
+        value: null,
+      },
+    ])
+    expect(
+      orphanEffect.getArgumentByParameterId('not-a-parameter')?.value,
+    ).toBeNull()
+
+    // When the stored type does not match the parameter type, the value is
+    // left as loaded rather than defaulted.
+    let mismatchEffect = buildEffect([
+      { _id: 'arg-count', parameterId: 'count', type: 'string', value: '' },
+    ])
+    expect(mismatchEffect.getArgumentByParameterId('count')?.value).toBe('')
   })
 })
 
