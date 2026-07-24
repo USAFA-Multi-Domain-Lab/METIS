@@ -272,7 +272,7 @@ const effectSubschema = {
         _id: { type: String, required: true },
         parameterId: { type: String, required: true },
         type: { type: String, required: true },
-        value: { type: Schema.Types.Mixed, required: true },
+        value: { type: Schema.Types.Mixed, required: false },
       },
     ],
   },

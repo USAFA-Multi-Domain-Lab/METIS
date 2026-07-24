@@ -45,12 +45,20 @@ export class MetisDatabase {
   private backupIntervalId: NodeJS.Timeout | null
 
   /**
+   * The path of the most recent backup taken by {@link createBackup}, or `null`
+   * if no backup has been taken this run. Recorded against an in-progress
+   * migration so an interrupted run can point the operator at the exact backup.
+   */
+  private backupPath: string | null
+
+  /**
    * @param server The Metis server instance.
    */
   public constructor(server: MetisServer) {
     this._mongooseConnection = null
     this._server = server
     this.backupIntervalId = null
+    this.backupPath = null
   }
 
   /**
@@ -87,6 +95,10 @@ export class MetisDatabase {
       mongooseConnection.once('open', async () => {
         try {
           databaseLogger.info('Connected to database.')
+          // Refuse to start if a previous migration was left incomplete. This
+          // runs before the backup so a halted startup does not snapshot a
+          // half-migrated database.
+          await this.ensureNoIncompleteMigration()
           if (server.backupsEnabled) {
             // Create backup of database before use.
             await this.createBackup()
@@ -145,12 +157,14 @@ export class MetisDatabase {
       const { mongoHost, mongoPort, mongoDB, mongoUsername, mongoPassword } =
         server
 
+      this.backupPath = `server/database/backups/${DateToolbox.fileName}`
+
       const args: string[] = []
 
       args.push('--host', mongoHost)
       args.push('--port', String(mongoPort))
       args.push('--db', mongoDB)
-      args.push('--out', `server/database/backups/${DateToolbox.fileName}`)
+      args.push('--out', this.backupPath)
 
       if (mongoUsername !== undefined && mongoPassword !== undefined) {
         args.push('--username', mongoUsername)
@@ -386,16 +400,23 @@ export class MetisDatabase {
    * This will build the schema for the given schema build number.
    * @param currentBuildNumber The current schema build number.
    * @param targetBuildNumber The target schema build number.
-   * @returns A promise that resolves once the schema is built to the target build number.
+   * @resolves Once the schema is built up to the target build number.
+   * @rejects If a build fails, if its in-progress flag cannot be recorded, or
+   * if a later build in the sequence fails.
    */
   private async buildSchema(
     currentBuildNumber: number,
     targetBuildNumber: number,
   ): Promise<void> {
+    let nextBuildNumber: number = currentBuildNumber + 1
+
+    // Record that a migration to this build is underway before it runs, so an
+    // interrupted run can be detected on the next startup.
+    await this.markMigrationInProgress(nextBuildNumber)
+
     return new Promise<void>((resolve, reject) => {
       const { mongoUsername, mongoPassword, mongoDB, mongoHost, mongoPort } =
         this.server
-      let nextBuildNumber: number = currentBuildNumber + 1
       let buildPath: string = MetisDatabase.generateFilePath(nextBuildNumber)
       let buildPathAbsolute = MetisServer.resolvePath('..', buildPath)
       let args: string[] = [
@@ -438,18 +459,27 @@ export class MetisDatabase {
           console.log(stdout)
 
           if (!error) {
-            databaseLogger.info(
-              `Database successfully migrated to build ${nextBuildNumber}`,
-            )
-            console.log(
-              `Database successfully migrated to build ${nextBuildNumber}`,
-            )
+            // A throw anywhere in this branch — clearing the flag or a later
+            // build in the sequence — must reject so the outer promise settles
+            // and startup shuts down cleanly rather than hanging.
+            try {
+              // Clear the in-progress flag now that this build has completed.
+              await this.clearMigrationInProgress()
 
-            if (nextBuildNumber < targetBuildNumber) {
-              await this.buildSchema(nextBuildNumber, targetBuildNumber)
+              databaseLogger.info(
+                `Database successfully migrated to build ${nextBuildNumber}`,
+              )
+              console.log(
+                `Database successfully migrated to build ${nextBuildNumber}`,
+              )
+
+              if (nextBuildNumber < targetBuildNumber) {
+                await this.buildSchema(nextBuildNumber, targetBuildNumber)
+              }
+
               resolve()
-            } else {
-              resolve()
+            } catch (buildError) {
+              reject(buildError)
             }
           } else {
             databaseLogger.error(
@@ -459,12 +489,171 @@ export class MetisDatabase {
             if (stderr) {
               databaseLogger.error(stderr)
             }
-            console.log(`Database failed to migrate to ${nextBuildNumber}`)
+
+            // The in-progress flag is left set so a restart without restoring is
+            // also halted. Surface restore instructions to the operator.
+            this.logIncompleteMigration(nextBuildNumber, this.backupPath)
+
             reject(error)
           }
         },
       )
     })
+  }
+
+  /**
+   * Records that a migration to the given build number is underway, along with
+   * the backup taken before it began. Written before a build runs so an
+   * interrupted run can be detected on the next startup and the operator
+   * pointed at the exact backup.
+   * @param buildNumber The build number the migration is advancing to.
+   * @resolves Once the flag is recorded.
+   * @rejects If the flag cannot be written to the database.
+   */
+  private async markMigrationInProgress(buildNumber: number): Promise<void> {
+    await InfoModel.updateOne(
+      {},
+      {
+        $set: {
+          migrationInProgress: buildNumber,
+          migrationBackupPath: this.backupPath,
+        },
+      },
+    ).exec()
+  }
+
+  /**
+   * Clears the migration-in-progress flag once a build has completed, or when a
+   * stale flag from an already-finished migration is found on startup.
+   * @resolves Once the flag is cleared.
+   * @rejects If the flag cannot be cleared in the database.
+   */
+  private async clearMigrationInProgress(): Promise<void> {
+    await InfoModel.updateOne(
+      {},
+      { $set: { migrationInProgress: null, migrationBackupPath: null } },
+    ).exec()
+  }
+
+  /**
+   * Halts startup if a previous schema migration was interrupted before it
+   * completed. Reads the {@link InfoModel} migration flag: if a migration to a
+   * build number the database never reached is still recorded, the data may be
+   * partially converted, so the operator is given restore instructions and an
+   * error is thrown to stop startup. A flag whose build number has already been
+   * reached is treated as stale (the clearing write was lost) and cleared.
+   * @resolves When it is safe to continue startup: no migration is flagged, or
+   * a stale flag was cleared.
+   * @rejects If a previous migration was left incomplete, halting startup, or
+   * if the info document cannot be read or updated.
+   */
+  private async ensureNoIncompleteMigration(): Promise<void> {
+    let info = await InfoModel.findOne().exec()
+
+    // A fresh database has no info document yet, so nothing can be pending.
+    if (!info) {
+      return
+    }
+
+    let { migrationInProgress, schemaBuildNumber } = info
+
+    // No migration is flagged: the database is at a clean build boundary.
+    if (migrationInProgress === null || migrationInProgress === undefined) {
+      return
+    }
+
+    // The flagged build was actually reached, so the migration completed and
+    // only the clearing write was lost (e.g. the process was killed in the gap
+    // after the build stamped its number). Clear the stale flag and continue.
+    if (schemaBuildNumber >= migrationInProgress) {
+      await this.clearMigrationInProgress()
+      databaseLogger.info(
+        `Cleared a stale migration-in-progress flag for build ${migrationInProgress}; that migration had already completed.`,
+      )
+      return
+    }
+
+    // Otherwise a migration to migrationInProgress began but never finished.
+    // The database may be half-converted, so refuse to start and recommend a
+    // restore.
+    this.logIncompleteMigration(migrationInProgress, info.migrationBackupPath)
+
+    throw new Error(
+      `Startup halted: a previous migration to schema build ${migrationInProgress} did not complete. Restore the database from a pre-migration backup and restart.`,
+    )
+  }
+
+  /**
+   * Logs the operator-facing message shown when a migration is found to be
+   * incomplete, including a ready-to-run restore command when the pre-migration
+   * backup path is known. Written to both the database log and the console so it
+   * is surfaced wherever the operator is watching.
+   * @param buildNumber The build the interrupted migration was targeting.
+   * @param backupPath The pre-migration backup path, or `null` if none exists.
+   */
+  private logIncompleteMigration(
+    buildNumber: number,
+    backupPath: string | null,
+  ): void {
+    let { mongoHost, mongoPort, mongoDB, mongoUsername, mongoPassword } =
+      this.server
+    let lines: string[] = []
+
+    lines.push('')
+    lines.push('=============== DATABASE MIGRATION INCOMPLETE ===============')
+    lines.push(
+      `A previous migration to schema build ${buildNumber} did not finish, so`,
+    )
+    lines.push(
+      'the database may be partially converted. The server will not start',
+    )
+    lines.push('until it is restored to its pre-migration state.')
+    lines.push('')
+
+    if (backupPath) {
+      let restoreArgs: string[] = [
+        'mongorestore',
+        '--drop',
+        `--host ${mongoHost}`,
+        `--port ${mongoPort}`,
+        `--db ${mongoDB}`,
+      ]
+
+      if (mongoUsername && mongoPassword) {
+        restoreArgs.push(
+          `--username ${mongoUsername}`,
+          '--password <password>',
+          `--authenticationDatabase ${mongoDB}`,
+        )
+      }
+
+      restoreArgs.push(`${backupPath}/${mongoDB}`)
+
+      lines.push('A backup was taken immediately before the migration began:')
+      lines.push(`  ${backupPath}`)
+      lines.push('')
+      lines.push('To restore it, run:')
+      lines.push(`  ${restoreArgs.join(' ')}`)
+    } else {
+      lines.push(
+        'No automatic backup is available (database backups are disabled).',
+      )
+      lines.push(
+        'Restore the database from your own most recent pre-migration backup.',
+      )
+    }
+
+    lines.push('')
+    lines.push(
+      'After restoring, restart the server and the migration will run again',
+    )
+    lines.push('from a clean state.')
+    lines.push('============================================================')
+    lines.push('')
+
+    let message = lines.join('\n')
+    databaseLogger.error(message)
+    console.error(message)
   }
 
   /**

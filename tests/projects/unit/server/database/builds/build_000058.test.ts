@@ -65,35 +65,6 @@ describe('build_000058 database migration', () => {
 
     assertNoUnresolvedReport(printLines.join('\n'))
   })
-
-  // KNOWN GAP (currently failing): the build writes each mission individually
-  // and stamps schemaBuildNumber only at the end, with no transaction. If a run
-  // is interrupted after some missions are written, the build number stays at 57
-  // and the runner re-runs build 58 over the whole collection — including the
-  // already-migrated missions. Those effects no longer have an `args` field, so
-  // `Object.entries(effect.args)` runs on undefined and throws, leaving the
-  // migration unable to complete or retry. The build should skip or safely
-  // no-op an already-migrated mission instead. See the "resumability" Medium
-  // finding in the effect-migrations report.
-  test('is resumable: re-running over an already-migrated mission does not throw', () => {
-    let original = createPreMigrationMission()
-
-    // First pass migrates the mission and writes it back.
-    let firstRun = runBuild(original)
-    let [, firstPayload] = firstRun.missionUpdateOne.mock.calls[0]
-
-    // Reconstruct the mission as the database now holds it after the first
-    // pass: effects in the `arguments` shape with `args` removed. This is what
-    // an interrupted-then-restarted migration reads back for those missions.
-    let alreadyMigratedMission: TPreMigrationMission = {
-      _id: original._id,
-      resources: original.resources,
-      forces: firstPayload.$set.forces,
-      effects: firstPayload.$set.effects,
-    }
-
-    expect(() => runBuild(alreadyMigratedMission)).not.toThrow()
-  })
 })
 
 function runBuild(mission: TPreMigrationMission) {

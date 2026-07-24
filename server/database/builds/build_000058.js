@@ -102,6 +102,17 @@ function inferArgumentType(value) {
   else return 'unknown'
 }
 
+// Returns the first element of a nested mission document array matching the
+// predicate, or undefined. Nested document arrays are not true JS arrays and
+// do not reliably support Array.prototype methods such as .find() in the
+// mongosh shell, so this iterates with for...of per the migration guide.
+function findInArray(array, predicate) {
+  for (let item of array) {
+    if (predicate(item)) return item
+  }
+  return undefined
+}
+
 // Converts an old-style mission component metadata object into the new
 // TMissionComponentSerializedSelection[] format by resolving localKeys
 // against the mission document.
@@ -125,34 +136,35 @@ function buildMissionComponentValue(
   if (object.forceKey === 'self') {
     force = sourceForce
   } else if (object.forceKey) {
-    force = mission.forces.find((force) => {
-      return force.localKey === object.forceKey
-    })
+    force = findInArray(
+      mission.forces,
+      (force) => force.localKey === object.forceKey,
+    )
   }
 
   // Determine pool.
   if (force && object.poolKey) {
-    pool = force.resourcePools.find((pool) => {
-      return pool.localKey === object.poolKey
-    })
+    pool = findInArray(
+      force.resourcePools,
+      (pool) => pool.localKey === object.poolKey,
+    )
   }
 
   // Determine node.
   if (force && object.nodeKey === 'self') {
     node = sourceNode
   } else if (force && object.nodeKey) {
-    node = force.nodes.find((node) => {
-      return node.localKey === object.nodeKey
-    })
+    node = findInArray(force.nodes, (node) => node.localKey === object.nodeKey)
   }
 
   // Determine action.
   if (force && node && object.actionKey === 'self') {
     action = sourceAction
   } else if (force && node && object.actionKey) {
-    action = node.actions.find((action) => {
-      return action.localKey === object.actionKey
-    })
+    action = findInArray(
+      node.actions,
+      (action) => action.localKey === object.actionKey,
+    )
   }
 
   // The most specific component that resolved, regardless of which one the
@@ -184,9 +196,10 @@ function buildMissionComponentValue(
   } else if (object.poolKey) {
     if (pool) {
       let resourceName =
-        mission.resources.find((resource) => {
-          return resource._id === pool.resourceId
-        })?.name ?? 'Unknown Resource'
+        findInArray(
+          mission.resources,
+          (resource) => resource._id === pool.resourceId,
+        )?.name ?? 'Unknown Resource'
       selections = [
         {
           componentType: 'resourcePool',

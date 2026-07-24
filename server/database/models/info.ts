@@ -5,6 +5,8 @@ import type { TInfo, TInfoModel } from './types'
 const Schema = new InfoSchema(
   {
     schemaBuildNumber: { type: Number, required: true },
+    migrationInProgress: { type: Number, default: null },
+    migrationBackupPath: { type: String, default: null },
   },
   {
     strict: 'throw',
