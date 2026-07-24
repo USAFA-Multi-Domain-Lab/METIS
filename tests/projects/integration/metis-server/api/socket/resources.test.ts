@@ -1,13 +1,7 @@
 import { afterEach, describe, expect, test } from '@jest/globals'
 import { MetisServer } from '@server/MetisServer'
-import type {
-  TRequestEvents,
-  TResponseEvents,
-  TServerEvents,
-} from '@shared/connect'
+import type { TResponseEvents, TServerEvents } from '@shared/connect'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
-import type { TExecutionCheats } from '@shared/missions/actions/ActionExecution'
-import { Mission } from '@shared/missions/Mission'
 import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
 import { MemberRole } from '@shared/sessions/members/MemberRole'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
@@ -17,7 +11,13 @@ import {
   INTEL_RESOURCE_POOL_DEFAULT_PROPERTIES,
   type TMissionCreatePayload,
 } from 'tests/helpers/projects/integration/rest-api/missions/payload'
-import { TestSession } from 'tests/helpers/TestSession'
+import {
+  launchPlayableSession,
+  readRealmPoolBalance,
+  resolveObjectiveExecution,
+  resourceCostOf,
+} from 'tests/helpers/session/scenarios'
+import { TestSession, type TTestMemberContext } from 'tests/helpers/TestSession'
 import { TestSocketClient } from 'tests/helpers/TestSocketClient'
 import { TestToolbox } from 'tests/helpers/TestToolbox'
 
@@ -27,86 +27,58 @@ const INTEL_RESOURCE_POOL_INDEX = INTEL_RESOURCE_POOL_DEFAULT_PROPERTIES.ORDER
 const RESOURCE_POOL_AWARD_AMOUNT = 20
 
 /**
- * Applies the customizations every test in this suite depends on, then
- * hands the payload to the test's own customization.
- * @note Files and session-start effects are stripped because they only
- * slow the start phase, and the action under test is made instant and
- * always-successful so executions resolve deterministically.
- */
-function customizeSocketMission(
-  payload: TMissionCreatePayload,
-  customize?: (payload: TMissionCreatePayload) => void,
-): void {
-  payload.files = []
-  payload.effects = []
-  payload.forces[0].nodes[1].actions[0] = {
-    ...payload.forces[0].nodes[1].actions[0],
-    effects: [],
-  }
-  payload.forces[0].nodes[1].actions[0].baseProcessTime = 0
-  payload.forces[0].nodes[1].actions[0].baseSuccessChance = 1
-
-  customize?.(payload)
-}
-
-/**
- * Launches and starts a session with a single member, then resolves the
- * force, action, and resource pools that member plays with.
- * @note Every returned mission object comes from the member's realm, not
- * from the session's template mission, because the realm copy is what
- * the server mutates during play.
+ * Launches and starts a playable session with a single member, then resolves
+ * the force, action, and resource pools that member plays with.
+ * @note Every returned mission object comes from the member's realm, not from
+ * the session's template mission, because the realm copy is what the server
+ * mutates during play.
  */
 async function prepareExecutionSession(
   options: TPrepareExecutionSessionOptions = {},
 ) {
   let { customizeMission, sessionConfig = {}, memberRoleId } = options
 
-  // A manager is not force-assignable, so it is left unassigned and
-  // observes the session through its complete-visibility subscription.
+  // A manager is not force-assignable, so it is left unassigned and observes
+  // the session through its complete-visibility subscription.
   let managed = memberRoleId === MemberRole.AVAILABLE_ROLES.manager._id
 
-  let context = await TestSession.launch({
+  let { context } = await launchPlayableSession({
     namePrefix: SUITE_PREFIX,
-    mission: {
-      customize: (payload) => customizeSocketMission(payload, customizeMission),
-    },
     config: sessionConfig,
     members: [{ force: managed ? undefined : 0, role: memberRoleId }],
-    start: true,
-    // The force is revealed below, once resolved, so that it is revealed
-    // for members that have no force of their own.
+    // Files only slow the start phase; strip them, then apply the test's tweaks.
+    customizeMission: (payload) => {
+      payload.files = []
+      customizeMission?.(payload)
+    },
+    // The force is revealed below, once resolved, so it is revealed even for a
+    // member with no force of their own.
     reveal: false,
   })
 
   let [participant] = context.members
-  let realm = participant.member.subscribedRealm
-  let force = participant.member.assignedForce ?? realm.mission.forces[0]
-
-  expect(realm).toBeTruthy()
-  expect(force).toBeTruthy()
-
+  let { force, action, fuelPool, intelPool } =
+    resolveObjectiveExecution(participant)
   force.revealAllNodes = true
 
-  let node = force.nodes[1]
-  let action = Array.from(node.actions.values())[0]
-  let fuelPool = force.resourcePools[0]
-  let intelPool = force.resourcePools[1]
-
-  expect(node).toBeTruthy()
   expect(action).toBeTruthy()
   expect(fuelPool).toBeTruthy()
   expect(intelPool).toBeTruthy()
-  expect(node.revealed).toBe(true)
+  expect(action.node.revealed).toBe(true)
 
   return {
     action,
     fuelPool,
     intelPool,
-    socket: participant.socket,
-    realm,
+    participant,
+    realm: participant.member.subscribedRealm,
   }
 }
 
+/**
+ * Reads a pool balance from the flat resource-pool array carried by an
+ * action-execution event payload (a different shape than a serialized mission).
+ */
 function findPoolBalanceByResourceId(
   resourcePools: Array<{ resourceId: string; balance?: number }>,
   resourceId: string,
@@ -114,51 +86,24 @@ function findPoolBalanceByResourceId(
   return resourcePools.find((pool) => pool.resourceId === resourceId)?.balance
 }
 
-function determineExpectedBalanceAfterExecution(
+/**
+ * The balance a pool will hold after one execution of the given action, from
+ * the pool's current balance and the action's cost.
+ */
+function expectedBalanceAfterExecution(
   action: Awaited<ReturnType<typeof prepareExecutionSession>>['action'],
   pool: Awaited<ReturnType<typeof prepareExecutionSession>>['fuelPool'],
 ): number {
-  let resourceCost =
-    action.includedCosts.find((cost) => cost.resourceId === pool.resourceId)
-      ?.amount ?? 0
-
-  return pool.balance - resourceCost
+  return pool.balance - resourceCostOf(action, pool.resourceId)
 }
 
-async function sendActionExecutionRequest(
-  socket: Socket,
-  actionId: string,
-  cheats: Partial<TExecutionCheats> = {},
-): Promise<void> {
-  let data: TRequestEvents['request-execute-action']['data'] = { actionId }
-
-  if (Object.keys(cheats).length > 0) {
-    data.cheats = cheats
-  }
-
-  TestSocketClient.sendJson<TRequestEvents['request-execute-action']>(socket, {
-    method: 'request-execute-action',
-    requestId: TestToolbox.generateRandomId(),
-    data,
-  })
-}
-
-async function requestCurrentSession(
-  socket: Socket,
-): Promise<TResponseEvents['current-session']> {
-  TestSocketClient.sendJson<TRequestEvents['request-current-session']>(socket, {
-    method: 'request-current-session',
-    requestId: TestToolbox.generateRandomId(),
-    data: {},
-  })
-
-  return await TestSocketClient.waitForEvent<
-    TResponseEvents['current-session']
-  >(socket, (event) => event.method === 'current-session')
-}
-
-async function waitForResourcePoolBalance(
-  socket: Socket,
+/**
+ * Polls the current session until a force's pool reaches the expected balance,
+ * so a test can wait out an asynchronous effect that awards or spends after an
+ * execution completes.
+ */
+async function waitForRealmPoolBalance(
+  participant: TTestMemberContext,
   forceId: string,
   resourceId: string,
   expectedBalance: number,
@@ -167,14 +112,12 @@ async function waitForResourcePoolBalance(
   let startTime = Date.now()
 
   while (Date.now() - startTime < timeoutMs) {
-    let response = await requestCurrentSession(socket)
-    let resourcePools = getCurrentSessionForceResourcePools(response, forceId)
-    let balance = findPoolBalanceByResourceId(resourcePools, resourceId)
-
-    if (balance === expectedBalance) {
+    let response = await TestSession.requestCurrentSession(participant)
+    if (
+      readRealmPoolBalance(response, forceId, resourceId) === expectedBalance
+    ) {
       return response
     }
-
     await new Promise((resolve) => setTimeout(resolve, 25))
   }
 
@@ -183,24 +126,10 @@ async function waitForResourcePoolBalance(
   )
 }
 
-function getCurrentSessionForceResourcePools(
-  response: TResponseEvents['current-session'],
-  forceId: string,
-) {
-  let session = response.data.session
-  expect(session).toBeTruthy()
-
-  // Live gameplay state travels on the requester's subscribed realm.
-  // The session's own `mission` is only the template the realm was
-  // minted from, so its balances never move.
-  let realm = session!.realms[0]
-  expect(realm).toBeTruthy()
-
-  let force = Mission.getForceById(realm.mission, forceId)
-  expect(force).toBeTruthy()
-  return force!.resourcePools
-}
-
+/**
+ * Registers a waiter for each given event method up front, so a test can send
+ * a request and then await the events it triggers without missing any.
+ */
 function createEventListeners<T extends keyof TServerEvents>(
   socket: Socket,
   methods: Array<T>,
@@ -223,21 +152,17 @@ describe('Action execution resource socket networking', () => {
   })
 
   test('deducts included resource costs and emits updated resource pools on action initiation', async () => {
-    let { action, fuelPool, intelPool, socket } =
+    let { action, fuelPool, intelPool, participant } =
       await prepareExecutionSession()
 
-    let listeners = createEventListeners(socket, ['action-execution-initiated'])
+    let listeners = createEventListeners(participant.socket, [
+      'action-execution-initiated',
+    ])
 
-    let expectedFuelBalance = determineExpectedBalanceAfterExecution(
-      action,
-      fuelPool,
-    )
-    let expectedIntelBalance = determineExpectedBalanceAfterExecution(
-      action,
-      intelPool,
-    )
+    let expectedFuelBalance = expectedBalanceAfterExecution(action, fuelPool)
+    let expectedIntelBalance = expectedBalanceAfterExecution(action, intelPool)
 
-    await sendActionExecutionRequest(socket, action._id)
+    TestSession.executeAction(participant, action._id)
     let response = await listeners['action-execution-initiated']
 
     let clientSideFuelResourcePoolBalance = findPoolBalanceByResourceId(
@@ -265,22 +190,20 @@ describe('Action execution resource socket networking', () => {
   test('returns CODE_ACTION_INSUFFICIENT_RESOURCES and leaves balances unchanged when a required pool cannot cover the cost', async () => {
     const fuelResourcePoolInitialBalance = 10
 
-    let { action, fuelPool, intelPool, socket } = await prepareExecutionSession(
-      {
+    let { action, fuelPool, intelPool, participant } =
+      await prepareExecutionSession({
         customizeMission: (payload) => {
           let force = payload.forces[0]
           let fuelResourcePool = force.resourcePools[FUEL_RESOURCE_POOL_INDEX]
           fuelResourcePool.initialBalance = fuelResourcePoolInitialBalance
         },
-      },
-    )
+      })
 
-    await sendActionExecutionRequest(socket, action._id)
+    TestSession.executeAction(participant, action._id)
 
-    let errorEvent = await TestSocketClient.waitForError(
-      socket,
-      (event) =>
-        event.code === ServerEmittedError.CODE_ACTION_INSUFFICIENT_RESOURCES,
+    let errorEvent = await TestSession.waitForError(
+      participant,
+      ServerEmittedError.CODE_ACTION_INSUFFICIENT_RESOURCES,
     )
 
     expect(errorEvent.code).toBe(
@@ -294,29 +217,24 @@ describe('Action execution resource socket networking', () => {
   })
 
   test('allows execution to drive a pool negative when that pool permits negative balances', async () => {
-    let { action, fuelPool, intelPool, socket } = await prepareExecutionSession(
-      {
+    let { action, fuelPool, intelPool, participant } =
+      await prepareExecutionSession({
         customizeMission: (payload) => {
           let force = payload.forces[0]
           let fuelResourcePool = force.resourcePools[FUEL_RESOURCE_POOL_INDEX]
           fuelResourcePool.initialBalance = 10
           fuelResourcePool.allowNegative = true
         },
-      },
-    )
+      })
 
-    let expectedFuelBalance = determineExpectedBalanceAfterExecution(
-      action,
-      fuelPool,
-    )
-    let expectedIntelBalance = determineExpectedBalanceAfterExecution(
-      action,
-      intelPool,
-    )
+    let expectedFuelBalance = expectedBalanceAfterExecution(action, fuelPool)
+    let expectedIntelBalance = expectedBalanceAfterExecution(action, intelPool)
 
-    let listeners = createEventListeners(socket, ['action-execution-initiated'])
+    let listeners = createEventListeners(participant.socket, [
+      'action-execution-initiated',
+    ])
 
-    await sendActionExecutionRequest(socket, action._id)
+    TestSession.executeAction(participant, action._id)
     let response = await listeners['action-execution-initiated']
 
     let clientSideFuelResourcePoolBalance = findPoolBalanceByResourceId(
@@ -338,28 +256,23 @@ describe('Action execution resource socket networking', () => {
   })
 
   test('skips costs for excluded pools during action execution while keeping their balances visible in session data', async () => {
-    let { action, fuelPool, intelPool, socket } = await prepareExecutionSession(
-      {
+    let { action, fuelPool, intelPool, participant } =
+      await prepareExecutionSession({
         customizeMission: (payload) => {
           let force = payload.forces[0]
           let intelResourcePool = force.resourcePools[INTEL_RESOURCE_POOL_INDEX]
           intelResourcePool.excluded = true
         },
-      },
-    )
+      })
 
-    let expectedFuelBalance = determineExpectedBalanceAfterExecution(
-      action,
-      fuelPool,
-    )
-    let expectedIntelBalance = determineExpectedBalanceAfterExecution(
-      action,
-      intelPool,
-    )
+    let expectedFuelBalance = expectedBalanceAfterExecution(action, fuelPool)
+    let expectedIntelBalance = expectedBalanceAfterExecution(action, intelPool)
 
     // Action Execution
-    let listeners = createEventListeners(socket, ['action-execution-initiated'])
-    await sendActionExecutionRequest(socket, action._id)
+    let listeners = createEventListeners(participant.socket, [
+      'action-execution-initiated',
+    ])
+    TestSession.executeAction(participant, action._id)
     let actionExecutionInitiatedResponse =
       await listeners['action-execution-initiated']
 
@@ -372,14 +285,10 @@ describe('Action execution resource socket networking', () => {
       intelPool.resourceId,
     )
 
-    // Current Session
-    let currentSessionResponse = await requestCurrentSession(socket)
-    let currentSessionForceResourcePools = getCurrentSessionForceResourcePools(
-      currentSessionResponse,
+    // Current Session — the excluded pool remains visible in session data.
+    let currentSessionForceIntelPoolBalance = readRealmPoolBalance(
+      await TestSession.requestCurrentSession(participant),
       action.force._id,
-    )
-    let currentSessionForceIntelPoolBalance = findPoolBalanceByResourceId(
-      currentSessionForceResourcePools,
       intelPool.resourceId,
     )
 
@@ -395,17 +304,16 @@ describe('Action execution resource socket networking', () => {
   })
 
   test('does not deduct any pool balances when the zeroCost cheat is enabled', async () => {
-    let { action, fuelPool, intelPool, socket } = await prepareExecutionSession(
-      {
+    let { action, fuelPool, intelPool, participant } =
+      await prepareExecutionSession({
         memberRoleId: MemberRole.AVAILABLE_ROLES.manager._id,
-      },
-    )
+      })
 
-    let listeners = createEventListeners(socket, ['action-execution-initiated'])
+    let listeners = createEventListeners(participant.socket, [
+      'action-execution-initiated',
+    ])
 
-    await sendActionExecutionRequest(socket, action._id, {
-      zeroCost: true,
-    })
+    TestSession.executeAction(participant, action._id, { zeroCost: true })
 
     let response = await listeners['action-execution-initiated']
 
@@ -434,8 +342,8 @@ describe('Action execution resource socket networking', () => {
   test('does not deduct any pool balances when infiniteResources is enabled in the session config', async () => {
     const fuelResourcePoolInitialBalance = 10
 
-    let { action, fuelPool, intelPool, socket } = await prepareExecutionSession(
-      {
+    let { action, fuelPool, intelPool, participant } =
+      await prepareExecutionSession({
         customizeMission: (payload) => {
           let force = payload.forces[0]
           let fuelResourcePool = force.resourcePools[FUEL_RESOURCE_POOL_INDEX]
@@ -444,12 +352,13 @@ describe('Action execution resource socket networking', () => {
         sessionConfig: {
           infiniteResources: true,
         },
-      },
-    )
+      })
 
-    let listeners = createEventListeners(socket, ['action-execution-initiated'])
+    let listeners = createEventListeners(participant.socket, [
+      'action-execution-initiated',
+    ])
 
-    await sendActionExecutionRequest(socket, action._id)
+    TestSession.executeAction(participant, action._id)
     let response = await listeners['action-execution-initiated']
 
     let clientSideFuelResourcePoolBalance = findPoolBalanceByResourceId(
@@ -475,10 +384,10 @@ describe('Action execution resource socket networking', () => {
   test('applies modifyResourceCost changes to subsequent action execution and broadcasts the modifier event', async () => {
     const resourceCostOperand = 10
 
-    let { action, fuelPool, intelPool, realm, socket } =
+    let { action, fuelPool, intelPool, realm, participant } =
       await prepareExecutionSession()
 
-    let listeners = createEventListeners(socket, [
+    let listeners = createEventListeners(participant.socket, [
       'action-execution-initiated',
       'action-resource-cost-updated',
     ])
@@ -496,17 +405,11 @@ describe('Action execution resource socket networking', () => {
 
     // Determine what the expected pool balances should be after the
     // action executes.
-    let expectedFuelBalance = determineExpectedBalanceAfterExecution(
-      action,
-      fuelPool,
-    )
-    let expectedIntelBalance = determineExpectedBalanceAfterExecution(
-      action,
-      intelPool,
-    )
+    let expectedFuelBalance = expectedBalanceAfterExecution(action, fuelPool)
+    let expectedIntelBalance = expectedBalanceAfterExecution(action, intelPool)
 
     // Execute the action with the modified values.
-    await sendActionExecutionRequest(socket, action._id)
+    TestSession.executeAction(participant, action._id)
     let response = await listeners['action-execution-initiated']
 
     // Grab the actual pool balances post-action-execution.
@@ -529,8 +432,8 @@ describe('Action execution resource socket networking', () => {
   })
 
   test('awards a resource pool through an execution effect and reflects the updated balance in current session data', async () => {
-    let { action, fuelPool, intelPool, socket } = await prepareExecutionSession(
-      {
+    let { action, fuelPool, intelPool, participant } =
+      await prepareExecutionSession({
         customizeMission: (payload) => {
           let force = payload.forces[0]
           let fuelResourcePool = force.resourcePools[FUEL_RESOURCE_POOL_INDEX]
@@ -580,51 +483,52 @@ describe('Action execution resource socket networking', () => {
             ],
           }
         },
-      },
-    )
+      })
 
-    let listeners = createEventListeners(socket, [
+    let listeners = createEventListeners(participant.socket, [
       'action-execution-initiated',
       'action-execution-completed',
     ])
 
-    let expectedFuelBalanceAfterDeduction =
-      determineExpectedBalanceAfterExecution(action, fuelPool)
+    let expectedFuelBalanceAfterDeduction = expectedBalanceAfterExecution(
+      action,
+      fuelPool,
+    )
 
-    let expectedIntelBalanceAfterDeduction =
-      determineExpectedBalanceAfterExecution(action, intelPool)
+    let expectedIntelBalanceAfterDeduction = expectedBalanceAfterExecution(
+      action,
+      intelPool,
+    )
 
     let expectedFuelBalanceAfterAward =
       expectedFuelBalanceAfterDeduction + RESOURCE_POOL_AWARD_AMOUNT
 
     // Execute the action containing the resource pool award effect.
-    await sendActionExecutionRequest(socket, action._id)
+    TestSession.executeAction(participant, action._id)
     let actionExecutionResponse = await listeners['action-execution-initiated']
 
     // Wait for the action execution to complete.
     await listeners['action-execution-completed']
 
     // Wait until the current-session payload reflects the awarded balance.
-    let session = await waitForResourcePoolBalance(
-      socket,
+    let session = await waitForRealmPoolBalance(
+      participant,
       action.force._id,
       fuelPool.resourceId,
       expectedFuelBalanceAfterAward,
-    )
-    let currentSessionResourcePools = getCurrentSessionForceResourcePools(
-      session,
-      action.force._id,
     )
     let clientSideFuelBalanceAfterDeduction = findPoolBalanceByResourceId(
       actionExecutionResponse.data.resourcePools,
       fuelPool.resourceId,
     )
-    let clientSideFuelBalanceAfterAward = findPoolBalanceByResourceId(
-      currentSessionResourcePools,
+    let clientSideFuelBalanceAfterAward = readRealmPoolBalance(
+      session,
+      action.force._id,
       fuelPool.resourceId,
     )
-    let clientSideIntelBalanceAfterAward = findPoolBalanceByResourceId(
-      currentSessionResourcePools,
+    let clientSideIntelBalanceAfterAward = readRealmPoolBalance(
+      session,
+      action.force._id,
       intelPool.resourceId,
     )
 

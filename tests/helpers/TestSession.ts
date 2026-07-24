@@ -2,7 +2,12 @@ import type { MetisServer } from '@metis/server/MetisServer'
 import type { ServerSessionMember } from '@server/sessions/ServerSessionMember'
 import type { ServerSessionRealm } from '@server/sessions/ServerSessionRealm'
 import { SessionServer } from '@server/sessions/SessionServer'
-import type { TServerMethod } from '@shared/connect'
+import type {
+  TRequestEvents,
+  TResponseEvents,
+  TServerMethod,
+} from '@shared/connect'
+import type { TExecutionCheats } from '@shared/missions/actions/ActionExecution'
 import type { TMemberRoleId } from '@shared/sessions/members/MemberRole'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import type { Socket } from 'socket.io-client'
@@ -273,6 +278,57 @@ export abstract class TestSession {
       (event) => event.method === 'session-started',
       TestSession.START_TIMEOUT,
     )
+  }
+
+  /**
+   * Requests that a member execute an action on a node.
+   * @param memberContext The member executing the action.
+   * @param actionId The ID of the action to execute.
+   * @param cheats Execution cheats to apply. Omitted keys are ignored by the
+   * server, and cheats are only honored for members authorized to use them.
+   * @note Fire-and-forget: await the resulting `action-execution-initiated`
+   * or `action-execution-completed` event with {@link TestSession.waitFor}
+   * when the test needs to observe the outcome.
+   */
+  public static executeAction(
+    memberContext: TTestMemberContext,
+    actionId: string,
+    cheats: Partial<TExecutionCheats> = {},
+  ): void {
+    let data: TRequestEvents['request-execute-action']['data'] = { actionId }
+    if (Object.keys(cheats).length > 0) data.cheats = cheats
+
+    TestSession.send(memberContext, {
+      method: 'request-execute-action',
+      requestId: TestToolbox.generateRandomId(),
+      data,
+    })
+  }
+
+  /**
+   * Requests the current session over a member's socket and resolves with the
+   * response, which carries the member's subscribed realm alongside the
+   * authoring template.
+   * @param memberContext The member requesting the session.
+   * @param timeoutMs Timeout in milliseconds.
+   * @resolves With the `current-session` response event.
+   * @rejects If the timeout elapses.
+   */
+  public static async requestCurrentSession(
+    memberContext: TTestMemberContext,
+    timeoutMs: number = 5000,
+  ): Promise<TResponseEvents['current-session']> {
+    let response = TestSession.waitFor<TResponseEvents['current-session']>(
+      memberContext,
+      'current-session',
+      timeoutMs,
+    )
+    TestSession.send(memberContext, {
+      method: 'request-current-session',
+      requestId: TestToolbox.generateRandomId(),
+      data: {},
+    })
+    return await response
   }
 
   /**
