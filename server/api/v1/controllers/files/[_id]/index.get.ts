@@ -1,6 +1,7 @@
 import { ApiResponse } from '@server/api/v1/library/ApiResponse'
 import { StatusError } from '@server/api/v1/library/StatusError'
 import { FileReferenceModel } from '@server/database/models/file-references'
+import { asyncHandler } from '@server/middleware/async'
 
 /**
  * Retrieves a file reference from the database
@@ -10,7 +11,7 @@ import { FileReferenceModel } from '@server/database/models/file-references'
  * @resolves With the response to send to the client.
  * @rejects If an error occurs.
  */
-export const getFile: TExpressHandler = async (request, response) => {
+export const getFile: TExpressHandler = asyncHandler(async (request, response) => {
   const { _id } = request.params
 
   // Get reference to file.
@@ -21,4 +22,4 @@ export const getFile: TExpressHandler = async (request, response) => {
   }
 
   return ApiResponse.sendJson(response, referenceData)
-}
+})

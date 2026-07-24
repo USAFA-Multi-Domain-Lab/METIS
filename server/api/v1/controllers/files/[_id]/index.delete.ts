@@ -1,5 +1,6 @@
 import { ApiResponse } from '@server/api/v1/library/ApiResponse'
 import { FileReferenceModel } from '@server/database/models/file-references'
+import { asyncHandler } from '@server/middleware/async'
 import { databaseLogger } from '../../../../../logging'
 
 /**
@@ -11,7 +12,7 @@ import { databaseLogger } from '../../../../../logging'
  * @resolves With the response to send to the client.
  * @rejects If an error occurs.
  */
-export const deleteFile: TExpressHandler = async (request, response) => {
+export const deleteFile: TExpressHandler = asyncHandler(async (request, response) => {
   const { _id } = request.params
 
   // Delete the mission.
@@ -28,4 +29,4 @@ export const deleteFile: TExpressHandler = async (request, response) => {
   databaseLogger.info(`Deleted file reference with the ID "${_id}".`)
   // Return a successful response.
   return ApiResponse.sendStatus(response, 200)
-}
+})

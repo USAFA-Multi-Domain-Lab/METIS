@@ -1,4 +1,5 @@
 import { FileReferenceModel } from '@server/database/models/file-references'
+import { asyncHandler } from '@server/middleware/async'
 import { ApiResponse } from '../../library/ApiResponse'
 
 /**
@@ -8,7 +9,7 @@ import { ApiResponse } from '../../library/ApiResponse'
  * @resolves With the response to send to the client.
  * @rejects If an error occurs.
  */
-export const getFiles: TExpressHandler = async (_, response) => {
+export const getFiles: TExpressHandler = asyncHandler(async (_, response) => {
   const referenceJson = await FileReferenceModel.find().exec()
   return ApiResponse.sendJson(response, referenceJson)
-}
+})

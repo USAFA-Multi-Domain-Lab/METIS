@@ -38,7 +38,15 @@ export const migrateEffectArgs: TExpressHandler = async (request, response) => {
   if (!target) return ApiResponse.sendStatus(response, 404)
   let migratableEffect = effect.toMigratable()
 
-  target.migrateEffect(migratableEffect)
+  try {
+    target.migrateEffect(migratableEffect)
+  } catch (error: any) {
+    databaseLogger.error(
+      `Failed to migrate effect "${effectId}" in mission "${missionId}".\n`,
+      error,
+    )
+    return ApiResponse.error(error, response)
+  }
 
   return ApiResponse.sendJson(response, {
     result: migratableEffect.result,
