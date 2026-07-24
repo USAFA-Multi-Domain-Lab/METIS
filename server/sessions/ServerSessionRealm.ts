@@ -180,6 +180,14 @@ export class ServerSessionRealm extends SessionRealm<TMetisServerComponents> {
           _id: node._id,
           forceId: node.forceId,
           structure,
+          // Known/intentional: this shared payload is broadcast to the
+          // whole batch, so we serialize under members[0]'s identity even
+          // though 'member-specific' is requested. This is safe because
+          // node data does not differ between members of the same force —
+          // every member with visibility of a force sees identical node
+          // data. If node visibility ever varies member to member within a
+          // force, this must switch to emitMemberSpecific (see the matching
+          // note in onRequestOpenNode.ts).
           revealedDescendants: descendants.map((descendant) =>
             descendant.toJson({
               sessionDataExposure: {
