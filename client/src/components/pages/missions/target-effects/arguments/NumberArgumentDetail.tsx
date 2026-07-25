@@ -5,7 +5,7 @@ import { useMissionPageContext } from '../../context'
 
 /**
  * Renders a number input box for the argument whose type is `"number"`.
- * @note Renders nothing if the argument or parameter type is not `"number"`.
+ * @throws If the argument or parameter type is not `"number"`.
  */
 export default function NumberArgumentDetail({
   argument,
@@ -22,8 +22,13 @@ export default function NumberArgumentDetail({
 
   /* -- VALIDATION -- */
 
+  // Unreachable: the caller only renders this for a matching number
+  // parameter. Throwing rather than returning keeps the hook count below
+  // constant, since a render that bails early would break the rules of hooks.
   if (context.type !== 'number' || !parameter || parameter.type !== 'number') {
-    return null
+    throw new Error(
+      `NumberArgumentDetail rendered for argument "${argument._id}" with argument type "${context.type}" and parameter type "${parameter?.type ?? 'none'}". Only a matching number parameter should reach this component.`,
+    )
   }
 
   /* -- STATE (CONTINUED) -- */

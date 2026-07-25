@@ -6,7 +6,7 @@ import { useMissionPageContext } from '../../context'
 
 /**
  * Renders a string input box for the argument whose type is `"string"`.
- * @note Renders nothing if the argument or parameter type is not `"string"`.
+ * @throws If the argument or parameter type is not `"string"`.
  */
 export default function StringArgumentDetail({
   argument,
@@ -23,12 +23,13 @@ export default function StringArgumentDetail({
 
   /* -- VALIDATION -- */
 
-  // Make sure the argument and parameter are
-  // both strings, otherwise this react component
-  // cannot function, therefore return null so
-  // nothing is rendered.
+  // Unreachable: the caller only renders this for a matching string
+  // parameter. Throwing rather than returning keeps the hook count below
+  // constant, since a render that bails early would break the rules of hooks.
   if (context.type !== 'string' || !parameter || parameter.type !== 'string') {
-    return null
+    throw new Error(
+      `StringArgumentDetail rendered for argument "${argument._id}" with argument type "${context.type}" and parameter type "${parameter?.type ?? 'none'}". Only a matching string parameter should reach this component.`,
+    )
   }
 
   /* -- STATE (CONTINUED) -- */

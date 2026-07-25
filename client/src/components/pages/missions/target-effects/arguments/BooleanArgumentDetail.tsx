@@ -5,7 +5,7 @@ import { useMissionPageContext } from '../../context'
 
 /**
  * Renders a toggle switch for the argument whose type is `"boolean"`.
- * @note Renders nothing if the argument or parameter type is not `"boolean"`.
+ * @throws If the argument or parameter type is not `"boolean"`.
  */
 export default function BooleanArgumentDetail({
   argument,
@@ -22,12 +22,17 @@ export default function BooleanArgumentDetail({
 
   /* -- VALIDATION -- */
 
+  // Unreachable: the caller only renders this for a matching boolean
+  // parameter. Throwing rather than returning keeps the hook count below
+  // constant, since a render that bails early would break the rules of hooks.
   if (
     context.type !== 'boolean' ||
     !parameter ||
     parameter.type !== 'boolean'
   ) {
-    return null
+    throw new Error(
+      `BooleanArgumentDetail rendered for argument "${argument._id}" with argument type "${context.type}" and parameter type "${parameter?.type ?? 'none'}". Only a matching boolean parameter should reach this component.`,
+    )
   }
 
   /* -- STATE (CONTINUED) -- */

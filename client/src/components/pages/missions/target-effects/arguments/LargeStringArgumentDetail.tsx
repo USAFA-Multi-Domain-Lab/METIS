@@ -5,7 +5,7 @@ import { useMissionPageContext } from '../../context'
 
 /**
  * Renders a large string input box for the argument whose type is `"large-string"`.
- * @note Renders nothing if the argument or parameter type is not `"large-string"`.
+ * @throws If the argument or parameter type is not `"large-string"`.
  */
 export default function LargeStringArgumentDetail({
   argument,
@@ -22,12 +22,17 @@ export default function LargeStringArgumentDetail({
 
   /* -- VALIDATION -- */
 
+  // Unreachable: the caller only renders this for a matching large-string
+  // parameter. Throwing rather than returning keeps the hook count below
+  // constant, since a render that bails early would break the rules of hooks.
   if (
     context.type !== 'large-string' ||
     !parameter ||
     parameter.type !== 'large-string'
   ) {
-    return null
+    throw new Error(
+      `LargeStringArgumentDetail rendered for argument "${argument._id}" with argument type "${context.type}" and parameter type "${parameter?.type ?? 'none'}". Only a matching large-string parameter should reach this component.`,
+    )
   }
 
   /* -- STATE (CONTINUED) -- */

@@ -22,7 +22,7 @@ import MissionOutline, {
 
 /**
  * Renders a multi-select for the argument whose type is `"mission-component"`.
- * @note Renders nothing if the argument or parameter type is not `"mission-component"`.
+ * @throws If the argument or parameter type is not `"mission-component"`.
  */
 export default function MissionComponentTargetDetail({
   argument,
@@ -41,12 +41,17 @@ export default function MissionComponentTargetDetail({
 
   /* -- VALIDATION -- */
 
+  // Unreachable: the caller only renders this for a matching mission-component
+  // parameter. Throwing rather than returning keeps the hook count below
+  // constant, since a render that bails early would break the rules of hooks.
   if (
     context.type !== 'mission-component' ||
     !parameter ||
     parameter.type !== 'mission-component'
   ) {
-    return null
+    throw new Error(
+      `MissionComponentTargetDetail rendered for argument "${argument._id}" with argument type "${context.type}" and parameter type "${parameter?.type ?? 'none'}". Only a matching mission-component parameter should reach this component.`,
+    )
   }
 
   /* -- STATE (CONTINUED) -- */
