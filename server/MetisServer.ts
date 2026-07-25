@@ -726,11 +726,30 @@ export class MetisServer {
       'LOGIN_LOCKOUT_DURATION',
       'LOGIN_ATTEMPT_WINDOW',
     ] as const
+    const numericKeys = [
+      'PORT',
+      'MONGO_PORT',
+      'HTTP_RATE_LIMIT',
+      'HTTP_RATE_LIMIT_DURATION',
+      'WS_RATE_LIMIT',
+      'WS_RATE_LIMIT_DURATION',
+      'MAX_LOGIN_ATTEMPTS',
+      'LOGIN_LOCKOUT_DURATION',
+      'LOGIN_ATTEMPT_WINDOW',
+    ] as const
 
     requiredKeys.forEach((key) => {
       if (!process.env[key]) {
         throw new Error(
           `Missing required environment variable: "${key}"\nIf \`defaults.env\` was modified, please undo changes. This file should not be modified by non-developers.`,
+        )
+      }
+    })
+    numericKeys.forEach((key) => {
+      let value = process.env[key]?.trim() ?? ''
+      if (!/^\d+$/.test(value)) {
+        throw new Error(
+          `Invalid environment variable: "${key}" must be a whole number, but was "${value}"\nIf \`defaults.env\` was modified, please undo changes. This file should not be modified by non-developers.`,
         )
       }
     })
