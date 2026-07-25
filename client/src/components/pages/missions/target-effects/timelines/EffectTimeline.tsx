@@ -17,7 +17,7 @@ import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import React, { useMemo, useRef, useState } from 'react'
 import { timelineContext } from './context'
 import './EffectTimeline.scss'
-import { NO_TIMELINE_ITEMS_ID } from './subcomponents/items/TimelineNoItems'
+import { getNoTimelineItemsId } from './subcomponents/items/TimelineNoItems'
 import TimelineControlPanel from './subcomponents/TimelineControlPanel'
 import { TimelineSection } from './subcomponents/TimelineSection'
 
@@ -56,6 +56,10 @@ export function EffectTimeline<TType extends TEffectType>(
 
   /**
    * A map of trigger to their corresponding effects.
+   * @note The dependency list is kept at a fixed size. Spreading the
+   * two arrays into it made it grow and shrink as effects were added
+   * and deleted, which React warns about; the joined keys carry the
+   * same information at a constant length.
    */
   const effectsMap = useMemo<
     Record<string, TMetisClientComponents[TType][]>
@@ -74,7 +78,11 @@ export function EffectTimeline<TType extends TEffectType>(
     }
 
     return map
-  }, [...host.validTriggers, ...host.effects, itemOrderUpdateId])
+  }, [
+    host.validTriggers.join(),
+    host.effects.map((effect) => effect._id).join(),
+    itemOrderUpdateId,
+  ])
 
   /* -- EFFECTS -- */
 
@@ -226,8 +234,8 @@ type TTimelineItemHoverOver = 'top' | 'bottom' | 'nothing'
 export type TTimelineDragDropItem<TType extends TEffectType> = {
   /**
    * The ID of the dragged effect item.
-   * If {@link NO_TIMELINE_ITEMS_ID}, it represents a placeholder item
-   * for an empty section.
+   * If it matches {@link getNoTimelineItemsId} for a trigger, it
+   * represents a placeholder item for that empty section.
    */
   _id: string
   /**

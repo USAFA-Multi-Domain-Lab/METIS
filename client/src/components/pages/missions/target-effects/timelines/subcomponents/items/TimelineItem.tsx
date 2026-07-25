@@ -19,7 +19,7 @@ import { useEffect, useRef } from 'react'
 import type { TTimelineDragDropItem } from '../../EffectTimeline'
 import { useTimelineContext } from '../../context'
 import './TimelineItem.scss'
-import { NO_TIMELINE_ITEMS_ID } from './TimelineNoItems'
+import { getNoTimelineItemsId } from './TimelineNoItems'
 import TimelineDragHandle from './cells/TimelineDragHandle'
 import TimelineIssueCell from './cells/TimelineIssueCell'
 import { TimelineItemCell } from './cells/TimelineItemCell'
@@ -59,6 +59,7 @@ export function TimelineItem<TType extends TEffectType>({
   const { onDuplicateRequest, onDeleteRequest } =
     useEffectItemButtonCallbacks(host)
   const lastScrollTime = useRef<number>(0)
+  const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastMouseMove = useRef<MouseEvent | null>(null)
   const root = useRef<HTMLDivElement>(null)
   const viewOptionsButtonEngine = useButtonSvgEngine({
@@ -222,12 +223,16 @@ export function TimelineItem<TType extends TEffectType>({
         let triggerData = targetedElement.getAttribute('data-trigger')
         let orderData = targetedElement.getAttribute('data-order')
 
-        // Abort if necessary data is missing.
+        // Give up on this element if necessary data is missing, but
+        // leave the loop rather than the function so that the clearing
+        // below still runs. Returning here would strand the previously
+        // targeted row, leaving it marked and its indicator pointing
+        // somewhere the cursor has already left.
         if (!idData || !triggerData || !orderData) {
           console.warn(
             'TimelineItem: Missing data attributes on targeted element.',
           )
-          return
+          break
         }
 
         // Construct the new targeted item from
@@ -243,8 +248,8 @@ export function TimelineItem<TType extends TEffectType>({
         // dragged item.
         if (
           mouseY <= rect.top + rect.height / 2 ||
-          newTargetedItem?._id === draggedItem._id ||
-          newTargetedItem?._id === NO_TIMELINE_ITEMS_ID
+          newTargetedItem._id === draggedItem._id ||
+          newTargetedItem._id === getNoTimelineItemsId(newTargetedItem.trigger)
         ) {
           newHoverOver = 'top'
         }
@@ -331,9 +336,11 @@ export function TimelineItem<TType extends TEffectType>({
     // Record the last scroll time.
     lastScrollTime.current = Date.now()
 
-    // Repeat scrolling until a condition breaks
-    // the loop.
-    setTimeout(() => {
+    // Repeat scrolling until a condition breaks the loop. Any repeat
+    // already pending is cleared first, so that a burst of mouse moves
+    // cannot leave several chains running at once.
+    if (scrollTimeout.current) clearTimeout(scrollTimeout.current)
+    scrollTimeout.current = setTimeout(() => {
       scrollIfNeeded()
     }, SCROLL_RATE)
   }
@@ -383,18 +390,25 @@ export function TimelineItem<TType extends TEffectType>({
   // Set up global mouse event listeners when this
   // item is being dragged
   useEffect(() => {
-    if (isDragged) {
-      const eventListener = (event: MouseEvent) => {
-        onGlobalMouseMove.current(event)
-      }
+    if (!isDragged) return
 
-      window.addEventListener('mousemove', eventListener)
+    const eventListener = (event: MouseEvent) => {
+      onGlobalMouseMove.current(event)
+    }
 
-      return () => {
-        window.removeEventListener('mousemove', eventListener)
+    window.addEventListener('mousemove', eventListener)
+
+    return () => {
+      window.removeEventListener('mousemove', eventListener)
+      // Stop the scroll repeat. It reads `isDragged` from the render
+      // that created it, so it cannot notice the drag ending on its
+      // own. Clearing here also covers this item unmounting mid-drag,
+      // which is what happens whenever an effect is dropped into a
+      // different section.
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current)
+        scrollTimeout.current = null
       }
-    } else {
-      if (root.current) root.current.style.top = `${0}px`
     }
   }, [isDragged])
 

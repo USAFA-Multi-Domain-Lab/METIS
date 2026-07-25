@@ -4,12 +4,19 @@ import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useTimelineContext } from '../../context'
 import './TimelineNoItems.scss'
 
-/* -- CONSTANTS -- */
+/* -- FUNCTIONS -- */
 
 /**
- * ID used to identify the no-items placeholder.
+ * Builds the ID used to identify the no-items placeholder of a
+ * section. Each section gets its own ID so that the placeholders of
+ * two empty sections can be told apart by ID alone.
+ * @param trigger The trigger of the section the placeholder stands in
+ * for.
+ * @returns The ID for that section's placeholder.
  */
-export const NO_TIMELINE_ITEMS_ID = 'no-items'
+export const getNoTimelineItemsId = (trigger: TEffectTrigger): string => {
+  return `no-items-${trigger}`
+}
 
 /* -- COMPONENTS -- */
 
@@ -35,10 +42,7 @@ export function TimelineNoItems({
    * targeted for a drop.
    */
   const isTargeted = compute<boolean>(() => {
-    return (
-      targetedItem?._id === NO_TIMELINE_ITEMS_ID &&
-      targetedItem.trigger === trigger
-    )
+    return targetedItem?._id === getNoTimelineItemsId(trigger)
   })
 
   /**
@@ -56,7 +60,7 @@ export function TimelineNoItems({
   return (
     <div
       className={rootClasses.value}
-      data-id={NO_TIMELINE_ITEMS_ID}
+      data-id={getNoTimelineItemsId(trigger)}
       data-trigger={trigger}
       data-order={1}
     >
