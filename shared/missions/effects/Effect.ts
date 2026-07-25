@@ -189,10 +189,24 @@ export abstract class Effect<
   public description: string
 
   /**
-   * The arguments to pass to the script in the
-   * target that will enact the effect.
+   * Every argument the effect holds, stale ones included, as the live list
+   * rather than a copy. This is what gets persisted, so an argument left
+   * behind by a parameter's type change survives a save instead of being
+   * discarded. Use it for serialization, migration, and anything that
+   * mutates the list in place; use {@link arguments} everywhere else.
    */
-  public arguments: JsonSerializableArray<T['targetArgument']>
+  public allArguments: JsonSerializableArray<T['targetArgument']>
+  /**
+   * The arguments to pass to the script in the target that will enact the effect.
+   * @note Stale arguments are excluded, so anything resolving an argument
+   * by `parameterId` reaches the one matching the target's current
+   * parameters rather than a leftover of a previous type.
+   * @note This is a filtered copy, so it is read-only in practice. Mutating
+   * it in place changes nothing — write to {@link allArguments} instead.
+   */
+  public get arguments(): JsonSerializableArray<T['targetArgument']> {
+    return this.allArguments.filter((argument) => !argument.stale)
+  }
 
   /**
    * A key for the effect, used to identify it within the action.
@@ -294,7 +308,7 @@ export abstract class Effect<
     this.order = order
     this.description = description
     this.localKey = localKey
-    this.arguments = this.parseArguments(args)
+    this.allArguments = this.parseArguments(args)
     this.sortArguments()
   }
 
@@ -319,14 +333,14 @@ export abstract class Effect<
   ): JsonSerializableArray<T['targetArgument']>
 
   /**
-   * Re-orders {@link arguments} to match the declaration order of parameters
+   * Re-orders {@link allArguments} to match the declaration order of parameters
    * on the current target. Arguments whose `parameterId` is not found in the
    * target are sorted to the end. A no-op if {@link target} is absent.
    */
   public sortArguments(): void {
     if (!this.target) return
     let parameterIds = this.target.parameters.map((param) => param._id)
-    this.arguments.sort(
+    this.allArguments.sort(
       (a, b) =>
         parameterIds.indexOf(a.parameterId) -
         parameterIds.indexOf(b.parameterId),
@@ -346,7 +360,7 @@ export abstract class Effect<
       order: this.order,
       name: this.name,
       description: this.description,
-      arguments: this.arguments.map((arg) => arg.json),
+      arguments: this.allArguments.map((argument) => argument.json),
       localKey: this.localKey,
     }
   }
@@ -405,6 +419,7 @@ export abstract class Effect<
    * Gets the argument associated with a specific parameter ID.
    * @param parameterId The ID of the parameter of the associated argument.
    * @returns The argument if found, otherwise undefined.
+   * @note Stale arguments will not be returned here. Only the active ones.
    */
   public getArgumentByParameterId = (
     parameterId: string,

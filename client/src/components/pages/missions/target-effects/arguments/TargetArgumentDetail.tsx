@@ -23,9 +23,7 @@ export default function TargetArgumentDetail({
   /**
    * Determines if all the argument's dependencies have been met.
    */
-  const allDependenciesMet = compute<boolean>(
-    () => argument.dependenciesMet,
-  )
+  const allDependenciesMet = compute<boolean>(() => argument.dependenciesMet)
 
   /**
    * The class name for the argument component.
@@ -47,10 +45,8 @@ export default function TargetArgumentDetail({
 
   // Return early if the argument is not ready for display.
   if (!allDependenciesMet) return null
-
-  // Hide stale arguments whose stored type no longer matches the parameter.
-  // A correctly-typed argument is added alongside in parseArguments.
-  if (argument.parameter?.type !== argument.type) return null
+  // Hide arguments whose parameter is no longer on the target.
+  if (argument.parameterIsMissing) return null
 
   let internalDetailJsx = compute<TReactElement | null>(() => {
     switch (argument.type) {

@@ -109,7 +109,9 @@ export class ServerEffect<
       trigger: self.trigger,
       description: self.description,
       order: self.order,
-      arguments: self.arguments.map((arg) => arg.json),
+      // Stale arguments included in case type ever
+      // changes again.
+      arguments: self.allArguments.map((arg) => arg.json),
       versionCursor: this.targetEnvironmentVersion,
       get mission() {
         return self.mission.toTargetEnvContext()

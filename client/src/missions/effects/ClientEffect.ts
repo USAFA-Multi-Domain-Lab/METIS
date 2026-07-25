@@ -140,9 +140,10 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
       localKey,
     )
 
-    // Duplicate the arguments.
-    duplicatedEffect.arguments = new JsonSerializableArray(
-      ...this.arguments.map((arg) => arg.duplicate(duplicatedEffect)),
+    // Duplicate the arguments. Stale ones are carried over so the duplicate
+    // stores what the original stores.
+    duplicatedEffect.allArguments = new JsonSerializableArray(
+      ...this.allArguments.map((arg) => arg.duplicate(duplicatedEffect)),
     )
 
     return duplicatedEffect
@@ -163,7 +164,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
           await ClientTargetEnvironment.$migrateTargetArguments(this)
         // Store the migrated data in the component.
         this.targetEnvironmentVersion = results.version
-        this.arguments = this.parseArguments(results.data)
+        this.allArguments = this.parseArguments(results.data)
         this.sortArguments()
         this.mission.issueRegistry.trigger('effect-updated', this)
         for (let argument of this.arguments) {

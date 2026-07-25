@@ -113,7 +113,8 @@ export abstract class TargetArgument<
 
   // Implemented
   public get sourceList(): T['targetArgument'][] {
-    return this.effect.arguments
+    // The live list, so removing this argument from it actually takes.
+    return this.effect.allArguments
   }
 
   // Implemented
@@ -198,8 +199,14 @@ export abstract class TargetArgument<
   /**
    * Recursive algorithm that determines what is returned from
    * the {@link dependenciesMet} getter.
+   * @param visited The parameters on the path currently being walked, added to
+   * and removed from around the recursion so a circular dependency is caught
+   * while a parameter reached twice by separate paths is not.
    */
   private _dependenciesMet(visited: Set<string>): boolean {
+    let dependencies = this.parameter?.dependencies ?? []
+    if (!dependencies.length) return true
+
     if (visited.has(this.parameterId)) {
       console.warn(
         `Circular dependency detected involving parameter "${this.parameterId}". Treating dependencies as unmet.`,
@@ -208,16 +215,28 @@ export abstract class TargetArgument<
     }
     visited.add(this.parameterId)
 
-    let dependencies = this.parameter?.dependencies ?? []
-    if (!dependencies.length) return true
-
-    return dependencies.every((dependency) => {
+    let result = dependencies.every((dependency) => {
       let dependentArgument = this.effect.arguments.find(
         (argument) => argument.parameterId === dependency.dependentId,
       )
       if (!dependentArgument?._dependenciesMet(visited)) return false
       return dependency.condition(dependentArgument.value)
     })
+
+    visited.delete(this.parameterId)
+
+    return result
+  }
+
+  /**
+   * Whether this argument is non-current in the effect's list of arguments.
+   * Meaning, the parameter no longer matches the type of the argument, therefore
+   * the argument is stale and not currently applicable to the effect's target.
+   * @note If the parameter is not found, the argument will be considered not
+   * to be stale.
+   */
+  public get stale(): boolean {
+    return Boolean(this.parameter && this.parameter.type !== this.type)
   }
 
   /**

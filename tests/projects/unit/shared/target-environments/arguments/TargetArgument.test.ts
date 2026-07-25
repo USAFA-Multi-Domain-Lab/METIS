@@ -510,11 +510,15 @@ describe('TargetArgument default application', () => {
     ).toBeNull()
 
     // When the stored type does not match the parameter type, the value is
-    // left as loaded rather than defaulted.
+    // left as loaded rather than defaulted. Reached through `allArguments`,
+    // since a stale argument is excluded from lookups by parameter ID.
     let mismatchEffect = buildEffect([
       { _id: 'arg-count', parameterId: 'count', type: 'string', value: '' },
     ])
-    expect(mismatchEffect.getArgumentByParameterId('count')?.value).toBe('')
+    expect(
+      mismatchEffect.allArguments.find((arg) => arg.parameterId === 'count')
+        ?.value,
+    ).toBe('')
   })
 })
 
