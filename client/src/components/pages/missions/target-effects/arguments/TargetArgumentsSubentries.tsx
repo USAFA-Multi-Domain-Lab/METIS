@@ -108,13 +108,4 @@ type TTargetParameterEntry_P = {
    * The effect that the arguments belong to.
    */
   effect: ClientEffect
-  /**
-   * The arguments that the effect uses to modify the target.
-   */
-  targetArguments: ClientEffect['arguments']
-  /**
-   * Function that updates the value of the effect's arguments
-   * stored in the state.
-   */
-  setTargetArguments: TReactSetter<ClientEffect['arguments']>
 }

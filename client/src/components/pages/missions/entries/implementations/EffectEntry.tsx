@@ -33,13 +33,12 @@ export default function EffectEntry<TType extends TEffectType>({
   )
   const effectState = useObjectFormSync(
     effect,
-    ['name', 'trigger', 'description', 'arguments'],
+    ['name', 'trigger', 'description'],
     { onChange: () => onChange(effect) },
   )
   const [name, setName] = effectState.name
   const [trigger, setTrigger] = effectState.trigger
   const [description, setDescription] = effectState.description
-  const [targetArguments, setTargetArguments] = effectState.arguments
   const svgEngine = useButtonSvgEngine({
     elements: [
       {
@@ -143,11 +142,7 @@ export default function EffectEntry<TType extends TEffectType>({
         errorType={'warning'}
         errorMessage={targetEnvironmentErrorMessage}
       />
-      <TargetArgumentsEntry
-        effect={effect}
-        targetArguments={targetArguments}
-        setTargetArguments={setTargetArguments}
-      />
+      <TargetArgumentsEntry effect={effect} />
     </Entry>
   )
 }
