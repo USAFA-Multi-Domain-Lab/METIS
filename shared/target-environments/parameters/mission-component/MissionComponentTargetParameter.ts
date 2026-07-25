@@ -1,3 +1,4 @@
+import type { TSatisfies } from '@shared/toolbox/objects/ObjectToolbox'
 import type {
   TBaseTargetParameter,
   TBaseTargetParameterJson,
@@ -9,6 +10,21 @@ import { TargetParameter } from '../TargetParameter'
  * as a parameter for a target.
  */
 export class MissionComponentTargetParameter {
+  /**
+   * Every component type that can appear in a saved selection. Kept as a
+   * single list so that runtime validation of stored selections and
+   * {@link TSelectedMissionComponentType} cannot drift apart.
+   */
+  public static readonly SELECTED_COMPONENT_TYPES = [
+    'mission',
+    'force',
+    'node',
+    'action',
+    'missionFile',
+    'resource',
+    'resourcePool',
+  ] as const satisfies readonly TSelectedMissionComponentType[]
+
   /**
    * Converts `TMissionComponentTargetParameter` to `TMissionComponentTargetParameterJson`.
    * @param parameter The mission component parameter to convert.
@@ -80,7 +96,7 @@ export type TMissionComponentSerializedSelection = {
    * The type of mission component selected (e.g. "force",
    * "node", "action").
    */
-  componentType: TMissionComponentType
+  componentType: TSelectedMissionComponentType
   /**
    * The last known name of the component that was selected.
    * This is useful when, for whatever reason, the selection
@@ -115,6 +131,31 @@ export type TMissionComponentType =
       | 'resourcePool'
     >
   | 'any'
+
+/**
+ * The type of a mission component that was actually selected. `"any"` is
+ * authoring vocabulary for
+ * {@link TMissionComponentTargetParameter.validComponentTypes}, where it
+ * means every type is selectable, so it can never describe a component
+ * someone picked.
+ */
+export type TSelectedMissionComponentType = Exclude<
+  TMissionComponentType,
+  'any'
+>
+
+/**
+ * Fails to compile if a member of {@link TSelectedMissionComponentType} is
+ * missing from {@link MissionComponentTargetParameter.SELECTED_COMPONENT_TYPES}.
+ * The `satisfies` on that list only rules out entries that do not belong,
+ * so this covers the opposite direction.
+ * @note Appears unused, but this will produce a compile-time error if
+ * not satisfied, which can be a helpful indicator of a problem.
+ */
+type TEverySelectedComponentTypeIsListed = TSatisfies<
+  TSelectedMissionComponentType,
+  (typeof MissionComponentTargetParameter.SELECTED_COMPONENT_TYPES)[number]
+>
 
 /**
  * The mission component parameter type for a target.

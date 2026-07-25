@@ -6,7 +6,10 @@ import { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import type { MissionComponentIssueRegistry } from '@shared/missions/MissionComponentIssueRegistry'
 import { MissionResource } from '@shared/missions/MissionResource'
 import { MissionNode } from '@shared/missions/nodes/MissionNode'
-import type { TMissionComponentSerializedSelection } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
+import {
+  MissionComponentTargetParameter,
+  type TMissionComponentSerializedSelection,
+} from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import { BooleanToolbox } from '@shared/toolbox/booleans/BooleanToolbox'
 import {
@@ -464,7 +467,8 @@ export abstract class TargetArgument<
   /**
    * Deserializes a selection of serialized mission components back into
    * their live mission component objects. Components that no longer exist
-   * in the mission (e.g. deleted since the selection was saved) are
+   * in the mission (e.g. deleted since the selection was saved), and
+   * selections whose stored component type cannot be resolved, are
    * silently filtered out.
    * @param serialized The serialized selection.
    * @param mission The mission to look up components in.
@@ -507,7 +511,17 @@ export abstract class TargetArgument<
             mission.getPoolById(ids[1], { forceId: ids[0] }),
           )
         } else {
-          throw new Error(`Unsupported component type: ${type}`)
+          // Unreachable by type, but stored selections are not constrained by
+          // the type system, so a component type retired since the selection
+          // was saved can still arrive here. This value is produced lazily, so
+          // throwing would fire during a render or mid-script rather than at
+          // load; skipping degrades the one selection instead. The annotation
+          // makes adding a component type without a lookup above a compile error.
+          let unresolvableType: never = type
+          console.warn(
+            `Skipping a mission component selection with the unsupported component type "${unresolvableType}".`,
+          )
+          return []
         }
       },
     )
@@ -613,7 +627,9 @@ export const targetArgumentJsonSchema = zod.discriminatedUnion('type', [
     type: zod.literal('mission-component'),
     value: zod.array(
       zod.object({
-        componentType: zod.string(),
+        componentType: zod.enum(
+          MissionComponentTargetParameter.SELECTED_COMPONENT_TYPES,
+        ),
         lastKnownName: zod.string(),
         ids: zod.array(zod.string()),
       }),
