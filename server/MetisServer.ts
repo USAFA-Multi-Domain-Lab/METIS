@@ -11,6 +11,7 @@ import type { Store } from 'express-session'
 import session from 'express-session'
 import fs from 'fs'
 import type mongoose from 'mongoose'
+import { randomBytes } from 'node:crypto'
 import type { Server as HttpServer } from 'node:http'
 import http from 'node:http'
 import https from 'node:https'
@@ -251,6 +252,20 @@ export class MetisServer {
   }
 
   /**
+   * Whether the server is serving over HTTPS rather than HTTP.
+   */
+  private _usingHttps: boolean
+  /**
+   * Whether the server is serving over HTTPS rather than HTTP.
+   * @note Anything that has to match the protocol the server is actually
+   * running on, such as marking web session cookies as secure, reads this
+   * rather than working the answer out a second time.
+   */
+  public get usingHttps(): boolean {
+    return this._usingHttps
+  }
+
+  /**
    * The maximum number of failed login attempts before lockout.
    */
   private _maxLoginAttempts: number
@@ -345,9 +360,11 @@ export class MetisServer {
       const key = fs.readFileSync(this.sslKeyPath)
       const cert = fs.readFileSync(this.sslCertPath)
       this._httpServer = https.createServer({ key, cert }, this.expressApp)
+      this._usingHttps = true
       console.log('SSL certificates found, running with HTTPS protocol.')
     } else {
       this._httpServer = http.createServer(this.expressApp)
+      this._usingHttps = false
       if (this.envType === 'prod') {
         console.warn('SSL certificates not found, running with HTTP protocol.')
       }
@@ -463,17 +480,34 @@ export class MetisServer {
       MetisServer.createSessionStore(
         MongoStore.create({
           client: mongooseConnection.getClient(),
+          collectionName: MetisServer.WEB_SESSION_COLLECTION_NAME,
           touchAfter: 24 * 3600, // lazy update after 24 hours
         }),
       )
 
+      // Discard the sessions kept from an earlier run, since the logins
+      // those sessions name did not survive the restart.
+      await MetisServer.clearStoredSessions(mongooseConnection)
+
       // Configure sessions.
       this._sessionMiddleware = session({
         name: MetisServer.WEB_SESSION_COOKIE_NAME,
-        secret: '3c8V3DoMuJxjoife0asdfasdf023asd9isfd',
+        secret: MetisServer.createSessionSecret(),
         resave: false,
         saveUninitialized: false,
         store: MetisServer.sessionStore,
+        cookie: {
+          // Keep the cookie away from page scripts, so nothing running on a
+          // page can read the session out of the browser.
+          httpOnly: true,
+          // Only hand the cookie over an encrypted connection. This follows
+          // the protocol the server actually started on, since marking it
+          // secure while serving plain HTTP stops browsers storing it at all.
+          secure: this.usingHttps,
+          // Leave the cookie off requests started by other sites, while still
+          // sending it when someone follows a link into METIS.
+          sameSite: 'lax',
+        },
       })
 
       // sets up pug as the view engine
@@ -662,6 +696,11 @@ export class MetisServer {
   public static readonly WEB_SESSION_COOKIE_NAME = 'connect.sid'
 
   /**
+   * The name of the database collection that holds the web sessions.
+   */
+  public static readonly WEB_SESSION_COLLECTION_NAME = 'sessions'
+
+  /**
    * Resolves the given paths with {@link path.resolve} relative
    * to the METIS server app directory ({@link MetisServer.APP_DIR}).
    * @param paths The paths to resolve.
@@ -678,6 +717,58 @@ export class MetisServer {
    */
   public static createSessionStore(store: Store): void {
     this._sessionStore = store
+  }
+
+  /**
+   * Removes every web session held in the database.
+   * @param mongooseConnection The connection holding the web session
+   * collection.
+   * @resolves When the sessions have been removed, or when they could not be
+   * removed and the failure has been logged.
+   * @note This should only be called once on server startup.
+   * @note Logins are held in memory and start out empty every time the server
+   * runs, while the sessions in the database outlive the server process.
+   * Sessions kept from an earlier run therefore name users who are no longer
+   * logged in, and a later login attempt would settle its conflict against
+   * one of those users, disconnecting whoever holds that user's login now.
+   * Those users are already logged out once the server restarts, so removing
+   * their sessions takes away nothing they could still use.
+   * @note The session documents are removed rather than their collection
+   * being dropped, so that the index that expires old sessions stays in
+   * place.
+   */
+  public static async clearStoredSessions(
+    mongooseConnection: mongoose.Connection,
+  ): Promise<void> {
+    try {
+      await mongooseConnection
+        .collection(MetisServer.WEB_SESSION_COLLECTION_NAME)
+        .deleteMany({})
+    } catch (error: any) {
+      expressLogger.error(
+        'Failed to remove the stored web sessions:',
+        error.message || error,
+      )
+    }
+  }
+
+  /**
+   * Creates the secret used to sign web session cookies.
+   * @returns A newly generated secret.
+   * @note The signature made with this secret is what proves a session cookie
+   * was handed out by this server, so the secret has to be unguessable and
+   * must never be logged or sent to a client. It only signs the session ID
+   * that the cookie carries; the session itself is kept in the database.
+   * @note A new secret is made every time the server runs, which leaves the
+   * cookies from an earlier run unusable. That costs nothing here, because
+   * the sessions those cookies point to are removed on startup anyway.
+   * @note This ties the server to running as a single process. A second
+   * process would generate its own secret and reject the cookies signed by
+   * this one.
+   * @see {@link MetisServer.clearStoredSessions}
+   */
+  private static createSessionSecret(): string {
+    return randomBytes(32).toString('hex')
   }
 
   /**

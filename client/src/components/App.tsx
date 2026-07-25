@@ -2,7 +2,6 @@ import backgroundImage from '@client/assets/images/landing-page-img.webp'
 import type { ServerConnection } from '@client/connect/ServerConnection'
 import { useGlobalContext } from '@client/context/global'
 import { MetisInfo } from '@client/info/MetisInfo'
-import type { SessionClient } from '@client/sessions/SessionClient'
 import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
 import { compute } from '@client/toolbox'
 import { removeKey } from '@client/toolbox/components'
@@ -67,6 +66,7 @@ export default function (props: {}): TReactElement | null {
     loadLoginInfo,
     navigateTo,
     connectToServer,
+    navigateAfterLogin,
     notify,
   } = globalContext.actions
 
@@ -208,43 +208,8 @@ export default function (props: {}): TReactElement | null {
           beginLoading('Connecting to server...')
           let server: ServerConnection = await connectToServer()
 
-          // If the logged in user needs a password
-          // reset, then navigate to the user
-          // reset page.
-          if (login.user.needsPasswordReset) {
-            navigateTo('UserResetPage', {})
-          }
-          // Or, if the logged in user is in a session,
-          // then switch to the session page.
-          else if (login.sessionId !== null) {
-            let session: SessionClient | null =
-              await server.$fetchCurrentSession()
-
-            // Handle case where session could not be found.
-            if (session === null) {
-              throw new Error('Session state is out of sync with the server.')
-            }
-
-            // Navigate based on the session state.
-            switch (session.state) {
-              case 'unstarted':
-              case 'starting':
-                navigateTo('LobbyPage', { session })
-                break
-              case 'started':
-              case 'resetting':
-                navigateTo('SessionPage', { session, returnPage: 'HomePage' })
-                break
-              case 'ending':
-              case 'ended':
-                navigateTo('HomePage', {})
-                break
-            }
-          }
-          // Else, go to the home page.
-          else {
-            navigateTo('HomePage', {})
-          }
+          // Go to the page that matches the login.
+          await navigateAfterLogin(login, server)
         }
 
         // Open the app up for use by the user.

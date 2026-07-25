@@ -264,6 +264,62 @@ describe('/api/v1/logins', () => {
     expect(getResponse.data.user.username).toBe(username)
   })
 
+  test('Same client stays authenticated after forcefully logging in again', async () => {
+    let { client } = await createTestContext()
+    await createTestUser({ username, password })
+
+    let firstLogin = await client.post('/api/v1/logins/', {
+      username,
+      password,
+    })
+    expect(firstLogin.status).toBe(200)
+
+    // A second login on the same session is refused, which is what puts the
+    // "Logout and login here" prompt on screen.
+    let secondLogin = await client.post('/api/v1/logins/', {
+      username,
+      password,
+    })
+    expect(secondLogin.status).toBe(409)
+
+    // That prompt retries the login forcefully.
+    let forcefulLogin = await client.post(
+      '/api/v1/logins/',
+      { username, password },
+      { headers: { forceful: 'true' } },
+    )
+    expect(forcefulLogin.status).toBe(200)
+
+    // The session has to keep working afterwards, since the page loads its
+    // post-login data over that same session.
+    let getResponse = await client.get('/api/v1/logins/')
+    expect(getResponse.status).toBe(200)
+    expect(getResponse.data.user.username).toBe(username)
+
+    let postLoginData = await client.get('/api/v1/target-environments/')
+    expect(postLoginData.status).toBe(200)
+  })
+
+  test('Same client stays authenticated after forcefully logging in as another user', async () => {
+    let otherUsername = `${usernamePrefix}_${generateRandomId()}`
+    let { client } = await createTestContext()
+    await createTestUser({ username, password })
+    await createTestUser({ username: otherUsername, password })
+
+    await client.post('/api/v1/logins/', { username, password })
+
+    let forcefulLogin = await client.post(
+      '/api/v1/logins/',
+      { username: otherUsername, password },
+      { headers: { forceful: 'true' } },
+    )
+    expect(forcefulLogin.status).toBe(200)
+    expect(forcefulLogin.data?.login?.user?.username).toBe(otherUsername)
+
+    let postLoginData = await client.get('/api/v1/target-environments/')
+    expect(postLoginData.status).toBe(200)
+  })
+
   test('Locks account after maximum failed login attempts', async () => {
     let { client } = await createTestContext()
     let lockoutUsername = `${usernamePrefix}_lockout_${generateRandomId()}`

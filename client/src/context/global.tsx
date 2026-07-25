@@ -14,6 +14,7 @@ import { MetisInfo } from '@client/info/MetisInfo'
 import { ClientLogin } from '@client/logins/ClientLogin'
 import type { TNotificationOptions } from '@client/notifications/Notification'
 import { Notification } from '@client/notifications/Notification'
+import type { SessionClient } from '@client/sessions/SessionClient'
 import { useInitRenderHandler } from '@client/toolbox/hooks'
 import { Logging } from '@client/toolbox/Logging'
 import type { ClientUser } from '@client/users/ClientUser'
@@ -289,6 +290,55 @@ const initializeActions = (
           reject(error)
         }
       })
+    },
+    navigateAfterLogin: async (
+      login: NonNullable<TLogin<ClientUser>>,
+      server: ServerConnection,
+    ): Promise<void> => {
+      const { navigateTo } = initialState.actions
+
+      // Send users who still owe a password reset there first.
+      if (login.user.needsPasswordReset) {
+        navigateTo('UserResetPage', {})
+      }
+      // Send users who are in a METIS session to the page that matches the
+      // state that session is in.
+      else if (login.sessionId !== null) {
+        let session: SessionClient | null = null
+
+        // The login names a METIS session the server may no longer have. A
+        // lookup that fails counts as not being in one, so a session that has
+        // gone away leaves the user on the home page instead of stranding
+        // them with nowhere to go.
+        try {
+          session = await server.$fetchCurrentSession()
+        } catch (error: any) {
+          Logging.error(error)
+        }
+
+        if (session === null) {
+          navigateTo('HomePage', {})
+        } else {
+          switch (session.state) {
+            case 'unstarted':
+            case 'starting':
+              navigateTo('LobbyPage', { session })
+              break
+            case 'started':
+            case 'resetting':
+              navigateTo('SessionPage', { session, returnPage: 'HomePage' })
+              break
+            case 'ending':
+            case 'ended':
+              navigateTo('HomePage', {})
+              break
+          }
+        }
+      }
+      // Send everyone else to the home page.
+      else {
+        navigateTo('HomePage', {})
+      }
     },
     connectToServer: (): Promise<ServerConnection> => {
       const { handleError, beginLoading } = initialState.actions
@@ -890,6 +940,18 @@ export type TGlobalContextActions = {
    * connection will be stored in the global state variable "server".
    * @returns The promise of the server connection.
    */
+  /**
+   * Navigates to the page that matches the given login, sending users who are
+   * in a METIS session back into that session rather than to the home page.
+   * @param login The login to navigate for.
+   * @param server The server connection used to look up the METIS session.
+   * @resolves Once the navigation has been requested. A login naming a METIS
+   * session the server no longer has resolves to the home page.
+   */
+  navigateAfterLogin: (
+    login: NonNullable<TLogin<ClientUser>>,
+    server: ServerConnection,
+  ) => Promise<void>
   connectToServer: () => Promise<ServerConnection>
   /**
    * Handles an error passed. How it is handled is dependent on the value of
