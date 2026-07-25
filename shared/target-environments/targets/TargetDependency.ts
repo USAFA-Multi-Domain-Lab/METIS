@@ -34,11 +34,6 @@ export const AVAILABLE_DEPENDENCIES_RAW = [
       unexpected[0] !== value,
   } as const,
   {
-    name: 'not-equals-some',
-    condition: (value: any, unexpected: TDependencyArg[]) =>
-      unexpected.some((x) => x !== value),
-  } as const,
-  {
     name: 'not-empty',
     condition: (value: any) =>
       (Array.isArray(value) && value.length > 0) ||
@@ -164,18 +159,6 @@ export class TargetDependency implements TDependency {
     dependentId: string,
     unexpected: TDependencyArg,
   ) => TargetDependency.SELECT('not-equals', dependentId, unexpected)
-
-  /**
-   * Ensures the argument value for the parameter identified by `dependentId` does not match any of the unexpected values.
-   * @param dependentId The ID of the parameter to evaluate.
-   * @param unexpected The unexpected values.
-   * @returns A new dependency that ensures the argument value does not match any of the unexpected values.
-   * @example TargetDependency.NOT_EQUALS_SOME('fruit', ['apple', 'grape', 'banana', 'orange'])
-   */
-  public static NOT_EQUALS_SOME = (
-    dependentId: string,
-    unexpected: TDependencyArg[],
-  ) => TargetDependency.SELECT('not-equals-some', dependentId, unexpected)
 
   /**
    * Checks if the argument value for the parameter identified by `dependentId` is
