@@ -16,6 +16,7 @@ import type {
   TEffectExecutionTriggered,
   TEffectExecutionTriggeredJson,
 } from '@shared/missions/effects/Effect'
+import { Effect } from '@shared/missions/effects/Effect'
 import { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
 import { ClientEffect } from '../effects/ClientEffect'
 import type { ClientMissionNode } from '../nodes/ClientMissionNode'
@@ -237,23 +238,10 @@ export class ClientMissionAction
     // Duplicate the effects.
     duplicatedAction.effects = this.effects.map((effect) => {
       return effect.duplicate({
-        context: {
-          type: 'executionTriggeredEffect',
-          trigger: effect.trigger,
-          sourceAction: duplicatedAction,
-          get sourceNode() {
-            return this.sourceAction.node
-          },
-          get sourceForce() {
-            return this.sourceAction.force
-          },
-          get sourceMission() {
-            return this.sourceAction.mission
-          },
-          get host() {
-            return this.sourceAction
-          },
-        },
+        context: Effect.buildExecutionContext<TMetisClientComponents>(
+          effect.trigger,
+          duplicatedAction,
+        ),
       })
     })
 

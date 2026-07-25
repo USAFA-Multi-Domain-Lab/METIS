@@ -4,6 +4,7 @@ import type { ClientTarget } from '@client/target-environments/ClientTarget'
 import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
 import { ClientTargetArgument } from '@client/target-environments/arguments/ClientTargetArgument'
 import type {
+  TEffectContext,
   TEffectContextExecution,
   TEffectContextSession,
   TEffectExecutionTriggered,
@@ -121,7 +122,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
   ): ClientEffect<TType> {
     // Gather details.
     const {
-      context = this.context,
+      context = ClientEffect.duplicateContext<TType>(this.context),
       name = this.name,
       localKey = this.localKey,
     } = options
@@ -200,23 +201,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
       target.environment.version,
       mission.generateEffectOrder(trigger),
       ClientEffect.DEFAULT_SESSION_PROPERTIES.description,
-      {
-        type: 'sessionTriggeredEffect',
-        trigger,
-        get sourceAction() {
-          return null
-        },
-        get sourceNode() {
-          return null
-        },
-        get sourceForce() {
-          return null
-        },
-        sourceMission: mission,
-        get host() {
-          return this.sourceMission
-        },
-      },
+      Effect.buildSessionContext<TMetisClientComponents>(trigger, mission),
       [],
       mission.generateEffectKey(),
     )
@@ -245,23 +230,7 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
       target.environment.version,
       action.generateEffectOrder(trigger),
       ClientEffect.DEFAULT_EXEC_PROPERTIES.description,
-      {
-        type: 'executionTriggeredEffect',
-        trigger,
-        sourceAction: action,
-        get sourceNode() {
-          return this.sourceAction.node
-        },
-        get sourceForce() {
-          return this.sourceAction.force
-        },
-        get sourceMission() {
-          return this.sourceAction.mission
-        },
-        get host() {
-          return this.sourceAction
-        },
-      },
+      Effect.buildExecutionContext<TMetisClientComponents>(trigger, action),
       ClientEffect.DEFAULT_EXEC_PROPERTIES.arguments,
       action.generateEffectKey(),
     )
@@ -285,23 +254,10 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
       json.targetEnvironmentVersion,
       json.order,
       json.description,
-      {
-        type: 'sessionTriggeredEffect',
-        trigger: json.trigger,
-        get sourceAction() {
-          return null
-        },
-        get sourceNode() {
-          return null
-        },
-        get sourceForce() {
-          return null
-        },
+      Effect.buildSessionContext<TMetisClientComponents>(
+        json.trigger,
         sourceMission,
-        get host() {
-          return sourceMission
-        },
-      },
+      ),
       json.arguments,
       json.localKey,
     )
@@ -324,26 +280,44 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
       json.targetEnvironmentVersion,
       json.order,
       json.description,
-      {
-        type: 'executionTriggeredEffect',
-        trigger: json.trigger,
+      Effect.buildExecutionContext<TMetisClientComponents>(
+        json.trigger,
         sourceAction,
-        get sourceNode() {
-          return this.sourceAction.node
-        },
-        get sourceForce() {
-          return this.sourceAction.force
-        },
-        get sourceMission() {
-          return this.sourceAction.mission
-        },
-        get host() {
-          return this.sourceAction
-        },
-      },
+      ),
       json.arguments,
       json.localKey,
     )
+  }
+
+  /**
+   * Builds a context matching the one provided, holding the same
+   * host and source references but with storage of its own for
+   * {@link ClientEffect.trigger}.
+   * @param context The context to reproduce.
+   * @returns The new context.
+   * @note Narrowing on the context's own `type` does not narrow `TType`,
+   * so TypeScript reduces the return type to `never` and cannot verify
+   * that each branch produces the matching context. The runtime
+   * discriminant is the same one `TType` is derived from, so each branch
+   * is normalized the way {@link Effect.normalize} handles the same
+   * limitation.
+   */
+  private static duplicateContext<TType extends TEffectType>(
+    context: TSelectEffectContext<TMetisClientComponents>[TType],
+  ): TSelectEffectContext<TMetisClientComponents>[TType] {
+    let source: TEffectContext<TMetisClientComponents> = context
+    switch (source.type) {
+      case 'sessionTriggeredEffect':
+        return Effect.buildSessionContext<TMetisClientComponents>(
+          source.trigger,
+          source.sourceMission,
+        ) as unknown as TSelectEffectContext<TMetisClientComponents>[TType]
+      case 'executionTriggeredEffect':
+        return Effect.buildExecutionContext<TMetisClientComponents>(
+          source.trigger,
+          source.sourceAction,
+        ) as unknown as TSelectEffectContext<TMetisClientComponents>[TType]
+    }
   }
 }
 

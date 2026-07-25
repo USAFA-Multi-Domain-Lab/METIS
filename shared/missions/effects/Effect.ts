@@ -528,6 +528,70 @@ export abstract class Effect<
       'execution-failure',
     ]
   }
+
+  /**
+   * Builds the context for an effect triggered by a
+   * session-lifecycle event.
+   * @param trigger The trigger that causes the effect to be applied.
+   * @param sourceMission The mission hosting the effect.
+   * @returns A new context. Every property the context holds directly
+   * is its own, so effects built from separate calls never share
+   * storage for {@link Effect.trigger}.
+   */
+  public static buildSessionContext<T extends TMetisBaseComponents>(
+    trigger: TEffectSessionTriggered,
+    sourceMission: T['mission'],
+  ): TEffectContextSession<T> {
+    return {
+      type: 'sessionTriggeredEffect',
+      trigger,
+      get sourceAction() {
+        return null
+      },
+      get sourceNode() {
+        return null
+      },
+      get sourceForce() {
+        return null
+      },
+      sourceMission,
+      get host() {
+        return this.sourceMission
+      },
+    }
+  }
+
+  /**
+   * Builds the context for an effect triggered by an
+   * action-execution-lifecycle event.
+   * @param trigger The trigger that causes the effect to be applied.
+   * @param sourceAction The action hosting the effect.
+   * @returns A new context. Every property the context holds directly
+   * is its own, so effects built from separate calls never share
+   * storage for {@link Effect.trigger}.
+   */
+  public static buildExecutionContext<T extends TMetisBaseComponents>(
+    trigger: TEffectExecutionTriggered,
+    sourceAction: T['action'],
+  ): TEffectContextExecution<T> {
+    return {
+      type: 'executionTriggeredEffect',
+      trigger,
+      sourceAction,
+      get sourceNode() {
+        return this.sourceAction.node
+      },
+      get sourceForce() {
+        return this.sourceAction.force
+      },
+      get sourceMission() {
+        return this.sourceAction.mission
+      },
+      get host() {
+        return this.sourceAction
+      },
+    }
+  }
 }
 
 /* -- TYPES -- */

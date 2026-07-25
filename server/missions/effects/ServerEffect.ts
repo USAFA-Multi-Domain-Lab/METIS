@@ -165,23 +165,7 @@ export class ServerEffect<
       target.environment.version,
       mission.generateEffectOrder(trigger),
       ServerEffect.DEFAULT_SESSION_PROPERTIES.description,
-      {
-        type: 'sessionTriggeredEffect',
-        trigger,
-        get sourceAction() {
-          return null
-        },
-        get sourceNode() {
-          return null
-        },
-        get sourceForce() {
-          return null
-        },
-        sourceMission: mission,
-        get host() {
-          return this.sourceMission
-        },
-      },
+      Effect.buildSessionContext<TMetisServerComponents>(trigger, mission),
       ServerEffect.DEFAULT_SESSION_PROPERTIES.arguments,
       mission.generateEffectKey(),
     )
@@ -209,23 +193,7 @@ export class ServerEffect<
       target.environment.version,
       action.generateEffectOrder(trigger),
       ServerEffect.DEFAULT_EXEC_PROPERTIES.description,
-      {
-        type: 'executionTriggeredEffect',
-        trigger,
-        sourceAction: action,
-        get sourceNode() {
-          return this.sourceAction.node
-        },
-        get sourceForce() {
-          return this.sourceAction.force
-        },
-        get sourceMission() {
-          return this.sourceAction.mission
-        },
-        get host() {
-          return this.sourceAction
-        },
-      },
+      Effect.buildExecutionContext<TMetisServerComponents>(trigger, action),
       ServerEffect.DEFAULT_EXEC_PROPERTIES.arguments,
       action.generateEffectKey(),
     )
@@ -248,23 +216,10 @@ export class ServerEffect<
       json.targetEnvironmentVersion,
       json.order,
       json.description,
-      {
-        type: 'sessionTriggeredEffect',
-        trigger: json.trigger,
-        get sourceAction() {
-          return null
-        },
-        get sourceNode() {
-          return null
-        },
-        get sourceForce() {
-          return null
-        },
+      Effect.buildSessionContext<TMetisServerComponents>(
+        json.trigger,
         sourceMission,
-        get host() {
-          return this.sourceMission
-        },
-      },
+      ),
       json.arguments,
       json.localKey,
     )
@@ -287,23 +242,10 @@ export class ServerEffect<
       json.targetEnvironmentVersion,
       json.order,
       json.description,
-      {
-        type: 'executionTriggeredEffect',
-        trigger: json.trigger,
+      Effect.buildExecutionContext<TMetisServerComponents>(
+        json.trigger,
         sourceAction,
-        get sourceNode() {
-          return this.sourceAction.node
-        },
-        get sourceForce() {
-          return this.sourceAction.force
-        },
-        get sourceMission() {
-          return this.sourceAction.mission
-        },
-        get host() {
-          return this.sourceAction
-        },
-      },
+      ),
       json.arguments,
       json.localKey,
     )
