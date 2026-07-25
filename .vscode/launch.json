@@ -4,6 +4,10 @@
     {
       "name": "dev: all",
       "configurations": ["dev: backend (debug)", "dev: react", "dev: mongosh"]
+    },
+    {
+      "name": "dev: node+react",
+      "configurations": ["dev: backend (debug)", "dev: react"]
     }
   ],
   "configurations": [
