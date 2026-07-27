@@ -2,9 +2,9 @@
 
 # version-2.5.0 (prerelease) | 7-27-2026
 
-- Sessions are now partitioned into realms, with each force owning and tracking its own game state independently rather than sharing one session-wide state.
-- Members with complete visibility can now switch between realms during a session using a searchable, keyboard-navigable realm switcher.
-- A standalone session mode has been added, allowing a single user to run a mission as a chosen force without configuring other participants.
+- Sessions are now built on realms. A realm is an isolated copy of a launched mission together with everything that changes about it as the mission is played. An ordinary multiplayer session runs as a single realm holding the whole mission, which is how sessions have always behaved.
+- A standalone session mode has been added. Every participant is placed in their own realm containing only one selected force, so a group can each work through the same scenario at their own pace within one session without affecting each other.
+- Observers and managers can now switch which realm they are watching while a session is running, using a searchable list that can be navigated by keyboard. This allows them to follow any participant's progress through a standalone session.
 - Testing sessions have been replaced with a one-shot play-test flow. Play-testing a mission now launches, joins, and starts a disposable session in a single step, taking the user straight into the session.
 - Members who leave a session now keep their force and role assignment, so they return to the same position when rejoining.
 - Banned members can now be unbanned, allowing them to rejoin a session.
@@ -22,7 +22,7 @@
 - Parameters that depend on other parameters no longer need those dependencies declared in the schema. Arguments whose dependencies are unmet are automatically left undefined and are hidden from the effect form.
 - Dropdown parameter options can now define tooltip descriptions.
 - The METIS target environment has been updated to the new argument format and includes migration scripts to convert existing effects. The migration reports any component reference it could not resolve rather than silently retargeting the effect.
-- Rich text editors now support text alignment, font color, line spacing, and additional keyboard shortcuts.
+- Rich text editors now support headings, text alignment, font color, line spacing, and additional keyboard shortcuts.
 - Duplicate usernames are now detected while creating or editing a user, with archived usernames reported separately from usernames already in use.
 - Several login issues were fixed. A session left over from a previous server run could disconnect the wrong user's login, and forcefully logging in over an existing session could leave every request afterwards unauthenticated.
 - The web session secret is now generated on each run instead of being read from the source, and session cookie security now follows the protocol the server actually started on.
