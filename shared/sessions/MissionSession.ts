@@ -7,7 +7,11 @@ import type { TSessionPanelAlert } from '../connect'
 import { MetisComponent } from '../MetisComponent'
 import type { TExecutionCheats } from '../missions/actions/ActionExecution'
 import type { TAction } from '../missions/actions/MissionAction'
-import type { TMission, TMissionExistingJson } from '../missions/Mission'
+import type {
+  Mission,
+  TMission,
+  TMissionExistingJson,
+} from '../missions/Mission'
 import type { TUserJson } from '../users/User'
 import { User } from '../users/User'
 import type { TChatChannel, TChatChannelJson } from './chat/ChatChannel'
@@ -589,6 +593,49 @@ export abstract class MissionSession<
     }
     return normalized
   }
+
+  /**
+   * Reports the first problem found in a session configuration, without
+   * correcting any of it.
+   * @param config The configuration to check.
+   * @param mission The mission the session is configured against.
+   * @param options Additional options for the check.
+   * @returns A description of the problem, or null when the
+   * configuration is valid.
+   * @note This does not normalize. Run
+   * {@link MissionSession.normalizeConfig} first, or a configuration
+   * will be reported as invalid for a combination normalizing was about
+   * to resolve.
+   */
+  public static validateConfig(
+    config: TSessionConfig,
+    mission: Mission,
+    options: TSessionConfigValidationOptions = {},
+  ): string | null {
+    const { requireComplete = false } = options
+
+    // Only standalone mode reads the force, so nothing else can be
+    // wrong with it.
+    if (config.mode !== 'standalone') return null
+
+    // Only enforce a force selection if the configuration
+    // is expected to be complete, since another update may
+    // be in progress to correct the problem.
+    if (!config.standaloneForceId) {
+      return requireComplete
+        ? 'A standalone session requires a configured force.'
+        : null
+    }
+
+    // Every participant's realm is minted from the configured force, so
+    // it has to be a force the mission actually has. This holds at any
+    // point in a session's life, complete configuration or not.
+    if (!mission.getForceById(config.standaloneForceId)) {
+      return `Force with ID "${config.standaloneForceId}" was not found in the mission.`
+    }
+
+    return null
+  }
 }
 
 /* -- TYPES -- */
@@ -613,6 +660,20 @@ export type TSessionAccessibility =
  * @option 'standalone' Each participant gets their own realm.
  */
 export type TSessionMode = 'multiplayer' | 'standalone'
+
+/**
+ * Options for {@link MissionSession.validateConfig}.
+ */
+export type TSessionConfigValidationOptions = {
+  /**
+   * Whether the configuration is expected to be complete, rather than
+   * an in-progress edit of one.
+   * @note A complete standalone configuration has to name a force. One
+   * still being edited does not have to have chosen it yet.
+   * @default false
+   */
+  requireComplete?: boolean
+}
 
 /**
  * Configuration options for a session, customizing the experience.

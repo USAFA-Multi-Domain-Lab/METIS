@@ -10,14 +10,19 @@ import { useRef } from 'react'
  * and reporting it via `onChange`.
  * @param sessionConfig The session config the editor commits into.
  * @param approve Gate asked to approve a pending change; returning
- * `false` (or a rejecting/throwing promise) reverts the field.
- * @param onChange Reports an approved change, with the applied updates.
+ * `false` (or a rejecting/throwing promise) reverts the field. Note,
+ * that this isn't last word in terms of reversion of state, `onChange`
+ * also may revert the change if it so chooses.
+ * @param onChange Reports an approved change, with the applied updates
+ * and a callback that undoes them. An implementation that persists the
+ * change calls that callback when persisting fails, so the editor stops
+ * showing a value the source of truth never accepted.
  * @returns The config updater utilities; see {@link TConfigUpdater}.
  */
 export function useConfigUpdater(
   sessionConfig: TSessionConfig,
   approve: (updates: Partial<TSessionConfig>) => boolean | Promise<boolean>,
-  onChange: (updates: Partial<TSessionConfig>) => void,
+  onChange: (updates: Partial<TSessionConfig>, revert: () => void) => void,
 ): TConfigUpdater {
   /**
    * Keys whose last write was a revert. A reverted field's state is
@@ -25,6 +30,17 @@ export function useConfigUpdater(
    * the key here lets that pass be skipped instead of re-processed.
    */
   const reverted = useRef<Array<keyof TSessionConfig>>([])
+
+  /**
+   * How many changes each field has processed. A change captures the
+   * count it was given, so a revert arriving after a later change to
+   * the same field can recognize that it has been superseded and leave
+   * the newer value alone.
+   * @note A counter is used rather than a comparison against the
+   * current value, since a field returned to a value it held earlier
+   * would compare as unchanged.
+   */
+  const changeCounts = useRef<Partial<Record<keyof TSessionConfig, number>>>({})
 
   /**
    * Runs a pending change past the `approve` gate, treating a thrown
@@ -46,30 +62,50 @@ export function useConfigUpdater(
   }
 
   /**
-   * See {@link TConfigUpdater.processUpdate}. Note this deliberately
-   * does not touch `reverted`; tracking reverts is left to
-   * {@link useProcessUpdater}.
+   * See {@link TConfigUpdater.processUpdate}.
    */
   const processUpdate = async <T extends keyof TSessionConfig>(
     key: T,
     value: TSessionConfig[T],
     setValue: TReactSetter<TSessionConfig[T]>,
   ): Promise<boolean> => {
+    // The value to fall back to, read before the change is committed.
+    let committedValue = sessionConfig[key]
+    // Claim this as the field's most recent change.
+    let changeCount = (changeCounts.current[key] ?? 0) + 1
+    changeCounts.current[key] = changeCount
+
+    /**
+     * Puts the field and the config back to the value held before this
+     * change, and records the key so the resulting state write is
+     * skipped rather than processed as a new change.
+     * @note This does nothing once a later change to the same field has
+     * been processed. `onChange` may hold this callback across an
+     * `await`, and by the time it decides to revert the user may have
+     * moved on to a value that should not be discarded.
+     */
+    const revert = () => {
+      if (changeCounts.current[key] !== changeCount) return
+      sessionConfig[key] = committedValue
+      if (!reverted.current.includes(key)) reverted.current.push(key)
+      setValue(committedValue)
+    }
+
     let approved = await requestApproval({ [key]: value })
 
     if (approved) {
       sessionConfig[key] = value
-      onChange({ [key]: value })
+      onChange({ [key]: value }, revert)
     } else {
-      setValue(sessionConfig[key])
+      revert()
     }
     return approved
   }
 
   /**
-   * See {@link TConfigUpdater.useProcessUpdater}. On rejection the key is
-   * recorded in `reverted` so the resulting revert-write is skipped on
-   * the effect's next run rather than processed as a new change.
+   * See {@link TConfigUpdater.useProcessUpdater}. A revert records its
+   * key in `reverted` as it writes, so the state write it causes is
+   * consumed here rather than processed as a new change.
    */
   const useProcessUpdater = <T extends keyof TSessionConfig>(
     key: T,
@@ -80,12 +116,7 @@ export function useConfigUpdater(
       if (reverted.current.includes(key)) {
         reverted.current = reverted.current.filter((cursor) => cursor !== key)
       } else {
-        processUpdate(key, value, setValue).then((approved) => {
-          // `processUpdate` sets the state to revert the value
-          // but doesn't add the key to the reverted list. Adding
-          // it here adds the key before the update actually occurs.
-          if (!approved) reverted.current.push(key)
-        })
+        void processUpdate(key, value, setValue)
       }
     }, [value])
   }
@@ -121,8 +152,8 @@ export type TConfigUpdater = {
    * Binds a field's live editor state to the session config. Once the
    * state settles — skipping the initial mount — the change is run
    * through `processUpdate`, committing it when approved and reverting
-   * the field when rejected. Call once per field, at the top level of
-   * the component.
+   * the field when rejected, or when `onChange` later reverts it. Call
+   * once per field, at the top level of the component.
    * @param key The config key this field maps to.
    * @param value The field's current live value.
    * @param setValue The field's state setter, used to revert.

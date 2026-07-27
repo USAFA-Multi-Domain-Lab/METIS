@@ -79,9 +79,7 @@ export default function SessionGeneralConfig({
   // When the mode switches, the standalone
   // force ID needs to be updated accordingly.
   usePostInitEffect(() => {
-    setStandaloneForceId(
-      mode === 'standalone' ? defaultForceId : undefined,
-    )
+    setStandaloneForceId(mode === 'standalone' ? defaultForceId : undefined)
   }, [mode])
 
   // An owner-only session admits no participants (only the owner, a
@@ -264,7 +262,10 @@ export type TSessionGeneralConfig_P = {
   /**
    * Callback invoked after an approved change has been committed to the
    * session config, with the applied updates. Can be used for auto-save.
+   * @param updates The applied config updates.
+   * @param revert Undoes the applied updates, restoring the field and
+   * the config to what they held before.
    * @default () => {}
    */
-  onChange?: (updates: Partial<TSessionConfig>) => void
+  onChange?: (updates: Partial<TSessionConfig>, revert: () => void) => void
 }

@@ -772,6 +772,23 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       return false
     }
 
+    // Confirm the config is in the correct state before
+    // starting the session.
+    let configProblem = MissionSession.validateConfig(
+      this.config,
+      this.mission,
+      { requireComplete: true },
+    )
+    if (configProblem) {
+      member.emitError(
+        new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
+          request: fulfilledRequest,
+          message: configProblem,
+        }),
+      )
+      return false
+    }
+
     this.initializeMode()
 
     // Loop through all members and find any

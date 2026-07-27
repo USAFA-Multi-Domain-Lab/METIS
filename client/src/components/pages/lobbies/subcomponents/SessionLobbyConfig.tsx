@@ -62,10 +62,7 @@ export default function SessionConfigMenu({
     // Switching to standalone converts any limited observers into
     // participants (standalone has no place for them), performed
     // server-side; confirm with the actor first.
-    if (
-      updates.mode === 'standalone' &&
-      session.config.mode !== 'standalone'
-    ) {
+    if (updates.mode === 'standalone' && session.config.mode !== 'standalone') {
       let { limitedObservers } = session
 
       if (limitedObservers.length) {
@@ -83,8 +80,12 @@ export default function SessionConfigMenu({
   /**
    * Persists a config change to the server.
    * @param updates The partial config to apply.
+   * @param revert Undoes the change in the editor.
    */
-  const commit = async (updates: Partial<TSessionConfig>): Promise<void> => {
+  const commit = async (
+    updates: Partial<TSessionConfig>,
+    revert: () => void,
+  ): Promise<void> => {
     try {
       await session.$updateConfig(updates)
     } catch (error) {
@@ -92,6 +93,7 @@ export default function SessionConfigMenu({
         message: 'Failed to save session configuration.',
         notifyMethod: 'bubble',
       })
+      revert()
     }
   }
 

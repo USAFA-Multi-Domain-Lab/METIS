@@ -2,8 +2,9 @@ import { MissionModel } from '@server/database/models/missions'
 import { ServerMission } from '@server/missions/ServerMission'
 import type { ServerUser } from '@server/users/ServerUser'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
-import { LaunchSessionError } from './LaunchSessionError'
+import { MissionSession } from '@shared/sessions/MissionSession'
 import { databaseLogger } from '../logging'
+import { LaunchSessionError } from './LaunchSessionError'
 import { SessionServer } from './SessionServer'
 
 /**
@@ -36,22 +37,13 @@ export async function launchSessionCore(
   // Create mission and launch the session.
   let mission = ServerMission.fromSaveJson(missionDoc.toJSON())
 
-  // A standalone session must have a valid force configured, as
-  // each participant's realm is built from it. Reject the launch
-  // rather than allowing a session that cannot be started.
-  if (config.mode === 'standalone') {
-    if (!config.standaloneForceId) {
-      throw new LaunchSessionError(
-        'invalid-config',
-        'A standalone session requires a configured force.',
-      )
-    }
-    if (!mission.getForceById(config.standaloneForceId)) {
-      throw new LaunchSessionError(
-        'invalid-config',
-        `Force with ID "${config.standaloneForceId}" was not found in the mission.`,
-      )
-    }
+  // Validate the config and throw and error if the validation
+  // fails.
+  let configProblem = MissionSession.validateConfig(config, mission, {
+    requireComplete: true,
+  })
+  if (configProblem) {
+    throw new LaunchSessionError('invalid-config', configProblem)
   }
 
   let session: SessionServer = SessionServer.launch(mission, config, owner)

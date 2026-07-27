@@ -44,11 +44,28 @@ export const onRequestConfigUpdate =
         configUpdates.accessibility === 'owner-only' &&
         this._config.accessibility !== 'owner-only'
 
-      // Assign the new configuration to the session, then normalize so
-      // interdependent options stay self-consistent (e.g. switching to
-      // owner-only forces the mode back to multiplayer).
-      Object.assign(this._config, configUpdates)
-      Object.assign(this._config, MissionSession.normalizeConfig(this._config))
+      // Build the configuration this update would produce, normalizing
+      // it so interdependent options stay self-consistent (e.g.
+      // switching to owner-only forces the mode back to multiplayer).
+      let updatedConfig = MissionSession.normalizeConfig({
+        ...this._config,
+        ...configUpdates,
+      })
+      let configProblem = MissionSession.validateConfig(
+        updatedConfig,
+        this.mission,
+      )
+      if (configProblem) {
+        return member.emitError(
+          new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
+            request,
+            message: configProblem,
+          }),
+        )
+      }
+
+      // Commit the validated configuration to the session.
+      Object.assign(this._config, updatedConfig)
       // Update the session name if it has changed.
       if (this.name !== configUpdates.name && configUpdates.name) {
         this.name = configUpdates.name
