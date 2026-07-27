@@ -54,7 +54,10 @@ export const useRichTextContext = richTextContext.getHook()
  * Displays and manages rich text.
  */
 export default function RichText(props: TRichText_P): TReactElement | null {
-  const defaultedProps = { ...props } as Required<TRichText_P>
+  const defaultedProps: Required<TRichText_P> = {
+    options: props.options ?? {},
+    deps: props.deps ?? [],
+  }
   const { options, deps } = defaultedProps
 
   // Extract the options.
@@ -69,7 +72,7 @@ export default function RichText(props: TRichText_P): TReactElement | null {
     onFocus,
     onBlur,
     bubbleMenuAnchor,
-  } = options ?? {}
+  } = options
 
   /* -- GLOBAL CONTEXT -- */
   const { prompt } = useGlobalContext().actions
@@ -255,7 +258,7 @@ export default function RichText(props: TRichText_P): TReactElement | null {
         type: 'button',
         icon: 'clear-format',
         label: '**Clear Format**',
-        description: getOs() === 'windows' ? '`ctrl+shift+0`' : '`cmd+shift+0`',
+        description: getOs() === 'windows' ? '`ctrl+alt+0`' : '`cmd+opt+0`',
         onClick: () => {
           editor?.commands.unsetAllMarks()
           editor?.commands.clearNodes()
@@ -546,6 +549,18 @@ export default function RichText(props: TRichText_P): TReactElement | null {
    */
   const handleKeyDownCapture = (event: React.KeyboardEvent) => {
     const modified = event.metaKey || event.ctrlKey
+    // Windows reports the shifted character for a letter key while macOS
+    // reports the unshifted one, so letters are compared in lower case.
+    const pressedLetter = event.key.toLowerCase()
+    // The zero key is matched both by its position on the keyboard and by
+    // every character it can produce, because holding a modifier can turn it
+    // into a different character and the number pad reports itself as a
+    // separate key.
+    const pressedZero =
+      event.code === 'Digit0' ||
+      event.code === 'Numpad0' ||
+      event.key === '0' ||
+      event.key === ')'
 
     // Enter triggers the bubble menu to appear automatically.
     // @see - Editor.onUpdate()
@@ -585,48 +600,65 @@ export default function RichText(props: TRichText_P): TReactElement | null {
     }
 
     // Cmd/Ctrl+K — toggle link.
-    if (modified && !event.shiftKey && event.key === 'k') {
+    if (modified && !event.shiftKey && pressedLetter === 'k') {
       event.preventDefault()
       toggleLink(editor)
     }
 
-    // Cmd/Ctrl+Shift+0 — clear all formatting.
-    if (modified && event.shiftKey && event.key === '0') {
+    // Cmd+Opt+0 / Ctrl+Alt+0 — clear all formatting.
+    if (modified && event.altKey && pressedZero) {
       event.preventDefault()
-      editor.commands.unsetAllMarks()
-      editor.commands.clearNodes()
+      editor?.commands.unsetAllMarks()
+      editor?.commands.clearNodes()
     }
 
     // Cmd/Ctrl+Shift+C — cycle font color and open the bubble menu + color picker.
-    if (modified && event.shiftKey && event.key === 'c') {
+    if (modified && event.shiftKey && pressedLetter === 'c') {
       event.preventDefault()
       cycleColor()
     }
 
     // Cmd/Ctrl+Shift+H — cycle heading level and open the bubble menu + heading picker.
-    if (modified && event.shiftKey && event.key === 'h') {
+    if (modified && event.shiftKey && pressedLetter === 'h') {
       event.preventDefault()
       cycleHeading()
     }
 
     // Cmd/Ctrl+Shift+A — cycle text alignment and open the bubble menu + align picker.
-    if (modified && event.shiftKey && event.key === 'a') {
+    if (modified && event.shiftKey && pressedLetter === 'a') {
       event.preventDefault()
       cycleAlign()
     }
 
     // Cmd/Ctrl+Shift+P — cycle line spacing and open the bubble menu + line spacing picker.
-    if (modified && event.shiftKey && event.key === 'p') {
+    if (modified && event.shiftKey && pressedLetter === 'p') {
       event.preventDefault()
       cycleLineSpacing()
     }
 
     // Cmd/Ctrl+Shift+M — toggle the bubble menu pinned open at the cursor.
-    if (modified && event.shiftKey && event.key === 'm') {
+    if (modified && event.shiftKey && pressedLetter === 'm') {
       event.preventDefault()
       if (isBubbleMenuForcedOpen) closeAllSubPanels()
       setIsBubbleMenuForcedOpen((prev) => !prev)
     }
+  }
+
+  /**
+   * Checks whether the editor is already displaying the given content.
+   *
+   * A direct comparison is not enough for empty values. An editor with
+   * nothing in it reports `<p></p>`, and a value holding nothing but spaces
+   * is stored as an empty string, so neither one ever matches an empty
+   * incoming value. Anything that displays no readable text is therefore
+   * treated as a match for an empty value.
+   *
+   * @param value The content to compare against.
+   */
+  const isContentDisplayed = (value: string): boolean => {
+    if (!editor) return false
+    if (editor.getHTML() === value) return true
+    return value === '' && editor.getText().trim() === ''
   }
 
   /**
@@ -741,6 +773,12 @@ export default function RichText(props: TRichText_P): TReactElement | null {
           paragraph: false,
           codeBlock: false,
           link: false,
+          // An empty paragraph is kept at the end of the content so there is
+          // always a way to move the cursor out of a code block or blockquote
+          // that finishes the text. Headings are excluded because they need no
+          // escape route, and adding a line after one causes the heading
+          // controls to keep applying to that new empty line.
+          trailingNode: { notAfter: ['heading'] },
           listItem: {
             HTMLAttributes: {
               class: listClassName,
@@ -752,6 +790,20 @@ export default function RichText(props: TRichText_P): TReactElement | null {
         }),
         Link.configure({
           protocols: ['http', 'https'],
+          isAllowedUri: (url, { defaultValidate }) => {
+            // The "protocols" option above only adds to the extension's
+            // built-in list, which also allows mail, telephone, and file
+            // transfer addresses. Anything carrying a scheme other than
+            // "http" or "https" is rejected here so the editor produces
+            // web links only. Addresses written without a scheme, such as
+            // "metis.example.com", are still handed to the extension's own
+            // check so they keep working.
+            const scheme = url.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):/)?.[1]
+            if (scheme && !['http', 'https'].includes(scheme.toLowerCase())) {
+              return false
+            }
+            return defaultValidate(url)
+          },
         }),
         MetisParagraph,
         MetisSpan,
@@ -768,7 +820,12 @@ export default function RichText(props: TRichText_P): TReactElement | null {
         TextStyle,
       ],
     },
-    [deps],
+    // The property is read straight from the props here rather than from the
+    // defaulted value. The editor is rebuilt whenever what it is given here
+    // changes, and it compares by identity, so an empty array created fresh on
+    // each render would rebuild the editor every time and throw away the undo
+    // history and the cursor position along with it.
+    [props.deps],
   )
 
   // Handles correct positioning for the bubble menu when any sub-panels
@@ -813,7 +870,7 @@ export default function RichText(props: TRichText_P): TReactElement | null {
   // and setContent is skipped.
   useEffect(() => {
     if (!editor || content === undefined) return
-    if (editor.getHTML() !== content) {
+    if (!isContentDisplayed(content)) {
       editor.commands.setContent(content)
     }
   }, [editor, content])

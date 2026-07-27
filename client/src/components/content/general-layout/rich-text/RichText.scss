@@ -1,4 +1,5 @@
 @use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
 
 @mixin code-styling() {
   background-color: $color-accent-dark;
@@ -10,6 +11,10 @@
 
 .RichText {
   .Editor {
+    // The shared heading scale, with less room around each heading than a
+    // documentation page uses, since these sit inside form fields.
+    @include heading-styling(8px, 10px);
+
     &:focus-visible {
       outline: none;
     }
@@ -153,6 +158,10 @@
 
 .BubbleToolbar {
   background-color: $color-primary;
+  // The toolbar floats over surfaces that share its background color, so the
+  // outline and shadow are what separate it from the text underneath.
+  border: 1px solid rgba($color-primary-light, 0.65);
+  box-shadow: 0 0.35em 1em rgba($color-primary-dark, 0.55);
   border-radius: 0.4em;
   padding-bottom: 0.5em;
   z-index: $z-index-rich-text-editor;

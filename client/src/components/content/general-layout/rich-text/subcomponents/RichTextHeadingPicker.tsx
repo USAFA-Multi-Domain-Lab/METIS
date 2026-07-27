@@ -47,8 +47,9 @@ export default function RichTextHeadingPicker(): TReactElement | null {
   return (
     <div className='HeadingPicker' style={style}>
       {HEADING_LEVELS.map((level) => (
-        <div
+        <button
           key={level}
+          type='button'
           className={generateClassName(level)}
           onClick={() => {
             editor.commands.toggleHeading({ level })
@@ -59,7 +60,7 @@ export default function RichTextHeadingPicker(): TReactElement | null {
           <Tooltip
             description={`**Heading ${level}**\n${getOs() === 'windows' ? `\`ctrl+alt+${level}\`` : `\`cmd+opt+${level}\``}`}
           />
-        </div>
+        </button>
       ))}
     </div>
   )

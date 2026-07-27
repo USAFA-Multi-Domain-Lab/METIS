@@ -1,8 +1,25 @@
+import Tooltip from '@client/components/content/communication/Tooltip'
 import { compute } from '@client/toolbox'
 import { Mission } from '@shared/missions/Mission'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useRichTextContext } from '../RichText'
 import './RichTextColorPicker.scss'
+
+/**
+ * The display names for the approved METIS colors. A swatch shows nothing but
+ * its color, so these names are what the tooltip and the button label use.
+ */
+const COLOR_NAMES: Record<string, string> = {
+  [Mission.WHITE]: 'White',
+  [Mission.RED]: 'Red',
+  [Mission.ORANGE]: 'Orange',
+  [Mission.BROWN]: 'Brown',
+  [Mission.YELLOW]: 'Yellow',
+  [Mission.GREEN]: 'Green',
+  [Mission.BLUE]: 'Blue',
+  [Mission.PURPLE]: 'Purple',
+  [Mission.MAGENTA]: 'Magenta',
+}
 
 /**
  * Normalizes a CSS color string to `rgb(r, g, b)` format for cross-format
@@ -43,6 +60,13 @@ export default function RichTextColorPicker(): TReactElement | null {
     ).value
   }
 
+  /**
+   * Gets the display name for a color, falling back to the color itself when
+   * it is not one of the named METIS colors.
+   * @param color The color to name.
+   */
+  const getColorName = (color: string): string => COLOR_NAMES[color] ?? color
+
   /* -- COMPUTED -- */
 
   /**
@@ -68,10 +92,12 @@ export default function RichTextColorPicker(): TReactElement | null {
   return (
     <div className='ColorPicker' style={style}>
       {Mission.COLOR_OPTIONS.map((color) => (
-        <div
+        <button
           key={color}
+          type='button'
           className={generateClassName(color)}
           style={{ backgroundColor: color }}
+          aria-label={`${getColorName(color)} font color`}
           onClick={() => {
             if (
               activeColor &&
@@ -83,7 +109,9 @@ export default function RichTextColorPicker(): TReactElement | null {
             }
             setIsColorPickerOpen(false)
           }}
-        />
+        >
+          <Tooltip description={`**${getColorName(color)}**`} />
+        </button>
       ))}
     </div>
   )

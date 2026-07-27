@@ -78,8 +78,9 @@ export default function RichTextAlignPicker(): TReactElement | null {
   return (
     <div className='AlignPicker' style={style}>
       {ALIGN_OPTIONS.map(({ value, icon, label, mac, windows }) => (
-        <div
+        <button
           key={value}
+          type='button'
           className={generateClassName(value)}
           onClick={() => {
             editor.commands.toggleTextAlign(value)
@@ -90,7 +91,7 @@ export default function RichTextAlignPicker(): TReactElement | null {
           <Tooltip
             description={`**${label}**\n${getOs() === 'windows' ? windows : mac}`}
           />
-        </div>
+        </button>
       ))}
     </div>
   )
