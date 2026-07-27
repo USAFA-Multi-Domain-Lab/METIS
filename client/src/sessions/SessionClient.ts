@@ -1,4 +1,7 @@
-import type { ServerConnection } from '@client/connect/ServerConnection'
+import type {
+  ServerConnection,
+  TServerHandler,
+} from '@client/connect/ServerConnection'
 import { ClientActionCost } from '@client/missions/actions/ClientActionCost'
 import type { ClientActionExecution } from '@client/missions/actions/ClientActionExecution'
 import type { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
@@ -11,6 +14,7 @@ import { ClientUser } from '@client/users/ClientUser'
 import type {
   TNodeOpenStateData,
   TResponseEvents,
+  TServerMethod,
   TSessionPanelAlert,
 } from '@shared/connect'
 import type { TExecutionCheats } from '@shared/missions/actions/ActionExecution'
@@ -210,6 +214,18 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   private activeExecutionTimeout: number | null = null
 
   /**
+   * The session listeners this client has registered on the server
+   * connection, tracked by method and handler reference.
+   * @note The connection is shared with the application and with every
+   * component listening through `useEventListener`, so the session must
+   * remove exactly the handlers it registered — removing by method alone
+   * would take down listeners belonging to everyone else.
+   * @note Populated by {@link addListeners} and cleared by
+   * {@link removeListeners}.
+   */
+  private activeHandlers: [TServerMethod, TServerHandler<any>][] = []
+
+  /**
    * This is a registry, not of active listeners, but the
    * methods and corresponding traffic controllers for all
    * listeners that should be added and removed via the
@@ -374,23 +390,32 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
-   * Creates session-specific listeners for the client's member.
+   * Creates session-specific listeners for the client's member, tracking
+   * each one in {@link activeHandlers} so it can be removed again
+   * individually.
    */
   private addListeners(): void {
     this.listenerInputRegistry.forEach(([method, handler]) => {
-      this.server.addEventListener(method, (event: any) =>
-        handler(this.member, event),
-      )
+      let wrappedHandler: TServerHandler<any> = (event: any) =>
+        handler(this.member, event)
+
+      this.server.addEventListener(method, wrappedHandler)
+      this.activeHandlers.push([method, wrappedHandler])
     })
   }
 
   /**
-   * Removes session-specific listeners for the client's member.
+   * Removes the session-specific listeners this client registered from
+   * the server connection and stops tracking them.
+   * @note Removal is by handler reference, not by method, so listeners
+   * that other parts of the application registered for the same methods
+   * are left in place.
    */
   private removeListeners(): void {
-    this.server.clearEventListeners(
-      this.listenerInputRegistry.map(([method]) => method),
-    )
+    for (let [method, handler] of this.activeHandlers) {
+      this.server.removeEventListener(method, handler)
+    }
+    this.activeHandlers = []
   }
 
   // Implemented
