@@ -62,6 +62,13 @@ export abstract class TargetEnvContext<
   public readonly realm: ServerSessionRealm
 
   /**
+   * The ID of the realm within which this context operates.
+   */
+  public get realmId() {
+    return this.realm._id
+  }
+
+  /**
    * The mission for the current context, rooted
    * in the provided realm.
    */
@@ -117,20 +124,31 @@ export abstract class TargetEnvContext<
   public readonly environment: ServerTargetEnvironment
 
   /**
-   * A store that is unique to the session and target environment.
+   * A store that is unique to the realm and target environment.
    */
   protected get localStore() {
     return TargetEnvStore.get(
       this.sessionId,
       this.instanceId,
+      this.realmId,
       this.environmentId,
     )
   }
 
   /**
-   * A store that is unique to the session, but not to any particular
+   * A store that is unique to the realm, but not to any particular
    * target environment. This allows for data to be shared across different
-   * target environments within the same session.
+   * target environments within the same realm.
+   */
+  protected get realmStore() {
+    return TargetEnvStore.get(this.sessionId, this.instanceId, this.realmId)
+  }
+
+  /**
+   * A store that is unique to the session instance, but not to any
+   * particular realm or target environment. This allows for data to be
+   * shared across every realm and target environment within the same
+   * session instance.
    */
   protected get globalStore() {
     return TargetEnvStore.get(this.sessionId, this.instanceId)
@@ -168,6 +186,7 @@ export abstract class TargetEnvContext<
         return self.mission.toTargetEnvContext()
       },
       localStore: this.localStore,
+      realmStore: this.realmStore,
       globalStore: this.globalStore,
       sleep: this.ifContextIsCurrent(this.sleep.bind(this)),
     }
@@ -305,15 +324,32 @@ export type TTargetEnvExposedContext = {
    */
   readonly mission: TTargetEnvExposedMission
   /**
-   * A store that is unique to the session instance and the target environment.
+   * A store that is unique to the realm and the target environment.
    * This can be used to store and retrieve temporary, random-access
    * data.
+   * @note A standalone session runs the same scripts once per
+   * participant, each in their own realm. Anything kept here belongs to
+   * one participant's run and is never seen by another's.
    */
   readonly localStore: TargetEnvStore
   /**
-   * A store that is unique to the session instance, but not to any particular
+   * A store that is unique to the realm, but not to any particular
    * target environment. This allows for data to be shared across different
-   * target environments within the same session instance.
+   * target environments within the same realm.
+   * @note This is no wider than {@link localStore} with respect to
+   * realms. It crosses target environments, not participants.
+   */
+  readonly realmStore: TargetEnvStore
+  /**
+   * A store that is unique to the session instance, but not to any
+   * particular realm or target environment. This allows for data to be
+   * shared across every realm and target environment within the same
+   * session instance.
+   * @note This is the only store that crosses realms, so a standalone
+   * session's participants all share it. Use it to coordinate something
+   * that genuinely belongs to the session as a whole, and prefer
+   * {@link realmStore} for anything belonging to a single participant's
+   * run.
    */
   readonly globalStore: TargetEnvStore
   /**

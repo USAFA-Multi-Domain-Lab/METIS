@@ -2,10 +2,14 @@ import { StoreState } from './StoreState'
 
 /**
  * Allows data to be cached for specific to a target environment
- * and to a session. Essentially, this will allow target environment
+ * and to a realm. Essentially, this will allow target environment
  * scripts to cache data between the execution of scripts during a
- * session, while preventing other sessions or target environments
- * from accessing that data.
+ * session, while preventing other sessions, realms, or target
+ * environments from accessing that data.
+ * @note How far the data reaches is decided by the key it is stored
+ * under. A store can belong to one target environment within one realm,
+ * to every environment within one realm, or to the session instance as
+ * a whole.
  */
 export class TargetEnvStore {
   /**
@@ -36,43 +40,59 @@ export class TargetEnvStore {
   }
 
   /**
-   * Registry of all TargetEnvStore instances, keyed by session and target environment.
+   * Registry of all TargetEnvStore instances, keyed by session, realm,
+   * and target environment.
    */
   private static registry: Map<string, TargetEnvStore> = new Map()
 
   /**
-   * Generates a unique key for a session and target environment pair.
+   * Generates a unique key for a realm and target environment pair.
    * @param sessionId The session identifier.
    * @param sessionInstanceId The session instance identifier.
+   * @param realmId The realm identifier. If not provided, a key spanning
+   * every realm in the session instance is generated.
    * @param targetEnvId The target environment identifier. If not provided,
    * a global store key is generated. This will be a key specific to the
-   * session, but not to any particular target environment.
+   * realm, but not to any particular target environment.
    * @returns The generated unique store key.
+   * @note The session ID leads the key so that {@link cleanUp} can sweep
+   * every store belonging to a session by prefix, and because a realm ID
+   * is not unique on its own: every session's default realm shares the
+   * same constant identifier.
    */
   private static generateKey(
     sessionId: string,
     sessionInstanceId: string,
+    realmId: string = '<global>',
     targetEnvId: string = '<global>',
   ): string {
-    return `${sessionId}::${sessionInstanceId}::${targetEnvId}`
+    return `${sessionId}::${sessionInstanceId}::${realmId}::${targetEnvId}`
   }
 
   /**
-   * Retrieves the store for a given session and target environment.
+   * Retrieves the store for a given realm and target environment.
    * If it does not exist, a new store is created.
    * @param sessionId The session identifier.
    * @param sessionInstanceId The session instance identifier.
+   * @param realmId The realm identifier. If not provided, a store shared
+   * by every realm in the session instance is returned.
    * @param targetEnvId The target environment identifier. If not provided,
    * a global, non-environment-specific store is returned. This store will
-   * still be specific to the session.
-   * @returns The store Map for the session/targetEnv pair.
+   * still be specific to the realm.
+   * @returns The store Map for the realm/targetEnv pair.
    */
   public static get(
     sessionId: string,
     sessionInstanceId: string,
+    realmId: string = '<global>',
     targetEnvId: string = '<global>',
   ): TargetEnvStore {
-    const key = this.generateKey(sessionId, sessionInstanceId, targetEnvId)
+    const key = this.generateKey(
+      sessionId,
+      sessionInstanceId,
+      realmId,
+      targetEnvId,
+    )
     if (!this.registry.has(key)) {
       this.registry.set(key, new TargetEnvStore())
     }
@@ -80,19 +100,27 @@ export class TargetEnvStore {
   }
 
   /**
-   * Removes the store for a given session and target environment from
+   * Removes the store for a given realm and target environment from
    * the registry.
    * @param sessionId The session identifier.
    * @param sessionInstanceId The session instance identifier.
+   * @param realmId The realm identifier. If not provided, the store
+   * shared by every realm in the session instance is cleared.
    * @param targetEnvId The target environment identifier. If not provided,
-   * a global store for the session is cleared.
+   * a global store for the realm is cleared.
    */
   public static deregister(
     sessionId: string,
     sessionInstanceId: string,
+    realmId: string = '<global>',
     targetEnvId: string = '<global>',
   ): void {
-    const key = this.generateKey(sessionId, sessionInstanceId, targetEnvId)
+    const key = this.generateKey(
+      sessionId,
+      sessionInstanceId,
+      realmId,
+      targetEnvId,
+    )
     this.registry.delete(key)
   }
 
