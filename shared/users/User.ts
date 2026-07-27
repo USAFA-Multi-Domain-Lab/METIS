@@ -640,3 +640,25 @@ export type TExistingUserPreferencesJson = RequireIdDeep<TUserPreferencesJson>
  * Data needed to identify the creator of a document.
  */
 export type TCreatedByInfo = Pick<User, '_id' | 'username'>
+
+/**
+ * The result of a username availability check.
+ * @option `'available'` — the username is free to use.
+ * @option `'active'` — the username is already in use by an active user.
+ * @option `'archived'` — the username was previously used by a user that has
+ * since been archived (soft-deleted) and is no longer available.
+ */
+export type TUsernameCheckResult = 'available' | 'active' | 'archived'
+
+/**
+ * The body returned by the username availability check endpoint.
+ * All three outcomes are returned with a 200 status, so the caller
+ * reads the outcome from this body rather than from the status code.
+ */
+export type TUsernameCheckJson = {
+  /**
+   * Whether the username is available, taken by an active user,
+   * or held by an archived user.
+   */
+  status: TUsernameCheckResult
+}

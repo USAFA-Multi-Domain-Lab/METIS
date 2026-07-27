@@ -1,10 +1,14 @@
-import { useUserPageContext } from '@client/components/pages/UserPage'
+import {
+  USERNAME_ARCHIVED_ERROR_MESSAGE,
+  USERNAME_TAKEN_ERROR_MESSAGE,
+  useUserPageContext,
+} from '@client/components/pages/UserPage'
 import { useGlobalContext } from '@client/context/global'
 import { compute } from '@client/toolbox'
 import { usePostInitEffect, useRequireLogin } from '@client/toolbox/hooks'
 import { ClientUser } from '@client/users/ClientUser'
 import { UserAccess } from '@shared/users/UserAccess'
-import { useEffect, useState } from 'react'
+import { useRef, useState } from 'react'
 import { DetailString } from '../form/DetailString'
 import { DetailToggle } from '../form/DetailToggle'
 import { DetailDropdown } from '../form/dropdowns/standard/DetailDropdown'
@@ -19,7 +23,7 @@ export default function UserEntry({
   handleChange,
 }: TUserEntry_P): TReactElement | null {
   const { state } = useUserPageContext()
-  const { forceUpdate } = useGlobalContext().actions
+  const { forceUpdate, notify } = useGlobalContext().actions
   const { isAuthorized } = useRequireLogin()
 
   /* -- STATE -- */
@@ -41,12 +45,29 @@ export default function UserEntry({
   const [existsInDatabase] = state.existsInDatabase
   const [userEmptyStringArray, setUserEmptyStringArray] =
     state.userEmptyStringArray
-  const [usernameAlreadyExists, setUsernameAlreadyExists] =
-    state.usernameAlreadyExists
+  const [usernameError, setUsernameError] = state.usernameError
   const [updatePassword, setUpdatePassword] = state.updatePassword
+
+  /* -- REFS -- */
+
+  /**
+   * Identifies the most recently started username availability check.
+   * A check whose identifier no longer matches has been superseded,
+   * either by a later check or by the user editing the username, and
+   * its result is discarded.
+   */
+  const latestUsernameCheckId = useRef<number>(0)
 
   /* -- COMPUTED -- */
 
+  /**
+   * The error shown beneath the username field. A problem with the
+   * format of the username takes priority over the result of the
+   * availability check.
+   */
+  const usernameErrorDisplayed: string = compute(
+    () => usernameErrorMessage || usernameError,
+  )
   /**
    * The label for the password field.
    */
@@ -93,8 +114,11 @@ export default function UserEntry({
   usePostInitEffect(() => {
     user.username = currentUsername
 
-    // Clear any existing duplicate-username error as the user types.
-    setUsernameAlreadyExists(false)
+    // Clear any existing availability error as the user types, and
+    // retire any check still in flight so its result, which describes
+    // the previous username, cannot bring the error back.
+    setUsernameError('')
+    latestUsernameCheckId.current++
 
     if (currentUsername !== '' && user.hasValidUsername) {
       removeUserEmptyString('username')
@@ -244,14 +268,6 @@ export default function UserEntry({
     handleChange()
   }, [needsPasswordReset])
 
-  // If the user has entered a username,
-  // check to see if it already exists.
-  useEffect(() => {
-    if (usernameAlreadyExists) {
-      setUsernameErrorMessage('Username already exists.')
-    }
-  }, [usernameAlreadyExists])
-
   /* -- FUNCTIONS -- */
 
   /**
@@ -269,20 +285,38 @@ export default function UserEntry({
    * This is called when the username field loses focus.
    * It checks if the username already exists in the database.
    */
-  const handleUsernameOnBlur = async () => {
-    if (
-      (!existsInDatabase && user.hasValidUsername) ||
-      (existsInDatabase && originalUsername !== currentUsername)
-    ) {
+  const handleUsernameOnBlur = async (): Promise<void> => {
+    // A username that fails format validation already has an error
+    // to show, and an unchanged username on the edit form belongs to
+    // the user being edited, so neither is worth a lookup.
+    let usernameIsUnchanged =
+      existsInDatabase && originalUsername === currentUsername
+    if (!user.hasValidUsername || usernameIsUnchanged) return
+
+    // Claim this check, so a result that arrives after a newer check
+    // has started can be recognized as out of date and discarded.
+    let checkId = ++latestUsernameCheckId.current
+
+    try {
       let result = await ClientUser.$checkUsername(currentUsername)
 
+      // Discard the result if this check has been superseded.
+      if (checkId !== latestUsernameCheckId.current) return
+
       if (result === 'active') {
-        setUsernameAlreadyExists(true)
+        setUsernameError(USERNAME_TAKEN_ERROR_MESSAGE)
       } else if (result === 'archived') {
-        setUsernameErrorMessage(
-          'This username has been archived and is no longer available.',
-        )
+        setUsernameError(USERNAME_ARCHIVED_ERROR_MESSAGE)
+      } else {
+        setUsernameError('')
       }
+    } catch {
+      // The check could not be completed, which is not the same as the
+      // username being taken, so tell the user rather than blocking them.
+      if (checkId !== latestUsernameCheckId.current) return
+      notify('Could not check whether this username is available.', {
+        isError: true,
+      })
     }
   }
 
@@ -299,7 +333,7 @@ export default function UserEntry({
         label='Username'
         value={currentUsername}
         setValue={setCurrentUsername}
-        errorMessage={usernameErrorMessage}
+        errorMessage={usernameErrorDisplayed}
         placeholder='Enter a username here...'
         onBlur={handleUsernameOnBlur}
       />

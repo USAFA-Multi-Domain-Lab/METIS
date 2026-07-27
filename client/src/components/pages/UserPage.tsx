@@ -25,6 +25,19 @@ import If from '../content/util/If'
 import './UserPage.scss'
 
 /**
+ * Shown when the username belongs to a user that is still active.
+ */
+export const USERNAME_TAKEN_ERROR_MESSAGE: string =
+  'This username is already taken.'
+
+/**
+ * Shown when the username belongs to a user that has been archived,
+ * which keeps the username reserved.
+ */
+export const USERNAME_ARCHIVED_ERROR_MESSAGE: string =
+  'This username has been archived and is no longer available.'
+
+/**
  * Context for the user page, which will help distribute
  * user page properties to its children.
  */
@@ -69,7 +82,7 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
   const state: TUserPage_S = {
     existsInDatabase: useState<boolean>(props.userId !== null),
     userEmptyStringArray: useState<string[]>([]),
-    usernameAlreadyExists: useState<boolean>(false),
+    usernameError: useState<string>(''),
     updatePassword: useState<boolean>(false),
     areUnsavedChanges: useState<boolean>(false),
   }
@@ -80,7 +93,7 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
   const [areUnsavedChanges, setAreUnsavedChanges] = state.areUnsavedChanges
   const [userEmptyStringArray] = state.userEmptyStringArray
   const [updatePassword] = state.updatePassword
-  const [, setUsernameAlreadyExists] = state.usernameAlreadyExists
+  const [usernameError, setUsernameError] = state.usernameError
   const [userEntryKey, setUserEntryKey] = useState<string>(
     StringToolbox.generateRandomId(),
   )
@@ -156,10 +169,19 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
   const isEmptyString: boolean = compute(() => userEmptyStringArray.length > 0)
 
   /**
+   * Whether a username that cannot be used is currently entered.
+   */
+  const hasUsernameError: boolean = compute(() =>
+    StringToolbox.isFilled(usernameError),
+  )
+
+  /**
    * Whether the save button is disabled.
    */
   const saveDisabled: TButtonTextDisabled = compute(() =>
-    !areUnsavedChanges || isEmptyString || !user.canSave ? 'full' : 'none',
+    !areUnsavedChanges || isEmptyString || hasUsernameError || !user.canSave
+      ? 'full'
+      : 'none',
   )
 
   /* -- FUNCTIONS -- */
@@ -170,8 +192,25 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
   const save = async (): Promise<void> => {
     if (saveDisabled !== 'none') return
 
+    /**
+     * Reports a failed create or update to the user and returns the
+     * form to its unsaved state so the changes can be retried.
+     */
+    const handleSaveError = (error: unknown) => {
+      // A username held by another user, whether that user is active or
+      // archived, is reported as a conflict by the unique index.
+      if (error instanceof AxiosError && error.response?.status === 409) {
+        notify('This user already exists. Try using a different username.')
+        setUsernameError(USERNAME_TAKEN_ERROR_MESSAGE)
+      } else {
+        notify('User failed to save.')
+      }
+      finishLoading()
+      setAreUnsavedChanges(true)
+    }
+
     setAreUnsavedChanges(false)
-    setUsernameAlreadyExists(false)
+    setUsernameError('')
 
     if (!existsInDatabase && isAuthorized('users_write_students')) {
       try {
@@ -181,21 +220,8 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
         finishLoading()
         setExistsInDatabase(true)
         navigateTo('HomePage', {})
-      } catch (error: any) {
-        if (error instanceof AxiosError && error.response?.status === 409) {
-          notify('This user already exists. Try using a different username.')
-          setUsernameAlreadyExists(true)
-        } else if (
-          error instanceof AxiosError &&
-          error.response?.status === 410
-        ) {
-          notify('This username has been archived and is no longer available.')
-          setUsernameAlreadyExists(true)
-        } else {
-          notify('User failed to save.')
-        }
-        finishLoading()
-        setAreUnsavedChanges(true)
+      } catch (error) {
+        handleSaveError(error)
       }
     } else if (existsInDatabase && isAuthorized('users_write_students')) {
       try {
@@ -209,21 +235,8 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
         setUserEntryKey(StringToolbox.generateRandomId())
         notify('User successfully saved.')
         finishLoading()
-      } catch (error: any) {
-        if (error instanceof AxiosError && error.response?.status === 409) {
-          notify('This user already exists. Try using a different username.')
-          setUsernameAlreadyExists(true)
-        } else if (
-          error instanceof AxiosError &&
-          error.response?.status === 410
-        ) {
-          notify('This username has been archived and is no longer available.')
-          setUsernameAlreadyExists(true)
-        } else {
-          notify('User failed to save.')
-        }
-        finishLoading()
-        setAreUnsavedChanges(true)
+      } catch (error) {
+        handleSaveError(error)
       }
     }
   }
@@ -346,9 +359,11 @@ export type TUserPage_S = {
    */
   userEmptyStringArray: TReactState<string[]>
   /**
-   * Whether or not the username already exists.
+   * The message explaining why the entered username cannot be used,
+   * or an empty string when the username is usable. Set by the
+   * availability check on the username field and by a rejected save.
    */
-  usernameAlreadyExists: TReactState<boolean>
+  usernameError: TReactState<string>
   /**
    * Whether or not the user's password is being updated.
    */
