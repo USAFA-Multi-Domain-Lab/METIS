@@ -34,10 +34,6 @@ export abstract class ActionExecution<
 
   /**
    * The ID of the realm within which the action was executed.
-   * @note This is recorded when the execution is created rather than
-   * resolved from the acting member later on. A member's subscribed
-   * realm can change at any moment, including while the action is
-   * still processing, but the realm an execution belongs to never does.
    */
   public readonly realmId: string
 
