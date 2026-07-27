@@ -108,6 +108,10 @@ export abstract class TargetEnvironmentTask<
      * The session in which this task is running.
      */
     public readonly session: T['session'],
+    /**
+     * The name of the realm within which this task was produced.
+     */
+    public readonly realmName: string,
     status: TEnvironmentTaskStatus,
     error: TEnvironmentTaskError | null,
     /**
@@ -177,6 +181,7 @@ export abstract class TargetEnvironmentTask<
       _id: this._id,
       environmentId: this.environment._id,
       sessionId: this.session._id,
+      realmName: this.realmName,
       status: this._status,
       error: null,
       source: this.source,
@@ -231,6 +236,10 @@ export type TEnvironmentTaskJson = {
    * The ID of the session in which this task is running.
    */
   sessionId: string
+  /**
+   * The name of the realm within which this task was produced.
+   */
+  realmName: string
   /**
    * Indicates where the task is in its lifecycle.
    * @see {@link TEnvironmentTaskStatus}

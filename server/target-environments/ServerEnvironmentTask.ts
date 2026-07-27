@@ -26,6 +26,7 @@ export class ServerEnvironmentTask extends TargetEnvironmentTask<TMetisServerCom
     _id: string,
     environment: ServerTargetEnvironment,
     session: SessionServer,
+    realmName: string,
     source: TEnvironmentTaskSource,
     /**
      * The script that is executed by the
@@ -40,7 +41,7 @@ export class ServerEnvironmentTask extends TargetEnvironmentTask<TMetisServerCom
      */
     private readonly shouldSkip: () => Promise<boolean> | boolean,
   ) {
-    super(_id, environment, session, 'queued', null, source)
+    super(_id, environment, session, realmName, 'queued', null, source)
   }
 
   /**
@@ -150,12 +151,14 @@ export class ServerEnvironmentTask extends TargetEnvironmentTask<TMetisServerCom
    * @param session The session this task belongs to, used to broadcast
    * lifecycle transitions to authorized members.
    * @param environment The environment to which this task pertains.
+   * @param realmName The name of the realm this task belongs to.
    * @param source What produced this task.
    * @param script The script to run when this task is executed.
    */
   public static create(
     session: SessionServer,
     environment: ServerTargetEnvironment,
+    realmName: string,
     source: TEnvironmentTaskSource,
     script: () => Promise<void>,
     options: TTaskCreateOptions = {},
@@ -165,6 +168,7 @@ export class ServerEnvironmentTask extends TargetEnvironmentTask<TMetisServerCom
       StringToolbox.generateRandomId(),
       environment,
       session,
+      realmName,
       source,
       script,
       shouldSkip,
@@ -215,6 +219,7 @@ export class ServerEnvironmentTask extends TargetEnvironmentTask<TMetisServerCom
     return ServerEnvironmentTask.create(
       session,
       effect.environment,
+      context.realm.name,
       source,
       async () => {
         try {

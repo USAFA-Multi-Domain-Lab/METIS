@@ -144,6 +144,7 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
         return ServerEnvironmentTask.create(
           realm.session,
           hook.environment,
+          realm.name,
           source,
           () => context.run((exposedContext) => hook.invoke(exposedContext)),
         )

@@ -1451,10 +1451,14 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * @param task The task to log.
    * @note Unresolved tasks (queued, running) are not logged; only
    * resolved states (success, failure, skipped) are.
+   * @note Every line leads with the task's origin, since a session mints
+   * one realm per participant and each produces its own copy of every
+   * hook and effect. Without it a manager sees N identical lines with no
+   * way to tell them apart.
    */
   protected logTask(task: ClientEnvironmentTask): void {
     let context = 'TE'
-    let { source, status, environment, error } = task
+    let { source, status, environment, error, realmName: origin } = task
 
     // Only resolved tasks are worth logging.
     if (status === 'queued' || status === 'running') return
@@ -1465,7 +1469,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     switch (source.kind) {
       case 'hook': {
         let label = source.method === 'environment-setup' ? 'setup' : 'teardown'
-        let properties = [environment.name, source.method]
+        let properties = [origin, environment.name, source.method]
         let message = undefined
 
         if (status === 'success') {
@@ -1481,7 +1485,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         break
       }
       case 'effect': {
-        let properties = [environment.name, source.trigger]
+        let properties = [origin, environment.name, source.trigger]
         let message = undefined
 
         if (status === 'success') {
@@ -1497,7 +1501,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
         break
       }
       default: {
-        let properties = [environment.name, status]
+        let properties = [origin, environment.name, status]
         let message = undefined
 
         if (status === 'failure') {

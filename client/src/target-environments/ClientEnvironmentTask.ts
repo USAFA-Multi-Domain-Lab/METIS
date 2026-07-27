@@ -54,6 +54,7 @@ export class ClientEnvironmentTask extends TargetEnvironmentTask<TMetisClientCom
       json._id,
       environment,
       session,
+      json.realmName,
       status,
       error,
       source,
