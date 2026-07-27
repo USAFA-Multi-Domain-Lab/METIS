@@ -72,11 +72,15 @@ export class ServerMissionAction extends MissionAction<TMetisServerComponents> {
    */
   public execute(options: TExecuteOptions): Promise<ServerExecutionOutcome> {
     const { infiniteResources } = options.sessionConfig
-    const { cheats = {}, onInit = () => {} } = options
+    const { realmId, cheats = {}, onInit = () => {} } = options
     const { zeroCost, guaranteedSuccess } = cheats
 
     return new Promise<ServerExecutionOutcome>((resolve) => {
-      let execution = ServerActionExecution.generateExecution(this, cheats)
+      let execution = ServerActionExecution.generateExecution(
+        this,
+        realmId,
+        cheats,
+      )
 
       // Process the execution at the node level.
       this.node.onExecution(execution)

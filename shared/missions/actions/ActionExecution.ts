@@ -33,6 +33,15 @@ export abstract class ActionExecution<
   public readonly action: TAction<T>
 
   /**
+   * The ID of the realm within which the action was executed.
+   * @note This is recorded when the execution is created rather than
+   * resolved from the acting member later on. A member's subscribed
+   * realm can change at any moment, including while the action is
+   * still processing, but the realm an execution belongs to never does.
+   */
+  public readonly realmId: string
+
+  /**
    * Cache for `outcome` field.
    */
   protected _outcome: TOutcome<T> | null
@@ -201,6 +210,8 @@ export abstract class ActionExecution<
   /**
    * @param _id The ID of the execution.
    * @param action The action to execute.
+   * @param realmId The ID of the realm within which the action is
+   * being executed.
    * @param start The timestamp for when the action began executing.
    * @param end The timestamp for when the action is expected to
    * finish
@@ -208,12 +219,14 @@ export abstract class ActionExecution<
   public constructor(
     _id: string,
     action: TAction<T>,
+    realmId: string,
     start: number,
     end: number,
   ) {
     super(_id, '', false)
 
     this.action = action
+    this.realmId = realmId
     this._outcome = null
     this.start = start
     this.end = end
@@ -228,6 +241,7 @@ export abstract class ActionExecution<
       _id: this._id,
       actionId: this.actionId,
       nodeId: this.nodeId,
+      realmId: this.realmId,
       start: this.start,
       end: this.end,
       outcome: this.outcome?.toJson() ?? null,
@@ -300,7 +314,7 @@ export type TExecution<T extends TMetisBaseComponents> = T['execution']
  */
 export type TActionExecutionJson = TCreateJsonType<
   ActionExecution,
-  '_id' | 'actionId' | 'nodeId' | 'start' | 'end',
+  '_id' | 'actionId' | 'nodeId' | 'realmId' | 'start' | 'end',
   { outcome: TExecutionOutcomeJson | null }
 >
 

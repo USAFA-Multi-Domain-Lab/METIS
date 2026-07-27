@@ -34,10 +34,10 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
   // Implemented
   protected importExecutions(data: TActionExecutionJson[]): void {
     this._executions = data.map(
-      ({ _id, actionId, outcome: outcomeData, start, end }) => {
+      ({ _id, actionId, realmId, outcome: outcomeData, start, end }) => {
         let action = this.getAction(actionId) as ServerMissionAction | undefined
         if (!action) throw new Error(`Action "${actionId}" not found.`)
-        return new ServerActionExecution(_id, action, start, end, {
+        return new ServerActionExecution(_id, action, realmId, start, end, {
           outcomeData,
         })
       },

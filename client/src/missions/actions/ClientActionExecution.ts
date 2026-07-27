@@ -58,6 +58,8 @@ export class ClientActionExecution extends ActionExecution<TMetisClientComponent
   /**
    * @param _id The ID of the execution.
    * @param action The action being executed.
+   * @param realmId The ID of the realm within which the action is
+   * being executed.
    * @param start The time at which the action started executing.
    * @param end The time at which the action finishes executing.
    * @param aborted Whether the execution was aborted.
@@ -67,13 +69,14 @@ export class ClientActionExecution extends ActionExecution<TMetisClientComponent
   public constructor(
     _id: string,
     action: ClientMissionAction,
+    realmId: string,
     start: number,
     end: number,
     options: TClientExecutionOptions = {},
   ) {
     const { outcomeData = null } = options
 
-    super(_id, action, start, end)
+    super(_id, action, realmId, start, end)
 
     // Parse outcome data, if present.
     if (outcomeData) {

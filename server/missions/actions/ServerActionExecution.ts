@@ -23,6 +23,8 @@ export class ServerActionExecution
   /**
    * @param _id The ID of the execution.
    * @param action The action being executed.
+   * @param realmId The ID of the realm within which the action is
+   * being executed.
    * @param start The time at which the action started executing.
    * @param end The time at which the action finishes executing.
    * @param aborted Whether the execution was aborted.
@@ -32,13 +34,14 @@ export class ServerActionExecution
   public constructor(
     _id: string,
     action: ServerMissionAction,
+    realmId: string,
     start: number,
     end: number,
     options: TServerExecutionOptions = {},
   ) {
     const { outcomeData = null } = options
 
-    super(_id, action, start, end)
+    super(_id, action, realmId, start, end)
 
     // Parse outcome data, if present.
     if (outcomeData) {
@@ -83,10 +86,13 @@ export class ServerActionExecution
    * Creates a brand new action-execution from the given
    * action.
    * @param action The action to execute.
+   * @param realmId The ID of the realm within which the action is
+   * being executed.
    * @param cheats Cheats to apply to the execution, if any.
    */
   public static generateExecution(
     action: ServerMissionAction,
+    realmId: string,
     cheats: Partial<TExecutionCheats> = {},
   ): ServerActionExecution {
     // Determine the start and end time of
@@ -102,6 +108,7 @@ export class ServerActionExecution
     return new ServerActionExecution(
       StringToolbox.generateRandomId(),
       action,
+      realmId,
       start,
       end,
     )
@@ -118,6 +125,13 @@ export type TExecuteOptions = {
    * The configuration for the session.
    */
   sessionConfig: TSessionConfig
+  /**
+   * The ID of the realm within which the action is being executed.
+   * @note This is recorded on the execution so that everything which
+   * follows from it — the events it emits and the effects it triggers —
+   * resolves the same realm the action was taken in.
+   */
+  realmId: string
   /**
    * Cheats to apply when executing the action.
    * @note Any cheats ommitted will be treated

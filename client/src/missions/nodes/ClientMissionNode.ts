@@ -387,10 +387,10 @@ export class ClientMissionNode
   // Implemented
   protected importExecutions(data: TActionExecutionJson[]): void {
     this._executions = data.map(
-      ({ _id, actionId, outcome: outcomeData, start, end }) => {
+      ({ _id, actionId, realmId, outcome: outcomeData, start, end }) => {
         let action = this.getAction(actionId)
         if (!action) throw new Error(`Action "${actionId}" not found.`)
-        return new ClientActionExecution(_id, action, start, end, {
+        return new ClientActionExecution(_id, action, realmId, start, end, {
           outcomeData,
         })
       },

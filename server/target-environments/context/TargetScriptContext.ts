@@ -678,7 +678,20 @@ export class TargetScriptContext<
     member: ServerSessionMember,
     execution: ServerActionExecution,
   ): TargetScriptContext<'executionTriggeredEffect'> {
-    return new TargetScriptContext(member.subscribedRealm, {
+    // ! The realm comes from the execution, not from the member. The
+    // ! member's subscription can change while the action is still
+    // ! processing, and since component IDs are preserved across realms,
+    // ! an effect built against the wrong realm would resolve its
+    // ! lookups successfully and mutate a mission the action never
+    // ! touched.
+    let realm = member.session.getRealm(execution.realmId)
+    if (!realm) {
+      throw new Error(
+        `Could not find the realm with ID "${execution.realmId}" within which the execution took place. A realm is necessary for context creation.`,
+      )
+    }
+
+    return new TargetScriptContext(realm, {
       type: 'executionTriggeredEffect',
       effect,
       get effectId() {

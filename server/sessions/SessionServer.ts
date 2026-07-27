@@ -356,11 +356,12 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
       // If the requester has complete visibility,
       // then update the mission options to expose
-      // all force data and file data, and hand them a shallow
-      // listing of every realm so they can switch between them.
+      // all force data, file data, and root effects, and hand them a
+      // shallow listing of every realm so they can switch between them.
       if (requester.isAuthorized('completeVisibility')) {
         realmOptions.forceExposure = { expose: 'all' }
         realmOptions.fileExposure = { expose: 'all' }
+        realmOptions.rootEffectsExposure = { expose: 'all' }
         realmBasics = this.realms.map((realm) => realm.toBasicJson())
       }
 
@@ -657,8 +658,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Reactivate an existing ghost member (one who quit but retained an
     // assignment) if present, otherwise create a brand-new member.
     let ghostMember = this._members.find((member) => member.userId === userId)
-    let member =
-      ghostMember ?? ServerSessionMember.createNew(client.user, this)
+    let member = ghostMember ?? ServerSessionMember.createNew(client.user, this)
     let hasCompleteVisibility = member.isAuthorized('completeVisibility')
     let isAssignedToForce = member.isAssignedToForce
 
@@ -1228,6 +1228,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     execution: ServerActionExecution,
   ): void {
     let { action } = execution
+    // The realm the action was taken in, recorded on the execution when
+    // it began. The member's own subscription is not consulted, since it
+    // can change while the action is still processing.
+    let realm = this.getRealm(execution.realmId)!
 
     // Construct payload for action execution
     // initiated event.
@@ -1251,7 +1255,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // initiation only reaches members in that realm.
     for (let recipient of this.getMembersForForce(
       action!.force._id,
-      member.subscribedRealmId,
+      realm._id,
     )) {
       recipient.emit('action-execution-initiated', initiationPayload)
     }
@@ -1263,7 +1267,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
             `
 
     // Send the output JSON to the force.
-    member.subscribedRealm.sendOutput(
+    realm.sendOutput(
       member.outputPrefix,
       message,
       { type: 'execution-initiation', sourceExecutionId: execution._id },
@@ -1336,9 +1340,12 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Emit the action execution completed
     // event to each member for the force.
+    // The realm is taken from the execution rather than the member so
+    // that the completion lands in the realm the action was taken in,
+    // even if the member has since switched realms.
     for (let forceMember of this.getMembersForForce(
       outcome.forceId,
-      member.subscribedRealmId,
+      outcome.execution.realmId,
     )) {
       forceMember.emit('action-execution-completed', completionPayload)
     }

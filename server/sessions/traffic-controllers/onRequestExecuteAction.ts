@@ -15,8 +15,11 @@ export const onRequestExecuteAction =
       // Gather data.
       let { config } = this
       let { actionId, cheats = {} } = event.data
-      let action: ServerMissionAction | undefined =
-        member.subscribedRealm.getAction(actionId)
+      // Retrieve the realm before any asynchronous operations,
+      // since the member could switch realms while the action
+      // is executing.
+      let realm = member.subscribedRealm
+      let action: ServerMissionAction | undefined = realm.getAction(actionId)
       let request = member.buildResponseRequestData(event)
 
       // Clear the cheats if the member is not authorized
@@ -120,6 +123,7 @@ export const onRequestExecuteAction =
         // Execute the action, awaiting result.
         let outcome = await action.execute({
           sessionConfig: config,
+          realmId: realm._id,
           cheats,
           onInit: (execution: ServerActionExecution) =>
             this.onExecution(member, request, execution),
