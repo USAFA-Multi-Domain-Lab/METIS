@@ -167,38 +167,13 @@ export class ClientConnection {
   }
 
   /**
-   * Clears event listeners from the connection.
-   * @param filter A list of handler types to remove. Any handler matching any type in the filter will be cleared.
-   * If this is undefined, all handlers will be removed from the connection.
-   * @returns The number of matching event listeners removed.
+   * Removes all listeners with the specified handler.
+   * @param handler The handler to remove from the connection's listeners.
+   * @returns The client connection instance, allowing the chaining of class method calls.
    */
-  public clearEventListeners(filter?: TClientMethod[]): number {
-    // Initialize removal count.
-    let removalCount: number = 0
-
-    // If no filter...
-    if (filter === undefined) {
-      // Get the number of event listeners currently
-      // existing.
-      removalCount = this.listeners.length
-
-      // Reinitialize listeners.
-      this.listeners = []
-    } else {
-      // Filter out listeners using the filter
-      // passed.
-      this.listeners = this.listeners.filter(([method]) => {
-        if (filter.includes(method)) {
-          removalCount++
-          return false
-        } else {
-          return true
-        }
-      })
-    }
-
-    // Return final removal count.
-    return removalCount
+  public removeEventListener(handler: TClientHandler<any>): ClientConnection {
+    this.listeners = this.listeners.filter(([, cursor]) => cursor !== handler)
+    return this
   }
 
   /**

@@ -13,10 +13,8 @@ import { ServerEnvironmentTask } from '@server/target-environments/ServerEnviron
 import type { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
 import type { ServerUser } from '@server/users/ServerUser'
 import type {
-  TClientEvent,
   TClientEvents,
   TRequestEvents,
-  TRequestMethod,
   TRequestOfResponse,
   TServerEvents,
   TServerMethod,
@@ -55,29 +53,12 @@ import type { TInstanceOrArray } from '@shared/toolbox/arrays/ArrayToolbox'
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { User } from '@shared/users/User'
-import { sessionLogger, targetEnvLogger } from '../logging'
+import { targetEnvLogger } from '../logging'
 import type { ServerChatChannel } from './chat/ServerChatChannel'
 import { ServerSessionMember } from './ServerSessionMember'
 import type { TServerRealmJsonOptions } from './ServerSessionRealm'
 import { ServerSessionRealm } from './ServerSessionRealm'
 import { TargetEnvStore } from './TargetEnvStore'
-import { onAcknowledgeSessionPanelAlert } from './traffic-controllers/onAcknowledgeSessionPanelAlert'
-import { onFetchSessionPanelAlerts } from './traffic-controllers/onFetchSessionPanelAlerts'
-import { onRequestAcknowledgeNodeAlert } from './traffic-controllers/onRequestAcknowledgeNodeAlert'
-import { onRequestAssignForce } from './traffic-controllers/onRequestAssignForce'
-import { onRequestAssignRole } from './traffic-controllers/onRequestAssignRole'
-import { onRequestBan } from './traffic-controllers/onRequestBan'
-import { onRequestConfigUpdate } from './traffic-controllers/onRequestConfigUpdate'
-import { onRequestEndSession } from './traffic-controllers/onRequestEndSession'
-import { onRequestExecuteAction } from './traffic-controllers/onRequestExecuteAction'
-import { onRequestKick } from './traffic-controllers/onRequestKick'
-import { onRequestOpenNode } from './traffic-controllers/onRequestOpenNode'
-import { onRequestResetSession } from './traffic-controllers/onRequestResetSession'
-import { onRequestSendChatMessage } from './traffic-controllers/onRequestSendChatMessage'
-import { onRequestSendOutput } from './traffic-controllers/onRequestSendOutput'
-import { onRequestStartSession } from './traffic-controllers/onRequestStartSession'
-import { onRequestSwitchRealm } from './traffic-controllers/onRequestSwitchRealm'
-import { onRequestUnban } from './traffic-controllers/onRequestUnban'
 
 /**
  * Server instance for sessions. Handles server-side logic for a session with participating clients. Communicates with clients to conduct the session.
@@ -160,37 +141,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * ```
    */
   private _unreadChatChannelMessages = new Map<string, Map<string, number>>()
-
-  /**
-   * This is a registry, not of active listeners, but the
-   * methods and corresponding handlers for all listeners
-   * that should be added and removed via the {@link addListeners}
-   * and {@link removeListeners} methods. This helps ensure
-   * there is no mismatch in adding and removing listeners,
-   * such as adding a listener and forgetting to remove it,
-   * or vice versa.
-   */
-  private get listenerInputRegistry() {
-    return [
-      ['request-start-session', onRequestStartSession],
-      ['request-end-session', onRequestEndSession],
-      ['request-reset-session', onRequestResetSession],
-      ['request-config-update', onRequestConfigUpdate],
-      ['request-kick', onRequestKick],
-      ['request-ban', onRequestBan],
-      ['request-unban', onRequestUnban],
-      ['request-assign-force', onRequestAssignForce],
-      ['request-assign-role', onRequestAssignRole],
-      ['request-open-node', onRequestOpenNode],
-      ['request-execute-action', onRequestExecuteAction],
-      ['request-send-output', onRequestSendOutput],
-      ['request-acknowledge-node-alert', onRequestAcknowledgeNodeAlert],
-      ['request-send-chat-message', onRequestSendChatMessage],
-      ['request-switch-realm', onRequestSwitchRealm],
-      ['acknowledge-session-panel-alert', onAcknowledgeSessionPanelAlert],
-      ['fetch-session-panel-alerts', onFetchSessionPanelAlerts],
-    ] as const
-  }
 
   public constructor(
     _id: string,
@@ -527,37 +477,13 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
-   * Handles any actions that are executing on a node.
-   */
-  private async abortExecutions(): Promise<void> {
-    let allExecutions: Promise<void>[] = []
-
-    this.mission.allNodes.forEach((node) => {
-      if (!node.executing) return
-
-      let execution = node.latestExecution!
-      // Register the listener (and capture its promise) before aborting, so
-      // a synchronous 'aborted' emission can't be missed and the promise is
-      // in the array before we await it.
-      allExecutions.push(
-        new Promise<void>((resolve) => {
-          execution.addEventListener('aborted', () => resolve())
-        }),
-      )
-      execution.abort()
-    })
-
-    // Wait for every aborted execution to settle. Resolves immediately when
-    // there are none.
-    await Promise.all(allExecutions)
-  }
-
-  /**
    * Destroys the session.
    */
   public destroy(): void {
     this.unregister()
     this._destroyed = true
+    // Await is unnecessary in this context.
+    void this.abortExecutions()
     TargetEnvStore.cleanUp(this._id)
 
     for (let member of this.joinedMembers) {
@@ -731,7 +657,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Reactivate an existing ghost member (one who quit but retained an
     // assignment) if present, otherwise create a brand-new member.
     let ghostMember = this._members.find((member) => member.userId === userId)
-    let member = ghostMember ?? ServerSessionMember.createNew(client, this)
+    let member =
+      ghostMember ?? ServerSessionMember.createNew(client.user, this)
     let hasCompleteVisibility = member.isAuthorized('completeVisibility')
     let isAssignedToForce = member.isAssignedToForce
 
@@ -756,11 +683,11 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Push the member to the list of members if they are newly created.
     if (!ghostMember) this._members.push(member)
-    // Rejoin with new client otherwise.
-    else ghostMember.rejoin(client)
 
-    // Add event listeners for the member.
-    this.addListeners(member)
+    // Attach the connection to the member, which joins them and adds
+    // their event listeners. This is the same path a ghost member takes
+    // when rejoining.
+    member.join(client)
 
     // Subscribe the member to the first realm available
     // if they are currently subscribed to the default realm.
@@ -835,10 +762,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // A standalone session mints one realm per participant, so
     // starting one with no participants would produce a blank session
     // with nothing to play. Reject the start rather than allow that.
-    if (
-      this.config.mode === 'standalone' &&
-      !this.hasForceAssignableMembers
-    ) {
+    if (this.config.mode === 'standalone' && !this.hasForceAssignableMembers) {
       member.emitError(
         new ServerEmittedError(
           ServerEmittedError.CODE_SESSION_NO_PARTICIPANTS,
@@ -919,9 +843,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     )
     // If the member is found, update the connection.
     if (member) {
-      this.removeListeners(member)
-      member.rejoin(newConnection)
-      this.addListeners(member)
+      member.join(newConnection)
 
       // Make sure the client's pending session panel alerts are in sync
       // with the server's pending session panel alerts upon reconnect.
@@ -1063,6 +985,13 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
+   * Aborts all executions across every realm gracefully.
+   */
+  private async abortExecutions(): Promise<void> {
+    await Promise.all(this.realms.map((realm) => realm.abortExecutions()))
+  }
+
+  /**
    * Resets the gameplay state within every existing realm in place,
    * rebuilding each realm's mission from its own pristine save JSON and
    * re-establishing initial runtime state.
@@ -1121,81 +1050,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       member.assignToRole('participant')
     }
     return changed
-  }
-
-  /**
-   * Creates session-specific listeners for the given member.
-   */
-  private addListeners(member: ServerSessionMember): void {
-    this.listenerInputRegistry.forEach(([method, handler]) => {
-      member.connection?.addEventListener(method, (event: any) => {
-        // Controllers may run synchronously or asynchronously. Route a
-        // synchronous throw and an async rejection through the same
-        // backstop so one member's request can never escalate into an
-        // unhandled rejection — which, under Node's default policy, would
-        // surface as an uncaught exception and take down the whole process.
-        try {
-          let result = handler(member, event) as unknown
-          if (result instanceof Promise) {
-            result.catch((error) =>
-              this.handleControllerError(member, event, error),
-            )
-          }
-        } catch (error) {
-          this.handleControllerError(member, event, error)
-        }
-      })
-    })
-  }
-
-  /**
-   * Backstop for errors escaping a session traffic controller. Expected
-   * failures throw a {@link ServerEmittedError}, which the controller has
-   * already surfaced to the requesting member — those are ignored here.
-   * Anything else is an unexpected error (a bug, a null deref, etc.): it is
-   * logged for diagnosis and reported to the requesting member as a generic
-   * server error, keeping the failure scoped to the offending request
-   * instead of crashing the process.
-   * @param member The member whose request was being handled.
-   * @param event The client event being handled when the error occurred.
-   * @param error The error thrown (or rejected) by the controller.
-   */
-  private handleControllerError(
-    member: ServerSessionMember,
-    event: TClientEvent,
-    error: unknown,
-  ): void {
-    // A ServerEmittedError is an expected failure the controller has
-    // already emitted to the member; nothing more to do.
-    if (error instanceof ServerEmittedError) return
-
-    sessionLogger.error(
-      `Unexpected error in session traffic controller for "${event.method}" ` +
-        `(session ${this._id}, member ${member.userId}):`,
-      error,
-    )
-
-    // Correlate the error with the originating request when possible; the
-    // two non-request listeners (panel-alert ack/fetch) carry no requestId.
-    let request =
-      'requestId' in event
-        ? member.buildResponseRequestData(
-            event as TClientEvents[TRequestMethod],
-          )
-        : undefined
-
-    member.emitError(
-      new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, { request }),
-    )
-  }
-
-  /**
-   * Removes session-specific listeners for the given participant.
-   */
-  private removeListeners(member: ServerSessionMember): void {
-    member.connection?.clearEventListeners(
-      this.listenerInputRegistry.map(([method]) => method),
-    )
   }
 
   /**
@@ -1539,9 +1393,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   /**
    * Handler for when a member leaves the session, whether voluntarily
    * or involuntarily. Performs a clean up routine, removing the member
-   * from the session if unassigned and removing session-specific
-   * listeners from the connection.
+   * from the session if unassigned.
    * @param member The member to clean up.
+   * @note The member removes its own session listeners as a part of
+   * {@link ServerSessionMember.leave}, which is what calls this.
    */
   public onMemberLeave(member: ServerSessionMember): void {
     if (
@@ -1554,7 +1409,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         (someMember) => member._id !== someMember._id,
       )
     }
-    this.removeListeners(member)
   }
 
   /**

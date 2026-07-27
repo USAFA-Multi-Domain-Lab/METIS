@@ -65,6 +65,33 @@ export class ServerSessionRealm extends SessionRealm<TMetisServerComponents> {
   }
 
   /**
+   * Gracefully cancels any action executions that are currently
+   * in progress.
+   */
+  public async abortExecutions(): Promise<void> {
+    let allExecutions: Promise<void>[] = []
+
+    this.mission.allNodes.forEach((node) => {
+      if (!node.executing) return
+
+      let execution = node.latestExecution!
+      // Register the listener (and capture its promise) before aborting, so
+      // a synchronous 'aborted' emission can't be missed and the promise is
+      // in the array before we await it.
+      allExecutions.push(
+        new Promise<void>((resolve) => {
+          execution.addEventListener('aborted', () => resolve())
+        }),
+      )
+      execution.abort()
+    })
+
+    // Wait for every aborted execution to settle. Resolves immediately when
+    // there are none.
+    await Promise.all(allExecutions)
+  }
+
+  /**
    * Resets the realm to a fresh initialized state.
    */
   public reset(): void {

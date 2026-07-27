@@ -1,15 +1,21 @@
-import type { TBuildResponseDataOptions } from '@server/connect/ClientConnection'
+import type {
+  TBuildResponseDataOptions,
+  TClientHandler,
+} from '@server/connect/ClientConnection'
 import { ClientConnection } from '@server/connect/ClientConnection'
 import { sessionLogger } from '@server/logging'
 import type { TTargetEnvExposedMember } from '@server/target-environments/context/TargetEnvContext'
+import type { ServerUser } from '@server/users/ServerUser'
 import type {
+  TClientEvent,
+  TClientEvents,
   TRequestEvents,
   TRequestMethod,
   TResponseEvent,
   TServerEvents,
   TServerMethod,
 } from '@shared/connect'
-import type { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
+import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import { type TMemberRoleId } from '@shared/sessions/members/MemberRole'
 import {
   SessionMember,
@@ -17,15 +23,73 @@ import {
 } from '@shared/sessions/members/SessionMember'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { SessionServer } from './SessionServer'
+import { onAcknowledgeSessionPanelAlert } from './traffic-controllers/onAcknowledgeSessionPanelAlert'
+import { onFetchSessionPanelAlerts } from './traffic-controllers/onFetchSessionPanelAlerts'
+import { onRequestAcknowledgeNodeAlert } from './traffic-controllers/onRequestAcknowledgeNodeAlert'
+import { onRequestAssignForce } from './traffic-controllers/onRequestAssignForce'
+import { onRequestAssignRole } from './traffic-controllers/onRequestAssignRole'
+import { onRequestBan } from './traffic-controllers/onRequestBan'
+import { onRequestConfigUpdate } from './traffic-controllers/onRequestConfigUpdate'
+import { onRequestEndSession } from './traffic-controllers/onRequestEndSession'
+import { onRequestExecuteAction } from './traffic-controllers/onRequestExecuteAction'
+import { onRequestKick } from './traffic-controllers/onRequestKick'
+import { onRequestOpenNode } from './traffic-controllers/onRequestOpenNode'
+import { onRequestResetSession } from './traffic-controllers/onRequestResetSession'
+import { onRequestSendChatMessage } from './traffic-controllers/onRequestSendChatMessage'
+import { onRequestSendOutput } from './traffic-controllers/onRequestSendOutput'
+import { onRequestStartSession } from './traffic-controllers/onRequestStartSession'
+import { onRequestSwitchRealm } from './traffic-controllers/onRequestSwitchRealm'
+import { onRequestUnban } from './traffic-controllers/onRequestUnban'
 
 /**
  * Server-side representation of a session member.
  */
 export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
   /**
-   * The WS connection to the client where the given user is logged in.
+   * This is a registry, not of active listeners, but the
+   * methods and corresponding handlers for all listeners
+   * that should be added and removed as the member's connection is
+   * attached and dropped by {@link join} and {@link leave}. This helps
+   * ensure there is no mismatch in adding and removing listeners, such as
+   * adding a listener and forgetting to remove it, or vice versa.
+   * @note Each handler runs with the session bound as `this`, so these
+   * are session traffic controllers registered per member rather than
+   * anything the member handles itself.
    */
-  public connection: ClientConnection | null
+  private static readonly listenerInputRegistry = [
+    // ^^ Has no type annotation to make the type exact.
+    ['request-start-session', onRequestStartSession],
+    ['request-end-session', onRequestEndSession],
+    ['request-reset-session', onRequestResetSession],
+    ['request-config-update', onRequestConfigUpdate],
+    ['request-kick', onRequestKick],
+    ['request-ban', onRequestBan],
+    ['request-unban', onRequestUnban],
+    ['request-assign-force', onRequestAssignForce],
+    ['request-assign-role', onRequestAssignRole],
+    ['request-open-node', onRequestOpenNode],
+    ['request-execute-action', onRequestExecuteAction],
+    ['request-send-output', onRequestSendOutput],
+    ['request-acknowledge-node-alert', onRequestAcknowledgeNodeAlert],
+    ['request-send-chat-message', onRequestSendChatMessage],
+    ['request-switch-realm', onRequestSwitchRealm],
+    ['acknowledge-session-panel-alert', onAcknowledgeSessionPanelAlert],
+    ['fetch-session-panel-alerts', onFetchSessionPanelAlerts],
+  ] as const
+
+  /** Private cache for {@link connection} */
+  private _connection: ClientConnection | null
+  /**
+   * The WS connection to the client where the given user is logged in,
+   * or `null` while the member is a ghost.
+   * @note Attached by {@link join} and dropped by {@link leave}, which
+   * keep the member's session listeners in step with it. Nothing else
+   * may swap the connection out, since listeners can only be removed
+   * from the connection they were registered on.
+   */
+  public get connection(): ClientConnection | null {
+    return this._connection
+  }
 
   /** Private cache for {@link joined} */
   private _joined: boolean
@@ -42,24 +106,36 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
   }
 
   /**
+   * The session listeners this member has registered on its own
+   * connection, tracked by handler reference.
+   * @note Populated by {@link addListeners} and cleared by
+   * {@link removeListeners}.
+   */
+  private activeHandlers: TClientHandler<any>[]
+
+  /**
    * @param _id The unique ID of the session member.
-   * @param connection The WS connection for the user who is joining the session.
+   * @param user The user the member represents.
    * @param assignment The member's role, force, and realm assignment.
    * @param session The session to which the member belongs.
    * @param subscribedRealmId The ID of the realm to which the member is
    * subscribed.
+   * @note A new member starts without a connection and is not joined
+   * until {@link join} attaches one, so a member whose join is rejected
+   * never appears — or listens — as a live participant.
    */
   private constructor(
     _id: string,
-    connection: ClientConnection,
+    user: ServerUser,
     assignment: TSessionMemberAssignment,
     session: SessionServer,
     subscribedRealmId: string,
   ) {
-    super(_id, connection.user, assignment, session, subscribedRealmId)
-    this.connection = connection
+    super(_id, user, assignment, session, subscribedRealmId)
+    this._connection = null
     this._banned = false
-    this._joined = true
+    this._joined = false
+    this.activeHandlers = []
   }
 
   /**
@@ -133,14 +209,117 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
   }
 
   /**
+   * Registers a session listener on the member's connection for every
+   * entry in {@link listenerInputRegistry}, tracking each one in
+   * {@link activeHandlers} so it can be removed again individually.
+   * @note Expects {@link join} to have already removed the listeners of
+   * any previous connection, which cannot be done from here — by the time
+   * this runs, the connection those listeners belong to is no longer the
+   * one attached.
+   * @note A no-op for a ghost member, who has no connection to listen on.
+   */
+  private addListeners(): void {
+    if (!this._connection) return
+
+    for (let [method, handler] of ServerSessionMember.listenerInputRegistry) {
+      let wrappedHandler: TClientHandler<any> = (event) => {
+        // Controllers may run synchronously or asynchronously. Route a
+        // synchronous throw and an async rejection through the same
+        // backstop so one member's request can never escalate into an
+        // unhandled rejection — which, under Node's default policy, would
+        // surface as an uncaught exception and take down the whole process.
+        try {
+          let result = handler(this, event) as unknown
+          if (result instanceof Promise) {
+            result.catch((error) => this.handleControllerError(event, error))
+          }
+        } catch (error) {
+          this.handleControllerError(event, error)
+        }
+      }
+      this._connection.addEventListener(method, wrappedHandler)
+      this.activeHandlers.push(wrappedHandler)
+    }
+  }
+
+  /**
+   * Removes every session listener this member registered from its
+   * connection and stops tracking them.
+   * @note Called before the member's connection is replaced or dropped,
+   * since the handlers can only be removed from the connection they were
+   * registered on.
+   */
+  private removeListeners(): void {
+    for (let handler of this.activeHandlers) {
+      this._connection?.removeEventListener(handler)
+    }
+    this.activeHandlers = []
+  }
+
+  /**
+   * Backstop for errors escaping a session traffic controller. Expected
+   * failures throw a {@link ServerEmittedError}, which the controller has
+   * already surfaced to this member — those are ignored here. Anything
+   * else is an unexpected error (a bug, a null deref, etc.): it is logged
+   * for diagnosis and reported to this member as a generic server error,
+   * keeping the failure scoped to the offending request instead of
+   * crashing the process.
+   * @param event The client event being handled when the error occurred.
+   * @param error The error thrown (or rejected) by the controller.
+   */
+  private handleControllerError(event: TClientEvent, error: unknown): void {
+    // A ServerEmittedError is an expected failure the controller has
+    // already emitted to the member; nothing more to do.
+    if (error instanceof ServerEmittedError) return
+
+    sessionLogger.error(
+      `Unexpected error in session traffic controller for "${event.method}" ` +
+        `(session ${this.session._id}, member ${this.userId}):`,
+      error,
+    )
+
+    // Correlate the error with the originating request when possible; the
+    // two non-request listeners (panel-alert ack/fetch) carry no requestId.
+    let request =
+      'requestId' in event
+        ? this.buildResponseRequestData(event as TClientEvents[TRequestMethod])
+        : undefined
+
+    this.emitError(
+      new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, { request }),
+    )
+  }
+
+  /**
+   * Attaches the given connection to the member, marks them as joined,
+   * and registers the session's listeners on that connection.
+   * @param connection The WS connection for the member.
+   * @note Used both when a member first joins and whenever their
+   * connection is replaced (a reconnect, or a ghost rejoining), so the
+   * listeners are always torn off the outgoing connection before the new
+   * one is wired up.
+   */
+  public join(connection: ClientConnection): void {
+    // Drop the listeners registered on any previous connection while it
+    // is still the one being tracked.
+    this.removeListeners()
+    this._connection = connection
+    this._joined = true
+    this.addListeners()
+  }
+
+  /**
    * Removes the member from the session and performs
    * any necessary clean up.
    */
   public leave(): void {
+    // Remove the listeners while the connection they were registered on
+    // is still attached.
+    this.removeListeners()
     this.session.onMemberLeave(this)
     this._joined = false
-    this.connection?.login.onMetisSessionLeave()
-    this.connection = null
+    this._connection?.login.onMetisSessionLeave()
+    this._connection = null
   }
 
   /**
@@ -164,36 +343,23 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
   }
 
   /**
-   * Marks the member as newly joined and reattaches the
-   * given connection to the member.
-   * @param connection The new WS connection for the member.
-   */
-  public rejoin(connection: ClientConnection): void {
-    this.connection = connection
-    this._joined = true
-  }
-
-  /**
    * Creates a default assignment for a new session member based
    * on the user's permissions and the state of the session.
-   * @param connection The WS connection with which the user who is
-   * joining the session.
+   * @param user The user who is joining the session.
    * @param session The session which the member is joining.
    * @returns The default assignment for the new session member.
    */
   public static createDefaultAssignment(
-    connection: ClientConnection,
+    user: ServerUser,
     session: SessionServer,
   ): TSessionMemberAssignment {
     let roleId: TMemberRoleId
-    let canManageAny = connection.user.isAuthorized('sessions_join_manager')
+    let canManageAny = user.isAuthorized('sessions_join_manager')
     let canManageThisSession =
-      connection.user.isAuthorized('sessions_join_manager_native') &&
-      session.ownerId === connection.userId
-    let canObserve = connection.user.isAuthorized('sessions_join_observer')
-    let canParticipate = connection.user.isAuthorized(
-      'sessions_join_participant',
-    )
+      user.isAuthorized('sessions_join_manager_native') &&
+      session.ownerId === user._id
+    let canObserve = user.isAuthorized('sessions_join_observer')
+    let canParticipate = user.isAuthorized('sessions_join_participant')
 
     if (canManageAny || canManageThisSession) {
       roleId = 'manager'
@@ -210,18 +376,19 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
 
   /**
    * Creates a new `ServerSessionMember` object with a random ID.
-   * @param connection The WS connection for the user who is joining the session.
+   * @param user The user who is joining the session.
    * @param session The session in which the member is joining.
    * @returns A new {@link ServerSessionMember} object.
+   * @note The member has no connection until {@link join} attaches one.
    */
   public static createNew(
-    connection: ClientConnection,
+    user: ServerUser,
     session: SessionServer,
   ): ServerSessionMember {
     return new ServerSessionMember(
       StringToolbox.generateRandomId(),
-      connection,
-      this.createDefaultAssignment(connection, session),
+      user,
+      this.createDefaultAssignment(user, session),
       session,
       session.defaultRealm._id,
     )
