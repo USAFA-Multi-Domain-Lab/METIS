@@ -79,11 +79,30 @@ export abstract class SessionMember<
    * The force to which the member is explicitly assigned, or `null`.
    * Resolved from the assigned realm's mission. If a force is assigned
    * but could not be found, `null` will be returned in that case also.
+   * @note If the session is in a pre-start state, this means the force
+   * cannot be resolved yet, since the realm has not been minted.
+   * If a force is needed for display purposes, use {@link assignedTemplateForce},
+   * which isn't the force the member will operate in, but it does hold
+   * display data that can be used before session start.
    */
   public get assignedForce(): TForce<T> | null {
     return (
       this.assignedRealm?.mission.getForceById(this.assignment.forceId) ?? null
     )
+  }
+
+  /**
+   * The force within the session's mission template which corresponds
+   * to the member's assigned force ID. The actual force within which the
+   * member will operate is {@link assignedForce}, which is resolved from
+   * the assigned realm's mission. However, before the session is started,
+   * the realm has not yet been minted. Therefore, this property can be used
+   * to access display data for the force, such as name and color, before
+   * the session is started.
+   * @note If unassigned, this will resolve to `null`.
+   */
+  public get assignedTemplateForce(): TForce<T> | null {
+    return this.session.mission.getForceById(this.assignment.forceId) ?? null
   }
 
   /**

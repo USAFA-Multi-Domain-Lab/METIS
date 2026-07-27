@@ -415,6 +415,7 @@ export default function ListItem<T extends MetisComponent>({
       ref={root}
       data-item-id={item._id}
       onDoubleClick={() => onItemDblClick(item)}
+      onContextMenu={(event) => event.preventDefault()}
     >
       {cellsJsx}
       <ButtonMenuController

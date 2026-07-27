@@ -677,7 +677,7 @@ export type TList_P<TItem extends MetisComponent> = {
   itemsPerPageMin?: number
   /**
    * The minimum width for the name column.
-   * @default '16em'
+   * @default '14em'
    */
   minNameColumnWidth?: string
   /**
@@ -694,7 +694,7 @@ export type TList_P<TItem extends MetisComponent> = {
   itemButtonIcons?: TMetisIcon[]
   /**
    * The initial sorting state for the list.
-   * @default { mode: 'automatic', column: 'name', method: 'descending' }
+   * @default { method: 'column-based', column: 'name', direction: 'ascending' }
    */
   initialSorting?: TListSorting<TItem>
   /**

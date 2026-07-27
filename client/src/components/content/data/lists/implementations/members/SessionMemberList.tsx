@@ -304,6 +304,7 @@ export default function SessionMemberList({
         name={'Members'}
         items={members}
         columns={['role', 'assignedForce', 'status']}
+        searchBlacklist={['role', 'assignedForce']}
         getColumnWidth={getColumnWidth}
         getColumnLabel={getColumnLabel}
         getCellContent={getCellContent}

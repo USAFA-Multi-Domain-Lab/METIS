@@ -43,8 +43,19 @@ export class ButtonSvgEngine {
    * The buttons powered by the engine.
    */
   public get buttons(): TButtonSvg_PK[] {
-    const buttonElements = this.panelElements.filter(
+    let buttonElements = this.panelElements.filter(
       (element) => element.type === 'button',
+    )
+    return buttonElements as TButtonSvg_PK[]
+  }
+
+  /**
+   * The buttons powered by the engine which
+   * are not hidden.
+   */
+  public get shownButtons(): TButtonSvg_PK[] {
+    let buttonElements = this.panelElements.filter(
+      (element) => element.type === 'button' && !element.hidden,
     )
     return buttonElements as TButtonSvg_PK[]
   }
@@ -53,7 +64,7 @@ export class ButtonSvgEngine {
    * The steppers powered by the engine.
    */
   public get steppers(): TStepperSvg_PK[] {
-    const stepperElements = this.panelElements.filter(
+    let stepperElements = this.panelElements.filter(
       (element) => element.type === 'stepper',
     )
     return stepperElements as TStepperSvg_PK[]

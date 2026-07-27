@@ -24,7 +24,7 @@ export default function SessionMemberForceCell({
 
   const { handleError } = useGlobalContext().actions
   const [assignedForce, setAssignedForce] = useState<ClientMissionForce | null>(
-    member.assignedForce,
+    member.assignedTemplateForce,
   )
   const [forceLock, setForceLock] = useState<boolean>(false)
 
@@ -93,7 +93,7 @@ export default function SessionMemberForceCell({
     if (!currentMember.isAuthorized('manageSessionMembers')) return
 
     // Gather details.
-    let previousForce = member.assignedForce
+    let previousForce = member.assignedTemplateForce
     let previousForceId = member.assignedForceId
 
     // Request to assign the force if the state changes.
@@ -117,7 +117,7 @@ export default function SessionMemberForceCell({
   // Sync the assigned force on a member list update.
   useEffect(() => {
     if (assignedForceId !== member.assignedForceId) {
-      setAssignedForce(member.assignedForce)
+      setAssignedForce(member.assignedTemplateForce)
     }
   }, [member])
 
@@ -189,11 +189,12 @@ export default function SessionMemberForceCell({
     let standaloneForce = session.mission.getForceById(
       session.config.standaloneForceId,
     )
+
     return (
       <DetailLocked
         label={null}
         value={standaloneForce?.name ?? 'Not configured'}
-        color={`${standaloneForce?.color}77`}
+        color={`${standaloneForce?.color ?? '#ffffff'}77`}
       />
     )
   }
