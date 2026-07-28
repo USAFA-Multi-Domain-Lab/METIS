@@ -11,7 +11,7 @@ import type { TNavigation_P } from '../../content/general-layout/Navigation'
 import ButtonSvgPanel from '../../content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '../../content/user-controls/buttons/panels/hooks'
 import './LaunchPage.scss'
-import SessionConfig from './subcomponents/SessionLaunchConfig'
+import SessionLaunchConfig from './subcomponents/SessionLaunchConfig'
 
 /**
  * Page responsible for launching a session with the given
@@ -238,7 +238,7 @@ export default function LaunchPage({
             <div className='Title'>Launch</div>
             <div className='Subtitle'>{mission.name}</div>
           </div>
-          <SessionConfig
+          <SessionLaunchConfig
             sessionConfig={sessionConfig}
             mission={mission}
             disabled={isLaunching}

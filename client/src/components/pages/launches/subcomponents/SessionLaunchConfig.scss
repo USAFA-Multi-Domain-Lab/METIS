@@ -30,6 +30,7 @@
       .PanelContent {
         @include form-container;
 
+        box-sizing: border-box;
         width: 100%;
         max-width: 40em;
         margin: 0 auto;

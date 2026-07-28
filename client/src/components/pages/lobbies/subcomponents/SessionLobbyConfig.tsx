@@ -2,7 +2,7 @@ import Prompt from '@client/components/content/communication/Prompt'
 import Panel from '@client/components/content/general-layout/panels/Panel'
 import PanelView from '@client/components/content/general-layout/panels/PanelView'
 import SessionGeneralConfig from '@client/components/content/session/config/SessionGeneralConfig'
-import TargetEnviromentConfig from '@client/components/content/session/config/TargetEnvironmentConfig'
+import TargetEnvironmentConfig from '@client/components/content/session/config/TargetEnvironmentConfig'
 import { useGlobalContext } from '@client/context/global'
 import type { SessionClient } from '@client/sessions/SessionClient'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
@@ -116,7 +116,7 @@ export default function SessionConfigMenu({
         </PanelView>
         <PanelView title='Target Environments'>
           <div className='PanelContent'>
-            <TargetEnviromentConfig
+            <TargetEnvironmentConfig
               sessionConfig={session.config}
               mission={mission}
               disabled={disabled}

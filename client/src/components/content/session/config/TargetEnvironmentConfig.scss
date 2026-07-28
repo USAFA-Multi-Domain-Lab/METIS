@@ -49,5 +49,18 @@
     .DetailDropdown {
       margin-top: 1em;
     }
+
+    &.LockedWithNoRealmSupport {
+      .DetailToggle {
+        &::after {
+          content: '🔒 No multi-realm support';
+          display: block;
+          width: 15em;
+          font-size: 0.7em;
+          font-style: italic;
+          color: $color-faded;
+        }
+      }
+    }
   }
 }

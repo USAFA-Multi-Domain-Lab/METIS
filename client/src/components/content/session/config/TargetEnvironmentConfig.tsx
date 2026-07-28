@@ -3,9 +3,11 @@ import type { ClientTargetEnvironment } from '@client/target-environments/Client
 import { compute } from '@client/toolbox'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import type { TTargetEnvConfig } from '@shared/target-environments/types'
+import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useState } from 'react'
 import { DetailToggle } from '../../form/DetailToggle'
 import { DetailDropdown } from '../../form/dropdowns/standard/DetailDropdown'
+import type { TToggleLockState } from '../../user-controls/Toggle'
 import './TargetEnvironmentConfig.scss'
 import { useConfigUpdater } from './useConfigUpdater'
 
@@ -13,7 +15,7 @@ import { useConfigUpdater } from './useConfigUpdater'
  * Allows the modification of target environment settings
  * within a session config.
  */
-export default function TargetEnviromentConfig({
+export default function TargetEnvironmentConfig({
   sessionConfig,
   mission,
   disabled = false,
@@ -69,28 +71,41 @@ export default function TargetEnviromentConfig({
   )
 
   /**
-   * Whether all target environments are enabled.
+   * Whether no target environment is explicitly disabled. Environments
+   * the session mode has disabled do not count, since enabling all
+   * cannot lift those.
    */
-  const allTargetEnvsEnabled = compute<boolean>(
-    () => disabledTargetEnvs.length === 0,
+  const allTargetEnvsExplicitlyEnabled = compute<boolean>(
+    () => explicitlyDisabled.length === 0,
   )
 
   /**
-   * Whether all target environments are disabled.
+   * Whether every target environment is explicitly disabled, which is
+   * the state disabling all produces.
    */
-  const allTargetEnvsDisabled = compute<boolean>(
-    () => disabledTargetEnvs.length === mission.targetEnvironments.length,
+  const allTargetEnvsExplicitlyDisabled = compute<boolean>(
+    () => explicitlyDisabled.length === mission.targetEnvironments.length,
   )
 
   /* -- FUNCTIONS -- */
+
+  /**
+   * Whether the session mode has disabled the given target environment,
+   * which the manager cannot lift.
+   * @param targetEnv The target environment to check.
+   * @returns Whether the mode has disabled it.
+   */
+  const isLockedByMode = (targetEnv: ClientTargetEnvironment): boolean =>
+    sessionConfig.mode === 'standalone' && !targetEnv.multiRealmSupport
 
   /**
    * Toggles whether the given target environment is enabled.
    * @param targetEnv The target environment to toggle.
    */
   const toggleEnabled = (targetEnv: ClientTargetEnvironment) => {
-    const isEnabled = !disabledTargetEnvs.includes(targetEnv._id)
-    const next = isEnabled
+    if (isLockedByMode(targetEnv)) return
+    let isEnabled = !disabledTargetEnvs.includes(targetEnv._id)
+    let next = isEnabled
       ? [...explicitlyDisabled, targetEnv._id]
       : explicitlyDisabled.filter((id) => id !== targetEnv._id)
     setExplicitlyDisabled(next)
@@ -100,8 +115,8 @@ export default function TargetEnviromentConfig({
    * Disables all target environments for this session.
    */
   const disableAll = () => {
-    if (allTargetEnvsDisabled) return
-    const allIds = mission.targetEnvironments.map((env) => env._id)
+    if (allTargetEnvsExplicitlyDisabled) return
+    let allIds = mission.targetEnvironments.map((env) => env._id)
     setExplicitlyDisabled(allIds)
   }
 
@@ -109,7 +124,7 @@ export default function TargetEnviromentConfig({
    * Enables all target environments for this session.
    */
   const enableAll = () => {
-    if (allTargetEnvsEnabled) return
+    if (allTargetEnvsExplicitlyEnabled) return
     setExplicitlyDisabled([])
   }
 
@@ -145,23 +160,30 @@ export default function TargetEnviromentConfig({
   const envConfigContent = compute<TReactElement[]>(() => {
     return mission.targetEnvironments.map((targetEnv) => {
       // Determine if the target environment is enabled.
-      const targetEnvironmentDisabled = disabledTargetEnvs.includes(
-        targetEnv._id,
-      )
+      let targetEnvironmentDisabled = disabledTargetEnvs.includes(targetEnv._id)
       // Determine the selected configuration for the target environment.
-      const configId = targetEnvConfigs[targetEnv._id]
-      const selectedConfig =
+      let configId = targetEnvConfigs[targetEnv._id]
+      let selectedConfig =
         targetEnv.configs.find((config) => config._id === configId) ??
         targetEnv.configs[0]
+      let lockedByMode = isLockedByMode(targetEnv)
+      let toggleLockState: TToggleLockState = lockedByMode
+        ? 'locked-deactivation'
+        : 'unlocked'
+      let classes = new ClassList('EnvironmentConfigContent').set(
+        'LockedWithNoRealmSupport',
+        lockedByMode,
+      )
 
       // Render
       return (
-        <div key={targetEnv._id} className='EnvironmentConfigContent'>
+        <div key={targetEnv._id} className={classes.value}>
           <DetailToggle
             label={`${targetEnv.name}`}
             value={!targetEnvironmentDisabled}
             setValue={() => toggleEnabled(targetEnv)}
             disabled={disabled}
+            lockState={toggleLockState}
           />
           {targetEnv.configs.length > 0 && (
             <DetailDropdown<TTargetEnvConfig>
@@ -200,7 +222,7 @@ export default function TargetEnviromentConfig({
             <button
               type='button'
               className='ActionButton'
-              disabled={disabled || allTargetEnvsEnabled}
+              disabled={disabled || allTargetEnvsExplicitlyEnabled}
               onClick={enableAll}
             >
               Enable All
@@ -208,7 +230,7 @@ export default function TargetEnviromentConfig({
             <button
               type='button'
               className='ActionButton'
-              disabled={disabled || allTargetEnvsDisabled}
+              disabled={disabled || allTargetEnvsExplicitlyDisabled}
               onClick={disableAll}
             >
               Disable All

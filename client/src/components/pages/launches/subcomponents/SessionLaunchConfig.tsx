@@ -1,9 +1,10 @@
 import Panel from '@client/components/content/general-layout/panels/Panel'
 import PanelView from '@client/components/content/general-layout/panels/PanelView'
 import SessionGeneralConfig from '@client/components/content/session/config/SessionGeneralConfig'
-import TargetEnviromentConfig from '@client/components/content/session/config/TargetEnvironmentConfig'
+import TargetEnvironmentConfig from '@client/components/content/session/config/TargetEnvironmentConfig'
 import { ButtonText } from '@client/components/content/user-controls/buttons/ButtonText'
 import type { ClientMission } from '@client/missions/ClientMission'
+import { useForcedUpdates } from '@client/toolbox/hooks/states'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import './SessionLaunchConfig.scss'
 
@@ -11,7 +12,7 @@ import './SessionLaunchConfig.scss'
  * Allows the modification of the given session config before
  * launching a session.
  */
-export default function SessionConfig({
+export default function SessionLaunchConfig({
   sessionConfig,
   mission,
   disabled = false,
@@ -19,6 +20,12 @@ export default function SessionConfig({
   onRequestLaunch,
   onRequestCancel,
 }: TSessionConfig_P): TReactElement | null {
+  const forceUpdate = useForcedUpdates()
+  const onChangeWrapper = () => {
+    forceUpdate()
+    onChange()
+  }
+
   /* -- RENDER -- */
 
   return (
@@ -29,16 +36,16 @@ export default function SessionConfig({
             <SessionGeneralConfig
               sessionConfig={sessionConfig}
               mission={mission}
-              onChange={onChange}
+              onChange={onChangeWrapper}
             />
           </div>
         </PanelView>
         <PanelView title='Target Environments'>
           <div className='PanelContent'>
-            <TargetEnviromentConfig
+            <TargetEnvironmentConfig
               sessionConfig={sessionConfig}
               mission={mission}
-              onChange={onChange}
+              onChange={onChangeWrapper}
             />
           </div>
         </PanelView>
