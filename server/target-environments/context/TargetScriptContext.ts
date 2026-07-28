@@ -596,6 +596,7 @@ export class TargetScriptContext<
           options.effect,
           options.member,
           options.execution,
+          options.realm,
         )
     }
   }
@@ -671,26 +672,15 @@ export class TargetScriptContext<
    * @param effect The effect for which the context is purposed.
    * @param member The member responsible for triggering the effect.
    * @param execution The execution responsible for triggering the effect.
+   * @param realm The realm within which the effect was triggered.
    * @returns The new context.
    */
   private static createExecutionContext(
     effect: ServerEffect<'executionTriggeredEffect'>,
     member: ServerSessionMember,
     execution: ServerActionExecution,
+    realm: ServerSessionRealm,
   ): TargetScriptContext<'executionTriggeredEffect'> {
-    // ! The realm comes from the execution, not from the member. The
-    // ! member's subscription can change while the action is still
-    // ! processing, and since component IDs are preserved across realms,
-    // ! an effect built against the wrong realm would resolve its
-    // ! lookups successfully and mutate a mission the action never
-    // ! touched.
-    let realm = member.session.getRealm(execution.realmId)
-    if (!realm) {
-      throw new Error(
-        `Could not find the realm with ID "${execution.realmId}" within which the execution took place. A realm is necessary for context creation.`,
-      )
-    }
-
     return new TargetScriptContext(realm, {
       type: 'executionTriggeredEffect',
       effect,
@@ -1256,4 +1246,6 @@ export type TEffectContextOptions =
       member: ServerSessionMember
       /** The execution that triggered the effect. */
       execution: ServerActionExecution
+      /** The realm within which the execution was initiated. */
+      realm: ServerSessionRealm
     }
