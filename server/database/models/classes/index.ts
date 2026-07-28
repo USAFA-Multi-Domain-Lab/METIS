@@ -1,5 +1,6 @@
-import { DefaultSchemaOptions, Schema } from 'mongoose'
-import {
+import type { DefaultSchemaOptions } from 'mongoose'
+import { Schema } from 'mongoose'
+import type {
   TFileReference,
   TFileReferenceDoc,
   TFileReferenceMethods,

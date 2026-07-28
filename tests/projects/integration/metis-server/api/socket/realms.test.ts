@@ -219,7 +219,7 @@ describe('Standalone session realms socket networking', () => {
     // Starting mints realms and enforces the standalone target-env rules.
     await TestSession.start(context)
 
-    let disabled = context.session.config.disabledTargetEnvs
+    let disabled = context.session.config.explicitlyDisabledEnvironments
     expect(disabled).toContain('metis-test-env')
     expect(disabled).not.toContain('metis')
   }, 30000)
