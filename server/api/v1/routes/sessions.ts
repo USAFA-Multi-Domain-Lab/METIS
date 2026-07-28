@@ -37,7 +37,7 @@ const routerMap = (router: Router, server: MetisServer, done: () => void) => {
           isTest: RequestBodyFilters.BOOLEAN,
           standaloneForceId: RequestBodyFilters.STRING,
           infiniteResources: RequestBodyFilters.BOOLEAN,
-          disabledTargetEnvs: RequestBodyFilters.ARRAY,
+          explicitlyDisabledEnvironments: RequestBodyFilters.ARRAY,
           name: RequestBodyFilters.STRING,
           targetEnvConfigs: RequestBodyFilters.OBJECT,
         },

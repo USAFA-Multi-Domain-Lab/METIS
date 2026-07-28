@@ -22,8 +22,8 @@ export default function TargetEnviromentConfig({
 }: TTargetEnvConfig_P): TReactElement | null {
   /* -- STATE -- */
 
-  const [disabledTargetEnvs, setDisabledTargetEnvs] = useState<string[]>(
-    sessionConfig.disabledTargetEnvs,
+  const [explicitlyDisabled, setExplicitlyDisabled] = useState<string[]>(
+    sessionConfig.explicitlyDisabledEnvironments,
   )
   const [targetEnvConfigs, setTargetEnvConfigs] = useState(() => {
     // Default each target environment to its first configuration
@@ -46,13 +46,27 @@ export default function TargetEnviromentConfig({
   /* -- EFFECTS -- */
 
   useProcessUpdater(
-    'disabledTargetEnvs',
-    disabledTargetEnvs,
-    setDisabledTargetEnvs,
+    'explicitlyDisabledEnvironments',
+    explicitlyDisabled,
+    setExplicitlyDisabled,
   )
   useProcessUpdater('targetEnvConfigs', targetEnvConfigs, setTargetEnvConfigs)
 
   /* -- COMPUTED -- */
+
+  /**
+   * The effective set of disabled environments: the manager's explicit
+   * choices unioned with any the current mode disables implicitly (in
+   * standalone, environments without multi-realm support). Derived from
+   * the live explicit selection, so it never goes stale and needs no
+   * config broadcast to stay correct.
+   */
+  const disabledTargetEnvs = compute<string[]>(() =>
+    mission.getDisabledEnvironments({
+      ...sessionConfig,
+      explicitlyDisabledEnvironments: explicitlyDisabled,
+    }),
+  )
 
   /**
    * Whether all target environments are enabled.
@@ -77,9 +91,9 @@ export default function TargetEnviromentConfig({
   const toggleEnabled = (targetEnv: ClientTargetEnvironment) => {
     const isEnabled = !disabledTargetEnvs.includes(targetEnv._id)
     const next = isEnabled
-      ? [...disabledTargetEnvs, targetEnv._id]
-      : disabledTargetEnvs.filter((id) => id !== targetEnv._id)
-    setDisabledTargetEnvs(next)
+      ? [...explicitlyDisabled, targetEnv._id]
+      : explicitlyDisabled.filter((id) => id !== targetEnv._id)
+    setExplicitlyDisabled(next)
   }
 
   /**
@@ -88,7 +102,7 @@ export default function TargetEnviromentConfig({
   const disableAll = () => {
     if (allTargetEnvsDisabled) return
     const allIds = mission.targetEnvironments.map((env) => env._id)
-    setDisabledTargetEnvs(allIds)
+    setExplicitlyDisabled(allIds)
   }
 
   /**
@@ -96,7 +110,7 @@ export default function TargetEnviromentConfig({
    */
   const enableAll = () => {
     if (allTargetEnvsEnabled) return
-    setDisabledTargetEnvs([])
+    setExplicitlyDisabled([])
   }
 
   /**

@@ -29,7 +29,7 @@ export const launchSession: TExpressHandler = async (request, response) => {
     isTest,
     standaloneForceId,
     infiniteResources,
-    disabledTargetEnvs,
+    explicitlyDisabledEnvironments,
     targetEnvConfigs,
   } = request.body
 
@@ -53,8 +53,9 @@ export const launchSession: TExpressHandler = async (request, response) => {
       standaloneForceId,
       infiniteResources:
         infiniteResources ?? SessionServer.DEFAULT_CONFIG.infiniteResources,
-      disabledTargetEnvs:
-        disabledTargetEnvs ?? SessionServer.DEFAULT_CONFIG.disabledTargetEnvs,
+      explicitlyDisabledEnvironments:
+        explicitlyDisabledEnvironments ??
+        SessionServer.DEFAULT_CONFIG.explicitlyDisabledEnvironments,
       targetEnvConfigs:
         targetEnvConfigs ?? SessionServer.DEFAULT_CONFIG.targetEnvConfigs,
     })

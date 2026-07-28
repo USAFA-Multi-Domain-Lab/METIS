@@ -201,7 +201,7 @@ export class SessionBasic
         mode: 'multiplayer',
         isTest: false,
         infiniteResources: false,
-        disabledTargetEnvs: [],
+        explicitlyDisabledEnvironments: [],
         targetEnvConfigs: {},
       },
     })

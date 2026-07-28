@@ -536,7 +536,7 @@ export abstract class MissionSession<
       mode: 'multiplayer',
       isTest: false,
       infiniteResources: false,
-      disabledTargetEnvs: [],
+      explicitlyDisabledEnvironments: [],
       targetEnvConfigs: {},
     }
   }
@@ -718,13 +718,17 @@ export type TSessionConfig = {
    */
   infiniteResources: boolean
   /**
-   * Array of target environment IDs that are disabled.
-   * @note If a target environment ID is in this array, its effects will not execute
-   * during the session.
+   * Array of target environment IDs the manager has explicitly disabled.
+   * @note This holds only the explicit choices. The effective set of
+   * environments whose effects will not execute also includes any the
+   * session mode disables implicitly (in standalone, every environment
+   * without `multiRealmSupport`). Resolve the effective set with
+   * {@link Mission.getDisabledEnvironments} rather than reading this
+   * field directly.
    * @default []
    * @example ['metis', 'metis-test-env']
    */
-  disabledTargetEnvs: string[]
+  explicitlyDisabledEnvironments: string[]
   /**
    * Map of target environment IDs to selected config IDs.
    * @note Tracks which configuration is selected for each target environment used in the session.

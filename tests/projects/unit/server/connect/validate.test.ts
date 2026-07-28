@@ -89,14 +89,14 @@ describe('clientEventSchemas', () => {
       data: {
         config: {
           name: 'New name',
-          disabledTargetEnvs: ['metis'],
+          explicitlyDisabledEnvironments: ['metis'],
           infiniteResources: true,
         },
       },
     })
 
     expect(parsed.data.config.name).toBe('New name')
-    expect(parsed.data.config.disabledTargetEnvs).toEqual(['metis'])
+    expect(parsed.data.config.explicitlyDisabledEnvironments).toEqual(['metis'])
     expect(parsed.data.config.infiniteResources).toBe(true)
   })
 })

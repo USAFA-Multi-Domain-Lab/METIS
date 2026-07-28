@@ -63,7 +63,7 @@ const zodPartialSessionConfig = zod.object({
     .optional(),
   standaloneForceId: zod.string().optional(),
   infiniteResources: zod.boolean().optional(),
-  disabledTargetEnvs: zod.array(zod.string()).optional(),
+  explicitlyDisabledEnvironments: zod.array(zod.string()).optional(),
   targetEnvConfigs: zod.record(zod.string(), zod.string()).optional(),
 })
 

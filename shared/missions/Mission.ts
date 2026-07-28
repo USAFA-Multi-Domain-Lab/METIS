@@ -830,6 +830,30 @@ export abstract class Mission<
   }
 
   /**
+   * Resolves the full set of target-environment IDs disabled for the
+   * given session config: the manager's explicit choices
+   * (`explicitlyDisabledEnvironments`) unioned with the ones the session
+   * mode disables implicitly. In standalone mode every environment
+   * without `multiRealmSupport` is disabled, since a mission's realms run
+   * in parallel and such an environment cannot be shared safely across
+   * them.
+   * @param config The session config to resolve against.
+   * @returns The IDs of every target environment disabled for the config,
+   * whether disabled explicitly or by the mode. Derived rather than
+   * stored, so it stays correct on both client and server without being
+   * broadcast.
+   */
+  public getDisabledEnvironments(config: TSessionConfig): string[] {
+    let disabled = new Set(config.explicitlyDisabledEnvironments)
+    if (config.mode === 'standalone') {
+      for (let environment of this.targetEnvironments) {
+        if (!environment.multiRealmSupport) disabled.add(environment._id)
+      }
+    }
+    return [...disabled]
+  }
+
+  /**
    * @param config The session config for which to get relevant issues.
    * @returns All issues in the mission relevant the session
    * configuration passed. All issues related to target-environments
@@ -838,7 +862,7 @@ export abstract class Mission<
   public getIssuesForConfig(
     config: TSessionConfig,
   ): MissionComponentIssue<MissionComponent<any, any>>[] {
-    let { disabledTargetEnvs } = config
+    let disabledTargetEnvs = this.getDisabledEnvironments(config)
     return this.allIssues.filter(({ component }) => {
       // Resolve the effect the issue belongs to, whether the issue is on the
       // effect itself or on one of its target arguments, and drop it when that

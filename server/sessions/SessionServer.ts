@@ -508,6 +508,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Get the target environments that the
     // mission of the given session uses.
     let environments = this.mission.targetEnvironments
+    let disabledEnvironments = this.mission.getDisabledEnvironments(this.config)
 
     // Phase 1 — build every setup task: the setup hooks for each realm
     // and environment, then the session-setup effects. Announce them all
@@ -516,7 +517,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let hookBatches: ServerEnvironmentTask[][] = []
     for (let realm of this.realms) {
       for (let environment of environments) {
-        if (this.config.disabledTargetEnvs.includes(environment._id)) {
+        if (disabledEnvironments.includes(environment._id)) {
           continue
         }
         hookBatches.push(environment.buildSetUpTasks(realm))
@@ -569,6 +570,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Get the target environments that the
     // mission of the given session uses.
     let environments = this.mission.targetEnvironments
+    let disabledEnvironments = this.mission.getDisabledEnvironments(this.config)
 
     // Phase 1 — build every teardown task: the session-teardown effects,
     // then the teardown hooks for each realm and environment. Announce
@@ -578,7 +580,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let hookBatches: ServerEnvironmentTask[][] = []
     for (let realm of this.realms) {
       for (let environment of environments) {
-        if (this.config.disabledTargetEnvs.includes(environment._id)) {
+        if (disabledEnvironments.includes(environment._id)) {
           continue
         }
         hookBatches.push(environment.buildTearDownTasks(realm))
@@ -979,7 +981,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     if (this.config.mode === 'standalone') {
       this.enforceStandaloneRoles()
       this.spawnStandaloneRealms()
-      this.enforceStandaloneTargetEnvs()
     } else {
       this.spawnMultiplayerRealm()
     }
@@ -1028,25 +1029,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     this._members = this._members.filter(
       ({ _id }) => !members.some((member) => member._id === _id),
     )
-  }
-
-  /**
-   * In standalone mode, locks every target environment used by the
-   * mission that does not support multiple realms into the disabled
-   * list. This prevents unsupported environments from colliding
-   * across the per-participant realms running simultaneously.
-   * @note A no-op outside standalone mode.
-   */
-  private enforceStandaloneTargetEnvs(): void {
-    if (this.config.mode !== 'standalone') return
-
-    let disabled = new Set(this._config.disabledTargetEnvs)
-    for (let environment of this.mission.targetEnvironments) {
-      if (!environment.multiRealmSupport) {
-        disabled.add(environment._id)
-      }
-    }
-    this._config.disabledTargetEnvs = [...disabled]
   }
 
   /**
@@ -1484,11 +1466,12 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     trigger: TEffectSessionTriggered,
   ): ServerEnvironmentTask[] {
     let entries: ServerEnvironmentTask[] = []
+    let disabledEnvironments = this.mission.getDisabledEnvironments(this.config)
     for (let realm of this._realms) {
       let effects = realm.mission.selectEffects({
         triggers: [trigger],
         environmentPresence: 'with-environment',
-        excludeEnvironments: this.config.disabledTargetEnvs,
+        excludeEnvironments: disabledEnvironments,
       })
 
       for (let effect of effects) {
@@ -1524,7 +1507,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     let effects = action.selectEffects({
       triggers: [trigger],
       environmentPresence: 'with-environment',
-      excludeEnvironments: this.config.disabledTargetEnvs,
+      excludeEnvironments: this.mission.getDisabledEnvironments(this.config),
       sort: true,
     })
     let tasks = effects.map((effect) =>
