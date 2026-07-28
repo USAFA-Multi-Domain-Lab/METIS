@@ -392,6 +392,64 @@ export abstract class TargetArgument<
   }
 
   /**
+   * Builds the {@link TTargetArgumentContext} an argument starts with when the
+   * effect has no stored argument for a parameter. Each type gets the value it
+   * uses to mean "nothing entered yet", then {@link applyDefault} fills in the
+   * parameter's default where one applies. Shared so the client and server
+   * produce the same starting argument for the same parameter.
+   * @param parameter The parameter to build a starting context for.
+   * @returns The constructed context.
+   */
+  protected static buildDefaultContext<T extends TMetisBaseComponents>(
+    parameter: TTargetParameter,
+  ): TTargetArgumentContext<T> {
+    let context: TTargetArgumentContext<T>
+
+    switch (parameter.type) {
+      case 'number':
+        context = {
+          type: 'number',
+          value: null,
+        }
+        break
+      case 'string':
+        context = {
+          type: 'string',
+          value: '',
+        }
+        break
+      case 'large-string':
+        context = {
+          type: 'large-string',
+          value: '',
+        }
+        break
+      case 'boolean':
+        context = {
+          type: 'boolean',
+          value: parameter.default ?? false,
+        }
+        break
+      case 'dropdown':
+        context = {
+          type: 'dropdown',
+          value: null,
+        }
+        break
+      case 'mission-component':
+        context = {
+          type: 'mission-component',
+          value: [],
+        }
+        break
+    }
+
+    TargetArgument.applyDefault(context, parameter)
+
+    return context
+  }
+
+  /**
    * Registers issue checkers for all {@link TargetArgument} instances
    * with the provided registry.
    * @param registry The registry to register checkers with.

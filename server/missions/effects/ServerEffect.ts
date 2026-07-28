@@ -30,9 +30,33 @@ export class ServerEffect<
   protected parseArguments(
     data: TTargetArgumentJson[],
   ): JsonSerializableArray<ServerTargetArgument> {
-    return JsonSerializableArray.fromJson(data, (datum: TTargetArgumentJson) =>
-      ServerTargetArgument.fromJson(datum, this),
+    let targetArguments = JsonSerializableArray.fromJson(
+      data,
+      (datum: TTargetArgumentJson) =>
+        ServerTargetArgument.fromJson(datum, this),
     )
+
+    // Extra step on the server to keep arguments in sync with the target's
+    // current parameters. Skip if the effect is outdated or the target cannot
+    // be resolved, since a migration will supply the correct arguments instead.
+    if (this.target && !this.outdated) {
+      for (let parameter of this.target.parameters) {
+        // Add a new default argument if there is no argument corresponding
+        // to the parameter in type. This could cause duplicate arguments.
+        let foundWithMatchingType = targetArguments.find(
+          (argument) =>
+            argument.parameterId === parameter._id &&
+            argument.type === parameter.type,
+        )
+        if (!foundWithMatchingType) {
+          targetArguments.push(
+            ServerTargetArgument.createDefault(parameter, this),
+          )
+        }
+      }
+    }
+
+    return targetArguments
   }
 
   // Implemented

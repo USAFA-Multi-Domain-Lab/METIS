@@ -4,7 +4,11 @@ import {
   TargetArgument,
   type TTargetArgumentJson,
 } from '@shared/target-environments/arguments/TargetArgument'
-import type { TTargetParameterType } from '@shared/target-environments/parameters/TargetParameter'
+import type {
+  TTargetParameter,
+  TTargetParameterType,
+} from '@shared/target-environments/parameters/TargetParameter'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type {
   TTargetEnvExposedAction,
   TTargetEnvExposedFile,
@@ -43,6 +47,25 @@ export class ServerTargetArgument extends TargetArgument<TMetisServerComponents>
       effect.normalize(),
     )
     return new ServerTargetArgument(effect, json._id, json.parameterId, context)
+  }
+
+  /**
+   * Creates a {@link ServerTargetArgument} with a default value for the given parameter.
+   * @param parameter The parameter to create a default argument for.
+   * @param effect The effect to which the argument belongs.
+   * @returns The new {@link ServerTargetArgument}.
+   */
+  public static createDefault(
+    parameter: TTargetParameter,
+    effect: ServerEffect,
+  ): ServerTargetArgument {
+    let _id = StringToolbox.generateRandomId()
+    let context =
+      ServerTargetArgument.buildDefaultContext<TMetisServerComponents>(
+        parameter,
+      )
+
+    return new ServerTargetArgument(effect, _id, parameter._id, context)
   }
 
   /**
