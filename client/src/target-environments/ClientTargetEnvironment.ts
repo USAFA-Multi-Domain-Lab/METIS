@@ -125,7 +125,6 @@ export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientCompo
           effectId: effect._id,
           missionId: effect.mission._id,
         },
-        { timeout: ClientTargetEnvironment.MIGRATE_TIMEOUT_MS },
       )
       return response.data.result
     } catch (error: any) {
