@@ -1,5 +1,37 @@
 # changelog
 
+# version-2.5.0 (prerelease) | 7-27-2026
+
+- Sessions are now built on realms. A realm is an isolated copy of a launched mission together with everything that changes about it as the mission is played. An ordinary multiplayer session runs as a single realm holding the whole mission, which is how sessions have always behaved.
+- A standalone session mode has been added. Every participant is placed in their own realm containing only one selected force, so a group can each work through the same scenario at their own pace within one session without affecting each other.
+- Observers and managers can now switch which realm they are watching while a session is running, using a searchable list that can be navigated by keyboard. This allows them to follow any participant's progress through a standalone session.
+- Testing sessions have been replaced with a one-shot play-test flow. Play-testing a mission now launches, joins, and starts a disposable session in a single step, taking the user straight into the session.
+- Members who leave a session now keep their force and role assignment, so they return to the same position when rejoining.
+- Banned members can now be unbanned, allowing them to rejoin a session.
+- The lobby member list now displays each member's status (joined, not joined, or banned), and configuration options are locked while a session start is in progress.
+- Session configuration has been reorganized into dedicated launch and lobby pages, with a redesigned lobby that summarizes session properties as badges and supports panel tabs mounted along the side.
+- Session teardown now announces its full list of tasks before any of them begin, so authorized members can see everything that will run.
+- Target-environment scripts run during setup, teardown, and effect execution can now be watched live by authorized members, showing each task move from queued to running to resolved.
+- The mission-issue system has been rebuilt around a central registry. The Issues panel now groups issues under the component they belong to and supports expanding or collapsing all groups at once.
+- A mission-wide action has been added to the Issues panel for updating outdated effects in bulk.
+- Files that are no longer referenced anywhere in a mission are now reported as an issue.
+- Effects that target another part of a mission are now built using a mission outline, a searchable tree of the mission's components that replaces the previous method of selecting a target. Matches are highlighted while searching, entire branches can be expanded or collapsed by right-clicking, and a collapsed item displays a badge counting how many of the components beneath it are selected.
+- Selecting a component on the mission page now brings the Inspector tab forward automatically, so the selected component's properties appear without having to switch tabs from Structure or Issues.
+- Effects are now created within a secondary panel view instead of a modal placed over the mission map.
+- Target arguments have been restructured. Target scripts now receive a named argument object instead of positional arguments, and argument types are exposed to the target environment.
+- Parameters that depend on other parameters no longer need those dependencies declared in the schema. Arguments whose dependencies are unmet are automatically left undefined and are hidden from the effect form.
+- Dropdown parameter options can now define tooltip descriptions.
+- The METIS target environment has been updated to the new argument format and includes migration scripts to convert existing effects. The migration reports any component reference it could not resolve rather than silently retargeting the effect.
+- Rich text editors now support headings, text alignment, font color, line spacing, and additional keyboard shortcuts.
+- Duplicate usernames are now detected while creating or editing a user, with archived usernames reported separately from usernames already in use.
+- Several login issues were fixed. A session left over from a previous server run could disconnect the wrong user's login, and forcefully logging in over an existing session could leave every request afterwards unauthenticated.
+- The web session secret is now generated on each run instead of being read from the source, and session cookie security now follows the protocol the server actually started on.
+- The server no longer exits when an unhandled promise rejection occurs, and a failure while handling a session request is now reported back to the requesting member instead of ending the process.
+- The WebSocket client provided by the integration library can now be configured to queue messages while it is disconnected, delivering them once the connection is restored. This allows a target environment to keep sending to METIS across a brief drop in connectivity instead of failing outright.
+- An issue was fixed where the output produced when an action began executing was not broadcast to everyone on the force.
+- An issue was fixed where pending alerts on nodes that had not yet been revealed were visible to the force.
+- Various bug fixes, optimizations, and design improvements throughout the application.
+
 # version-2.4.5 | 6-1-2026
 
 - An issue was fixed where missions wouldn't save after an action was duplicated.

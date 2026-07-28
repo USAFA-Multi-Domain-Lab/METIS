@@ -52,10 +52,12 @@ export function useErrorMessages(options: TUseErrorMessages_P): TResult {
     done()
   })
 
-  // Enter live mode if an error is found when blurred.
+  // Enter live mode if an error is found when blurred. Errors that
+  // arrive after the field is left, such as the result of a lookup
+  // started on blur, are picked up here as well.
   usePostInitEffect(() => {
     if (!focused) setLiveMode(pendingError)
-  }, [inputValue, focused])
+  }, [inputValue, focused, pendingError])
 
   /* -- RENDER -- */
 

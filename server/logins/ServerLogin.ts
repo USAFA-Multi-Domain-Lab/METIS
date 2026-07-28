@@ -41,6 +41,12 @@ export class ServerLogin {
       )
     }
 
+    // Unregister the connection being replaced, since this login is no
+    // longer reachable through its socket.
+    if (this._client) {
+      ServerLogin.socketRegistry.delete(this._client.socketId)
+    }
+
     // Register in socket registry.
     if (client) {
       ServerLogin.socketRegistry.set(client.socketId, this)
@@ -108,47 +114,22 @@ export class ServerLogin {
   }
 
   /**
-   * Whether this login is a duplicate login that conflicts with an existing login.
-   */
-  private _isDuplicate: boolean
-  /**
-   * Whether this login is a duplicate login that conflicts with an existing login.
-   */
-  public get isDuplicate(): boolean {
-    if (this.destroyed) return false
-    return this._isDuplicate
-  }
-
-  /**
    * @param user The user to log in.
    * @param expressRequest The express request associated with the attempted login.
-   * @param options Options for the login.
+   * @note Creating a login takes over from any login that conflicts with it,
+   * ending that one. Call {@link ServerLogin.findConflict} beforehand to ask
+   * whether there is a conflict without ending anything.
    */
-  public constructor(
-    user: ServerUser,
-    expressRequest: Request,
-    options: TServerLoginOptions = {},
-  ) {
-    const { forceful = false } = options
-
+  public constructor(user: ServerUser, expressRequest: Request) {
     this._user = user
     this._expressSessionId = expressRequest.sessionID
     this._client = null
     this._metisSessionId = null
     this._destroyed = false
-    this._isDuplicate = false
 
-    // Check for duplicate logins by user ID (another session for same user)
-    // or by express session (same session trying to login again).
-    let duplicateLogin =
-      ServerLogin.userIdRegistry.get(this.userId) ??
-      ServerLogin.get(expressRequest)
+    let duplicateLogin = ServerLogin.findConflict(user, expressRequest)
 
     if (duplicateLogin) {
-      this._isDuplicate = true
-
-      if (!forceful) return
-
       // If the duplicate login has a client,
       // emit an error to that client that the
       // connection is switching.
@@ -158,7 +139,28 @@ export class ServerLogin {
         )
       }
 
-      duplicateLogin.destroy()
+      // The duplicate may be logged in on the same express session this login
+      // is being made from. That session carries over instead of being torn
+      // down, which would leave the request that is logging in without one.
+      let keepExpressSession =
+        duplicateLogin.expressSessionId === this.expressSessionId
+
+      // When the same user is logging back in on that session, they are only
+      // swapping one login for another and stay in whatever METIS session they
+      // are still part of. A session that has since ended is left behind, so a
+      // login never claims a session the session server no longer has.
+      let { metisSessionId } = duplicateLogin
+      let keepMetisSession =
+        keepExpressSession &&
+        duplicateLogin.userId === this.userId &&
+        metisSessionId !== null &&
+        SessionServer.get(metisSessionId) !== undefined
+
+      if (keepMetisSession) {
+        this._metisSessionId = metisSessionId
+      }
+
+      duplicateLogin.destroy({ keepExpressSession, keepMetisSession })
     }
 
     // Register the login.
@@ -179,8 +181,11 @@ export class ServerLogin {
 
   /**
    * Destroys the login information.
+   * @param options Options for destroying the login.
    */
-  public destroy(): void {
+  public destroy(options: TServerLoginDestroyOptions = {}): void {
+    const { keepExpressSession = false, keepMetisSession = false } = options
+
     if (this.destroyed) return
 
     // Remove from user ID registry.
@@ -189,8 +194,9 @@ export class ServerLogin {
     // Remove from express session ID registry.
     ServerLogin.expressRegistry.delete(this.expressSessionId)
 
-    // Remove from METIS session registry, if any.
-    if (this.metisSessionId) {
+    // Remove from METIS session registry, unless the user is staying in it
+    // and only their login is being swapped out.
+    if (this.metisSessionId && !keepMetisSession) {
       SessionServer.quit(this.metisSessionId, this.userId)
     }
 
@@ -203,15 +209,18 @@ export class ServerLogin {
     // Mark as destroyed.
     this._destroyed = true
 
-    // Destroy the express session.
-    MetisServer.sessionStore.destroy(this.expressSessionId, (error) => {
-      if (error) {
-        expressLogger.error(
-          'Session store destroy warning:',
-          error.message || error,
-        )
-      }
-    })
+    // Destroy the express session, unless it is being carried over to
+    // another login and still has to work.
+    if (!keepExpressSession) {
+      MetisServer.sessionStore.destroy(this.expressSessionId, (error) => {
+        if (error) {
+          expressLogger.error(
+            'Session store destroy warning:',
+            error.message || error,
+          )
+        }
+      })
+    }
   }
 
   /**
@@ -252,6 +261,26 @@ export class ServerLogin {
   >()
 
   /**
+   * Finds the login that logging the given user in would conflict with,
+   * without changing anything.
+   * @param user The user attempting to log in.
+   * @param expressRequest The express request the login is being attempted
+   * from.
+   * @returns The conflicting login, if there is one. This is either an
+   * existing login for the same user, or the login already held by the
+   * session the attempt is coming from.
+   */
+  public static findConflict(
+    user: ServerUser,
+    expressRequest: Request,
+  ): ServerLogin | undefined {
+    return (
+      ServerLogin.userIdRegistry.get(user._id) ??
+      ServerLogin.get(expressRequest)
+    )
+  }
+
+  /**
    * @returns the login information associated with the express request.
    */
   private static getByExpressRequest(
@@ -259,10 +288,15 @@ export class ServerLogin {
   ): ServerLogin | undefined {
     const { userId } = expressRequest.session
 
+    // Prefer the login for the user the session says it is logged in as.
     if (userId) {
-      return ServerLogin.userIdRegistry.get(userId)
+      let login = ServerLogin.userIdRegistry.get(userId)
+
+      if (login) return login
     }
 
+    // Otherwise fall back to a login registered for this session, which still
+    // finds the login when the session names a user who no longer has one.
     let expressSessionId = expressRequest.sessionID
     return ServerLogin.expressRegistry.get(expressSessionId)
   }
@@ -309,13 +343,27 @@ export class ServerLogin {
 /* -- TYPES -- */
 
 /**
- * Options for `ServerLogin` constructor.
+ * Options for {@link ServerLogin.destroy}.
  */
-export type TServerLoginOptions = {
+export type TServerLoginDestroyOptions = {
   /**
-   * Whether to force logout any other client logged in
-   * with the same user.
+   * Whether to leave the express session in the session store rather than
+   * removing it.
+   * @note Used when the login being destroyed is on the same express session
+   * as the login replacing it, since removing that session would leave the
+   * request that is logging in without one.
    * @default false
    */
-  forceful?: boolean
+  keepExpressSession?: boolean
+  /**
+   * Whether to leave the user in their METIS session rather than quitting it
+   * on their behalf.
+   * @note Used when the same user is logging back in on the same express
+   * session, since they are staying where they are and only their login is
+   * being replaced. The login replacing it takes over the METIS session ID so
+   * that their next connection is reattached to the session.
+   * @default false
+   */
+  keepMetisSession?: boolean
 }
+

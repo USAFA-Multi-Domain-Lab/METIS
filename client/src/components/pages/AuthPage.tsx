@@ -17,8 +17,13 @@ export interface IAuthPage extends TPage_P {}
  */
 export default function AuthPage(): TReactElement | null {
   const globalContext = useGlobalContext()
-  const { beginLoading, finishLoading, navigateTo, connectToServer, prompt } =
-    globalContext.actions
+  const {
+    beginLoading,
+    finishLoading,
+    connectToServer,
+    navigateAfterLogin,
+    prompt,
+  } = globalContext.actions
   const [_, setLogin] = globalContext.login
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -76,17 +81,12 @@ export default function AuthPage(): TReactElement | null {
       if (login) {
         setIsSubmitting(false)
         setLogin(login)
-        connectToServer()
 
-        // If the user needs a password reset,
-        // then navigate to the user reset page.
-        if (login.user.needsPasswordReset) {
-          navigateTo('UserResetPage', {})
-        }
-        // Otherwise, go to the home page.
-        else {
-          navigateTo('HomePage', {})
-        }
+        // Go to the page that matches the login. A forceful login keeps the
+        // user in the METIS session they were already in, so this can land
+        // on the session rather than the home page.
+        let server = await connectToServer()
+        await navigateAfterLogin(login, server)
       }
     } catch (error: any) {
       let { status, message } = error.response?.data?.error ?? {

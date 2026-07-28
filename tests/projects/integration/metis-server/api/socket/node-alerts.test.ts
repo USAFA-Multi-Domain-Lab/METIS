@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from '@jest/globals'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
+import { launchPlayableSession } from 'tests/helpers/session/scenarios'
 import { TestSession } from 'tests/helpers/TestSession'
 import { TestToolbox } from 'tests/helpers/TestToolbox'
 
@@ -12,17 +13,9 @@ describe('Node alert socket networking', () => {
    * distinguished from leaks.
    */
   async function prepareAlertSession() {
-    let context = await TestSession.launch({
+    let { context } = await launchPlayableSession({
       namePrefix: SUITE_PREFIX,
-      mission: {
-        // Session-start effects only slow the start phase down, and this
-        // suite never executes an action, so they are stripped.
-        customize: (payload) => {
-          payload.effects = []
-        },
-      },
       members: [{ force: 0 }, { force: 0 }, { force: 1 }],
-      start: true,
     })
 
     let [sameForceMemberOne, sameForceMemberTwo, otherForceMember] =

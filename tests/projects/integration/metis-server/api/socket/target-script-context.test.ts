@@ -9,6 +9,7 @@ import type { TTargetArgumentJson } from '@shared/target-environments/arguments/
 import { TargetParameter } from '@shared/target-environments/parameters/TargetParameter'
 import { TargetEnvRegistry } from '@shared/target-environments/TargetEnvRegistry'
 import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
+import { launchPlayableSession } from 'tests/helpers/session/scenarios'
 import { TestSession } from 'tests/helpers/TestSession'
 
 /**
@@ -132,19 +133,13 @@ describe('TargetScriptContext getArguments', () => {
   /**
    * Launches a started single-member session and returns the real realm the
    * member plays in, which is the realm the context is built against.
+   * @note The playable mission strips session-start effects; this suite builds
+   * its own effect and runs it directly against the realm.
    */
   async function launchRealm() {
-    let context = await TestSession.launch({
+    let { context } = await launchPlayableSession({
       namePrefix: SUITE_PREFIX,
-      mission: {
-        // Session-start effects only slow the start phase; this suite builds
-        // its own effect, so the mission's are stripped.
-        customize: (payload) => {
-          payload.effects = []
-        },
-      },
       members: [{ force: 0 }],
-      start: true,
     })
     let realm = context.members[0].member.subscribedRealm
     expect(realm).toBeTruthy()

@@ -412,8 +412,11 @@ export class ClientConnection {
       }
     }
 
-    // Clear client from the login information.
-    this.login.client = null
+    // Clear client from the login information, unless the login has already
+    // been handed a different connection.
+    if (this.login.client === this) {
+      this.login.client = null
+    }
   }
 
   /**

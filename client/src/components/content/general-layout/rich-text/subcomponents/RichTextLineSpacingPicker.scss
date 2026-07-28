@@ -1,4 +1,5 @@
 @use '@client/assets/styles/config.scss' as *;
+@use '@client/assets/styles/util.scss' as *;
 
 .LineSpacingPicker {
   display: flex;
@@ -8,6 +9,7 @@
   padding: 0.25em 0.65em 0.35em;
 
   .LineSpacingButton {
+    @include unstyled-button();
     cursor: pointer;
     font-weight: 700;
     padding: 0.15em 0.4em;
@@ -17,6 +19,13 @@
 
     &:hover {
       border-color: rgba($color-accent, 0.8);
+    }
+
+    // Keyboard focus reuses the same underline as the mouse, drawn at full
+    // strength so the focused option is easy to pick out.
+    &:focus-visible {
+      outline: none;
+      border-color: $color-accent;
     }
 
     &.Selected {

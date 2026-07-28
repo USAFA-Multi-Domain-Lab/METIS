@@ -55,8 +55,9 @@ export default function RichTextLineSpacingPicker(): TReactElement | null {
   return (
     <div className='LineSpacingPicker' style={style}>
       {LINE_HEIGHT_OPTIONS.map((value) => (
-        <div
+        <button
           key={value}
+          type='button'
           className={generateClassName(value)}
           onClick={() => {
             if (activeLineHeight === value) {
@@ -68,7 +69,7 @@ export default function RichTextLineSpacingPicker(): TReactElement | null {
           }}
         >
           {value}x
-        </div>
+        </button>
       ))}
     </div>
   )

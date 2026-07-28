@@ -11,6 +11,7 @@ import { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
 import type { ServerSessionMember } from '@server/sessions/ServerSessionMember'
 import type { TMissionFileJson } from '@shared/missions/files/MissionFile'
 import { Types } from 'mongoose'
+import { createMissionPayload } from 'tests/helpers/projects/integration/rest-api/missions/payload'
 import type { TestHttpClient } from 'tests/helpers/TestHttpClient'
 import { TestSession } from 'tests/helpers/TestSession'
 import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
@@ -202,6 +203,60 @@ describe('/api/v1/sessions', () => {
       (session: any) => session._id === sessionId,
     )
     expect(found?.name).toBe(sessionName)
+  })
+
+  test('Launches a standalone session and reports its configured mode and force', async () => {
+    // The mission is authored by an admin, because instructors lack the
+    // 'missions_write' permission. Authoring it from a known payload is what
+    // makes a valid standalone force ID available up front.
+    let { client: adminClient } = await createTestContext()
+    let adminUsername = `${suitePrefix}_standalone_admin_${generateRandomId()}`
+    await createTestUser({
+      username: adminUsername,
+      password,
+      accessId: 'admin',
+    })
+    await loginUser(adminClient, { username: adminUsername, password })
+
+    let missionPayload = createMissionPayload(
+      `${suitePrefix}_standalone_mission_${generateRandomId()}`,
+    )
+    let standaloneForceId = missionPayload.forces[0]._id
+    let missionResponse = await adminClient.post(
+      '/api/v1/missions/',
+      missionPayload,
+    )
+    expect(missionResponse.status).toBe(200)
+    let missionId = missionResponse.data._id
+    expect(typeof missionId).toBe('string')
+
+    // The instructor launches the standalone session from that mission.
+    let { client } = await createTestContext()
+    await createTestUser({ username, password })
+    await loginUser(client, { username, password })
+
+    let sessionName = `${suitePrefix}_standalone_${generateRandomId()}`
+    let launchResponse = await client.post('/api/v1/sessions/launch/', {
+      missionId,
+      name: sessionName,
+      mode: 'standalone',
+      standaloneForceId,
+    })
+    expect(launchResponse.status).toBe(200)
+    let sessionId = launchResponse.data.sessionId
+    expect(typeof sessionId).toBe('string')
+    sessionIdsToCleanup.push(sessionId)
+
+    // The launched session reports the standalone mode and force it was
+    // configured with.
+    let listResponse = await client.get('/api/v1/sessions/')
+    expect(listResponse.status).toBe(200)
+    let found = listResponse.data.find(
+      (session: any) => session._id === sessionId,
+    )
+    expect(found).toBeDefined()
+    expect(found.config.mode).toBe('standalone')
+    expect(found.config.standaloneForceId).toBe(standaloneForceId)
   })
 
   test('Rejects session launch for student access without session write', async () => {
