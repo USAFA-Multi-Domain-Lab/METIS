@@ -35,10 +35,10 @@ WORKDIR /opt/metis
 COPY . .
 
 # Create directories for persistent data
-RUN mkdir -p ./files/store && \
-    mkdir -p ./database/backups && \
-    chmod -R 777 ./files/store && \
-    chmod -R 777 ./database/backups
+RUN mkdir -p ./server/files/store && \
+    mkdir -p ./server/database/backups && \
+    chmod -R 777 ./server/files/store && \
+    chmod -R 777 ./server/database/backups
 
 # Install dependencies and build
 RUN npm install && \
