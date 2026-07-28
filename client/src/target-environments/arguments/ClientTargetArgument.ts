@@ -1,6 +1,5 @@
 import type { TMetisClientComponents } from '@client/index'
 import type { ClientEffect } from '@client/missions/effects/ClientEffect'
-import type { TTargetArgumentContext } from '@shared/target-environments/arguments/TargetArgument'
 import {
   TargetArgument,
   type TTargetArgumentJson,
@@ -50,50 +49,11 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
     parameter: TTargetParameter,
     effect: ClientEffect,
   ): ClientTargetArgument {
-    const _id = StringToolbox.generateRandomId()
-
-    let context: TTargetArgumentContext<TMetisClientComponents>
-
-    switch (parameter.type) {
-      case 'number':
-        context = {
-          type: 'number',
-          value: null,
-        }
-        break
-      case 'string':
-        context = {
-          type: 'string',
-          value: '',
-        }
-        break
-      case 'large-string':
-        context = {
-          type: 'large-string',
-          value: '',
-        }
-        break
-      case 'boolean':
-        context = {
-          type: 'boolean',
-          value: parameter.default ?? false,
-        }
-        break
-      case 'dropdown':
-        context = {
-          type: 'dropdown',
-          value: null,
-        }
-        break
-      case 'mission-component':
-        context = {
-          type: 'mission-component',
-          value: [],
-        }
-        break
-    }
-
-    TargetArgument.applyDefault(context, parameter)
+    let _id = StringToolbox.generateRandomId()
+    let context =
+      ClientTargetArgument.buildDefaultContext<TMetisClientComponents>(
+        parameter,
+      )
 
     return new ClientTargetArgument(effect, _id, parameter._id, context)
   }
