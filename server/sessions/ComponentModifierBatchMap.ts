@@ -80,7 +80,7 @@ export class ComponentModifierBatchMap<
   private getCompleteVisibilityMembers(): ServerSessionMember[] {
     let realm = this.realm
     let members = realm.session.getMembersWithPermissions('completeVisibility')
-    return members.filter((member) => member.subscribedRealm._id === realm._id)
+    return members.filter((member) => member.subscribedRealmId === realm._id)
   }
 
   /**
@@ -142,6 +142,13 @@ export class ComponentModifierBatchMap<
     })
   }
 
+  /**
+   * Emits an event to each client individually, in the same batches
+   * {@link emit} uses, so the payload can be constructed for one member.
+   * @param method The server method to emit.
+   * @param constructPayload A function that constructs the payload for
+   * the event, given a list of component IDs and the receiving member.
+   */
   public emitMemberSpecific<
     TMethod extends TServerMethod,
     TPayloadData extends Omit<TServerEvents[TMethod], 'method'>,

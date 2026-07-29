@@ -88,7 +88,7 @@ export class TargetSchema {
 
   // Implemented
   public get migrationVersions(): string[] {
-    return Object.keys(this.migrationRegistry.versions)
+    return this.migrationRegistry.versions
   }
 
   /**

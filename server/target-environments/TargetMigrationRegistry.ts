@@ -17,7 +17,8 @@ export class TargetMigrationRegistry {
    */
   protected readonly _migrations: Record<string, TargetMigration>
   /**
-   * The migrations available for a target, sorted in ascending version order.
+   * A shallow copy of the migrations available for a target. Key order
+   * is maintained in ascending version order by {@link refreshMigrationOrder}.
    */
   protected get migrations(): Record<string, TargetMigration> {
     return { ...this._migrations }
@@ -84,10 +85,8 @@ export class TargetMigrationRegistry {
 
   /**
    * @param effect The effect for which to determine pending migrations.
-   * @param desiredVersion The desired target environment version
-   * for the effect, once migrations are done.
-   * @returns All migrations which must be run in order to make the
-   * effect compatible with the desired version.
+   * @returns All migrations which must be run in order to bring the
+   * effect past its current version cursor.
    */
   private getPending(effect: TMigratableEffect): TargetMigration[] {
     return Array.from(Object.values(this._migrations)).filter(({ version }) =>
