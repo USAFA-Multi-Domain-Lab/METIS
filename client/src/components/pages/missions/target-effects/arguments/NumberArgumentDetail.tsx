@@ -45,16 +45,15 @@ export default function NumberArgumentDetail({
     unit: parameter.unit,
     placeholder: 'Enter a number...',
     tooltipDescription: parameter.tooltipDescription,
-    key: `arg-${argument._id}_name-${parameter.name}_type-${parameter.type}_${
-      parameter.required ? 'required' : 'optional'
-    }`,
   } as const
+  const key = `arg-${argument._id}_name-${parameter.name}_type-${parameter.type}_${parameter.required ? 'required' : 'optional'}`
 
   if (parameter.required) {
     let defaultedValue = value ?? parameter.default
 
     return (
       <DetailNumber
+        key={key}
         {...sharedProps}
         fieldType='required'
         value={defaultedValue}
@@ -74,6 +73,7 @@ export default function NumberArgumentDetail({
   } else {
     return (
       <DetailNumber
+        key={key}
         {...sharedProps}
         fieldType='optional'
         value={context.value}

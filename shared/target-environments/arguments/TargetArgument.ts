@@ -155,20 +155,24 @@ export abstract class TargetArgument<
 
   /**
    * Whether this argument has a dropdown parameter whose options do not include
-   * the assigned value. If `parameter` is `undefined` or not a dropdown type, `false`
+   * the assigned value.
+   * @note If {@link parameter} is `undefined` or not a dropdown type, `false`
    * is returned.
+   * @note If the dropdown is optional, the value can also be `null` or `undefined`.
    */
   public get valueIsInvalidOption(): boolean {
-    return (
-      this.parameter?.type === 'dropdown' &&
-      this.parameter.options.every((option) => option.value !== this.value)
-    )
+    if (this.parameter?.type !== 'dropdown') return false
+
+    let valueIsUnset = this.value === null || this.value === undefined
+    if (valueIsUnset && !this.parameter.required) return false
+
+    return this.parameter.options.every((option) => option.value !== this.value)
   }
 
   /**
    * Whether this argument has a string parameter with a pattern that does not match
    * the assigned value.
-   * @note If `parameter` is `undefined` or not a string type, `false` is returned.
+   * @note If {@link parameter} is `undefined` or not a string type, `false` is returned.
    */
   public get hasPatternMismatch(): boolean {
     return (
@@ -587,7 +591,11 @@ export abstract class TargetArgument<
   ): TMissionComponentSerializedSelection[] {
     return components.map(
       (item: MissionComponent<T>): TMissionComponentSerializedSelection => {
-        if (!(item instanceof MissionComponent)) throw new Error('')
+        if (!(item instanceof MissionComponent)) {
+          throw new Error(
+            'One of the items passed to serializeMissionComponents is not a MissionComponent.',
+          )
+        }
         let { name: lastKnownName } = item
 
         if (item instanceof Mission) {

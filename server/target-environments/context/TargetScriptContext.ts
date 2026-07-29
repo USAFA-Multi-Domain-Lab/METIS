@@ -117,8 +117,8 @@ export class TargetScriptContext<
       ),
       addNodeAlert: this.ifContextIsCurrent(this.addNodeAlert.bind(this)),
       modifySuccessChance: this.ifContextIsCurrent(
-        this.modifySuccessChance,
-      ).bind(this),
+        this.modifySuccessChance.bind(this),
+      ),
       modifyProcessTime: this.ifContextIsCurrent(
         this.modifyProcessTime.bind(this),
       ),
