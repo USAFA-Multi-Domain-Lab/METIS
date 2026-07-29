@@ -105,17 +105,20 @@ export class ComponentModifierBatchMap<
     // Emit a force-agnostic event to all complete-visibility members,
     // if any.
     if (completeVisibilityMembers.length) {
-      ServerSessionMember.emitToGroup(
-        completeVisibilityMembers,
-        method,
-        constructPayload(
-          this.internalMap.get(
+      let components = this.internalMap.get(
+        ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY,
+      )!
+      if (components.length) {
+        ServerSessionMember.emitToGroup(
+          completeVisibilityMembers,
+          method,
+          constructPayload(
+            components,
+            completeVisibilityMembers as TNonEmptyArray<ServerSessionMember>,
             ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY,
-          )!,
-          completeVisibilityMembers as TNonEmptyArray<ServerSessionMember>,
-          ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY,
-        ),
-      )
+          ),
+        )
+      }
     }
 
     // Emit per-force events to force-specific (non-complete-visibility) members,
@@ -123,7 +126,8 @@ export class ComponentModifierBatchMap<
     this.internalMap.forEach((components, forceId) => {
       if (
         forceId !==
-        ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY
+          ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY &&
+        components.length
       ) {
         let members = this.session.getMembersForForce(forceId, this.realm._id, {
           limitedVisibilityOnly: true,
@@ -166,16 +170,19 @@ export class ComponentModifierBatchMap<
     // if any.
     if (completeVisibilityMembers.length) {
       for (let member of completeVisibilityMembers) {
-        member.emit(
-          method,
-          constructPayload(
-            this.internalMap.get(
+        let components = this.internalMap.get(
+          ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY,
+        )!
+        if (components.length) {
+          member.emit(
+            method,
+            constructPayload(
+              components,
+              member,
               ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY,
-            )!,
-            member,
-            ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY,
-          ),
-        )
+            ),
+          )
+        }
       }
     }
 
@@ -184,7 +191,8 @@ export class ComponentModifierBatchMap<
     this.internalMap.forEach((components, forceId) => {
       if (
         forceId !==
-        ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY
+          ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY &&
+        components.length
       ) {
         let members = this.session.getMembersForForce(forceId, this.realm._id, {
           limitedVisibilityOnly: true,

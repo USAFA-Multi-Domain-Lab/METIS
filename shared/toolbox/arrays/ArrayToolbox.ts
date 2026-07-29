@@ -116,7 +116,7 @@ export class ArrayToolbox {
   public static normalize<T>(
     value: TInstanceOrArray<T> | null | undefined,
   ): T[] {
-    if (!value) {
+    if (value === null || value === undefined) {
       return []
     } else if (Array.isArray(value)) {
       return value
