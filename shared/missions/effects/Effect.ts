@@ -231,6 +231,14 @@ export abstract class Effect<
   }
 
   /**
+   * Whether the effect's stored target-environment version
+   * is not a valid semantic version.
+   */
+  public get hasInvalidVersion(): boolean {
+    return !VersionToolbox.isValidVersion(this.targetEnvironmentVersion)
+  }
+
+  /**
    * Whether the given is outdated given the current
    * version of the target environment.
    */
@@ -244,6 +252,11 @@ export abstract class Effect<
     // If there is no latest migratable version,
     // the effect is not outdated.
     if (latestMigratableVersion === undefined) return false
+
+    // An unparseable version cannot be compared, so the effect
+    // is not reported as outdated. It is surfaced as its own
+    // issue instead of throwing out of this getter.
+    if (this.hasInvalidVersion) return false
 
     // Return whether the target-environment version
     // of the effect is earlier than the latest
@@ -475,6 +488,19 @@ export abstract class Effect<
           effect.outdated,
         ),
     })
+    registry.check({
+      key: Effect.ISSUE_KEY_INVALID_VERSION,
+      message: (effect) =>
+        `The stored target-environment version ("${effect.targetEnvironmentVersion}") is not a valid version, so this effect cannot be updated. Please delete this effect and recreate it.`,
+      what: [Effect],
+      when: ['initialization', 'effect-updated'],
+      if: (effect) =>
+        BooleanToolbox.onlyLast(
+          effect.missingTarget,
+          effect.failedEnvironmentInference,
+          effect.hasInvalidVersion,
+        ),
+    })
   }
 
   /**
@@ -512,6 +538,12 @@ export abstract class Effect<
    * Key used to index an issue when an effect is outdated.
    */
   public static readonly ISSUE_KEY_OUTDATED = 'outdated'
+
+  /**
+   * Key used to index an issue when an effect's stored
+   * target-environment version cannot be parsed.
+   */
+  public static readonly ISSUE_KEY_INVALID_VERSION = 'invalid-version'
 
   /**
    * Default properties set when creating a new
