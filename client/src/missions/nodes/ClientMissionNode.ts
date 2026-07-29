@@ -450,10 +450,16 @@ export class ClientMissionNode
   /**
    * Handles a node-opened event from the server by updating local state and revealing descendants.
    * @param revealedDescendants The descendant nodes that should now be visible to the client.
+   * @param member The session member for whom the node is being opened (used for authorization).
+   * @returns Whether any nodes were added to the force.
+   * @note Members with complete visibility already hold every node, so nothing is added for them.
    * @note This method updates the mission structure and triggers UI re-renders.
    */
-  public onOpen(revealedDescendants: TMissionNodeJson[] | undefined): void {
-    if (!revealedDescendants) return
+  public onOpen(
+    revealedDescendants: TMissionNodeJson[] | undefined,
+    member: ClientSessionMember,
+  ): boolean {
+    if (!revealedDescendants) return false
 
     // Log warning if trying to open a non-openable node (shouldn't happen due to server validation).
     if (!this.openable && !this.executed) {
@@ -464,37 +470,50 @@ export class ClientMissionNode
     this._opened = true
     this.mission.lastOpenedNode = this
 
-    // Add the revealed descendant nodes to the force.
-    this.populateDescendants(revealedDescendants)
+    // Add the revealed descendant nodes to the force. Members with complete
+    // visibility are served every node up front, so there is nothing to add.
+    let addedDescendants = false
+    if (!member.isAuthorized('completeVisibility')) {
+      addedDescendants = this.populateDescendants(revealedDescendants)
+    }
 
     // Clear the pending state and update UI.
     this.pendingOpen = false
     this.mission.handleStructureChange()
     this.emitEvent('opened')
+
+    return addedDescendants
   }
 
   /**
    * Handles a node-closed event from the server by updating local state and hiding descendants.
    * @param member The session member for whom the node is being closed (used for authorization).
+   * @returns Whether any nodes were removed from the force.
    * @note Members with complete visibility will still see closed nodes (but greyed out).
    * @note This method updates the mission structure and triggers UI re-renders.
    */
-  public onClose(member: ClientSessionMember): void {
-    // Mark this node and all descendants as closed.
-    this.close()
-
+  public onClose(member: ClientSessionMember): boolean {
     // Remove descendants from view only if the member doesn't have complete visibility.
     // Managers with complete visibility keep the full tree visible (just greyed out).
+    // ! This must come before close() is called, otherwise
+    // ! the descendantIds will be empty.
+    let removedDescendants = false
     if (!member.isAuthorized('completeVisibility')) {
       const descendantIds = new Set(this.revealedDescendants.map((d) => d._id))
       this.force.nodes = this.force.nodes.filter(
         (node) => !descendantIds.has(node._id),
       )
+      removedDescendants = descendantIds.size > 0
     }
+
+    // Mark this node and all descendants as closed.
+    this.close()
 
     // Update UI to reflect the structure change.
     this.mission.handleStructureChange()
     this.emitEvent('closed')
+
+    return removedDescendants
   }
 
   // Overridden
@@ -584,16 +603,19 @@ export class ClientMissionNode
   /**
    * Populates the node's descendants, if not already populated.
    * @param data The descendant data to populate with.
+   * @returns Whether any nodes were added to the force.
    */
-  protected populateDescendants(data: TMissionNodeJson[]): void {
+  protected populateDescendants(data: TMissionNodeJson[]): boolean {
     // If the descendants are already set,
     // don't set them again.
-    if (this.descendants.length > 0) return
+    if (this.descendants.length > 0) return false
 
     data.forEach((datum) => {
       let descendant = new ClientMissionNode(this.force, datum)
       this.force.nodes.push(descendant)
     })
+
+    return data.length > 0
   }
 
   /**

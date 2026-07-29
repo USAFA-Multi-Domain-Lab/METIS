@@ -462,13 +462,18 @@ export class ClientMissionPrototype
    * Handles a prototype-opened event from the server by mapping descendant prototype relationships.
    * @param revealedDescendantPrototypes The descendant prototypes that should now be visible.
    * @param structure The hierarchical structure data describing prototype parent-child relationships.
+   * @param member The session member for whom the prototype is being opened (used for authorization).
+   * @note Members with complete visibility are served the whole prototype tree on load, so their
+   * relationships are already mapped and nothing is done for them.
    * @note This establishes the prototype tree structure that mirrors the node tree.
    */
   public onOpen(
     revealedDescendantPrototypes: TMissionPrototypeJson[] | undefined,
     structure: TAnyObject | undefined,
+    member: ClientSessionMember,
   ): void {
     if (!revealedDescendantPrototypes || !structure) return
+    if (member.isAuthorized('completeVisibility')) return
     this.mapDescendantRelationships(revealedDescendantPrototypes, structure)
   }
 

@@ -1525,7 +1525,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     nodes: TInstanceOrArray<Omit<TNodeOpenStateData, 'opened'>>,
     opened: boolean,
   ): void => {
-    let hasRevealedDescendants = false
+    let shouldRefreshActions = false
 
     for (let data of ArrayToolbox.toArray(nodes)) {
       // Extract the event data.
@@ -1543,21 +1543,24 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       let { prototype } = node
 
       // Update both the prototype (template level) and node (instance level).
+      // Each node reports whether it changed the force's node set, which is
+      // what determines if the action map has to be rebuilt.
       if (opened) {
         // Opening: Reveal descendants and establish structure relationships.
-        prototype.onOpen(revealedDescendantPrototypes, structure)
-        node.onOpen(revealedDescendants)
+        prototype.onOpen(revealedDescendantPrototypes, structure, this.member)
+        if (node.onOpen(revealedDescendants, this.member)) {
+          shouldRefreshActions = true
+        }
       } else {
         // Closing: Hide descendants (unless member has complete visibility).
+        if (node.onClose(this.member)) shouldRefreshActions = true
         prototype.onClose(this.member)
-        node.onClose(this.member)
       }
-
-      if (revealedDescendants) hasRevealedDescendants = true
     }
 
-    // Rebuild the action map once if any node revealed new descendants.
-    if (hasRevealedDescendants) this.subscribedRealm.mapActions()
+    // Rebuild the action map once if any node added or removed descendants,
+    // since those nodes carry the actions the map is built from.
+    if (shouldRefreshActions) this.subscribedRealm.mapActions()
   }
 
   /**
