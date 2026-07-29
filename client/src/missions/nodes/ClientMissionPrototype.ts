@@ -185,9 +185,6 @@ export class ClientMissionPrototype
   public readonly outlineIcon: TMetisIcon = 'node'
 
   // Implemented
-  public expandedInOutline: boolean = false
-
-  // Implemented
   public get outlineChildren(): TMissionOutlineItem[] {
     return this.subComponents
   }

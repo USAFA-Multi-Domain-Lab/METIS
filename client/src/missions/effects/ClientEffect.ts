@@ -34,9 +34,6 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
   public readonly outlineIcon: TMetisIcon = 'waves'
 
   // Implemented
-  public expandedInOutline: boolean = false
-
-  // Implemented
   public get outlineChildren(): TMissionOutlineItem[] {
     return []
   }

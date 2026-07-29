@@ -11,7 +11,7 @@ import './TargetArgumentsSubentries.scss'
  */
 export default function TargetArgumentsSubentries({
   effect,
-}: TTargetParameterEntry_P): TReactElement | null {
+}: TTargetArgumentsSubentries_P): TReactElement | null {
   /* -- COMPUTED -- */
 
   /**
@@ -98,12 +98,12 @@ export default function TargetArgumentsSubentries({
   )
 }
 
-/* ---------------------------- TYPES FOR ARG ENTRY ---------------------------- */
+/* ---------------------------- TYPES FOR TARGET ARGUMENTS SUBENTRIES ---------------------------- */
 
 /**
- * Props for `ArgEntry` component.
+ * Props for {@link TargetArgumentsSubentries}.
  */
-type TTargetParameterEntry_P = {
+type TTargetArgumentsSubentries_P = {
   /**
    * The effect that the arguments belong to.
    */

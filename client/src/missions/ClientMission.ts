@@ -260,9 +260,6 @@ export class ClientMission
   public readonly outlineIcon: TMetisIcon = 'flag'
 
   // Implemented
-  public expandedInOutline: boolean = false
-
-  // Implemented
   public get outlineChildren(): TMissionOutlineItem[] {
     return this.subComponents
   }

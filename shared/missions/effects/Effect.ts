@@ -339,11 +339,18 @@ export abstract class Effect<
    */
   public sortArguments(): void {
     if (!this.target) return
-    let parameterIds = this.target.parameters.map((param) => param._id)
+    let parameterIds = this.target.parameters.map((parameter) => parameter._id)
+
+    // An argument whose parameter is no longer declared on the target has no
+    // position among the declared ones, so it is placed past the last of them
+    // rather than at the index of -1 that `indexOf` reports.
+    let positionOf = (argument: T['targetArgument']): number => {
+      let index = parameterIds.indexOf(argument.parameterId)
+      return index === -1 ? parameterIds.length : index
+    }
+
     this.allArguments.sort(
-      (a, b) =>
-        parameterIds.indexOf(a.parameterId) -
-        parameterIds.indexOf(b.parameterId),
+      (first, second) => positionOf(first) - positionOf(second),
     )
   }
 

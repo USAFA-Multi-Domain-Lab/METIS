@@ -108,11 +108,6 @@ export default function DetailMultiSelect<TOption>(
    */
   const allOptionsClasses = new ClassList('AllOptions').set('Hidden', !expanded)
 
-  /**
-   * The class name for the optional text.
-   * @note Always hidden — a multi-select always produces a defined array value,
-   * so there is no meaningful distinction between required and optional.
-   */
   /* -- EFFECTS -- */
 
   useImperativeHandle(ref, () => ({
@@ -143,9 +138,11 @@ export default function DetailMultiSelect<TOption>(
 
     let currentValues = Array.isArray(value) ? [...value] : []
     let optionKey = getKey(option)
-    let filteredValues = currentValues.filter((v) => getKey(v) !== optionKey)
+    let filteredValues = currentValues.filter(
+      (cursor) => getKey(cursor) !== optionKey,
+    )
 
-    setValue(filteredValues as any)
+    setValue(filteredValues)
   }
 
   /* -- PRE-RENDER PROCESSING -- */

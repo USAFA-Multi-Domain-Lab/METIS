@@ -154,15 +154,6 @@ export abstract class TargetArgument<
   }
 
   /**
-   * Whether the type of this argument's value conflicts with the type of the
-   * corresponding parameter on the target. If `parameter` is `undefined, `false`
-   * is returned.
-   */
-  public get hasTypeMismatch(): boolean {
-    return this.parameter?.type !== this.type
-  }
-
-  /**
    * Whether this argument has a dropdown parameter whose options do not include
    * the assigned value. If `parameter` is `undefined` or not a dropdown type, `false`
    * is returned.
