@@ -28,7 +28,6 @@ export class ServerTargetArgument extends TargetArgument<TMetisServerComponents>
    * @param json The JSON to create the argument from.
    * @param effect The effect to which the argument belongs.
    * @returns The new {@link ServerTargetArgument}.
-   * @throws If the parameter with the given ID cannot be found in the target.
    */
   public static fromJson(
     json: TTargetArgumentJson,
@@ -119,7 +118,11 @@ export type TSelectExposedArgumentValue = Omit<
 }
 
 /**
- * The JSON representation of {@link TargetArgument}.
+ * The exposed representation of {@link TargetArgument} — what
+ * {@link ServerTargetArgument.toTargetEnvContext} hands to target-environment
+ * code. Distinct from `TTargetArgumentJson`, which is the serialized form that
+ * gets stored: a `mission-component` value here is a list of exposed
+ * components rather than the serialized selections written to the database.
  */
 export type TTargetEnvExposedArgument = {
   [TType in TTargetParameterType]: {

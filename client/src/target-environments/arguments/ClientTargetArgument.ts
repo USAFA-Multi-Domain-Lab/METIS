@@ -16,7 +16,6 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
    * @param json The JSON to create the argument from.
    * @param effect The effect to which the argument belongs.
    * @returns The new {@link ClientTargetArgument}.
-   * @throws If the parameter with the given ID cannot be found in the target.
    */
   public static fromJson(
     json: TTargetArgumentJson,

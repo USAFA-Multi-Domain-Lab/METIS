@@ -85,7 +85,7 @@ export abstract class TargetArgument<
 
   /**
    * The {@link TTargetParameter} this argument satisfies.
-   * @note If `null`, the parameter could not be found for
+   * @note If `undefined`, the parameter could not be found for
    * the {@link parameterId} on the target.
    */
   public get parameter(): TTargetParameter | undefined {
@@ -238,8 +238,8 @@ export abstract class TargetArgument<
    * the target script.
    * @param _id The unique identifier for this argument entry.
    * @param parameterId The `_id` of the parameter this argument satisfies.
-   * @param type The type of the parameter this argument satisfies.
-   * @param value The value supplied for the parameter.
+   * @param context Dynamic data gated by a `type` discriminant, which determines
+   * the nature of the argument and the type of its value.
    */
   protected constructor(
     effect: T[TEffectType] | Effect<T, any>,
