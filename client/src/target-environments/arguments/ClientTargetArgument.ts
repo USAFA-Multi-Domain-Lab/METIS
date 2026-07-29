@@ -24,9 +24,10 @@ export class ClientTargetArgument extends TargetArgument<TMetisClientComponents>
     let parameter = effect.target?.getParameterById(json.parameterId)
 
     // Default to parameter type if type is unknown in
-    // the argument.
+    // the argument. Asserted because `value` is carried over unchecked, so the
+    // result only satisfies the union once the value matches the new type.
     if (json.type === 'unknown' && parameter) {
-      json = { ...json, type: parameter.type as any }
+      json = { ...json, type: parameter.type } as TTargetArgumentJson
     }
 
     ClientTargetArgument.applyDefault(json, parameter)

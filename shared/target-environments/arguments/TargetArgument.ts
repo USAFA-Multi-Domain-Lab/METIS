@@ -23,7 +23,7 @@ import { Mission, type TMission } from '../../missions/Mission'
 import { MissionComponent } from '../../missions/MissionComponent'
 import type {
   TDropdownTargetParameter,
-  TDropdownTargetParameterOptionVal,
+  TDropdownTargetParameterOptionValue,
 } from '../parameters/DropdownTargetParameter'
 import type { TLargeStringTargetParameter } from '../parameters/LargeStringTargetParameter'
 import type { TNumberTargetParameter } from '../parameters/NumberTargetParameter'
@@ -276,6 +276,32 @@ export abstract class TargetArgument<
   }
 
   /**
+   * The default properties for a {@link TargetArgument} object.
+   */
+  public static get DEFAULT_PROPERTIES(): Omit<
+    TTargetArgumentJson,
+    'parameterId' | 'value'
+  > {
+    return {
+      _id: StringToolbox.generateRandomId(),
+      type: 'string',
+    }
+  }
+
+  /**
+   * Key used to index an issue when a target argument has a dropdown value that
+   * does not match any of the parameter's options.
+   */
+  public static readonly ISSUE_KEY_DROPDOWN_VALUE_MISMATCH =
+    'dropdown-value-mismatch'
+
+  /**
+   * Key used to index an issue when a target argument has a pattern mismatch
+   * with its parameter.
+   */
+  public static readonly ISSUE_KEY_PATTERN_MISMATCH = 'pattern-mismatch'
+
+  /**
    * If the argument is required and its value is unset for its type, this replaces
    * the value with the parameter's default. Called during `fromJson` before
    * context construction so that the in-memory representation (and any
@@ -492,32 +518,6 @@ export abstract class TargetArgument<
   }
 
   /**
-   * The default properties for a {@link TargetArgument} object.
-   */
-  public static get DEFAULT_PROPERTIES(): Omit<
-    TTargetArgumentJson,
-    'parameterId' | 'value'
-  > {
-    return {
-      _id: StringToolbox.generateRandomId(),
-      type: 'string',
-    }
-  }
-
-  /**
-   * Key used to index an issue when a target argument has a dropdown value that
-   * does not match any of the parameter's options.
-   */
-  public static readonly ISSUE_KEY_DROPDOWN_VALUE_MISMATCH =
-    'dropdown-value-mismatch'
-
-  /**
-   * Key used to index an issue when a target argument has a pattern mismatch
-   * with its parameter.
-   */
-  public static readonly ISSUE_KEY_PATTERN_MISMATCH = 'pattern-mismatch'
-
-  /**
    * Deserializes a selection of serialized mission components back into
    * their live mission component objects. Components that no longer exist
    * in the mission (e.g. deleted since the selection was saved), and
@@ -712,7 +712,7 @@ export type TSelectArgumentSerializedValue = TSatisfies<
     'string': string
     'large-string': string
     'boolean': boolean
-    'dropdown': TDropdownTargetParameterOptionVal
+    'dropdown': TDropdownTargetParameterOptionValue
     'mission-component': TMissionComponentSerializedSelection[]
     'unknown': TTargetArgumentSerializedValue
   },

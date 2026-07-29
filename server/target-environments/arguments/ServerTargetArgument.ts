@@ -35,8 +35,10 @@ export class ServerTargetArgument extends TargetArgument<TMetisServerComponents>
   ): ServerTargetArgument {
     let parameter = effect.target?.getParameterById(json.parameterId)
 
+    // Asserted because `value` is carried over unchecked, so the result only
+    // satisfies the union once the value matches the new type.
     if (json.type === 'unknown' && parameter) {
-      json = { ...json, type: parameter.type as any }
+      json = { ...json, type: parameter.type } as TTargetArgumentJson
     }
 
     ServerTargetArgument.applyDefault(json, parameter)
@@ -97,7 +99,7 @@ export class ServerTargetArgument extends TargetArgument<TMetisServerComponents>
  * A union of all possible mission components that can be exposed
  * to target-environment code.
  */
-export type TExposedArgCompatibleComponent =
+export type TExposedArgumentCompatibleComponent =
   | TTargetEnvExposedMission
   | TTargetEnvExposedResource
   | TTargetEnvExposedForce
@@ -114,7 +116,7 @@ export type TSelectExposedArgumentValue = Omit<
   TSelectArgumentSerializedValue,
   'mission-component'
 > & {
-  'mission-component': TExposedArgCompatibleComponent[]
+  'mission-component': TExposedArgumentCompatibleComponent[]
 }
 
 /**

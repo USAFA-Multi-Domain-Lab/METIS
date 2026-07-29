@@ -48,22 +48,22 @@ export class MissionComponentTargetParameter {
 
   /**
    * Converts `TMissionComponentTargetParameterJson` to `TMissionComponentTargetParameter`.
-   * @param arg The mission component parameter as JSON to convert.
+   * @param parameter The mission component parameter as JSON to convert.
    * @returns The mission component parameter.
    */
   public static fromJson = (
-    arg: TMissionComponentTargetParameterJson,
+    parameter: TMissionComponentTargetParameterJson,
   ): TMissionComponentTargetParameter => {
     return {
-      _id: arg._id,
-      name: arg.name,
-      groupingId: arg.groupingId,
-      dependencies: arg.dependencies
-        ? TargetParameter.decodeDependencies(arg.dependencies)
+      _id: parameter._id,
+      name: parameter.name,
+      groupingId: parameter.groupingId,
+      dependencies: parameter.dependencies
+        ? TargetParameter.decodeDependencies(parameter.dependencies)
         : undefined,
-      tooltipDescription: arg.tooltipDescription,
-      type: arg.type,
-      validComponentTypes: arg.validComponentTypes,
+      tooltipDescription: parameter.tooltipDescription,
+      type: parameter.type,
+      validComponentTypes: parameter.validComponentTypes,
     }
   }
 }

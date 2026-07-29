@@ -26,7 +26,7 @@ export const AVAILABLE_DEPENDENCIES_RAW = [
   {
     name: 'equals-some',
     condition: (value: any, expected: TDependencyArg[]) =>
-      expected.some((x) => x === value),
+      expected.some((expectation) => expectation === value),
   } as const,
   {
     name: 'not-equals',

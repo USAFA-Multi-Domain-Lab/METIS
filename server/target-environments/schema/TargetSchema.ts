@@ -2,7 +2,7 @@ import type { TMissionComponentType } from '@shared/target-environments/paramete
 import type { TTargetParameterJson } from '@shared/target-environments/parameters/TargetParameter'
 import type { TTargetJson } from '@shared/target-environments/targets/Target'
 import type {
-  TExposedArgCompatibleComponent,
+  TExposedArgumentCompatibleComponent,
   TSelectExposedArgumentValue,
 } from '../arguments/ServerTargetArgument'
 import type {
@@ -227,7 +227,7 @@ type TExposedMissionComponentByType = {
   missionFile: TTargetEnvExposedFile
   resource: TTargetEnvExposedResource
   resourcePool: TTargetEnvExposedPool
-  any: TExposedArgCompatibleComponent
+  any: TExposedArgumentCompatibleComponent
 }
 
 /**
@@ -273,11 +273,11 @@ type THasDependenciesSoMaybeUndefined<
  * base value type with the dependency-undefined check.
  *
  * - `mission-component` with `validComponentTypes` → `Array<T | U | ...>` using
- *   only the listed component types instead of the full {@link TExposedArgCompatibleComponent} union.
+ *   only the listed component types instead of the full {@link TExposedArgumentCompatibleComponent} union.
  * - `number` with `required: true` → `number` (strips `null`, which is only
  *   possible for optional numbers that the user left blank).
  * - `dropdown` with `options` → the exact union of each option's `value` type
- *   instead of the wide {@link TDropdownTargetParameterOptionVal} fallback.
+ *   instead of the wide {@link TDropdownTargetParameterOptionValue} fallback.
  * - Any parameter with a non-empty `dependencies` array → `T | undefined`,
  *   because the framework sets the argument to `undefined` when its
  *   dependencies are not met.

@@ -431,7 +431,9 @@ export abstract class Effect<
   public getArgumentByParameterId = (
     parameterId: string,
   ): T['targetArgument'] | undefined => {
-    return this.arguments.find((arg) => arg.parameterId === parameterId)
+    return this.arguments.find(
+      (argument) => argument.parameterId === parameterId,
+    )
   }
 
   /**
