@@ -136,7 +136,7 @@ export class ServerEffect<
       // Stale arguments included in case type ever
       // changes again.
       arguments: self.allArguments.map((argument) => argument.json),
-      versionCursor: this.targetEnvironmentVersion,
+      versionCursor: self.targetEnvironmentVersion,
       get mission() {
         return self.mission.toTargetEnvContext()
       },

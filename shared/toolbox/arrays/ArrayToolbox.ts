@@ -124,6 +124,15 @@ export class ArrayToolbox {
       return [value]
     }
   }
+
+  /**
+   * @param values The array to check.
+   * @returns Whether the array holds at least one value, narrowing it
+   * to a {@link TNonEmptyArray} when it does.
+   */
+  public static isNotEmpty<T>(values: T[]): values is TNonEmptyArray<T> {
+    return values.length > 0
+  }
 }
 
 /* -- TYPES -- */
