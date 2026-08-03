@@ -11,41 +11,57 @@ Target environment stores provide a powerful way to cache and share data between
 - [Use Cases](#use-cases)
 - [Best Practices](#best-practices)
 - [Examples](#examples)
+- [Related Documentation](#related-documentation)
 
 ## Overview
 
-METIS provides two types of stores for target environment scripts:
+METIS provides three types of stores for target environment scripts:
 
-- **Local Store** - Data specific to a session and target environment
-- **Global Store** - Data shared across target environments within the same session
+- **Local Store** - Data specific to one realm and one target environment
+- **Realm Store** - Data shared across target environments within one realm
+- **Global Store** - Data shared across every realm and target environment in the session
 
-Both stores are automatically managed by METIS and are available through the target script context. Data stored in these stores persists for the duration of the session and is automatically cleaned up when the session ends.
+A realm is an isolated copy of the launched mission. A multiplayer session runs as a single realm, so local and realm stores cover the whole session. A standalone session gives each participant their own realm, so those two stores hold data for one participant only, and the global store is the only one that reaches across all of them.
+
+All three stores are automatically managed by METIS and are available through the target script context.
 
 **Key Features:**
 
-- **Session-scoped**: Data persists only for the current session
+- **Instance-scoped**: Data belongs to the current run of the session, and a reset starts from empty
 - **Type-safe**: Full TypeScript support with generic typing
-- **Easy to use**: Simple get/set API with default values
-- **Automatic cleanup**: Memory is freed when sessions end
-- **Isolation**: Local stores prevent data leakage between target environments
+- **Easy to use**: A single `use()` method that reads, writes, and initializes
+- **Automatic cleanup**: Memory is freed when the session is destroyed
+- **Isolation**: Local stores prevent data leakage between target environments and between realms
 
 ## Store Types
 
 ### Local Store
 
-The local store is specific to both the session and the target environment. Data stored here is only accessible by scripts running in the same target environment within the same session.
+The local store is specific to both the realm and the target environment. Data stored here is only accessible by scripts running in the same target environment within the same realm.
 
 ```typescript
-// Example: Store force posture for a specific target environment and session
+// Example: Store force posture for a specific target environment and realm
 context.localStore.use('forcePosture', {
   readiness: 'high',
   location: 'AO Bravo',
 })
 ```
 
+### Realm Store
+
+The realm store is specific to the realm but shared across all target environments. Use it when two environments need to coordinate on behalf of the same participant.
+
+```typescript
+// Example: Share the current objective between environments in one realm
+context.realmStore.use('currentObjective', {
+  name: 'Secure the relay',
+  assignedAt: Date.now(),
+})
+```
+
 ### Global Store
 
-The global store is specific to the session but shared across all target environments. This allows different target environments to share data within the same session.
+The global store spans every realm and target environment in the session. It is the only store that reaches across realms, so use it for anything that belongs to the scenario as a whole rather than to a single participant.
 
 ```typescript
 // Example: Store overall scenario state for the session
@@ -62,19 +78,23 @@ context.globalStore.use('scenarioState', {
 Stores are available through the context object passed to your target scripts:
 
 ```typescript
-export default new TargetSchema({
+export default TargetSchema.create({
+  _id: 'store-example',
   name: 'Store Example',
   description: 'Demonstrates basic store usage',
   script: async (context) => {
-    // Access local store (target environment specific)
+    // Access local store (realm and target environment specific)
     const localStore = context.localStore
 
-    // Access global store (session wide)
+    // Access realm store (realm wide, all target environments)
+    const realmStore = context.realmStore
+
+    // Access global store (session wide, all realms)
     const globalStore = context.globalStore
 
     // Your script logic here...
   },
-  args: [],
+  parameters: [],
 })
 ```
 
@@ -115,6 +135,10 @@ const posture = context.localStore.use('forcePosture', {
 const apiCache = context.localStore.use<Map<string, any>>('apiCache', new Map())
 ```
 
+`use()` is the only method a store exposes. It is synchronous, and the holder it returns stays valid for the rest of the session, so a value can be read and written through it repeatedly.
+
+There is no method for removing a key. To discard data, set the value back to an empty or default state, or keep the data inside a collection you can clear yourself.
+
 ## Use Cases
 
 ### 1. API Response Caching
@@ -122,26 +146,21 @@ const apiCache = context.localStore.use<Map<string, any>>('apiCache', new Map())
 Cache expensive API calls to avoid repeated requests:
 
 ```typescript
-script: async (context) => {
+script: async (context, { userId, notify }) => {
   const apiCache = context.localStore.use<Map<string, any>>(
     'apiCache',
     new Map(),
   )
 
-  const cacheKey = `user_${args.userId}`
+  const cacheKey = `user_${userId}`
 
-  if (apiCache.value.has(cacheKey)) {
-    // Return cached data
-    return apiCache.value.get(cacheKey)
+  if (!apiCache.value.has(cacheKey)) {
+    // Fetch from API and cache the result
+    apiCache.value.set(cacheKey, await fetchUserData(userId))
   }
 
-  // Fetch from API
-  const userData = await fetchUserData(args.userId)
-
-  // Cache the result
-  apiCache.value.set(cacheKey, userData)
-
-  return userData
+  const userData = apiCache.value.get(cacheKey)
+  context.sendOutput(`Loaded profile for ${userData.name}`, notify)
 }
 ```
 
@@ -151,7 +170,7 @@ Track session-wide state across multiple target environments:
 
 ```typescript
 // Target Environment A
-script: async (context) => {
+script: async (context, { username }) => {
   const sessionState = context.globalStore.use('sessionState', {
     authenticated: false,
     currentUser: null,
@@ -160,7 +179,7 @@ script: async (context) => {
 
   // Update session state
   sessionState.value.authenticated = true
-  sessionState.value.currentUser = args.username
+  sessionState.value.currentUser = username
 }
 
 // Target Environment B (different target, same session)
@@ -176,12 +195,14 @@ script: async (context) => {
 }
 ```
 
+> **Note:** Because the global store crosses realms, a standalone session shares this state between every participant. Use `realmStore` instead for anything that belongs to one participant.
+
 ### 3. Configuration Management
 
 Store target-specific configuration that persists across script runs:
 
 ```typescript
-script: async (context) => {
+script: async (context, { enableDebug }) => {
   const config = context.localStore.use('config', {
     retryAttempts: 3,
     timeout: 5000,
@@ -189,7 +210,7 @@ script: async (context) => {
   })
 
   // Update configuration based on arguments
-  if (args.enableDebug) {
+  if (enableDebug) {
     config.value.debugMode = true
     config.value.timeout = 30000 // Longer timeout for debugging
   }
@@ -207,7 +228,7 @@ script: async (context) => {
 Track progress in multi-step operations:
 
 ```typescript
-script: async (context) => {
+script: async (context, { action, item, items, notify }) => {
   const batchState = context.localStore.use('batchProcessing', {
     totalItems: 0,
     processedItems: 0,
@@ -215,42 +236,45 @@ script: async (context) => {
     startTime: null,
   })
 
-  if (args.action === 'start') {
+  if (action === 'start') {
     // Initialize batch processing
-    batchState.value.totalItems = args.items.length
+    batchState.value.totalItems = items.length
     batchState.value.processedItems = 0
     batchState.value.errors = []
     batchState.value.startTime = Date.now()
-  } else if (args.action === 'process') {
+  } else if (action === 'process') {
     // Process single item
     try {
-      await processSingleItem(args.item)
+      await processSingleItem(item)
       batchState.value.processedItems += 1
     } catch (error) {
       batchState.value.errors.push({
-        item: args.item,
+        item: item,
         error: error.message,
       })
     }
-  } else if (args.action === 'status') {
-    // Return current status
+  } else if (action === 'status') {
+    // Report current status
     const progress =
       (batchState.value.processedItems / batchState.value.totalItems) * 100
-    return {
-      progress: `${progress.toFixed(1)}%`,
-      errors: batchState.value.errors.length,
-      duration: Date.now() - batchState.value.startTime,
-    }
+    const duration = Date.now() - batchState.value.startTime
+    context.sendOutput(
+      `Progress: ${progress.toFixed(1)}% — ` +
+        `${batchState.value.errors.length} error(s) in ${Math.round(duration / 1000)}s`,
+      notify,
+    )
   }
 }
 ```
+
+> **Note:** A target script returns nothing. Report progress with `context.sendOutput()` or leave it in a store for another target to read — a returned value goes nowhere.
 
 ## Best Practices
 
 ### Data Structure Design
 
 - **Use meaningful keys**: Choose descriptive names for your store keys
-- **Keep data serializable**: Avoid storing functions or complex objects
+- **Store whatever suits the job**: Values are held in memory and never serialized, so `Map`s, class instances, and API clients are all fine
 - **Use appropriate defaults**: Provide sensible default values for initialization
 
 ```typescript
@@ -270,8 +294,8 @@ const apiCache = context.localStore.use<Map<string, CacheEntry>>(
 
 ### Memory Management
 
-- **Clean up temporary data**: Remove data that's no longer needed
-- **Use appropriate store scope**: Local for target-specific data, global for shared data
+- **Clean up temporary data**: Keys cannot be removed, so clear the contents of what you store when it is no longer needed
+- **Use the narrowest store that works**: Local for one environment in one realm, realm for one participant across environments, global only for data the whole session shares
 - **Avoid storing large objects**: Consider external storage for large datasets
 
 ```typescript
@@ -295,7 +319,7 @@ script: async (context) => {
 - **Log store operations**: Help with debugging and monitoring
 
 ```typescript
-script: async (context) => {
+script: async (context, { notify }) => {
   try {
     const config = context.localStore.use('config', {})
 
@@ -306,7 +330,7 @@ script: async (context) => {
 
     // Use configuration...
   } catch (error) {
-    context.sendOutput(`Store error: ${error.message}`)
+    context.sendOutput(`Store error: ${error.message}`, notify)
     throw error
   }
 }
@@ -323,7 +347,7 @@ interface UserSession {
   permissions: string[]
 }
 
-script: async (context) => {
+script: async (context, { userId }) => {
   // Type-safe store usage
   const session = context.globalStore.use<UserSession>('userSession', {
     userId: '',
@@ -332,7 +356,7 @@ script: async (context) => {
   })
 
   // TypeScript will enforce the interface
-  session.value.userId = args.userId
+  session.value.userId = userId
   session.value.loginTime = Date.now()
 }
 ```
@@ -341,42 +365,115 @@ script: async (context) => {
 
 ### Complete Multi-Step Workflow
 
-Here's a complete example showing how to use stores for a multi-step deployment workflow:
+Here's a complete example showing how to use stores for a multi-step deployment workflow.
+
+Several targets read and write the same stored value, so the shape and the key live in one module that each of them imports. Passing that type to `use()` is what makes the stored value typed at every call site:
 
 ```typescript
-// targets/deploy-finish/schema.ts
+// deployment.ts
 
-export default new TargetSchema({ deployment workflow',
-  script: async (context) => {
-    const deployment = context.globalStore.use('deployment', {
-      id: null,
-      status: 'idle',
-      steps: [],
-      startTime: null,
-      config: {},
-    })
+/**
+ * The key under which the deployment state is stored.
+ */
+export const DEPLOYMENT_KEY = 'deployment'
+
+/**
+ * A single step within a deployment.
+ */
+export interface DeploymentStep {
+  name: string
+  startTime: number
+  endTime?: number
+  status: 'running' | 'completed' | 'failed'
+  error?: string
+}
+
+/**
+ * The state shared by every deployment target.
+ */
+export interface DeploymentState {
+  id: string | null
+  status: 'idle' | 'preparing' | 'running' | 'failed'
+  steps: DeploymentStep[]
+  startTime: number | null
+  config: {
+    environment?: string
+    version?: string
+    strategy?: string
+  }
+}
+
+/**
+ * The value a deployment starts from before anything has run.
+ */
+export const INITIAL_DEPLOYMENT: DeploymentState = {
+  id: null,
+  status: 'idle',
+  steps: [],
+  startTime: null,
+  config: {},
+}
+```
+
+```typescript
+// targets/deploy-start/schema.ts
+
+import {
+  DEPLOYMENT_KEY,
+  INITIAL_DEPLOYMENT,
+  type DeploymentState,
+} from '../../deployment'
+
+export default TargetSchema.create({
+  _id: 'deploy-start',
+  name: 'Start Deployment',
+  description: 'Initializes the deployment workflow',
+  script: async (context, { notify, environment, version, strategy }) => {
+    const deployment = context.realmStore.use<DeploymentState>(
+      DEPLOYMENT_KEY,
+      INITIAL_DEPLOYMENT,
+    )
 
     // Initialize deployment
     deployment.value.id = `deploy_${Date.now()}`
     deployment.value.status = 'preparing'
     deployment.value.startTime = Date.now()
     deployment.value.config = {
-      environment: args.environment,
-      version: args.version,
-      strategy: args.strategy || 'rolling',
+      environment: environment,
+      version: version,
+      strategy: strategy,
     }
 
-    context.sendOutput(`Deployment ${deployment.value.id} initialized`)
-
-    return {
-      deploymentId: deployment.value.id,
-      status: deployment.value.status,
-    }
+    context.sendOutput(`Deployment ${deployment.value.id} initialized`, notify)
   },
-  args: [
-    { _id: 'environment', name: 'Environment', type: 'string' },
-    { _id: 'version', name: 'Version', type: 'string' },
-    { _id: 'strategy', name: 'Strategy', type: 'string' },
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      validComponentTypes: ['mission', 'force'],
+    },
+    {
+      _id: 'environment',
+      name: 'Environment',
+      type: 'string',
+      required: true,
+      default: 'staging',
+    },
+    {
+      _id: 'version',
+      name: 'Version',
+      type: 'string',
+      required: true,
+      default: '1.0.0',
+    },
+    {
+      _id: 'strategy',
+      name: 'Strategy',
+      type: 'string',
+      required: true,
+      default: 'rolling',
+    },
   ],
 })
 ```
@@ -384,19 +481,30 @@ export default new TargetSchema({ deployment workflow',
 ```typescript
 // targets/deploy-step/schema.ts
 
-export default new TargetSchema({
+import {
+  DEPLOYMENT_KEY,
+  INITIAL_DEPLOYMENT,
+  type DeploymentState,
+  type DeploymentStep,
+} from '../../deployment'
+
+export default TargetSchema.create({
+  _id: 'deploy-step',
   name: 'Execute Deployment Step',
   description: 'Executes a single step in the deployment workflow',
-  script: async (context) => {
-    const deployment = context.globalStore.use('deployment', {})
+  script: async (context, { notify, stepName }) => {
+    const deployment = context.realmStore.use<DeploymentState>(
+      DEPLOYMENT_KEY,
+      INITIAL_DEPLOYMENT,
+    )
 
     if (!deployment.value.id) {
       throw new Error('No active deployment found. Start deployment first.')
     }
 
     // Add step to history
-    const step = {
-      name: args.stepName,
+    const step: DeploymentStep = {
+      name: stepName,
       startTime: Date.now(),
       status: 'running',
     }
@@ -406,14 +514,14 @@ export default new TargetSchema({
 
     try {
       // Execute the step
-      await executeDeploymentStep(args.stepName, deployment.value.config)
+      await executeDeploymentStep(stepName, deployment.value.config)
 
       // Mark step as completed
       step.status = 'completed'
       step.endTime = Date.now()
 
-      context.sendOutput(`Step ${args.stepName} completed successfully`)
-    } catch (error) {
+      context.sendOutput(`Step ${stepName} completed successfully`, notify)
+    } catch (error: any) {
       step.status = 'failed'
       step.error = error.message
       step.endTime = Date.now()
@@ -421,52 +529,79 @@ export default new TargetSchema({
 
       throw error
     }
-
-    return {
-      deploymentId: deployment.value.id,
-      stepStatus: step.status,
-      totalSteps: deployment.value.steps.length,
-    }
   },
-  args: [{ _id: 'stepName', name: 'Step Name', type: 'string' }],
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      validComponentTypes: ['mission', 'force'],
+    },
+    {
+      _id: 'stepName',
+      name: 'Step Name',
+      type: 'string',
+      required: true,
+      default: 'build',
+    },
+  ],
 })
 ```
 
 ```typescript
 // targets/deploy-status/schema.ts
 
-export default new TargetSchema({
+import {
+  DEPLOYMENT_KEY,
+  INITIAL_DEPLOYMENT,
+  type DeploymentState,
+} from '../../deployment'
+
+export default TargetSchema.create({
+  _id: 'deploy-status',
   name: 'Deployment Status',
   description: 'Gets the current status of the active deployment',
-  script: async (context) => {
-    const deployment = context.globalStore.use('deployment', {})
+  script: async (context, { notify }) => {
+    const deployment = context.realmStore.use<DeploymentState>(
+      DEPLOYMENT_KEY,
+      INITIAL_DEPLOYMENT,
+    )
 
-    if (!deployment.value.id) {
-      return { message: 'No active deployment' }
+    if (!deployment.value.id || deployment.value.startTime === null) {
+      context.sendOutput('No active deployment', notify)
+      return
     }
 
     const duration = Date.now() - deployment.value.startTime
     const completedSteps = deployment.value.steps.filter(
-      (s) => s.status === 'completed',
+      (step) => step.status === 'completed',
     ).length
     const failedSteps = deployment.value.steps.filter(
-      (s) => s.status === 'failed',
+      (step) => step.status === 'failed',
     ).length
 
-    return {
-      deploymentId: deployment.value.id,
-      status: deployment.value.status,
-      duration: `${Math.round(duration / 1000)}s`,
-      totalSteps: deployment.value.steps.length,
-      completedSteps,
-      failedSteps,
-      environment: deployment.value.config.environment,
-      version: deployment.value.config.version,
-    }
+    context.sendOutput(
+      `Deployment ${deployment.value.id} (${deployment.value.status})\n` +
+        `Environment: ${deployment.value.config.environment} ` +
+        `v${deployment.value.config.version}\n` +
+        `Steps: ${completedSteps} completed, ${failedSteps} failed, ` +
+        `${deployment.value.steps.length} total\n` +
+        `Duration: ${Math.round(duration / 1000)}s`,
+      notify,
+    )
   },
-  args: [],
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      validComponentTypes: ['mission', 'force'],
+    },
+  ],
 })
 ```
+
+These three targets share state through `realmStore`, so each participant in a standalone session runs their own deployment. Switching them to `globalStore` would make every participant share one.
 
 ## Related Documentation
 

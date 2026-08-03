@@ -10,8 +10,9 @@ This guide walks you through creating a new METIS target environment from scratc
 - [External System Integration](#external-system-integration-optional)
 - [Adding Your First Target](#adding-your-first-target)
 - [Recommended Project Structure](#recommended-project-structure)
-- [Testing Your Environment](#testing-your-environment)
-- [Troubleshooting](#troubleshooting)
+- [Validation and Testing](#validation-and-testing)
+- [Common Issues and Solutions](#common-issues-and-solutions)
+- [Next Steps](#next-steps)
 - [Related Documentation](#related-documentation)
 
 ## Prerequisites
@@ -27,7 +28,7 @@ Before creating files, decide on:
 2. **External integrations** - Whether you'll call external APIs/services
 3. **Initial targets** - What functionality you want to implement first
 
-> ⚠️ **Important**: Folder names become permanent IDs. Renaming requires [migrations](migrations.md).
+> **Important**: Folder names become permanent IDs. Renaming requires [migrations](migrations.md).
 
 ## Basic Environment Setup
 
@@ -35,7 +36,7 @@ Before creating files, decide on:
 
 Create your environment folder and main schema file:
 
-```ts
+```typescript
 // integration/target-env/acme-cloud/schema.ts
 
 export default new TargetEnvSchema({
@@ -50,6 +51,7 @@ Key points:
 - The folder name (`acme-cloud`) becomes the environment ID
 - Use semantic versioning for the `version` field
 - The server sets the `_id` automatically from the folder name
+- Without `multiRealmSupport: true`, the environment is disabled in standalone sessions — see [Environment Properties](../references/schemas.md#environment-properties)
 
 ### Step 2: Add the targets directory
 
@@ -72,7 +74,7 @@ If your targets need to communicate with external systems, METIS provides client
 
 For HTTP/HTTPS REST API calls, you'll create a REST client within your target scripts using the session's selected configuration. Configuration is managed through `configs.json` (see [configs.json Reference](../references/configs-json.md)).
 
-```ts
+```typescript
 // integration/target-env/acme-cloud/schema.ts
 
 export default new TargetEnvSchema({
@@ -106,7 +108,7 @@ Then create a `configs.json` file for your connection settings:
 
 Within your target scripts, access the configuration through the context and create the API client:
 
-```ts
+```typescript
 import { RestApi } from '@metis/api/RestApi'
 
 script: async (context) => {
@@ -134,14 +136,20 @@ For detailed configuration options and best practices:
 
 Create a target folder with its own schema file:
 
-```ts
+```typescript
 // integration/target-env/acme-cloud/targets/health-check/schema.ts
 
-export default new TargetSchema({
+export default TargetSchema.create({
   _id: 'health-check',
   name: 'Health Check',
   description: 'Verify system connectivity and status',
-  args: [
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      validComponentTypes: ['mission', 'force'],
+    },
     {
       _id: 'endpoint',
       name: 'Endpoint',
@@ -150,12 +158,11 @@ export default new TargetSchema({
       default: '/health',
     },
   ],
-  script: async (ctx) => {
-    const { endpoint } = ctx.effect.args
-    ctx.sendOutput(`Checking ${endpoint}...`)
+  script: async (ctx, { notify, endpoint }) => {
+    ctx.sendOutput(`Checking ${endpoint}...`, notify)
 
     // Your implementation here
-    ctx.sendOutput('✓ Health check completed')
+    ctx.sendOutput('✓ Health check completed', notify)
   },
 })
 ```
@@ -163,7 +170,7 @@ export default new TargetSchema({
 For comprehensive target development guidance, see:
 
 - **[Defining Targets](defining-targets.md)** - Complete target creation guide
-- **[Argument Types](argument-types.md)** - User input types and patterns
+- **[Parameter and Argument Types](parameter-and-argument-types.md)** - User input types and patterns
 - **[Context API](../references/context-api.md)** - Available context methods and properties
 
 ## Recommended Project Structure
@@ -237,7 +244,7 @@ No target folder found at "path/to/targets". Skipping...
 ## Next Steps
 
 1. **Build more targets** - Add functionality using [Defining Targets](defining-targets.md)
-2. **Add arguments** - Create conditional arguments using [Argument Types](argument-types.md)
+2. **Add arguments** - Create conditional arguments using [Parameter and Argument Types](parameter-and-argument-types.md)
 3. **Set up lifecycle hooks** - Manage resources with [Environment Hooks](environment-hooks.md)
 4. **Study examples** - Review [Basic](../examples/basic-target.md) and [Complex](../examples/complex-target.md) patterns
 5. **Production considerations** - Review [Tips & Conventions](tips-and-conventions.md) for best practices
@@ -247,7 +254,7 @@ No target folder found at "path/to/targets". Skipping...
 ### Guides
 
 - **[Defining Targets](defining-targets.md)** - Complete target development guide
-- **[Argument Types](argument-types.md)** - All available argument types and dependencies
+- **[Parameter and Argument Types](parameter-and-argument-types.md)** - All available argument types and dependencies
 - **[Tips & Conventions](tips-and-conventions.md)** - Best practices and common patterns
 - **[Migrations](migrations.md)** - Handling schema changes and ID renames
 
