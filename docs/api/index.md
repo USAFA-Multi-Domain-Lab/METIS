@@ -1,6 +1,6 @@
 # METIS API Documentation
 
-Complete REST API reference for integrating with METIS programmatically. All METIS functionality is accessible through these endpoints, enabling custom integrations, automation, and third-party applications.
+REST API reference for integrating with METIS programmatically — building missions, managing users, launching sessions, and handling files. What happens *inside* a running session is driven over the [WebSocket connection](../devs/websocket.md) instead.
 
 ## Quick Start
 
@@ -11,6 +11,8 @@ Complete REST API reference for integrating with METIS programmatically. All MET
 3. **[Sessions API](sessions.md)** → Launch and control mission sessions
 4. **[Users API](users.md)** → Manage participants and permissions
 
+The remaining references are the [Files API](files.md), the [Logins API](logins.md), the [Target Environments API](target-environments.md), and the [Info API](info.md).
+
 **Base URL:** `/api/v1/`  
 **Authentication:** Express sessions with HTTP-only cookies
 
@@ -20,7 +22,7 @@ Complete REST API reference for integrating with METIS programmatically. All MET
 
 - **[Missions API](missions.md)** - Create, update, and manage training scenarios
 - **[Sessions API](sessions.md)** - Launch missions and control real-time sessions
-- **[Target Environments API](target-environments.md)** - Manage external integrations
+- **[Target Environments API](target-environments.md)** - Read the registry and migrate effect arguments
 
 ### User & Access Control
 
@@ -29,8 +31,8 @@ Complete REST API reference for integrating with METIS programmatically. All MET
 
 ### Data & Resources
 
-- **[Files API](files.md)** - Upload, manage, and control access to mission files
-- **[Info API](info.md)** - System information and health monitoring
+- **[Files API](files.md)** - Upload, read, download, and delete files
+- **[Info API](info.md)** - Version, changelog, and credits
 
 ## 🔧 Technical Reference
 
@@ -44,11 +46,11 @@ Complete REST API reference for integrating with METIS programmatically. All MET
 
 - **REST + WebSocket hybrid** - Use REST for CRUD operations, WebSocket for real-time updates
 - **Session-based auth** - Login via REST, maintain session for subsequent requests
-- **Permission-based access** - Each endpoint requires specific user permissions
+- **Permission-based access** - Most endpoints require specific permissions; the logins and info endpoints do not
 
 ## Related Documentation
 
-- **[Setup Instructions](/docs/setup/index.md)** - Install METIS before using the API
-- **[Developer Documentation](/docs/devs/index.md)** - Architecture and development patterns
-- **[WebSocket Documentation](/docs/devs/websocket.md)** - Real-time communication patterns
-- **[Target Environment Integration](/docs/target-env-integration/index.md)** - Create custom integrations
+- **[Setup Instructions](../setup/index.md)** - Install METIS before using the API
+- **[Developer Documentation](../devs/index.md)** - Architecture and development patterns
+- **[WebSocket Documentation](../devs/websocket.md)** - Real-time communication patterns
+- **[Target Environment Integration](../target-env-integration/index.md)** - Create custom integrations
