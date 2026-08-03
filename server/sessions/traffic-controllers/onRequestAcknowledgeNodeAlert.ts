@@ -57,7 +57,7 @@ export const onRequestAcknowledgeNodeAlert =
 
         // Communicate with all members of the force
         // that the alert has now been acknowledged.
-        for (let forceMember of this.getMembersForForce(
+        for (let forceMember of this.getJoinedMembersForForce(
           node.forceId,
           member.subscribedRealmId,
         )) {

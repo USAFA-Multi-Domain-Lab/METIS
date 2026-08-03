@@ -207,20 +207,20 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * be subscribed.
    * @param options Additional options to tailor the members returned based on
    * the callers needs.
-   * @returns the members of the session which have visibility of the force
-   * with the given ID. List will be further refined based on any additional
-   * options provided.
+   * @returns the joined members of the session which have visibility of the
+   * force with the given ID. List will be further refined based on any
+   * additional options provided.
    */
-  public getMembersForForce(
+  public getJoinedMembersForForce(
     forceId: string,
     realmId: string,
     options: TMembersForForceOptions = {},
   ): ServerSessionMember[] {
     const { limitedVisibilityOnly = false } = options
 
-    // Get all members that either have complete visibility
+    // Get all joined members that either have complete visibility
     // or are assigned to the force with the given ID.
-    return this.members.filter((member) => {
+    return this.joinedMembers.filter((member) => {
       let hasCompleteVisibility = member.isAuthorized('completeVisibility')
       let isAssignedToForce = member.assignedForceId === forceId
       let isSubscribedToRealm = member.subscribedRealmId === realmId
@@ -239,12 +239,14 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
   /**
    * @param permissions The permission(s) to check for.
-   * @returns The members with the specified permission(s).
+   * @returns The joined members with the specified permission(s).
    */
-  public getMembersWithPermissions(
+  public getJoinedMembersWithPermissions(
     permissions: TSessionAuthParam,
   ): ServerSessionMember[] {
-    return this.members.filter((member) => member.isAuthorized(permissions))
+    return this.joinedMembers.filter((member) =>
+      member.isAuthorized(permissions),
+    )
   }
 
   /**
@@ -1286,7 +1288,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Emit action execution initiated event
     // to each member. Scope to the acting action's realm so the
     // initiation only reaches members in that realm.
-    for (let recipient of this.getMembersForForce(
+    for (let recipient of this.getJoinedMembersForForce(
       action!.force._id,
       realm._id,
     )) {
@@ -1387,7 +1389,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // The realm is taken from the execution rather than the member so
     // that the completion lands in the realm the action was taken in,
     // even if the member has since switched realms.
-    for (let forceMember of this.getMembersForForce(
+    for (let forceMember of this.getJoinedMembersForForce(
       outcome.forceId,
       realm._id,
     )) {
@@ -1811,7 +1813,7 @@ export type TOutputTo = {
 }
 
 /**
- * Additional options for {@link SessionServer.getMembersForForce} method.
+ * Additional options for {@link SessionServer.getJoinedMembersForForce} method.
  */
 export type TMembersForForceOptions = {
   /**

@@ -79,7 +79,9 @@ export class ComponentModifierBatchMap<
    */
   private getCompleteVisibilityMembers(): ServerSessionMember[] {
     let realm = this.realm
-    let members = realm.session.getMembersWithPermissions('completeVisibility')
+    let members = realm.session.getJoinedMembersWithPermissions(
+      'completeVisibility',
+    )
     return members.filter((member) => member.subscribedRealmId === realm._id)
   }
 
@@ -202,9 +204,11 @@ export class ComponentModifierBatchMap<
       ) {
         return
       }
-      let members = this.session.getMembersForForce(forceId, this.realm._id, {
-        limitedVisibilityOnly: true,
-      })
+      let members = this.session.getJoinedMembersForForce(
+        forceId,
+        this.realm._id,
+        { limitedVisibilityOnly: true },
+      )
       if (!ArrayToolbox.isNotEmpty(members)) return
 
       callback(components, members, forceId)
