@@ -43,11 +43,6 @@ export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientCompo
   public static readonly API_ENDPOINT: string = '/api/v1/target-environments'
 
   /**
-   * Max time to wait on an effect-args migration before failing the request.
-   */
-  public static readonly MIGRATE_TIMEOUT_MS: number = 30_000
-
-  /**
    * A registry of all target environments installed
    * on the server and provided to the client.
    */

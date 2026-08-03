@@ -6,7 +6,6 @@ import TargetEnvironmentConfig from '@client/components/content/session/config/T
 import { useGlobalContext } from '@client/context/global'
 import type { SessionClient } from '@client/sessions/SessionClient'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
-import { s } from '@shared/toolbox/strings/StringToolbox'
 import './SessionLobbyConfig.scss'
 
 /**
@@ -59,19 +58,14 @@ export default function SessionConfigMenu({
       }
     }
 
-    // Switching to standalone converts any limited observers into
-    // participants (standalone has no place for them), performed
-    // server-side; confirm with the actor first.
+    // Switching to standalone reworks the roster server-side, clearing
+    // force assignments and converting any limited observers into
+    // participants; confirm with the actor first.
     if (updates.mode === 'standalone' && session.config.mode !== 'standalone') {
-      let { limitedObservers } = session
-
-      if (limitedObservers.length) {
-        let observerCount = `${limitedObservers.length} limited observer${s(limitedObservers.length)}`
-        let confirmation = `Switching to \`Standalone\` will change ${observerCount} to participants. Continue?`
-
-        let { choice } = await prompt(confirmation, Prompt.ConfirmationChoices)
-        if (choice === 'Cancel') return false
-      }
+      let confirmation =
+        'Switching to `Standalone` will clear all force assignments and change any limited observers to participants. Continue?'
+      let { choice } = await prompt(confirmation, Prompt.ConfirmationChoices)
+      if (choice === 'Cancel') return false
     }
 
     return true

@@ -979,6 +979,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // below treats them as assigned); in multiplayer it is the single
     // shared realm.
     if (this.config.mode === 'standalone') {
+      this.enforceStandaloneMembership()
       this.enforceStandaloneRoles()
       this.spawnStandaloneRealms()
     } else {
@@ -1029,6 +1030,41 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     this._members = this._members.filter(
       ({ _id }) => !members.some((member) => member._id === _id),
     )
+  }
+
+  /**
+   * In standalone mode, unassigns every member from any force or realm
+   * they may have been assigned to in another mode. Any ghost members
+   * who no longer have any reason to persist are also removed.
+   * @returns Any updated/removed members. Provides feedback to callers so
+   * they can dilineate between calls that did nothing vs calls that did.
+   * @note A no-op outside standalone mode.
+   */
+  protected enforceStandaloneMembership(): ServerSessionMember[] {
+    if (this.config.mode !== 'standalone') return []
+
+    let toRemove: ServerSessionMember[] = []
+    let toUnassign: ServerSessionMember[] = []
+
+    for (let member of this.members) {
+      let isRemovableGhost =
+        !member.joined && !member.banned && member.userId !== this.ownerId
+
+      if (isRemovableGhost) {
+        toRemove.push(member)
+      } else if (member.isAssignedToForce || member.isAssignedToRealm) {
+        toUnassign.push(member)
+      }
+    }
+
+    for (let member of toUnassign) {
+      member.assignToForce(null)
+      member.assignToRealm(null)
+    }
+
+    this.removeMembers(toRemove)
+
+    return [...toRemove, ...toUnassign]
   }
 
   /**
