@@ -87,7 +87,7 @@ export default function SessionGeneralConfig({
   // mode back to multiplayer whenever the session becomes owner-only
   // and the config is set to standalone mode.
   usePostInitEffect(() => {
-    if (accessibility === 'owner-only' && mode !== 'standalone') {
+    if (accessibility === 'owner-only' && mode === 'standalone') {
       setMode('multiplayer')
     }
   }, [accessibility])
