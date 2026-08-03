@@ -1,6 +1,6 @@
 # METIS: Style Guide
 
-> **Note:** This is a developer-friendly reference copy of the style guide. The authoritative source enforced by AI agents is [.github/instructions/STYLE-GUIDE.instructions.md](../../.github/instructions/STYLE-GUIDE.instructions.md). If the two files ever conflict, the `.instructions.md` file takes precedence. Keep both files in sync when making changes.
+> **Note:** This is the authoritative style guide for the project. Keep it current when conventions change.
 
 ## Table of Contents:
 
@@ -18,11 +18,12 @@
   - [Inherited Docs](#inherited-docs)
 - [**Naming Conventions**](#naming-conventions)
   - [Overview](#overview-1)
+  - [Files](#files)
   - [Types](#types)
-  - [Interfaces](#interfaces)
   - [Class Properties](#class-properties)
   - [AJAX Functions and Methods](#ajax-functions-and-methods)
   - [Constants](#constants)
+  - [Variable Declarations](#variable-declarations)
 - [**Organization**](#organization)
   - [Order Within Files](#order-within-files)
   - [Class Properties](#class-properties-1)
