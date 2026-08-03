@@ -948,6 +948,13 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * Sets up the session to function in the configured mode,
    * creating mode-specific realms and enforcing any mode-specific
    * restrictions on the session configuration.
+   * @note Calling this method will almost certainly update the
+   * state of the member list. Therefore, any callers of this
+   * method should call {@link emitMembersUpdated} afterward to
+   * notify all members of the changes. The only reason it isn't
+   * called here is because some callers may want to perform additional
+   * member updates before notifying members and don't want to
+   * notify twice.
    */
   protected initializeMode(): void {
     // Create the realms now that the participant roster is known. In
@@ -1014,7 +1021,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * they may have been assigned to in another mode. Any ghost members
    * who no longer have any reason to persist are also removed.
    * @returns Any updated/removed members. Provides feedback to callers so
-   * they can dilineate between calls that did nothing vs calls that did.
+   * they can delineate between calls that did nothing vs calls that did.
    * @note A no-op outside standalone mode.
    */
   protected enforceStandaloneMembership(): ServerSessionMember[] {
@@ -1050,8 +1057,8 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * do-nothing realm, which is meaningless in standalone where every
    * participant already has their own isolated realm; rather than mint
    * that dead realm, the member is switched to a playable participant.
-   * @returns The members whose role was changed, so callers can decide
-   * whether to notify clients of the updated roster.
+   * @returns Any updated members. Provides feedback to callers so
+   * they can delineate between calls that did nothing vs calls that did.
    * @note A no-op outside standalone mode.
    */
   protected enforceStandaloneRoles(): ServerSessionMember[] {
