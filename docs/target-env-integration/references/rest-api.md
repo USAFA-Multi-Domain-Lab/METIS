@@ -1,269 +1,277 @@
 # REST API Reference
 
-The `RestApi` class is the primary tool for making HTTP requests from your target environment plugins to external services and APIs. This class handles authentication, connection configuration, and provides a simple interface for all standard HTTP methods.
+The `RestApi` class makes HTTP requests from a target environment to external services. It builds a base URL from the configuration selected for the session, applies TLS settings, and wraps axios for the standard HTTP methods.
 
 ## Table of Contents
 
 - [Overview](#overview)
-- [Getting Started](#getting-started)
-- [Configuration](#configuration)
+- [Creating a Client](#creating-a-client)
+- [Configuration Properties](#configuration-properties)
+  - [How the Base URL Is Built](#how-the-base-url-is-built)
 - [HTTP Methods](#http-methods)
 - [Authentication](#authentication)
 - [Error Handling](#error-handling)
-- [Best Practices](#best-practices)
-- [Examples](#examples)
+- [Complete Example](#complete-example)
+- [Related Documentation](#related-documentation)
 
 ## Overview
 
-The `RestApi` class automatically reads your [environment configuration](./environment-configuration.md) and sets up authenticated HTTP connections to target systems. It's designed to simplify API interactions while handling the complexities of authentication, SSL/TLS configuration, and connection management.
+`RestApi` reads the configuration a session manager selected for the session and turns it into a ready-to-use HTTP client. It handles:
 
-**Key Features:**
+- Base URL construction from `protocol`, `host`, and `port`
+- TLS certificate validation through `rejectUnauthorized`
+- All five standard HTTP methods, each returning an axios response
 
-- Automatic environment configuration loading
-- Built-in authentication (Basic Auth, API Key)
-- SSL/TLS certificate handling
-- Support for all standard HTTP methods
-- Axios-based implementation for reliability
+> **Important:** `RestApi` does **not** attach credentials to requests. It reads `username`, `password`, and `apiKey` from your configuration and exposes them as properties, but nothing is added to the outgoing request. Attaching them is your script's job — see [Authentication](#authentication).
 
-## Getting Started
+## Creating a Client
 
-### Import and Initialize
-
-The `RestApi` class is used within your target scripts. You create instances using the configuration selected for the session:
+Build the client from the configuration selected for the session. `context.config.targetEnvConfig` is `null` when no configuration was selected, so check it first.
 
 ```typescript
 import { RestApi } from '@metis/api/RestApi'
 
-script: async (context) => {
-  // Get the selected configuration from the session
-  const { config } = context
-  if (!config.targetEnvConfig) {
-    throw new Error('No target environment configuration selected.')
-  }
+const FetchUsers = TargetSchema.create({
+  _id: 'fetch-users',
+  name: 'Fetch Users',
+  description: 'Read the user list from the external system.',
+  script: async (context, { notify }) => {
+    if (!context.config.targetEnvConfig) {
+      throw new Error('No target environment configuration selected.')
+    }
 
-  // Create REST API client with the selected config
-  const api = RestApi.fromConfig(config.targetEnvConfig.data)
+    let api = RestApi.fromConfig(context.config.targetEnvConfig.data)
+    let response = await api.get<{ users: string[] }>('/users')
 
-  // Use the API client
-  await api.get('/endpoint')
-}
-```
-
-Configuration is managed through `configs.json` files. See the [configs.json Reference](./configs-json.md) for complete configuration details.
-
-### Basic Usage
-
-```typescript
-// Make a simple GET request
-await api.get('https://api.example.com/data')
-
-// POST data to an endpoint
-await api.post('https://api.example.com/users', {
-  name: 'John Doe',
-  email: 'john@example.com',
+    context.sendOutput(`Found ${response.data.users.length} users.`, notify)
+  },
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      validComponentTypes: ['mission', 'force'],
+    },
+  ],
 })
+
+export default FetchUsers
 ```
 
-## Configuration
+`fromConfig` validates the configuration and throws `Invalid REST API configuration: <reason>` if it does not fit. Properties it does not recognize are ignored rather than rejected, so a `data` object holding your own settings alongside the connection ones is fine.
 
-The `RestApi` class is configured using data from your target environment's `configs.json` file. During a session, users select which configuration to use, and that configuration is available via `context.config.targetEnvConfig.data`.
+Configuration comes from `configs.json`. See the [configs.json Reference](configs-json.md).
 
-See the [configs.json Reference](./configs-json.md) for complete configuration details.
+## Configuration Properties
 
-### Configuration Properties Used
+These are the properties `RestApi` reads out of `data`. Everything else in `data` is left for your script to use.
 
-- **`protocol`** - HTTP or HTTPS
-- **`host`** - Server host or domain
-- **`port`** - Connection port
-- **`username`/`password`** - Basic authentication
-- **`apiKey`** - API key authentication
-- **`rejectUnauthorized`** - SSL certificate validation
+| Property             | Type                  | Default  | Effect                                                        |
+| -------------------- | --------------------- | -------- | ------------------------------------------------------------- |
+| `protocol`           | `'http'` \| `'https'` | `'http'` | Scheme of the base URL, and which default port applies         |
+| `host`               | `string`              | `localhost` | Domain or IP. May include a port                            |
+| `port`               | `number` \| numeric `string` | `80`, or `443` when `protocol` is `https` | Port of the base URL      |
+| `rejectUnauthorized` | `boolean`             | `true`   | When `false`, accepts invalid TLS certificates                 |
+| `username`           | `string`              | —        | Exposed as `api.username`. **Not sent automatically**          |
+| `password`           | `string`              | —        | Exposed as `api.password`. **Not sent automatically**          |
+| `apiKey`             | `string`              | —        | Exposed as `api.apiKey`. **Not sent automatically**            |
 
-### Accessing Configuration
+`rejectUnauthorized` only takes effect when it is present in the configuration; leaving it out uses Node's default of `true`.
 
-```typescript
-script: async (context) => {
-  // Get config from session context
-  const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
+### How the Base URL Is Built
 
-  // Access the computed base URL
-  console.log(api.baseUrl) // e.g., "https://api.example.com:443"
+The resulting base URL is available as `api.baseUrl`, and axios applies it to every relative path you request.
 
-  // Access the request configuration
-  console.log(api.config) // Axios configuration object
-}
-```
+| Configuration                              | `api.baseUrl`                |
+| ------------------------------------------ | ---------------------------- |
+| `protocol: 'https'`, `host: 'api.test.com'` | `https://api.test.com:443`   |
+| `protocol: 'http'`, `host: 'api.test.com'`  | `http://api.test.com:80`     |
+| `host: 'api.test.com'`, `port: 8080`        | `http://api.test.com:8080`   |
+| `host: 'api.test.com:9000'`, `port: 8080`   | `http://api.test.com:9000` — a port in `host` wins |
+| `port: 3000` with no `host`                 | `http://localhost:3000`      |
+| Neither `host` nor `port`                   | `http://localhost:80`        |
+
+Passing an absolute URL to a request method bypasses the base URL entirely, which is occasionally useful for a one-off call to a different service.
 
 ## HTTP Methods
 
-The `RestApi` class supports all standard HTTP methods with consistent interfaces:
+Every method returns an axios response, so the body is on `.data` and the status on `.status`. The optional final argument is an axios request configuration merged over the client's own.
 
-### GET Requests
-
-```typescript
-// Basic GET
-await api.get('/api/users')
-
-// GET with custom headers
-await api.get('/api/users', {
-  headers: { 'Custom-Header': 'value' },
-})
-```
-
-### POST Requests
+| Method                        | Signature                                     |
+| ----------------------------- | --------------------------------------------- |
+| `get(uri, config?)`           | Read a resource                               |
+| `post(uri, data?, config?)`   | Create a resource                             |
+| `put(uri, data?, config?)`    | Replace a resource                            |
+| `patch(uri, data?, config?)`  | Partially update a resource                   |
+| `delete(uri, config?)`        | Remove a resource                             |
 
 ```typescript
-// POST with JSON data
-await api.post('/api/users', {
-  name: 'Jane Doe',
-  role: 'admin',
-})
+// Read, with a typed response body.
+let response = await api.get<{ users: string[] }>('/users')
 
-// POST with custom configuration
-await api.post('/api/users', userData, {
-  timeout: 5000,
-  headers: { 'Content-Type': 'application/json' },
-})
-```
+// Create.
+await api.post('/users', { name: 'Jane Doe', role: 'admin' })
 
-### PUT Requests
+// Replace, with a per-request timeout.
+await api.put('/users/123', { name: 'Updated Name' }, { timeout: 5000 })
 
-```typescript
-// Update a resource
-await api.put('/api/users/123', {
-  name: 'Updated Name',
-  status: 'active',
-})
-```
+// Partially update.
+await api.patch('/users/123', { status: 'inactive' })
 
-### PATCH Requests
-
-```typescript
-// Partial update
-await api.patch('/api/users/123', {
-  status: 'inactive',
-})
-```
-
-### DELETE Requests
-
-```typescript
-// Delete a resource
-await api.delete('/api/users/123')
-
-// Delete with confirmation headers
-await api.delete('/api/users/123', {
-  headers: { 'X-Confirm': 'true' },
-})
+// Remove, with a custom header.
+await api.delete('/users/123', { headers: { 'X-Confirm': 'true' } })
 ```
 
 ## Authentication
 
-Authentication is configured automatically based on your environment settings:
+`RestApi` stores the credentials from your configuration but does not send them. Attach them per request, or build a config object once and reuse it.
 
-### Basic Authentication
-
-When `username` and `password` are provided in configuration:
+**Basic authentication** uses axios's `auth` option:
 
 ```typescript
-// Automatically adds Authorization header
-await api.get('/protected-endpoint')
-```
+let api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
-### API Key Authentication
-
-When `apiKey` is provided in configuration:
-
-```typescript
-// Automatically adds api-key header
-await api.get('/protected-endpoint')
-```
-
-### Custom Authentication
-
-For custom authentication needs, add headers to individual requests:
-
-```typescript
-await api.get('/endpoint', {
-  headers: {
-    'Authorization': 'Bearer your-jwt-token',
-    'X-API-Version': '2.0',
+await api.get('/protected', {
+  auth: {
+    username: api.username ?? '',
+    password: api.password ?? '',
   },
 })
 ```
 
-## Best Practices
+**API key authentication** is a header, and the header name is whatever the external service expects:
 
-### Configuration Management
+```typescript
+await api.get('/protected', {
+  headers: { 'api-key': api.apiKey ?? '' },
+})
+```
 
-- Store sensitive data (API keys, passwords) in `configs.json` files
-- Use multiple configs for environments that run in parallel
-- Secure `configs.json` files with appropriate file permissions for your OS
-- Never commit `configs.json` files with real credentials to version control
-- Access configuration via `context.config.targetEnvConfig.data` in target scripts
+**Reuse one set of options** rather than repeating it at every call site:
 
-### Error Handling
+```typescript
+let api = RestApi.fromConfig(context.config.targetEnvConfig.data)
+let authenticated = { headers: { Authorization: `Bearer ${api.apiKey ?? ''}` } }
 
-- Always use try-catch blocks for API calls
-- Log errors appropriately for debugging
-- Implement retry logic for transient failures
-- Validate responses before processing
+await api.get('/users', authenticated)
+await api.post('/users', { name: 'Jane Doe' }, authenticated)
+```
 
-### Performance
+Any scheme the service supports works, because you control the headers — bearer tokens, a signature header, a session cookie.
 
-- Reuse the same `RestApi` instance when possible
-- Set appropriate timeouts for long-running requests
+## Error Handling
 
-## Examples
+Axios rejects on any non-2xx status, so a failed request throws. The thrown value is typed `unknown`, and the useful shape depends on how far the request got.
 
-### Complete Target Example
+| Situation                        | What the error carries                     |
+| -------------------------------- | ------------------------------------------ |
+| The server responded with an error | `error.response.status` and `error.response.data` |
+| The request was sent, no response | `error.request`, and no `error.response`   |
+| The request was never sent       | `error.message` only                       |
+
+Use axios's own type guard rather than casting, so the narrowing is checked:
 
 ```typescript
 import { RestApi } from '@metis/api/RestApi'
+import axios from 'axios'
 
-export default new TargetSchema({
-  _id: 'manage-user',
-  name: 'Manage User',
-  description: 'Create or update user in external system',
-  script: async (context) => {
-    const { action, userId, userData } = context.effect.args
+const FetchData = TargetSchema.create({
+  _id: 'fetch-data',
+  name: 'Fetch Data',
+  description: 'Read data from the external system.',
+  script: async (context, { notify }) => {
+    if (!context.config.targetEnvConfig) {
+      throw new Error('No target environment configuration selected.')
+    }
+
+    let api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
     try {
-      // Get configuration from session
-      if (!context.config.targetEnvConfig) {
-        throw new Error('No configuration selected for this session.')
+      let response = await api.get('/data')
+      context.sendOutput(`Retrieved ${response.status}.`, notify)
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(`Request failed with status ${error.response.status}.`)
       }
-
-      // Initialize API client with selected configuration
-      const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
-
-      context.sendOutput(
-        `${action === 'create' ? 'Creating' : 'Updating'} user...`,
-      )
-
-      // Perform API operation based on action
-      let response
-      if (action === 'create') {
-        response = await api.post('/users', userData)
-        context.sendOutput(`✓ User created: ${response.data.username}`)
-      } else {
-        response = await api.put(`/users/${userId}`, userData)
-        context.sendOutput(`✓ User updated: ${response.data.username}`)
+      if (axios.isAxiosError(error) && error.request) {
+        throw new Error('No response from the server.')
       }
-
-      return response.data
-    } catch (error: any) {
-      const message = error.response?.data?.message || error.message
-      context.sendOutput(`✗ Operation failed: ${message}`)
       throw error
     }
   },
-  args: [
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      validComponentTypes: ['mission', 'force'],
+    },
+  ],
+})
+
+export default FetchData
+```
+
+Throwing stops the effect and surfaces the message, which is usually what you want. Catching only to send output and continue leaves the effect looking successful.
+
+## Complete Example
+
+```typescript
+import { RestApi } from '@metis/api/RestApi'
+import axios from 'axios'
+
+const ManageUser = TargetSchema.create({
+  _id: 'manage-user',
+  name: 'Manage User',
+  description: 'Create or update a user in the external system.',
+  script: async (context, { notify, action, userId, userData }) => {
+    if (!context.config.targetEnvConfig) {
+      throw new Error('No target environment configuration selected.')
+    }
+
+    let api = RestApi.fromConfig(context.config.targetEnvConfig.data)
+    let authenticated = { headers: { 'api-key': api.apiKey ?? '' } }
+    let parsed: unknown
+
+    try {
+      parsed = JSON.parse(userData)
+    } catch {
+      throw new Error('User Data must be valid JSON.')
+    }
+
+    try {
+      if (action === 'create') {
+        let response = await api.post('/users', parsed, authenticated)
+        context.sendOutput(`Created user ${response.data.username}.`, notify)
+      } else {
+        if (!userId) throw new Error('A user ID is required to update a user.')
+        let response = await api.put(`/users/${userId}`, parsed, authenticated)
+        context.sendOutput(`Updated user ${response.data.username}.`, notify)
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(
+          `The external system rejected the request with status ${error.response.status}.`,
+        )
+      }
+      throw error
+    }
+  },
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      groupingId: 'user',
+      validComponentTypes: ['mission', 'force'],
+    },
     {
       _id: 'action',
       name: 'Action',
       type: 'dropdown',
       required: true,
+      groupingId: 'user',
+      default: 'create',
       options: [
         { _id: 'create', name: 'Create User', value: 'create' },
         { _id: 'update', name: 'Update User', value: 'update' },
@@ -274,59 +282,27 @@ export default new TargetSchema({
       name: 'User ID',
       type: 'string',
       required: false,
-      dependencies: [{ type: 'equals', argId: 'action', value: 'update' }],
+      groupingId: 'user',
+      dependencies: [TargetDependency.EQUALS('action', 'update')],
     },
     {
       _id: 'userData',
       name: 'User Data (JSON)',
-      type: 'largeString',
+      type: 'large-string',
       required: true,
+      groupingId: 'user',
+      default: '{}',
     },
   ],
 })
-```
 
-### Error Handling Example
-
-```typescript
-script: async (context) => {
-  const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
-
-  try {
-    const response = await api.get('/api/data')
-    context.sendOutput('✓ Data retrieved successfully')
-    return response.data
-  } catch (error: any) {
-    if (error.response) {
-      // Server responded with error status
-      switch (error.response.status) {
-        case 401:
-          context.sendOutput('✗ Authentication failed')
-          break
-        case 404:
-          context.sendOutput('✗ Resource not found')
-          break
-        case 500:
-          context.sendOutput('✗ Server error')
-          break
-        default:
-          context.sendOutput(`✗ Request failed: ${error.response.status}`)
-      }
-    } else if (error.request) {
-      // Request made but no response received
-      context.sendOutput('✗ No response from server (network error)')
-    } else {
-      // Error setting up the request
-      context.sendOutput(`✗ Request setup error: ${error.message}`)
-    }
-    throw error
-  }
-}
+export default ManageUser
 ```
 
 ## Related Documentation
 
-- **[configs.json Reference](./configs-json.md)** - Configuration file structure and management
-- **[Context API Reference](./context-api.md)** - Complete context properties and methods
-- **[External API Integration Guide](../guides/external-api-integration.md)** - Best practices for API integration
-- **[Creating Target Environments](../guides/creating-target-environments.md)** - Setup guide for new integrations
+- **[configs.json Reference](configs-json.md)** - Configuration file structure and loading
+- **[Environment Configuration](environment-configuration.md)** - Every property a configuration can carry
+- **[WebSocket API Reference](websocket-api.md)** - Persistent connections instead of request/response
+- **[Context API Reference](context-api.md)** - Complete context properties and methods
+- **[External API Integration Guide](../guides/external-api-integration.md)** - Patterns for talking to external systems
