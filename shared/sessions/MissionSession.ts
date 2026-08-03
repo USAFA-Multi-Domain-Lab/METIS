@@ -73,16 +73,16 @@ export abstract class MissionSession<
   }
 
   /**
-   * The mission being executed by the participants.
+   * Protected cache for `mission`.
    */
   protected _mission: TMission<T>
   /**
    * The session's authoring template of the mission.
    * @note This is the source from which realms are minted. Gameplay
    * resolution (force/node/action lookups) for a member happens
-   * through that member's realm (`member.realm.mission`), not here.
-   * In a multiplayer session the default realm's mission is the same
-   * object as this template.
+   * through that member's realm (`member.subscribedRealm.mission`),
+   * not here. Every realm mints its own copy of this template, in
+   * both multiplayer and standalone.
    */
   public get mission(): T['mission'] {
     return this._mission
