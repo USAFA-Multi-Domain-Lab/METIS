@@ -56,7 +56,6 @@ import type { User } from '@shared/users/User'
 import { targetEnvLogger } from '../logging'
 import type { ServerChatChannel } from './chat/ServerChatChannel'
 import { ServerSessionMember } from './ServerSessionMember'
-import type { TServerRealmJsonOptions } from './ServerSessionRealm'
 import { ServerSessionRealm } from './ServerSessionRealm'
 import { TargetEnvStore } from './TargetEnvStore'
 
@@ -315,9 +314,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
   // Implemented
   public toJson(options: TSessionServerJsonOptions = {}): TSessionJson {
-    // Gather details.
+    // Gather details. Without a requester there is no member whose
+    // exposure to serialize under, so nothing member-facing is exposed.
     const { requester } = options
-    let realmOptions: TMissionJsonOptions = {
+    let missionJsonOptions: TMissionJsonOptions = {
       forceExposure: { expose: 'none' },
       fileExposure: { expose: 'none' },
       sessionDataExposure: { expose: 'all' },
@@ -332,38 +332,13 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Handler a requester being passed.
     if (requester) {
-      // Gather details.
-      let { assignedForceId: forceId } = requester
+      // Serialize everything this requester receives under the exposure
+      // their permissions and force assignment allow.
+      missionJsonOptions = requester.missionJsonOptions
 
-      // Update the session-data exposure to be user
-      // specific to the requester.
-      realmOptions.sessionDataExposure = {
-        expose: 'member-specific',
-        memberId: requester._id,
-      }
-
-      // If the requester is assigned to a force,
-      // then update the mission options to include
-      // data pertinent to the force.
-      if (forceId) {
-        realmOptions.forceExposure = {
-          expose: 'force-with-revealed-nodes',
-          forceId,
-        }
-        realmOptions.fileExposure = {
-          expose: 'accessible',
-          forceId,
-        }
-      }
-
-      // If the requester has complete visibility,
-      // then update the mission options to expose
-      // all force data, file data, and root effects, and hand them a
-      // shallow listing of every realm so they can switch between them.
+      // A requester with complete visibility is handed a shallow listing
+      // of every realm so they can switch between them.
       if (requester.isAuthorized('completeVisibility')) {
-        realmOptions.forceExposure = { expose: 'all' }
-        realmOptions.fileExposure = { expose: 'all' }
-        realmOptions.rootEffectsExposure = { expose: 'all' }
         realmBasics = this.realms.map((realm) => realm.toBasicJson())
       }
 
@@ -390,7 +365,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
       // Include subscribed realm if it is not the default realm.
       if (requester.subscribedRealm !== this.defaultRealm) {
-        realms.push(requester.subscribedRealm.toJson(realmOptions))
+        realms.push(requester.subscribedRealmJson)
       }
     }
 
@@ -404,7 +379,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       ownerFirstName: this.ownerFirstName,
       ownerLastName: this.ownerLastName,
       launchedAt: this.launchedAt.toISOString(),
-      mission: this.mission.toExistingJson(realmOptions),
+      mission: this.mission.toExistingJson(missionJsonOptions),
       realms,
       realmBasics,
       members: this._members.map((member) => member.toJson()),
@@ -1174,39 +1149,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     for (let member of this.joinedMembers) {
       let hasCompleteVisibility = member.isAuthorized('completeVisibility')
-      let subscribedRealm = member.subscribedRealm
-      let assignedForceId = member.assignedForceId
-      let realmJsonOptions: TServerRealmJsonOptions
-
-      // Decide serialization options based on the member's visibility
-      // and assignments.
-      if (!hasCompleteVisibility && assignedForceId) {
-        realmJsonOptions = {
-          forceExposure: {
-            expose: 'force-with-revealed-nodes',
-            forceId: assignedForceId,
-          },
-          fileExposure: { expose: 'accessible', forceId: assignedForceId },
-          sessionDataExposure: {
-            expose: 'member-specific',
-            memberId: member._id,
-          },
-        }
-      } else if (hasCompleteVisibility) {
-        realmJsonOptions = {
-          forceExposure: { expose: 'all' },
-          fileExposure: { expose: 'all' },
-          sessionDataExposure: { expose: 'all' },
-        }
-      } else {
-        realmJsonOptions = {
-          forceExposure: { expose: 'none' },
-          fileExposure: { expose: 'none' },
-          sessionDataExposure: { expose: 'all' },
-        }
-      }
-
-      let subscribedRealmJson = subscribedRealm.toJson(realmJsonOptions)
       let realmBasicsJson = hasCompleteVisibility
         ? this.realms.map((realm) => realm.toBasicJson())
         : []
@@ -1214,7 +1156,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       member.emit(responseMethod, {
         method: responseMethod,
         data: {
-          subscribedRealm: subscribedRealmJson,
+          subscribedRealm: member.subscribedRealmJson,
           chatChannels: [],
           realmBasics: realmBasicsJson,
         },

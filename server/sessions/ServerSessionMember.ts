@@ -16,7 +16,9 @@ import type {
   TServerMethod,
 } from '@shared/connect'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
+import type { TMissionJsonOptions } from '@shared/missions/Mission'
 import { type TMemberRoleId } from '@shared/sessions/members/MemberRole'
+import type { TSessionRealmJson } from '@shared/sessions/SessionRealm'
 import {
   SessionMember,
   type TSessionMemberAssignment,
@@ -112,6 +114,52 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
    * {@link removeListeners}.
    */
   private activeHandlers: TClientHandler<any>[]
+
+  /**
+   * Options for serializing a mission for this member, exposing only
+   * what the member's permissions and force assignment allow.
+   * @note Every mission served to a member — the realm they play in and
+   * the session's template alike — is serialized with these, so what a
+   * member may see is decided here and nowhere else.
+   */
+  public get missionJsonOptions(): TMissionJsonOptions {
+    let options: TMissionJsonOptions = {
+      forceExposure: { expose: 'none' },
+      fileExposure: { expose: 'none' },
+      sessionDataExposure: { expose: 'member-specific', memberId: this._id },
+      rootEffectsExposure: { expose: 'none' },
+    }
+
+    // Complete visibility takes precedence over any force assignment,
+    // and is the only level that sees root effects.
+    if (this.isAuthorized('completeVisibility')) {
+      options.forceExposure = { expose: 'all' }
+      options.fileExposure = { expose: 'all' }
+      options.rootEffectsExposure = { expose: 'all' }
+    }
+    // Otherwise a member assigned to a force sees that force and the
+    // files it can reach.
+    else if (this.assignedForceId) {
+      options.forceExposure = {
+        expose: 'force-with-revealed-nodes',
+        forceId: this.assignedForceId,
+      }
+      options.fileExposure = {
+        expose: 'accessible',
+        forceId: this.assignedForceId,
+      }
+    }
+
+    return options
+  }
+
+  /**
+   * The realm the member is subscribed to, serialized under
+   * {@link missionJsonOptions}.
+   */
+  public get subscribedRealmJson(): TSessionRealmJson {
+    return this.subscribedRealm.toJson(this.missionJsonOptions)
+  }
 
   /**
    * @param _id The unique ID of the session member.
