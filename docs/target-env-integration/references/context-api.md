@@ -1,198 +1,549 @@
 # Context API Reference
 
-This reference documents the complete Context API available to target scripts, providing detailed information about all properties, methods, and parameters.
+This reference documents the complete Context API available to target-environment code, covering the properties it exposes and the methods it provides for reading a mission and changing it during a session.
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Script Context vs Hook Context](#script-context-vs-hook-context)
 - [Effect Types](#effect-types)
-- [🏗️ Context Structure](#️-context-structure)
-- [📋 Context Properties](#-context-properties)
-- [📤 Output Methods](#-output-methods)
-- [📦 Data Store Methods](#-data-store-methods)
-- [🎯 Node Control Methods](#-node-control-methods)
-- [⚡ Action Modification Methods](#-action-modification-methods)
-- [💰 Resource Management Methods](#-resource-management-methods)
-- [📁 File Access Methods](#-file-access-methods)
-- [🔑 Method Options](#-method-options)
-- [📊 Type Definitions](#-type-definitions)
-- [💡 Usage Examples](#-usage-examples)
-- [📖 Related Documentation](#-related-documentation)
+- [Reading Arguments](#reading-arguments)
+- [Targeting Components](#targeting-components)
+- [Context Properties](#context-properties)
+- [Output and Timing](#output-and-timing)
+- [Data Stores](#data-stores)
+- [Node Control Methods](#node-control-methods)
+- [Action Modification Methods](#action-modification-methods)
+- [Resource Management Methods](#resource-management-methods)
+- [File Access Methods](#file-access-methods)
+- [Session Resets](#session-resets)
+- [Type Definitions](#type-definitions)
+- [Related Documentation](#related-documentation)
 
 ## Overview
 
-The Context API provides target scripts with access to the METIS mission environment through the `context` parameter. It includes properties for accessing effect data and methods for manipulating mission state.
+Target scripts receive a `context` object as their first parameter. It exposes the session, its configuration, and the mission, and provides methods for sending output and changing mission state.
 
-```ts
-script: async (context) => {
-  // context: TTargetScriptExposedContext
-
-  // Access properties
-  const { arg1, arg2 } = context.effect.args
+```typescript
+script: async (context, { notify, hostname }) => {
+  // Read from the mission and session
   const missionName = context.mission.name
-  const username = context.user.username
-  const sessionId = context.session._id
+  const sessionState = context.session.state
   const configData = context.config.targetEnvConfig?.data
-  const effectType = context.type // 'sessionTriggeredEffect' | 'executionTriggeredEffect'
-  const triggeredBy = context.triggeredBy // User who executed (execution-triggered only)
 
-  // Call methods
-  context.sendOutput('Operation starting...')
-  context.modifySuccessChance(25)
-  context.blockNode({ nodeKey: '<node-key>' })
+  // Identify the effect and who triggered it
+  const effectName = context.effect.name
+  const executor = context.triggeredBy // null for session-triggered effects
+
+  // Change mission state
+  context.sendOutput(`Connecting to ${hostname}...`, notify)
 }
 ```
 
-## 🏗️ Context Structure
+A script returns nothing. To report a result, send output or leave the value in a data store for another target to read — a returned value is discarded.
 
-The context object exposes three main property categories and multiple method categories:
+## Script Context vs Hook Context
 
-```ts
-interface TTargetScriptExposedContext<TType extends TEffectType> {
-  // Core Properties
-  readonly type: TType // 'sessionTriggeredEffect' | 'executionTriggeredEffect'
-  readonly effect: TTargetEnvExposedEffect
-  readonly mission: TTargetEnvExposedMission
-  readonly user: TTargetEnvExposedUser
-  readonly session: TTargetEnvExposedSession
-  readonly config: TTargetEnvExposedConfig
-  readonly triggeredBy: TTargetEnvExposedMember | null // null for session-triggered
-  readonly localStore: TTargetEnvStore
-  readonly globalStore: TTargetEnvStore
+Two kinds of target-environment code receive a context, and they do not receive the same one.
 
-  // Methods
-  sendOutput: Function
-  sleep: Function
-  blockNode: Function
-  unblockNode: Function
-  openNode: Function
-  closeNode: Function
-  modifySuccessChance: Function
-  modifyProcessTime: Function
-  modifyResourceCost: Function
-  modifyResourcePool: Function
-  grantFileAccess: Function
-  revokeFileAccess: Function
-}
-```
+| Available in | Target scripts | Environment hooks |
+| ------------ | :------------: | :---------------: |
+| `session`, `config`, `mission` | ✓ | ✓ |
+| `localStore`, `realmStore`, `globalStore` | ✓ | ✓ |
+| `sleep()` | ✓ | ✓ |
+| `type`, `effect`, `triggeredBy` | ✓ | — |
+| `getArguments()` | ✓ | — |
+| `sendOutput()` and all mission-changing methods | ✓ | — |
+
+An `environment-setup` or `environment-teardown` hook cannot send output or modify the mission. It exists to acquire and release resources, and it can read configuration and use the data stores to hand something to the scripts that run later.
+
+> **Note:** Hooks run once per realm per target environment. In a standalone session, where each participant has their own realm, setup and teardown run once for each of them.
 
 ## Effect Types
 
-METIS supports two types of effects, each with different trigger conditions and available context properties:
+Every target script runs on behalf of an effect, and the effect's type determines what triggered it.
 
 ### Session-Triggered Effects
 
-Execute during session lifecycle events:
+Run during session lifecycle events:
 
-- **session-setup** - When session starts (before mission starts)
-- **session-start** - When mission begins
-- **session-teardown** - When session ends
+- **session-setup** — while the session is starting, before the mission begins
+- **session-start** — when the mission begins
+- **session-teardown** — while the session is ending
 
-**Key Characteristics:**
-
-- `context.type` = `'sessionTriggeredEffect'`
-- `context.triggeredBy` = `null` (no specific user triggered it)
-- No `'self'` defaults - must specify `forceKey`, `nodeKey`, `actionKey` explicitly
-- Run automatically based on session state changes
+`context.type` is `'sessionTriggeredEffect'` and `context.triggeredBy` is `null`.
 
 ### Execution-Triggered Effects
 
-Execute during action execution lifecycle:
+Run during the lifecycle of an action execution:
 
-- **execution-initiation** - When action execution begins
-- **execution-success** - When action execution succeeds
-- **execution-failure** - When action execution fails
+- **execution-initiation** — when an execution begins
+- **execution-success** — when an execution succeeds
+- **execution-failure** — when an execution fails
 
-**Key Characteristics:**
+`context.type` is `'executionTriggeredEffect'` and `context.triggeredBy` is the member who executed the action.
 
-- `context.type` = `'executionTriggeredEffect'`
-- `context.triggeredBy` = User who executed the action
-- `'self'` defaults available (current force/node/action)
-- Run in response to user actions
-
-**Example:**
-
-```ts
-script: async (context) => {
-  if (context.type === 'sessionTriggeredEffect') {
-    // Session-triggered: must specify targets explicitly
-    context.sendOutput('Session initializing...', { forceKey: 'blue-team' })
-    context.blockNode({ forceKey: 'red-team', nodeKey: 'server-room' })
+```typescript
+script: async (context, { notify }) => {
+  if (context.type === 'executionTriggeredEffect') {
+    context.sendOutput(
+      `${context.triggeredBy.username} executed this action`,
+      notify,
+    )
   } else {
-    // Execution-triggered: can use 'self' defaults
-    const executor = context.triggeredBy
-    context.sendOutput(`${executor.username} executed this action`)
-    context.blockNode() // Blocks current node
+    context.sendOutput('Automated session lifecycle effect', notify)
   }
 }
 ```
 
-## 📋 Context Properties
+## Reading Arguments
 
-### ctx.type
+Argument values are supplied to the script as its second parameter, named after each parameter's `_id`:
 
-Indicates the type of effect being executed.
+```typescript
+script: async (context, { hostname, port, sslEnabled }) => {
+  context.sendOutput(`Connecting to ${hostname}:${port}`, notify)
+}
+```
 
-```ts
+The same values are also reachable through `getArguments`, which is useful in a helper that receives the context without the destructured argument object.
+
+```typescript
+getArguments(id: string): unknown
+getArguments(ids: string[]): Record<string, unknown>
+```
+
+```typescript
+// A single parameter's value
+const hostname = context.getArguments('hostname')
+
+// Several at once
+const { hostname, port } = context.getArguments(['hostname', 'port'])
+```
+
+Both forms are typed from the target's `parameters`, so only declared `_id`s are accepted and each value carries the type implied by its parameter.
+
+An argument whose parameter declares dependencies resolves to `undefined` whenever those dependencies are unmet, and its type includes `undefined` so a check is required before use.
+
+```typescript
+script: async (context, { priority, encryptionLevel }) => {
+  // `encryptionLevel` depends on `priority`, so it may be undefined
+  if (encryptionLevel) {
+    context.sendOutput(`Using ${encryptionLevel}`, notify)
+  }
+}
+```
+
+## Targeting Components
+
+Every method that changes the mission takes the component or components to act on as its first argument. Those components come from a `mission-component` parameter, or from the mission on the context.
+
+```typescript
+// From a mission-component parameter
+script: async (context, { applyTo }) => {
+  context.blockNodes(applyTo)
+}
+
+// From the mission on the context
+context.sendOutput('Broadcast to everyone', context.mission)
+```
+
+Passing a broader component fans the operation out to everything beneath it. A single component or an array of them is accepted anywhere.
+
+| Passed | `blockNodes` affects | `modifySuccessChance` affects |
+| ------ | -------------------- | ----------------------------- |
+| an action | — | that action |
+| a node | that node | every action on it |
+| a force | every node in it | every action in it |
+| the mission | every node in it | every action in it |
+
+Which component types a method accepts is listed with each method below. A `mission-component` parameter should declare `validComponentTypes` that match, so the picker cannot offer a selection the script has no use for.
+
+## Context Properties
+
+### context.type
+
+```typescript
 readonly type: 'sessionTriggeredEffect' | 'executionTriggeredEffect'
 ```
 
-**Usage Examples:**
+Discriminates the effect type, and narrows `triggeredBy` when checked.
 
-```ts
-script: async (ctx) => {
-  if (ctx.type === 'sessionTriggeredEffect') {
-    ctx.sendOutput('Running during session lifecycle')
-    // Must specify all keys explicitly
-  } else {
-    ctx.sendOutput('Running during action execution')
-    // Can use 'self' defaults
+### context.triggeredBy
+
+```typescript
+readonly triggeredBy: TTargetEnvExposedMember | null
+```
+
+The member who triggered the execution, or `null` for a session-triggered effect.
+
+```typescript
+script: async (context, { notify }) => {
+  if (context.triggeredBy) {
+    const { username, firstName, lastName } = context.triggeredBy
+    context.sendOutput(`Executed by ${firstName} ${lastName}`, notify)
   }
 }
 ```
 
-### ctx.triggeredBy
+### context.effect
 
-Provides information about the user who triggered the execution (execution-triggered effects only).
+```typescript
+readonly effect: TTargetEnvExposedEffect
+```
 
-```ts
-readonly triggeredBy: TTargetEnvExposedMember | null
+The effect this script is running for, including where it lives in the mission and which target it uses.
 
+```typescript
+script: async (context) => {
+  const effectName = context.effect.name
+  const trigger = context.effect.trigger
+  const targetName = context.effect.target?.name
+
+  // Where the effect lives
+  const hostingAction = context.effect.sourceAction // null for mission-level effects
+  const hostingForce = context.effect.sourceForce
+}
+```
+
+### context.session
+
+```typescript
+readonly session: TTargetEnvExposedSession
+```
+
+The session that invoked the script, including its membership.
+
+```typescript
+script: async (context, { notify }) => {
+  context.sendOutput(
+    `${context.session.name} is ${context.session.state} with ` +
+      `${context.session.joinedMembers.length} member(s) online`,
+    notify,
+  )
+}
+```
+
+### context.config
+
+```typescript
+readonly config: TTargetEnvExposedSessionConfig
+```
+
+The session's configuration, plus the configuration selected for this target environment.
+
+```typescript
+import { RestApi } from '@metis/api/RestApi'
+
+script: async (context, { notify }) => {
+  if (!context.config.targetEnvConfig) {
+    throw new Error('No configuration selected for this session.')
+  }
+
+  const { name, data } = context.config.targetEnvConfig
+  const api = RestApi.fromConfig(data)
+
+  context.sendOutput(`Using config: ${name}`, notify)
+}
+```
+
+`targetEnvConfig` is `null` when no configuration has been selected, so check it before use. Its `data` is whatever the environment's `configs.json` defines.
+
+### context.mission
+
+```typescript
+readonly mission: TTargetEnvExposedMission
+```
+
+The mission as it currently stands in this realm, including live gameplay state.
+
+```typescript
+script: async (context, { notify }) => {
+  const { name, forces, allNodes, allActions, resources, files } =
+    context.mission
+
+  context.sendOutput(
+    `${name}: ${forces.length} force(s), ${allNodes.length} node(s)`,
+    notify,
+  )
+
+  const openNodes = allNodes.filter((node) => node.opened)
+}
+```
+
+> **Note:** The collections are `forces`, `allNodes`, `allActions`, `allEffects`, `resources`, and `files`. There is no `nodes` property on the mission — `allNodes` spans every force, while an individual force has its own `nodes`.
+
+## Output and Timing
+
+### context.sendOutput()
+
+```typescript
+sendOutput(
+  message: string,
+  to: TTargetEnvExposedForce | TTargetEnvExposedMission | Array<...>,
+): void
+```
+
+Sends a message to an output panel. `to` is required.
+
+- Passing a **force** sends to that force's output panel.
+- Passing the **mission** sends a global message that every force sees.
+
+```typescript
+script: async (context, { notify }) => {
+  // To whichever force the effect's author selected
+  context.sendOutput('Operation starting...', notify)
+
+  // To everyone
+  context.sendOutput('Mission-wide announcement', context.mission)
+
+  // To several specific forces
+  const redAndBlue = context.mission.forces.filter((force) =>
+    ['Red Team', 'Blue Team'].includes(force.name),
+  )
+  context.sendOutput('Coordinated update', redAndBlue)
+}
+```
+
+### context.sleep()
+
+```typescript
+sleep(duration: number): Promise<void>
+```
+
+Pauses for the given number of milliseconds. Always use this instead of `setTimeout`, which is blocked inside target-environment code.
+
+```typescript
+script: async (context, { notify }) => {
+  context.sendOutput('Starting operation...', notify)
+  await context.sleep(5000)
+  context.sendOutput('Operation complete', notify)
+}
+```
+
+It aborts early if the session ends, so it never leaves a timer running past the session it belongs to.
+
+```typescript
+// ❌ Blocked — throws, directing you to context.sleep
+setTimeout(() => {}, 5000)
+
+// ✅ Correct
+await context.sleep(5000)
+```
+
+## Data Stores
+
+Three stores are available, differing only in how far their data reaches:
+
+| Store | Scope |
+| ----- | ----- |
+| `localStore` | one target environment within one realm |
+| `realmStore` | every target environment within one realm |
+| `globalStore` | every target environment in every realm of the session |
+
+Each exposes a single method:
+
+```typescript
+use<T>(key: string, initialValue: T): StoreState<T>
+```
+
+It returns a holder whose `value` can be read and written. The call is synchronous, and the holder stays valid for the rest of the session.
+
+```typescript
+script: async (context, { notify }) => {
+  const counter = context.localStore.use('requestCount', 0)
+  counter.value += 1
+  context.sendOutput(`Request #${counter.value}`, notify)
+}
+```
+
+Supply an explicit type argument for anything read by more than one target, otherwise the type is inferred from `initialValue` and an empty initial value will not permit the properties you intend to set.
+
+```typescript
+interface ScenarioState {
+  phase: 'planning' | 'execution'
+  objectivesMet: number
+}
+
+const state = context.globalStore.use<ScenarioState>('scenario', {
+  phase: 'planning',
+  objectivesMet: 0,
+})
+state.value.phase = 'execution'
+```
+
+> **See also:** [Data Stores Guide](../guides/data-stores.md) for caching strategies and multi-target coordination.
+
+## Node Control Methods
+
+All three accept a **node**, **force**, or **mission**.
+
+```typescript
+blockNodes(nodes): void
+unblockNodes(nodes): void
+updateNodeBlockStatus(nodes, blocked: boolean): void
+
+openNode(nodes): void
+closeNode(nodes): void
+updateNodeOpenState(nodes, opened: boolean): void
+
+addNodeAlert(applyTo, message: string, severityLevel): void
+```
+
+Blocking prevents further interaction with a node. Opening reveals the next level of the mission structure beneath it.
+
+```typescript
+script: async (context, { applyTo }) => {
+  context.blockNodes(applyTo)
+  context.openNode(applyTo)
+
+  // Or set the state from a value you computed
+  context.updateNodeBlockStatus(applyTo, shouldBlock)
+}
+```
+
+`addNodeAlert` attaches a message to a node for its operators to read. `severityLevel` is one of `'info'`, `'suspicious'`, `'warning'`, or `'danger'`.
+
+```typescript
+script: async (context, { applyTo, message, severityLevel }) => {
+  context.addNodeAlert(applyTo, message, severityLevel)
+}
+```
+
+## Action Modification Methods
+
+All accept an **action**, **node**, **force**, or **mission**.
+
+```typescript
+modifySuccessChance(applyTo, operand: number): void
+modifyProcessTime(applyTo, operand: number): void
+modifyResourceCost(applyTo, resources, operand: number): void
+```
+
+The operand may be positive or negative.
+
+| Method | Unit | Clamped to |
+| ------ | ---- | ---------- |
+| `modifySuccessChance` | percentage points | 0–100% |
+| `modifyProcessTime` | milliseconds | 0 – 3,600,000 (1 hour) |
+| `modifyResourceCost` | resource amount | minimum 0 |
+
+```typescript
+script: async (context, { applyTo, resources }) => {
+  // Every action beneath whatever was selected
+  context.modifySuccessChance(applyTo, 25)
+  context.modifyProcessTime(applyTo, -30000)
+
+  // Resource costs need the resources whose cost to change
+  context.modifyResourceCost(applyTo, resources, -10)
+}
+```
+
+## Resource Management Methods
+
+```typescript
+modifyResourcePool(applyTo, operand: number): void
+```
+
+Accepts a **resource pool**, **force**, or **mission**. Passing a force affects every pool it holds; passing the mission affects every pool in the mission.
+
+```typescript
+script: async (context, { applyTo }) => {
+  context.modifyResourcePool(applyTo, 50) // award
+  context.modifyResourcePool(applyTo, -25) // deduct
+}
+```
+
+A pool stops at zero unless the mission allows negative balances, which is readable as `allowNegative` on the pool.
+
+## File Access Methods
+
+```typescript
+grantFileAccess(applyTo, files): void
+revokeFileAccess(applyTo, files): void
+updateFileAccess(applyTo, files, granted: boolean): void
+```
+
+`applyTo` accepts a **force** or the **mission**; `files` accepts one or more mission files. Both usually come from `mission-component` parameters.
+
+```typescript
+script: async (context, { forces, files, notify }) => {
+  context.grantFileAccess(forces, files)
+  context.sendOutput(`Granted access to ${files.length} file(s)`, notify)
+
+  // Or set it from a value you computed
+  context.updateFileAccess(forces, files, shouldGrant)
+}
+```
+
+## Session Resets
+
+A session can be reset, which discards gameplay state and starts the mission over. Work begun before a reset must not be allowed to alter the session afterwards.
+
+Each context belongs to one run of the session. If a script tries to change mission state through a context that a reset has superseded, the call raises an `OutdatedContextError` rather than applying to the new run. `context.sleep()` also aborts early, so a script waiting when the session ends resumes instead of hanging.
+
+```typescript
+script: async (context, { notify }) => {
+  await context.sleep(60000)
+
+  // If the session reset while sleeping, this raises OutdatedContextError
+  context.sendOutput('Still here', notify)
+}
+```
+
+Data stores are keyed to the run as well, so a reset starts from empty initial values.
+
+> **See also:** [Session Lifecycle Guide](../guides/session-lifecycle.md) for the full reset model and how to handle `OutdatedContextError`.
+
+## Type Definitions
+
+Every exposed component carries a `componentType` discriminant, so a value from a `mission-component` argument can be narrowed without being told its type in advance.
+
+```typescript
+script: async (context, { applyTo }) => {
+  for (const component of applyTo) {
+    switch (component.componentType) {
+      case 'force':
+        context.sendOutput(`Force: ${component.name}`, component)
+        break
+      case 'node':
+        context.blockNodes(component)
+        break
+    }
+  }
+}
+```
+
+### Component Types
+
+| Type | `componentType` | Notable properties |
+| ---- | --------------- | ------------------ |
+| `TTargetEnvExposedMission` | `'mission'` | `forces`, `allNodes`, `allActions`, `allEffects`, `resources`, `files`, `effects` |
+| `TTargetEnvExposedForce` | `'force'` | `nodes`, `resourcePools`, `localKey`, `color`, `mission` |
+| `TTargetEnvExposedNode` | `'node'` | `actions`, `parent`, `children`, `siblings`, `opened`, `blocked`, `revealed`, `executing`, `force` |
+| `TTargetEnvExposedAction` | `'action'` | `successChance`, `processTime`, `resourceCosts`, `effects`, `type`, `executionCount`, `node` |
+| `TTargetEnvExposedPool` | `'resourcePool'` | `balance`, `initialBalance`, `allowNegative`, `excluded`, `resource`, `force` |
+| `TTargetEnvExposedResource` | `'resource'` | `icon`, `order`, `mission` |
+| `TTargetEnvExposedFile` | `'missionFile'` | `originalName`, `alias`, `extension`, `mimetype`, `size`, `initialAccess` |
+
+> **Note:** A file's `componentType` is `'missionFile'`, and that is also the name used in `validComponentTypes`.
+
+### Supporting Types
+
+```typescript
 interface TTargetEnvExposedMember {
   readonly _id: string
-  readonly username: string
-  readonly role: 'manager' | 'member'
-}
-```
-
-**Usage Examples:**
-
-```ts
-script: async (ctx) => {
-  if (ctx.triggeredBy) {
-    // Execution-triggered effect
-    const { username, role } = ctx.triggeredBy
-    ctx.sendOutput(`Action executed by ${username} (${role})`)
-
-    // Audit logging
-    console.log(`User ${ctx.triggeredBy._id} executed effect ${ctx.effect._id}`)
-  } else {
-    // Session-triggered effect
-    ctx.sendOutput('Automated session lifecycle effect')
-  }
-}
-```
-
-### ctx.session
-
-Provides access to session information.
-
-```ts
-interface TTargetEnvExposedSession {
-  readonly _id: string
   readonly name: string
-  readonly state: TSessionState
-  readonly instanceId: string
+  readonly username: string
+  readonly firstName: string
+  readonly lastName: string
+}
+
+interface TTargetEnvExposedSessionConfig {
+  readonly name?: string
+  readonly accessibility: 'public' | 'id-required' | 'invite-only' | 'owner-only'
+  readonly infiniteResources: boolean
+  readonly targetEnvConfig: TTargetEnvConfig | null
 }
 
 type TSessionState =
@@ -202,1128 +553,29 @@ type TSessionState =
   | 'ending'
   | 'ended'
   | 'resetting'
+
+type TNodeAlertSeverityLevel = 'info' | 'suspicious' | 'warning' | 'danger'
 ```
 
-**Usage Examples:**
+The session exposes `_id`, `name`, `state`, `launchedAt`, `config`, and the membership collections `members`, `joinedMembers`, `participants`, `observers`, and `managers`.
 
-```ts
-script: async (ctx) => {
-  const sessionId = ctx.session._id
-  const sessionName = ctx.session.name
-  const sessionState = ctx.session.state
+An effect exposes `_id`, `localKey`, `name`, `type`, `description`, `trigger`, `order`, its `host`, its `sourceForce` / `sourceNode` / `sourceAction`, its `target` and `environment`, and its `arguments`.
 
-  ctx.sendOutput(`Session: ${sessionName} (State: ${sessionState})`)
+## Related Documentation
 
-  // Store session-specific data
-  ctx.globalStore.use('sessionMetadata', {
-    id: sessionId,
-    startedAt: Date.now(),
-  })
-}
-```
-
-### ctx.config
-
-Provides access to the target environment configuration selected for the session.
-
-```ts
-interface TTargetEnvExposedConfig {
-  readonly targetEnvConfig?: {
-    readonly _id: string
-    readonly name: string
-    readonly data: object // Your configuration data from configs.json
-  }
-}
-```
-
-**Usage Examples:**
-
-```ts
-import { RestApi } from '@metis/api/RestApi'
-
-script: async (ctx) => {
-  // Check if configuration was selected
-  if (!ctx.config.targetEnvConfig) {
-    throw new Error('No configuration selected for this session.')
-  }
-
-  // Access configuration metadata
-  const configId = ctx.config.targetEnvConfig._id
-  const configName = ctx.config.targetEnvConfig.name
-
-  // Access configuration data
-  const { host, port, apiKey } = ctx.config.targetEnvConfig.data
-
-  // Use with API clients
-  const api = RestApi.fromConfig(ctx.config.targetEnvConfig.data)
-  const response = await api.get('/endpoint')
-
-  ctx.sendOutput(`Using config: ${configName}`)
-}
-```
-
-### ctx.effect
-
-Provides access to the current effect and its arguments.
-
-```ts
-interface TTargetEnvExposedEffect {
-  readonly _id: string // Effect ID
-  readonly name: string // Effect name
-  readonly args: TAnyObject // Effect arguments from target schema
-}
-```
-
-**Usage Examples:**
-
-```ts
-script: async (ctx) => {
-  // Access effect metadata
-  const effectId = ctx.effect._id
-  const effectName = ctx.effect.name
-
-  // Access arguments
-  const { hostname, port, sslEnabled } = ctx.effect.args
-
-  ctx.sendOutput(`Executing ${effectName}.`)
-  ctx.sendOutput(`Connecting to ${hostname}:${port}`)
-}
-```
-
-### ctx.mission
-
-Provides access to mission-wide information and structure.
-
-```ts
-interface TTargetEnvExposedMission {
-  readonly _id: string // Mission ID
-  readonly name: string // Mission name
-  readonly forces: TTargetEnvExposedForce[] // All forces in mission
-  readonly nodes: TTargetEnvExposedNode[] // All nodes in mission
-}
-```
-
-**Usage Examples:**
-
-```ts
-script: async (ctx) => {
-  // Access mission metadata
-  const missionId = ctx.mission._id
-  const missionName = ctx.mission.name
-
-  // Access mission structure
-  const allForces = ctx.mission.forces
-  const allNodes = ctx.mission.nodes
-
-  ctx.sendOutput(`Mission: ${missionName} (${allForces.length} forces)`)
-
-  // Find specific forces or nodes
-  const redForce = allForces.find((f) => f.name === 'Red Team')
-  const criticalNodes = allNodes.filter((n) => n.name.includes('Critical'))
-}
-```
-
-### ctx.user
-
-Provides access to user information for the person who triggered the effect.
-
-```ts
-interface TTargetEnvExposedUser {
-  readonly _id: string // User ID
-  readonly username: string // Username
-}
-```
-
-**Usage Examples:**
-
-```ts
-script: async (ctx) => {
-  const userId = ctx.user._id
-  const username = ctx.user.username
-
-  ctx.sendOutput(`Operation initiated by ${username}`)
-
-  // Use user info for audit logging
-  console.log(`User ${userId} (${username}) executed target effect`)
-}
-```
-
-### ctx.localStore
-
-Provides session-scoped data storage specific to the current target environment. Data persists for the duration of the session and is isolated per target environment.
-
-**Usage Examples:**
-
-```ts
-script: async (ctx) => {
-  // Initialize or retrieve a counter
-  const counter = ctx.localStore.use('requestCounter', 0)
-
-  counter.value += 1
-  ctx.sendOutput(`Request #${counter.value} processed`)
-
-  // Cache API responses
-  const apiCache = ctx.localStore.use<Map<string, any>>('apiCache', new Map())
-
-  if (!apiCache.value.has('userList')) {
-    const users = await fetchUsers()
-    apiCache.value.set('userList', users)
-  }
-}
-```
-
-### ctx.globalStore
-
-Provides session-scoped data storage shared across all target environments. Enables communication and state sharing between different targets within the same session.
-
-**Usage Examples:**
-
-```ts
-script: async (ctx) => {
-  // Share session state across target environments
-  const sessionState = ctx.globalStore.use('missionState', {
-    phase: 'planning',
-    objectivesComplete: 0,
-    startTime: Date.now(),
-  })
-
-  // Update shared state
-  sessionState.value.phase = 'execution'
-  sessionState.value.objectivesComplete += 1
-
-  ctx.sendOutput(`Mission phase: ${sessionState.value.phase}`)
-}
-```
-
-## 📤 Output Methods
-
-### ctx.sendOutput()
-
-Sends messages to the mission output panel.
-
-```ts
-sendOutput(message: string, options?: TManipulateForceOptions): void
-```
-
-**Parameters:**
-
-- `message` (string) - The message to display
-- `options` (optional) - Configuration object
-
-**Options:**
-
-```ts
-interface TManipulateForceOptions {
-  forceKey?: string // Target force key (default: 'self')
-}
-```
-
-**Examples:**
-
-```ts
-script: async (ctx) => {
-  const { targetForce } = ctx.effect.args // Assuming force metadata argument
-
-  // Send to current force (default)
-  ctx.sendOutput('Operation starting...')
-
-  // Send to specific force using extracted metadata
-  ctx.sendOutput('Alert: Security breach detected', {
-    forceKey: targetForce.forceKey,
-  })
-
-  // Send to all forces by iterating mission forces
-  const forces = ctx.mission.forces
-  forces.forEach((force) => {
-    ctx.sendOutput('Mission update broadcast', {
-      forceKey: force.localKey,
-    })
-  })
-
-  // Hardcoded keys are also valid when you know the exact force
-  ctx.sendOutput('Direct communication to blue team', {
-    forceKey: 'blue-team',
-  })
-}
-```
-
-### ctx.sleep()
-
-Pauses execution for a specified duration (session-safe alternative to setTimeout).
-
-```ts
-sleep(ms: number): Promise<void>
-```
-
-**Parameters:**
-
-- `ms` (number) - Milliseconds to sleep
-
-**Important:**
-
-- **Always use `context.sleep()` instead of `setTimeout()`** - setTimeout is disabled in target scripts
-- Automatically aborts if session resets, preventing stale callbacks
-- Safe for session lifecycle - won't leave dangling timers
-
-**Examples:**
-
-```ts
-script: async (ctx) => {
-  ctx.sendOutput('Starting operation...')
-
-  // Wait 5 seconds
-  await ctx.sleep(5000)
-
-  ctx.sendOutput('Operation complete after delay')
-
-  // Use in loops for periodic operations
-  for (let i = 0; i < 10; i++) {
-    ctx.sendOutput(`Progress: ${i * 10}%`)
-    await ctx.sleep(1000) // Wait 1 second between updates
-  }
-
-  // Conditional delays
-  if (operationRequiresWarmup) {
-    ctx.sendOutput('Warming up system...')
-    await ctx.sleep(3000)
-  }
-}
-```
-
-**Why Not setTimeout?**
-
-```ts
-// ❌ WRONG - setTimeout is blocked and will throw an error
-script: async (ctx) => {
-  setTimeout(() => {
-    ctx.sendOutput('This will never execute')
-  }, 5000)
-}
-
-// ✅ CORRECT - Use context.sleep()
-script: async (ctx) => {
-  await ctx.sleep(5000)
-  ctx.sendOutput('This executes correctly')
-}
-```
-
-## 📦 Data Store Methods
-
-### ctx.localStore.use()
-
-Retrieves or initializes data in the local store (session and target-environment scoped).
-
-```ts
-use<T>(key: string, defaultValue: T): { value: T }
-```
-
-**Parameters:**
-
-- `key` (string) - Unique identifier for the stored data
-- `defaultValue` (T) - Value to use if key doesn't exist
-
-**Returns:**
-
-- Object with `value` property that can be read and modified
-
-**Examples:**
-
-```ts
-script: async (ctx) => {
-  // Initialize counter
-  const requestCounter = ctx.localStore.use('requests', 0)
-  requestCounter.value += 1
-
-  // Cache expensive API responses
-  const cache = ctx.localStore.use<Map<string, any>>('apiCache', new Map())
-
-  const cacheKey = `data_${args.userId}`
-  if (!cache.value.has(cacheKey)) {
-    const apiData = await fetchExpensiveData(args.userId)
-    cache.value.set(cacheKey, apiData)
-  }
-
-  // Configuration that persists across executions
-  const config = ctx.localStore.use('settings', {
-    retryAttempts: 3,
-    timeout: 5000,
-  })
-
-  if (args.enableDebugMode) {
-    config.value.timeout = 30000
-  }
-}
-```
-
-### ctx.globalStore.use()
-
-Retrieves or initializes data in the global store (session-wide, shared across target environments).
-
-```ts
-use<T>(key: string, defaultValue: T): { value: T }
-```
-
-**Parameters:**
-
-- `key` (string) - Unique identifier for the stored data
-- `defaultValue` (T) - Value to use if key doesn't exist
-
-**Returns:**
-
-- Object with `value` property that can be read and modified
-
-**Examples:**
-
-```ts
-script: async (ctx) => {
-  // Share mission state across different target environments
-  const missionState = ctx.globalStore.use('missionProgress', {
-    phase: 'planning',
-    tasksComplete: 0,
-    startTime: Date.now(),
-  })
-
-  // Update shared state
-  missionState.value.phase = 'execution'
-  missionState.value.tasksComplete += 1
-
-  // Cross-target authentication state
-  const authState = ctx.globalStore.use('authentication', {
-    isAuthenticated: false,
-    sessionToken: null,
-  })
-
-  if (authState.value.isAuthenticated) {
-    ctx.sendOutput('Using existing authentication')
-  } else {
-    // Perform authentication...
-    authState.value.isAuthenticated = true
-    authState.value.sessionToken = 'new-token'
-  }
-
-  // Multi-step workflow coordination
-  const deploymentState = ctx.globalStore.use('deployment', {
-    steps: [],
-    currentStep: 0,
-  })
-
-  deploymentState.value.steps.push({
-    name: ctx.effect.name,
-    completed: true,
-    timestamp: Date.now(),
-  })
-}
-```
-
-## 🎯 Node Control Methods
-
-### ctx.blockNode()
-
-Blocks a node from further interaction.
-
-```ts
-blockNode(options?: TManipulateNodeOptions): void
-```
-
-**Parameters:**
-
-- `options` (optional) - Node targeting configuration
-
-**Options:**
-
-```ts
-interface TManipulateNodeOptions {
-  nodeKey?: string // Target node key (default: 'self')
-  forceKey?: string // Target force key (default: 'self')
-}
-```
-
-**Examples:**
-
-```ts
-script: async (ctx) => {
-  const { targetNode } = ctx.effect.args // Assuming node metadata argument
-
-  // Block current node (default)
-  ctx.blockNode()
-
-  // Block specific node using extracted metadata
-  ctx.blockNode({
-    forceKey: targetNode.forceKey,
-    nodeKey: targetNode.nodeKey,
-  })
-
-  // Block node in current force using just nodeKey
-  ctx.blockNode({
-    nodeKey: targetNode.nodeKey,
-  })
-
-  // Hardcoded keys when you know the exact targets
-  ctx.blockNode({
-    forceKey: 'red-team',
-    nodeKey: 'server-room',
-  })
-}
-```
-
-### ctx.unblockNode()
-
-Unblocks a node, allowing interaction.
-
-```ts
-unblockNode(options: TManipulateNodeOptions): void
-```
-
-**Parameters:**
-
-- `options` (required) - Node targeting configuration
-
-**Examples:**
-
-```ts
-script: async (ctx) => {
-  const { targetNode } = ctx.effect.args // Assuming node metadata argument
-
-  // Unblock specific node using extracted metadata (options required)
-  ctx.unblockNode({
-    forceKey: targetNode.forceKey,
-    nodeKey: targetNode.nodeKey,
-  })
-
-  // Unblock node in current force using just nodeKey
-  ctx.unblockNode({
-    nodeKey: targetNode.nodeKey,
-  })
-
-  // Hardcoded keys when you know the exact targets
-  ctx.unblockNode({
-    forceKey: 'blue-team',
-    nodeKey: 'firewall',
-  })
-}
-```
-
-### ctx.openNode()
-
-Opens a node to reveal the next level in the mission structure.
-
-```ts
-openNode(options?: TManipulateNodeOptions): void
-```
-
-**Parameters:**
-
-- `options` (optional) - Node targeting configuration
-
-**Examples:**
-
-```ts
-script: async (ctx) => {
-  const { targetNode } = ctx.effect.args // Assuming node metadata argument
-
-  // Open current node (default)
-  ctx.openNode()
-
-  // Open specific node using extracted metadata
-  ctx.openNode({
-    forceKey: targetNode.forceKey,
-    nodeKey: targetNode.nodeKey,
-  })
-
-  // Hardcoded keys when you know the exact target
-  ctx.openNode({
-    forceKey: 'red-team',
-    nodeKey: 'network-segment',
-  })
-}
-```
-
-## ⚡ Action Modification Methods
-
-### ctx.modifySuccessChance()
-
-Modifies an action's probability of success.
-
-```ts
-modifySuccessChance(operand: number, options?: TManipulateActionOptions): void
-```
-
-**Parameters:**
-
-- `operand` (number) - Amount to modify (positive or negative)
-- `options` (optional) - Action targeting configuration
-
-**Constraints:**
-
-- Result clamped to 0-100%
-- Affects all actions in node if no specific action targeted
-
-**Options:**
-
-```ts
-interface TManipulateActionOptions {
-  actionKey?: string // Target action key (default: all actions in node)
-  nodeKey?: string // Target node key (default: 'self')
-  forceKey?: string // Target force key (default: 'self')
-}
-```
-
-**Examples:**
-
-```ts
-script: async (ctx) => {
-  const { targetAction } = ctx.effect.args // Assuming action metadata argument
-
-  // Increase success chance for current node's actions by 25%
-  ctx.modifySuccessChance(25)
-
-  // Decrease success chance for specific action using extracted metadata
-  ctx.modifySuccessChance(-50, {
-    forceKey: targetAction.forceKey,
-    nodeKey: targetAction.nodeKey,
-    actionKey: targetAction.actionKey,
-  })
-
-  // Boost all actions in a specific node using node metadata
-  const { targetNode } = ctx.effect.args
-  ctx.modifySuccessChance(15, {
-    forceKey: targetNode.forceKey,
-    nodeKey: targetNode.nodeKey,
-  })
-
-  // Hardcoded keys when you know exact targets
-  ctx.modifySuccessChance(-30, {
-    forceKey: 'red-team',
-    nodeKey: 'firewall',
-    actionKey: 'brute-force',
-  })
-}
-```
-
-### ctx.modifyProcessTime()
-
-Modifies how long an action takes to execute.
-
-```ts
-modifyProcessTime(operand: number, options?: TManipulateActionOptions): void
-```
-
-**Parameters:**
-
-- `operand` (number) - Milliseconds to add/subtract
-- `options` (optional) - Action targeting configuration
-
-**Constraints:**
-
-- Result clamped to 0s - 1 hour (3,600s)
-- Affects all actions in node if no specific action targeted
-
-**Examples:**
-
-```ts
-script: async (ctx) => {
-  const { targetAction } = ctx.effect.args // Assuming action metadata argument
-
-  // Speed up current actions by 30 seconds
-  ctx.modifyProcessTime(-30000)
-
-  // Slow down specific action using extracted metadata
-  ctx.modifyProcessTime(120000, {
-    forceKey: targetAction.forceKey,
-    nodeKey: targetAction.nodeKey,
-    actionKey: targetAction.actionKey,
-  })
-
-  // Add time to all actions in a node using node metadata
-  const { targetNode } = ctx.effect.args
-  ctx.modifyProcessTime(45000, {
-    forceKey: targetNode.forceKey,
-    nodeKey: targetNode.nodeKey,
-  })
-
-  // Hardcoded keys when you know exact targets
-  ctx.modifyProcessTime(90000, {
-    forceKey: 'red-team',
-    nodeKey: 'encryption',
-    actionKey: 'decrypt',
-  })
-}
-```
-
-### ctx.modifyResourceCost()
-
-Modifies the resource cost of actions.
-
-```ts
-modifyResourceCost(resourceId: string, operand: number, options?: TManipulateActionOptions): void
-```
-
-**Parameters:**
-
-- `resourceId` (string) - ID of the resource whose cost to modify
-- `operand` (number) - Resource amount to add/subtract
-- `options` (optional) - Action targeting configuration
-
-**Constraints:**
-
-- Result clamped to minimum 0
-- Affects all actions in node if no specific action targeted
-
-**Examples:**
-
-```ts
-script: async (ctx) => {
-  const { targetAction, resourceMetadata } = ctx.effect.args // Assuming action and resource metadata arguments
-  const { resourceId } = resourceMetadata
-
-  // Reduce resource cost for current actions by 10
-  ctx.modifyResourceCost(resourceId, -10)
-
-  // Increase cost for specific action using extracted metadata
-  ctx.modifyResourceCost(resourceId, 25, {
-    forceKey: targetAction.forceKey,
-    nodeKey: targetAction.nodeKey,
-    actionKey: targetAction.actionKey,
-  })
-
-  // Make actions cheaper in a node using node metadata
-  const { targetNode } = ctx.effect.args
-  ctx.modifyResourceCost(resourceId, -5, {
-    forceKey: targetNode.forceKey,
-    nodeKey: targetNode.nodeKey,
-  })
-
-  // Hardcoded keys when you know exact targets
-  ctx.modifyResourceCost(resourceId, 15, {
-    forceKey: 'blue-team',
-    nodeKey: 'intrusion-detection',
-    actionKey: 'deep-scan',
-  })
-}
-```
-
-## 💰 Resource Management Methods
-
-### ctx.modifyResourcePool()
-
-Modifies a force's available resource pool.
-
-```ts
-modifyResourcePool(operand: number, options?: TManipulateForceOptions): void
-```
-
-**Parameters:**
-
-- `operand` (number) - Resources to add (positive) or subtract (negative)
-- `options` (optional) - Force and pool targeting configuration
-
-**Examples:**
-
-```ts
-script: async (ctx) => {
-  const { targetForce, poolMetadata } = ctx.effect.args // Assuming force and pool metadata arguments
-  const { forceKey, poolKey } = poolMetadata
-
-  // Add 50 resources to a specific pool on the current force
-  ctx.modifyResourcePool(50, { poolKey })
-
-  // Subtract resources from a specific force and pool
-  ctx.modifyResourcePool(-25, {
-    forceKey: targetForce.forceKey,
-    poolKey,
-  })
-
-  // Hardcoded keys when you know the exact force and pool
-  ctx.modifyResourcePool(-30, {
-    forceKey: 'red-team',
-    poolKey: 'intel-pool',
-  })
-}
-
-  // Penalty for failed operation
-  if (operationFailed) {
-    ctx.modifyResourcePool(-100, { poolKey })
-    ctx.sendOutput('Operation failed - resource penalty applied')
-  }
-}
-```
-
-## 📁 File Access Methods
-
-### ctx.grantFileAccess()
-
-Grants a force access to a mission file.
-
-```ts
-grantFileAccess(fileId: string, forceKey: string): void
-```
-
-**Parameters:**
-
-- `fileId` (string) - ID of the file to grant access to
-- `forceKey` (string) - Local key of the force to grant access
-
-**Examples:**
-
-```ts
-script: async (ctx) => {
-  const { targetFile, targetForce } = ctx.effect.args // File and force metadata arguments
-
-  // Grant access using extracted file and force metadata
-  ctx.grantFileAccess(targetFile.fileId, targetForce.forceKey)
-
-  // Grant access to current force using file metadata
-  ctx.grantFileAccess(targetFile.fileId, 'self')
-
-  // Hardcoded approach when you know exact values
-  ctx.grantFileAccess('file-123', 'blue-team')
-
-  ctx.sendOutput(`Granted access to ${targetFile.filename}`)
-}
-```
-
-### ctx.revokeFileAccess()
-
-Revokes a force's access to a mission file.
-
-```ts
-revokeFileAccess(fileId: string, forceKey: string): void
-```
-
-**Parameters:**
-
-- `fileId` (string) - ID of the file to revoke access from
-- `forceKey` (string) - Local key of the force to revoke access
-
-**Examples:**
-
-```ts
-script: async (ctx) => {
-  const { targetFile, targetForce } = ctx.effect.args // File and force metadata arguments
-
-  // Revoke access using extracted metadata
-  ctx.revokeFileAccess(targetFile.fileId, targetForce.forceKey)
-
-  // Hardcoded approach when you know exact values
-  ctx.revokeFileAccess(targetFile.fileId, 'red-team')
-
-  ctx.sendOutput(`Revoked access to ${targetFile.filename}`)
-}
-```
-
-## 🔑 Method Options
-
-### Key Resolution
-
-All methods support flexible key resolution:
-
-- `'self'` - Current effect's force/node/action
-- `string` - Specific local key to target
-- `undefined` - Default behavior (usually 'self')
-
-### Force Keys
-
-```ts
-interface TManipulateForceOptions {
-  forceKey?: string // 'self' | '<force-local-key>'
-}
-```
-
-### Node Keys
-
-```ts
-interface TManipulateNodeOptions {
-  forceKey?: string // 'self' | '<force-local-key>'
-  nodeKey?: string // 'self' | '<node-local-key>'
-}
-```
-
-### Action Keys
-
-```ts
-interface TManipulateActionOptions {
-  forceKey?: string // 'self' | '<force-local-key>'
-  nodeKey?: string // 'self' | '<node-local-key>'
-  actionKey?: string // 'self' | 'all' | '<action-local-key>'
-}
-```
-
-**Special Action Key Values:**
-
-- `'self'` - Current effect's action only
-- `'all'` - All actions in the target node (default)
-- `'<key>'` - Specific action by local key
-
-## 📊 Type Definitions
-
-### Mission Structure Types
-
-```ts
-interface TTargetEnvExposedMission {
-  readonly _id: string
-  readonly name: string
-  get forces(): TTargetEnvExposedForce[]
-  get nodes(): TTargetEnvExposedNode[]
-}
-
-interface TTargetEnvExposedForce {
-  readonly _id: string
-  readonly name: string
-  readonly nodes: TTargetEnvExposedNode[]
-}
-
-interface TTargetEnvExposedNode {
-  readonly _id: string
-  readonly name: string
-  readonly description: string
-  readonly actions: TTargetEnvExposedAction[]
-}
-
-interface TTargetEnvExposedAction {
-  readonly _id: string
-  readonly name: string
-  readonly description: string
-  readonly successChance: number
-  readonly processTime: number
-  readonly resourceCost: number
-  readonly effects: TTargetEnvExposedEffect[]
-}
-
-interface TTargetEnvExposedEffect {
-  readonly _id: string
-  readonly name: string
-  readonly forceName: string
-  readonly args: TAnyObject
-}
-```
-
-### Option Types
-
-```ts
-interface TManipulateForceOptions {
-  forceKey?: string
-  poolKey?: string
-}
-
-interface TManipulateNodeOptions {
-  forceKey?: string
-  nodeKey?: string
-}
-
-interface TManipulateActionOptions {
-  forceKey?: string
-  nodeKey?: string
-  actionKey?: string
-}
-```
-
-### User Structure Types
-
-```ts
-interface TTargetEnvExposedUser {
-  readonly _id: string
-  readonly username: string
-}
-```
-
-## 💡 Usage Examples
-
-### Auto-Generated Argument Objects
-
-When using `force`, `node`, `action`, or `file` argument types, METIS automatically generates objects containing the selected keys and metadata. These are not manually defined values, but objects with auto-generated properties.
-
-#### Argument Type Definitions
-
-```ts
-// Target definition with different metadata argument types
-args: [
-  {
-    _id: 'targetForce', // Your argument ID
-    type: 'force', // Auto-generates TForceMetadata object
-    // ... other arg properties
-  },
-  {
-    _id: 'targetNode', // Your argument ID
-    type: 'node', // Auto-generates TNodeMetadata object
-    // ... other arg properties
-  },
-  {
-    _id: 'targetAction', // Your argument ID
-    type: 'action', // Auto-generates TActionMetadata object
-    // ... other arg properties
-  },
-  {
-    _id: 'configFile', // Your argument ID
-    type: 'file', // Auto-generates TFileMetadata object
-    // ... other arg properties
-  },
-]
-```
-
-#### Extracting Auto-Generated Objects
-
-In your target script, extract the metadata objects from `ctx.effect.args`:
-
-```ts
-script: async (ctx) => {
-  const { targetForce, targetNode, targetAction, configFile } = ctx.effect.args
-
-  // Type-safe access with global types:
-  const forceMetadata: TForceMetadata = targetForce
-  const nodeMetadata: TNodeMetadata = targetNode
-  const actionMetadata: TActionMetadata | undefined = targetAction
-  const fileMetadata: TFileMetadata = configFile
-
-  // Extract keys for use in context methods:
-  const forceKey = forceMetadata.forceKey
-  const nodeKey = nodeMetadata.nodeKey
-  const actionKey = actionMetadata?.actionKey
-  const fileId = fileMetadata.fileId // Note: files use fileId, not fileKey
-}
-```
-
-#### Metadata Object Properties
-
-Each auto-generated object contains different properties:
-
-```ts
-// TForceMetadata object:
-const forceMetadata = {
-  forceKey: '<generated-force-key>',
-  // ... other force properties
-}
-
-// TNodeMetadata object:
-const nodeMetadata = {
-  forceKey: '<generated-force-key>',
-  nodeKey: '<generated-node-key>',
-  // ... other node properties
-}
-
-// TActionMetadata object:
-const actionMetadata = {
-  forceKey: '<generated-force-key>',
-  nodeKey: '<generated-node-key>',
-  actionKey: '<generated-action-key>',
-  // ... other action properties
-}
-
-// TFileMetadata object:
-const fileMetadata = {
-  fileId: '<generated-file-id>', // Note: fileId, not fileKey
-  fileName: 'config.json',
-  // ... other file properties
-}
-```
-
-#### Using Extracted Keys
-
-Use the extracted keys with context methods:
-
-```ts
-script: async (ctx) => {
-  const { targetForce, targetNode, targetAction, configFile } = ctx.effect.args
-
-  // Extract keys
-  const forceKey = targetForce.forceKey
-  const nodeKey = targetNode.nodeKey
-  const actionKey = targetAction?.actionKey
-  const fileId = configFile.fileId
-
-  // Use keys with context methods
-  ctx.blockNode({ nodeKey, forceKey })
-
-  if (actionKey) {
-    ctx.modifySuccessChance(50, { actionKey, nodeKey, forceKey })
-  }
-
-  // Access file information
-  ctx.sendOutput(`Using config file: ${configFile.fileName}`)
-}
-```
-
-**Important:** The `forceKey`, `nodeKey`, `actionKey`, and `fileId` values are automatically generated by METIS based on user selections in the UI. You cannot manually set these values - they must be extracted from the argument objects.
-
-**TypeScript Support:** Import `TForceMetadata`, `TNodeMetadata`, `TActionMetadata`, and `TFileMetadata` types from the `shared` package for full type safety.
-
-### Complete Target Example
-
-```ts
-export default new TargetSchema({
-  name: 'Network Intrusion',
-  description: 'Attempt to penetrate target network defenses',
-  args: [
-    {
-      _id: 'targetNode',
-      name: 'Target Node',
-      type: 'node',
-      required: true,
-    },
-    {
-      _id: 'attackType',
-      name: 'Attack Type',
-      type: 'dropdown',
-      required: true,
-      default: { _id: 'stealth', name: 'Stealth', value: 'stealth' },
-      options: [
-        { _id: 'stealth', name: 'Stealth', value: 'stealth' },
-        { _id: 'aggressive', name: 'Aggressive', value: 'aggressive' },
-      ],
-    },
-  ],
-  script: async (ctx) => {
-    const { targetNode, attackType } = ctx.effect.args
-    const username = ctx.user.username
-
-    ctx.sendOutput(`${username} initiating ${attackType} attack`)
-
-    if (attackType === 'stealth') {
-      // Stealth approach - higher success, longer time
-      ctx.modifySuccessChance(15, {
-        forceKey: targetNode.forceKey,
-        nodeKey: targetNode.nodeKey,
-      })
-      ctx.modifyProcessTime(30000, {
-        forceKey: targetNode.forceKey,
-        nodeKey: targetNode.nodeKey,
-      })
-      ctx.sendOutput('Using stealth approach - increased success chance')
-    } else {
-      // Aggressive approach - lower success, faster
-      ctx.modifySuccessChance(-10, {
-        forceKey: targetNode.forceKey,
-        nodeKey: targetNode.nodeKey,
-      })
-      ctx.modifyProcessTime(-15000, {
-        forceKey: targetNode.forceKey,
-        nodeKey: targetNode.nodeKey,
-      })
-      ctx.sendOutput('Using aggressive approach - faster but riskier')
-    }
-
-    // Resource cost for the attack
-    ctx.modifyResourcePool(-20)
-    ctx.sendOutput('Resources consumed for attack')
-  },
-})
-```
-
-## 📖 Related Documentation
-
-### 📋 Essential Guides
+### Essential Guides
 
 - **[Defining Targets](../guides/defining-targets.md)** - Target schema and script creation
-- **[Session Lifecycle & Instance Protection](../guides/session-lifecycle.md)** - Session resets and OutdatedContextError
-- **[Environment Hooks](../guides/environment-hooks.md)** - Lifecycle management for persistent connections
+- **[Session Lifecycle](../guides/session-lifecycle.md)** - Session resets and `OutdatedContextError`
+- **[Environment Hooks](../guides/environment-hooks.md)** - Setup and teardown for persistent connections
 - **[Data Stores](../guides/data-stores.md)** - Caching and sharing data between script executions
-- **[Target-Effect Conversion](../guides/target-effect-conversion.md)** - Argument handling and extraction
-- **[Argument Types](../guides/argument-types.md)** - Mission component argument usage
+- **[Parameter and Argument Types](../guides/parameter-and-argument-types.md)** - Every parameter type, including `mission-component`
 
-### 💡 Examples
+### Examples
 
 - **[Basic Target](../examples/basic-target.md)** - Simple context API usage
 - **[Complex Target](../examples/complex-target.md)** - Advanced context patterns
 
-### 🔗 References
+### References
 
-- **[Schema Documentation](schemas.md)** - TypeScript types, interfaces, and effect object structure
+- **[Schema Documentation](schemas.md)** - TypeScript types, interfaces, and target schema structure
