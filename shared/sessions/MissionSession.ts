@@ -699,7 +699,6 @@ export type TSessionConfig = {
    * in standalone mode.
    * @note Required when `mode` is `'standalone'`; ignored
    * otherwise.
-   * @default null
    */
   standaloneForceId?: string
   /**
