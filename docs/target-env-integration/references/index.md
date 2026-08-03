@@ -38,7 +38,7 @@ WebSocket integration for live data streams:
 Exact specifications for all data structures:
 
 - Target environment and definition schemas
-- Argument type specifications and validation rules
+- Parameter type specifications and validation rules
 - Interface definitions for custom components
 
 ### **[Environment Configuration](environment-configuration.md)** - Setup and deployment
@@ -65,4 +65,4 @@ Configuration reference for all environments:
 - **[Implementation Guides](../guides/index.md)** - Step-by-step tutorials using these APIs
 - **[Examples](../examples/index.md)** - See these references in working code
 - **[Migration Guide](../guides/migrations.md)** - Version management patterns
-- **[REST API Endpoints](/docs/api/target-environments.md)** - Server-side API documentation
+- **[REST API Endpoints](../../api/target-environments.md)** - Server-side API documentation

@@ -29,6 +29,6 @@ Production-ready patterns for sophisticated use cases:
 ## Related Documentation
 
 - **[Implementation Guides](../guides/index.md)** - Step-by-step instructions for building these patterns
-- **[Quickstart Guide](../quickstart.md)** - Create your first target environment in 10 minutes
+- **[Quickstart Guide](../quickstart.md)** - Create your first target environment in 5 minutes
 - **[Migration Guide](../guides/migrations.md)** - Version upgrade patterns and data migration
 - **[Technical References](../references/index.md)** - Complete API documentation

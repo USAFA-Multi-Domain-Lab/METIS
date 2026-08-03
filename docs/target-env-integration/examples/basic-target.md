@@ -47,13 +47,11 @@ Create the target schema at `/integration/target-env/hello-world/targets/greetin
 /**
  * A target that creates a personalized greeting message.
  */
-const Greeting = new TargetSchema({
+const Greeting = TargetSchema.create({
+  _id: 'greeting',
   name: 'Create Greeting',
   description: 'Generates a personalized greeting message',
-  script: async (context) => {
-    // Extract arguments from the effect
-    const { name, language, forceMetadata } = context.effect.args
-
+  script: async (context, { notify, name, language }) => {
     // Create greeting based on language selection
     let greeting: string
     switch (language) {
@@ -69,18 +67,16 @@ const Greeting = new TargetSchema({
         break
     }
 
-    // Output the greeting to the force's output panel
-    context.sendOutput(greeting, {
-      forceKey: forceMetadata.forceKey,
-    })
+    // Output the greeting to the selected force's output panel
+    context.sendOutput(greeting, notify)
   },
-  args: [
+  parameters: [
     {
-      _id: 'forceMetadata',
+      _id: 'notify',
       name: 'Target Force',
-      type: 'force',
-      required: true,
+      type: 'mission-component',
       groupingId: 'target',
+      validComponentTypes: ['mission', 'force'],
       tooltipDescription: 'The force that will receive the greeting message',
     },
     {
@@ -97,7 +93,7 @@ const Greeting = new TargetSchema({
       name: 'Language',
       type: 'dropdown',
       required: true,
-      default: { _id: 'english', name: 'English', value: 'english' },
+      default: 'english',
       groupingId: 'greeting',
       tooltipDescription: 'Select the language for the greeting',
       options: [
@@ -148,36 +144,40 @@ const HelloWorld = new TargetEnvSchema({
 ### Target Schema
 
 ```typescript
-const Greeting = new TargetSchema({
-  name: 'Create Greeting',               // Target name in UI
+const Greeting = TargetSchema.create({
+  _id: 'greeting',                              // Unique identifier
+  name: 'Create Greeting',                      // Target name in UI
   description: 'Generates a personalized greeting message',
-  script: async (context) => { ... },   // Execution logic
-  args: [ ... ]                         // User-configurable arguments
+  script: async (context, effectArguments) => { ... },  // Execution logic
+  parameters: [ ... ],                          // User-configurable inputs
 })
 ```
 
-**Key Components:**
+**Key Points:**
 
-#### The Script Function
+- **`_id`**: Required, and distinct from the folder name
+- **`parameters`**: Define the form an author fills in when creating an effect
+- **`script`**: Receives the context and the argument values for those parameters
+
+### The Script Function
+
+The script's second parameter holds the argument values, named after each parameter's `_id`:
 
 ```typescript
-script: async (context) => {
-  // Access user-provided arguments
-  const { name, language, forceMetadata } = context.effect.args
-
+script: async (context, { notify, name, language }) => {
   // Perform operations
   let greeting = `Hello, ${name}!`
 
   // Output results to METIS
-  context.sendOutput(greeting, {
-    forceKey: forceMetadata.forceKey,
-  })
+  context.sendOutput(greeting, notify)
 }
 ```
 
-#### Argument Definitions
+To read a value by parameter `_id` instead of destructuring, use `context.getArguments('name')`, or pass an array to read several at once.
 
-Each argument has essential properties:
+### Parameter Definitions
+
+Each parameter has essential properties:
 
 ```typescript
 {
@@ -185,9 +185,22 @@ Each argument has essential properties:
   name: 'Name',                   // Display label
   type: 'string',                 // Input type
   required: true,                 // Validation
-  default: 'John D.',             // Ensures there's a value
+  default: 'John D.',             // Required whenever `required` is true
   groupingId: 'greeting',         // UI grouping
   tooltipDescription: '...',      // Help text
+}
+```
+
+The `notify` parameter uses the `mission-component` type, which lets the effect's author pick what the target acts on. `validComponentTypes` limits the picker, and the resulting argument is an array of the selected components:
+
+```typescript
+{
+  _id: 'notify',
+  name: 'Target Force',
+  type: 'mission-component',
+  groupingId: 'target',
+  validComponentTypes: ['mission', 'force'],
+  tooltipDescription: '...',
 }
 ```
 
@@ -212,14 +225,14 @@ Started server on port <your-port>
 1. **Create or open a mission**
 2. **Navigate to a force** (not "Master")
 3. **Find an executable mission node** (has lightning bolt icon)
-4. **Click on an action** in the side panel
-5. **Scroll to effects section** at bottom of side panel
-6. **Click "+"** at the top of the effects list
-7. **Click "Custom Effect"** in the context menu
-8. **Select "Hello World"** from target environment dropdown
+4. **Click on an action** — the Inspector tab comes forward automatically
+5. **Find the effect timeline** in the Inspector
+6. **Click "+"** on the timeline section for the trigger you want
+7. **Click "Custom Effect"** in the menu that appears
+8. **Select "Hello World"** from the target environment dropdown in the "Create Effect" view
 9. **Select the "Create Greeting"** target
-10. **Fill in the arguments**:
-    - **Target Force**: Select a force
+10. **Fill in the parameters**:
+    - **Target Force**: Choose a force, or the mission to reach everyone
     - **Name**: Enter any name (e.g., "John")
     - **Language**: Choose from dropdown
 11. **Save and execute** the action that the effect is tied to during a session
@@ -241,8 +254,8 @@ When executed, you should see:
 
 ### "Effects not working"
 
-- **Check context usage**: Ensure `context.effect.args` data is correct when the target script executes
-- **Verify force metadata**: `forceKey` must be valid (Note: _"self"_ is a **valid** value for `forceKey`)
+- **Check argument values**: Ensure the values passed to the script are correct when it executes
+- **Verify the component selection**: A `mission-component` argument is an array of the components the author selected, and is empty if they selected nothing
 - **Check async/await**: Script function should handle promises properly
 
 ## Next Steps
@@ -252,8 +265,8 @@ Now that you have a basic target environment working:
 1. **Explore Complex Patterns** → See [Complex Target Example](complex-target.md)
 2. **Learn About Migrations** → See [Migration Guide](../guides/migrations.md)
 3. **Study Tips & Conventions** → See [Tips & Conventions](../guides/tips-and-conventions.md)
-4. **Advanced Arguments** → See [Argument Types Guide](../guides/argument-types.md)
-5. **Explore the METIS Target Environment Implementation** → See [METIS Target Environment](/integration/target-env/METIS/schema.ts)
+4. **Advanced Arguments** → See [Parameter and Argument Types](../guides/parameter-and-argument-types.md)
+5. **Explore the METIS Target Environment Implementation** → See [METIS Target Environment](../../../integration/target-env/metis/schema.ts)
 
 ## Related Documentation
 

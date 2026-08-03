@@ -6,9 +6,10 @@ Step-by-step guides for developing target environments in METIS. Each guide prov
 
 New to target environment development? Follow this path:
 
-1. **[Creating Target Environments](creating-target-environments.md)** → Set up your project
-2. **[Defining Targets](defining-targets.md)** → Build your first operations
-3. **[Argument Types](argument-types.md)** → Create user-friendly interfaces
+1. **[Install an Existing Target Environment](installing-existing-target-environments.md)** → Pull one down with the METIS CLI
+2. **[Creating Target Environments](creating-target-environments.md)** → Set up your project
+3. **[Defining Targets](defining-targets.md)** → Build your first operations
+4. **[Parameter and Argument Types](parameter-and-argument-types.md)** → Create user-friendly interfaces
 
 ## 🔗 Connect External Systems
 
@@ -35,15 +36,15 @@ New to target environment development? Follow this path:
 
 - **[Data Stores](data-stores.md)** - Cache and share data between script executions
 
-  - Session-scoped data persistence
-  - Local vs global store patterns
+  - Realm-scoped and session-scoped data persistence
+  - Local, realm, and global store patterns
   - Performance optimization techniques
 
 - **[Target-Effect Conversion](target-effect-conversion.md)** - How targets become effects
 
-  - Understanding the conversion process
-  - Argument binding and validation
-  - Runtime context and execution flow
+  - What your script receives for each parameter type
+  - Unset values, and when an argument is `undefined`
+  - Reconciling stored arguments when a target changes
 
 - **[Migrations](migrations.md)** - Manage versions and data changes
 
@@ -60,4 +61,4 @@ New to target environment development? Follow this path:
 
 - **[Examples](../examples/index.md)** - See these guides in action
 - **[Technical References](../references/index.md)** - API documentation and schemas
-- **[Quickstart](../quickstart.md)** - Get started in 10 minutes
+- **[Quickstart](../quickstart.md)** - Get started in 5 minutes
