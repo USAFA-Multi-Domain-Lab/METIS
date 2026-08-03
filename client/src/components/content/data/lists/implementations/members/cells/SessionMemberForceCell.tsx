@@ -69,15 +69,17 @@ export default function SessionMemberForceCell({
   const targetManipulatesNodes: boolean = member.isAuthorized('manipulateNodes')
 
   /**
+   * Whether the target member can only view the force they are
+   * assigned to.
+   */
+  const targetLimitedVisibility: boolean =
+    !member.isAuthorized('manipulateNodes')
+
+  /**
    * Whether the current member has complete visibility.
    */
   const currentCompleteVisibility: boolean =
     currentMember.isAuthorized('completeVisibility')
-
-  /**
-   * Whether the current member has limited visibility.
-   */
-  const currentLimitedVisibility: boolean = member.roleId === 'observer_limited'
 
   /**
    * Whether the dropdown to assign a force to the member should
@@ -135,9 +137,9 @@ export default function SessionMemberForceCell({
       text = 'N/A'
     } else if (targetCompleteVisibility) {
       text = targetManipulatesNodes ? 'Complete control' : 'Complete visibility'
-    } else if (!currentCompleteVisibility && !currentLimitedVisibility) {
+    } else if (!currentCompleteVisibility && !targetLimitedVisibility) {
       text = targetEffectivelyAssigned ? 'Assigned' : 'Not assigned'
-    } else if (!currentCompleteVisibility && currentLimitedVisibility) {
+    } else if (!currentCompleteVisibility && targetLimitedVisibility) {
       text = targetEffectivelyAssigned ? 'Assigned (view only)' : 'Not assigned'
     } else if (assignedForce) {
       delete style.fontStyle
