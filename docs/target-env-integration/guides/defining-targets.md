@@ -5,20 +5,20 @@ This guide covers everything you need to know about creating individual targets 
 ## Table of Contents
 
 - [Overview](#overview)
-- [⚠️ Key Requirements](#️-key-requirements)
+- [Key Requirements](#key-requirements)
 - [Basic Target Structure](#basic-target-structure)
 - [Target Schema Properties](#target-schema-properties)
 - [The Script Function](#the-script-function)
-- [Working with Arguments](#working-with-arguments)
+- [Working with Parameters](#working-with-parameters)
 - [Working with Data Stores](#working-with-data-stores)
-- [🔗 External API Integration](#-external-api-integration)
-- [🔄 Migrations](#-migrations)
-- [📚 Examples](#-examples)
-- [🧪 Testing Your Targets](#-testing-your-targets)
-- [📁 Folder Organization](#-folder-organization)
-- [⚡ Performance Considerations](#-performance-considerations)
-- [🔧 Troubleshooting](#-troubleshooting)
-- [📖 Related Documentation](#-related-documentation)
+- [External API Integration](#external-api-integration)
+- [Migrations](#migrations)
+- [Examples](#examples)
+- [Testing Your Targets](#testing-your-targets)
+- [Folder Organization](#folder-organization)
+- [Performance Considerations](#performance-considerations)
+- [Troubleshooting](#troubleshooting)
+- [Related Documentation](#related-documentation)
 
 ## Overview
 
@@ -27,48 +27,57 @@ A target is a single executable unit that:
 - Accepts typed arguments from users
 - Performs specific operations (API calls, file processing, system commands, etc.)
 - Provides real-time output and results
-- Supports conditional arguments
+- Supports conditional parameters
 
-Each target lives in its own folder with a `schema.ts` file that exports a `TargetSchema`.
+Each target lives in its own folder with a `schema.ts` file that default-exports a target created with `TargetSchema.create()`.
 
-## ⚠️ Key Requirements
+## Key Requirements
 
-- **One target per folder** - File must default-export `TargetSchema`
-- **Kebab-case folder names** - Folder name becomes the target `_id`
-- **System-managed IDs** - Don't hardcode `_id` or `targetEnvId`
-- **Start small** - Add args incrementally and test discovery/output early
+- **One target per folder** - The file must default-export the result of `TargetSchema.create()`
+- **Declare an `_id`** - Every target sets its own `_id`, and it must be unique within the environment
+- **Never set `targetEnvId`** - That is assigned from the environment's folder name
+- **Kebab-case folder names** - Folders are only where discovery looks; they do not determine the target's `_id`
+- **Start small** - Add parameters incrementally and test discovery and output early
+
+> **Note:** The `_id` is what saved effects reference, so changing it on an existing target orphans every effect built from it. Treat it as permanent, or supply a migration.
 
 ## Basic Target Structure
 
 ### Minimal Target Example
 
-```ts
+```typescript
 // integration/target-env/my-env/targets/ping/schema.ts
 
-export default new TargetSchema({
+export default TargetSchema.create({
+  _id: 'ping',
   name: 'Ping Host',
   description: 'Check if a host is reachable',
-  args: [
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      validComponentTypes: ['mission', 'force'],
+    },
     {
       _id: 'hostname',
       name: 'Hostname',
       type: 'string',
       required: true,
+      default: 'localhost',
     },
   ],
-  script: async (ctx) => {
-    const { hostname } = ctx.effect.args
-    ctx.sendOutput(`Pinging ${hostname}...`)
+  script: async (ctx, { notify, hostname }) => {
+    ctx.sendOutput(`Pinging ${hostname}...`, notify)
 
     // Your implementation logic here
     // Example: perform a check here and set success accordingly
     const success = true
 
     if (success) {
-      ctx.sendOutput(`✓ ${hostname} is reachable`)
+      ctx.sendOutput(`${hostname} is reachable`, notify)
     } else {
-      ctx.sendOutput(`✗ ${hostname} is not reachable`)
-      // Consider early return or additional handling as needed
+      ctx.sendOutput(`${hostname} is not reachable`, notify)
     }
   },
 })
@@ -76,80 +85,89 @@ export default new TargetSchema({
 
 ## Target Schema Properties
 
-> 💡 **Need detailed argument types?** See the **[Argument Types Guide](argument-types.md)** for complete type reference and examples.
+> **Need detailed parameter types?** See the **[Parameter and Argument Types](parameter-and-argument-types.md)** for complete type reference and examples.
 
 ### Required Properties
 
-| Property      | Type          | Description                                   |
-| ------------- | ------------- | --------------------------------------------- |
-| `name`        | string        | Display name shown in the UI                  |
-| `description` | string        | Brief explanation of what the target does     |
-| `script`      | TTargetScript | Async function that executes the target logic |
+| Property      | Type                     | Description                                          |
+| ------------- | ------------------------ | ---------------------------------------------------- |
+| `_id`         | `string`                 | Unique identifier for the target within its environment |
+| `name`        | `string`                 | Display name shown in the UI                         |
+| `description` | `string`                 | Brief explanation of what the target does            |
+| `parameters`  | `TTargetParameterJson[]` | Inputs the effect's author fills in. Use `[]` for none |
+| `script`      | `function`               | Async function that executes the target logic        |
 
 ### Optional Properties
 
-| Property     | Type                      | Description                                                             |
-| ------------ | ------------------------- | ----------------------------------------------------------------------- |
-| `args`       | `TTargetArgJson[]`        | Array of argument definitions (see [Argument Types](argument-types.md)) |
-| `migrations` | `TargetMigrationRegistry` | Registry for handling target schema migrations                          |
+| Property     | Type                      | Description                                    |
+| ------------ | ------------------------- | ---------------------------------------------- |
+| `migrations` | `TargetMigrationRegistry` | Registry for converting effects built against an older version of the target |
 
 ## The Script Function
 
-The script function is where your target's logic lives. It receives a context object with properties and methods for interacting with the METIS system.
+The script function is where your target's logic lives. It receives two arguments: the context, and an object holding the argument values named after each parameter's `_id`.
 
 ### Context Overview
 
-```ts
-script: async (ctx) => {
-  // Access arguments and effect data
-  const { hostname } = ctx.effect.args
+```typescript
+script: async (ctx, { notify, applyTo, hostname }) => {
+  // Effect and mission data
   const effectName = ctx.effect.name
-
-  // Access mission and user information
   const missionId = ctx.mission._id
-  const username = ctx.user.username
+
+  // Who triggered it (null for session-triggered effects)
+  const executor = ctx.triggeredBy
 
   // Send output and manipulate mission state
-  ctx.sendOutput('Starting operation...')
-  ctx.modifySuccessChance(25) // +25% success chance
-  ctx.blockNode({ nodeKey: '<node-key>' })
+  ctx.sendOutput('Starting operation...', notify)
+  ctx.modifySuccessChance(applyTo, 25) // +25 percentage points
+  ctx.blockNodes(applyTo)
 }
 ```
 
-### 📋 Context Properties
+A script returns nothing. To report a result, send output or leave the value in a data store for another target to read — a returned value is discarded.
 
-| Property      | Description                                |
-| ------------- | ------------------------------------------ |
-| `ctx.effect`  | Current effect with arguments and metadata |
-| `ctx.mission` | Mission context with forces and nodes      |
-| `ctx.user`    | User who triggered the effect              |
+### Context Properties
 
-### 🔧 Context Methods
+| Property           | Description                                                     |
+| ------------------ | --------------------------------------------------------------- |
+| `ctx.type`         | Whether the effect is session- or execution-triggered           |
+| `ctx.effect`       | The current effect, its trigger, target, and where it lives     |
+| `ctx.triggeredBy`  | The member who executed the action, or `null`                   |
+| `ctx.session`      | Session name, state, and membership                             |
+| `ctx.config`       | Session configuration and this environment's selected config    |
+| `ctx.mission`      | The mission in this realm: `forces`, `allNodes`, `allActions`, `resources`, `files` |
 
-| Category          | Methods                                                                | Purpose                  |
-| ----------------- | ---------------------------------------------------------------------- | ------------------------ |
-| **Output**        | `sendOutput()`                                                         | Send output to users     |
-| **Data Stores**   | `localStore.use()`, `globalStore.use()`                                | Cache and share data     |
-| **Node Control**  | `blockNode()`, `unblockNode()`, `openNode()`                           | Control node states      |
-| **Action Tuning** | `modifySuccessChance()`, `modifyProcessTime()`, `modifyResourceCost()` | Modify action properties |
-| **Resources**     | `modifyResourcePool()`                                                 | Adjust force resources   |
-| **File Access**   | `grantFileAccess()`, `revokeFileAccess()`                              | Manage file permissions  |
+### Context Methods
 
-> 📘 **For complete details** on all context properties, methods, parameters, and options, see the [Context API Reference](../references/context-api.md).
+| Category          | Methods                                                                         | Purpose                  |
+| ----------------- | ------------------------------------------------------------------------------- | ------------------------ |
+| **Output**        | `sendOutput()`                                                                  | Send output to a force or the whole mission |
+| **Timing**        | `sleep()`                                                                       | Pause safely inside a session |
+| **Data Stores**   | `localStore.use()`, `realmStore.use()`, `globalStore.use()`                     | Cache and share data     |
+| **Node Control**  | `blockNodes()`, `unblockNodes()`, `updateNodeBlockStatus()`, `openNode()`, `closeNode()`, `updateNodeOpenState()`, `addNodeAlert()` | Control node states and alerts |
+| **Action Tuning** | `modifySuccessChance()`, `modifyProcessTime()`, `modifyResourceCost()`           | Modify action properties |
+| **Resources**     | `modifyResourcePool()`                                                          | Adjust force resources   |
+| **File Access**   | `grantFileAccess()`, `revokeFileAccess()`, `updateFileAccess()`                  | Manage file permissions  |
 
-## Working with Arguments
+Every mission-changing method takes the component to act on as its first argument, and fans out when given a broader one — passing a force affects all of its nodes, passing the mission affects everything.
 
-Arguments define what inputs your target accepts from users. They create the user interface form that appears when someone configures your target.
+> **For complete details** on all context properties, methods, and parameters, see the [Context API Reference](../references/context-api.md).
 
-### Basic Argument Structure
+## Working with Parameters
 
-```ts
-args: [
+Parameters define what inputs your target accepts. They create the form that appears when someone builds an effect from your target.
+
+### Basic Parameter Structure
+
+```typescript
+parameters: [
   {
     _id: 'hostname', // Unique identifier
     name: 'Server Hostname', // Display name in UI
     type: 'string', // Input type
-    required: true, // Whether required
+    required: true, // Whether a value is required
+    default: 'localhost', // Required whenever `required` is true
     groupingId: 'connection', // Visual grouping
     tooltipDescription: 'Server to connect to', // Help text
   },
@@ -158,7 +176,7 @@ args: [
     name: 'Priority Level',
     type: 'dropdown',
     required: true,
-    default: { _id: 'normal', name: 'Normal', value: 'normal' },
+    default: 'normal', // The `_id` of one of the options below
     options: [
       { _id: 'low', name: 'Low', value: 'low' },
       { _id: 'normal', name: 'Normal', value: 'normal' },
@@ -168,17 +186,20 @@ args: [
 ]
 ```
 
-### Conditional Arguments
+Help text belongs in `tooltipDescription`. A `description` property compiles but is never rendered.
 
-Arguments can be shown/hidden based on other argument values using `dependencies`:
+### Conditional Parameters
 
-```ts
+Parameters can be shown or hidden based on other values using `dependencies`:
+
+```typescript
 // Authentication Method and API Key Form Grouping
 {
-  _id: 'auth-method',
+  _id: 'authMethod',
   name: 'Authentication Method',
   type: 'dropdown',
   required: true,
+  default: 'none',
   options: [
     { _id: 'none', name: 'None', value: 'none' },
     { _id: 'basic', name: 'Basic', value: 'basic' },
@@ -187,12 +208,13 @@ Arguments can be shown/hidden based on other argument values using `dependencies
   groupingId: 'authentication',
 },
 {
-  _id: 'api-key',
+  _id: 'apiKey',
   name: 'API Key',
   type: 'string',
   required: true,
+  default: '',
   groupingId: 'authentication',
-  dependencies: [TargetDependency.EQUALS('auth-method', 'token')],  // Only show if auth-method is 'token'
+  dependencies: [TargetDependency.EQUALS('authMethod', 'token')],  // Only show if authMethod is 'token'
 },
 
 // Priority and Encryption Level Form Grouping
@@ -201,11 +223,12 @@ Arguments can be shown/hidden based on other argument values using `dependencies
   name: 'Priority Level',
   type: 'dropdown',
   required: true,
-  default: { _id: 'normal', name: 'Normal', value: 'normal' },
+  default: 'normal',
   options: [
     { _id: 'low', name: 'Low', value: 'low' },
     { _id: 'normal', name: 'Normal', value: 'normal' },
     { _id: 'high', name: 'High', value: 'high' },
+    { _id: 'urgent', name: 'Urgent', value: 'urgent' },
   ],
   groupingId: 'priority',
 },
@@ -214,6 +237,7 @@ Arguments can be shown/hidden based on other argument values using `dependencies
   name: 'Encryption Level',
   type: 'dropdown',
   required: true,
+  default: 'aes256',
   dependencies: [TargetDependency.EQUALS_SOME('priority', ['high', 'urgent'])],  // Show for high/urgent priority
   options: [
     { _id: 'aes128', name: 'AES-128', value: 'aes128' },
@@ -223,80 +247,76 @@ Arguments can be shown/hidden based on other argument values using `dependencies
 }
 ```
 
+A dependency compares against the other parameter's **argument value**, which for a dropdown is the option's `value` rather than its `_id`. Note the asymmetry: a dropdown's `default` names an option's `_id`, while a dependency matches its `value`.
+
+Neither the parameter `_id` a dependency names nor the value it compares against is checked at compile time, so a typo in either produces a parameter that silently never appears. Verify dependencies by exercising the form.
+
 ### Accessing Arguments in Scripts
 
-```ts
-script: async (ctx) => {
-  // Extract arguments from the effect
-  const {
-    ['auth-method']: authMethod,
-    ['api-key']: apiKey,
-    priority,
-    encryptionLevel,
-  } = ctx.effect.args
+Argument values arrive as the script's second parameter, named after each parameter's `_id`:
 
-  // Use arguments in your logic
-  restApi.post(
-    '/path/for/request',
-    {
-      priority,
-      encryptionLevel,
-    },
-    {
-      headers: {
-        'api-key': apiKey,
-        'auth-method': authMethod,
-      },
-    },
-  )
+```typescript
+script: async (ctx, { authMethod, apiKey, priority, encryptionLevel }) => {
+  // A parameter with dependencies is undefined when they are unmet
+  if (priority === 'high' || priority === 'urgent') {
+    console.log(`Encrypting with ${encryptionLevel}`)
+  }
 }
 ```
 
-> 📘 **For complete details** on all argument types, scripts, properties, dependencies, and examples, see:
+If a parameter `_id` is not a valid identifier, rename it while destructuring:
+
+```typescript
+script: async (ctx, { ['api-key']: apiKey, ['auth-method']: authMethod }) => {
+  // ...
+}
+```
+
+Values can also be read by `_id` with `ctx.getArguments('hostname')`, which is useful in a helper that receives the context on its own.
+
+> **For complete details** on all parameter types, dependencies, and examples, see:
 >
-> - **[Argument Types Guide](argument-types.md)** - Complete reference with all types and options
-> - **[Target-Effect Conversion Guide](target-effect-conversion.md)** - Guide on how target arguments are converted to effect arguments and how to extract them to use in target scripts
-> - **[Basic Target Example](../examples/basic-target.md)** - Simple argument patterns
-> - **[Complex Target Example](../examples/complex-target.md)** - Advanced argument usage
+> - **[Parameter and Argument Types](parameter-and-argument-types.md)** - Complete reference with all types and options
+> - **[Target-Effect Conversion Guide](target-effect-conversion.md)** - How parameters become effect arguments and how to read them
+> - **[Basic Target Example](../examples/basic-target.md)** - Simple parameter patterns
+> - **[Complex Target Example](../examples/complex-target.md)** - Advanced parameter usage
 
 ## Working with Data Stores
 
 METIS provides data stores that allow you to cache and share data between target executions within a session. This enables stateful operations, API response caching, and cross-target communication.
 
-### Local Store (Target Environment Scoped)
+A realm is an isolated copy of the launched mission. A multiplayer session runs as one realm; a standalone session gives each participant their own. That distinction is what separates the three stores:
 
-Use the local store for data that should persist within a specific target environment:
+| Store | Scope |
+| ----- | ----- |
+| `localStore` | one target environment within one realm |
+| `realmStore` | every target environment within one realm |
+| `globalStore` | every target environment in every realm of the session |
 
-```ts
-script: async (ctx) => {
-  const { userId } = ctx.effect.args
+### Local Store
 
+Use the local store for data belonging to this environment within one realm:
+
+```typescript
+script: async (ctx, { notify, userId }) => {
   // Cache API responses to avoid repeated calls
   const userCache = ctx.localStore.use<Map<string, any>>('userCache', new Map())
 
-  if (userCache.value.has(userId)) {
-    ctx.sendOutput('Using cached user data')
-    return userCache.value.get(userId)
+  if (!userCache.value.has(userId)) {
+    userCache.value.set(userId, await fetchUserFromAPI(userId))
+    ctx.sendOutput('User data cached for future requests', notify)
+  } else {
+    ctx.sendOutput('Using cached user data', notify)
   }
-
-  // Fetch and cache user data
-  const userData = await fetchUserFromAPI(userId)
-  userCache.value.set(userId, userData)
-
-  ctx.sendOutput('User data cached for future requests')
-  return userData
 }
 ```
 
-### Global Store (Session Wide)
+### Global Store
 
-Use the global store for data that should be shared across different target environments:
+Use the global store for data the whole session shares, across every realm:
 
-```ts
-script: async (ctx) => {
-  const { operationStatus } = ctx.effect.args
-
-  // Share mission state across all target environments
+```typescript
+script: async (ctx, { notify, operationStatus }) => {
   const missionState = ctx.globalStore.use('missionState', {
     phase: 'planning',
     operationsComplete: 0,
@@ -307,18 +327,21 @@ script: async (ctx) => {
   missionState.value.operationsComplete += 1
   missionState.value.phase = operationStatus
 
-  ctx.sendOutput(`Mission phase: ${missionState.value.phase}`)
+  ctx.sendOutput(`Mission phase: ${missionState.value.phase}`, notify)
   ctx.sendOutput(
     `Operations completed: ${missionState.value.operationsComplete}`,
+    notify,
   )
 }
 ```
+
+Because the global store crosses realms, every participant in a standalone session shares it. Use `realmStore` for anything belonging to one participant.
 
 ### Common Data Store Patterns
 
 **Request Counter for Rate Limiting:**
 
-```ts
+```typescript
 script: async (ctx) => {
   const requestTracker = ctx.localStore.use('requests', {
     count: 0,
@@ -342,110 +365,142 @@ script: async (ctx) => {
 
 **Cross-Target Communication:**
 
-```ts
+```typescript
 script: async (ctx) => {
   // Target A sets up authentication
-  const authState = ctx.globalStore.use('auth', { token: null, expires: 0 })
+  const authState = ctx.realmStore.use<{
+    token: string | null
+    expires: number
+  }>('auth', { token: null, expires: 0 })
 
   if (Date.now() > authState.value.expires) {
     authState.value.token = await getAuthToken()
     authState.value.expires = Date.now() + 3600000 // 1 hour
   }
 
-  // Now Target B can use the same token
-  return authState.value.token
+  // Target B reads the same token from the same realm
 }
 ```
 
-> 📘 **For comprehensive data store patterns and examples**, see the **[Data Stores Guide](data-stores.md)** which covers caching strategies, performance optimization, and advanced usage patterns.
+Supply an explicit type argument whenever more than one target reads the value, otherwise the type is inferred from the initial value alone.
 
-## 🔗 External API Integration
+> **For comprehensive data store patterns and examples**, see the **[Data Stores Guide](data-stores.md)** which covers caching strategies, performance optimization, and advanced usage patterns.
 
-> 🔗 **For comprehensive external API patterns**, see the **[External API Integration Guide](external-api-integration.md)** which covers authentication, error handling, and advanced patterns.
+## External API Integration
+
+> **For comprehensive external API patterns**, see the **[External API Integration Guide](external-api-integration.md)** which covers authentication, error handling, and advanced patterns.
 
 ### Using REST APIs
 
-If your environment has a REST client configured, use it in your targets:
+Build a client from the configuration selected for the session:
 
-```ts
-// Import the client from your environment schema
-import { MyServiceApi } from '../schema'
+```typescript
+// integration/target-env/my-service/targets/create-user/schema.ts
+import { RestApi } from '@metis/api/RestApi'
 
-export default new TargetSchema({
+export default TargetSchema.create({
+  _id: 'create-user',
   name: 'Create User',
   description: 'Create a new user account',
-  args: [
-    { _id: 'username', name: 'Username', type: 'string', required: true },
-    { _id: 'email', name: 'Email', type: 'string', required: true },
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      validComponentTypes: ['mission', 'force'],
+    },
+    {
+      _id: 'username',
+      name: 'Username',
+      type: 'string',
+      required: true,
+      default: 'john_doe',
+    },
+    {
+      _id: 'email',
+      name: 'Email',
+      type: 'string',
+      required: true,
+      default: 'john_doe@example.com',
+    },
   ],
-  script: async (ctx) => {
-    const { username, email } = ctx.effect.args
+  script: async (ctx, { notify, username, email }) => {
+    if (!ctx.config.targetEnvConfig) {
+      throw new Error('No configuration selected for this session.')
+    }
+    const api = RestApi.fromConfig(ctx.config.targetEnvConfig.data)
 
     try {
-      ctx.sendOutput('Creating user account...')
+      ctx.sendOutput('Creating user account...', notify)
 
-      const response = await MyServiceApi.post('/users', {
+      const response = await api.post('/users', {
         username,
         email,
         created_at: new Date().toISOString(),
       })
 
-      ctx.sendOutput(`✓ User created with ID: ${response.data.id}`)
-    } catch (error) {
-      ctx.sendOutput(`✗ Failed to create user: ${error.message}`)
-      return
+      ctx.sendOutput(`User created with ID: ${response.data.id}`, notify)
+    } catch (error: any) {
+      ctx.sendOutput(`Failed to create user: ${error.message}`, notify)
+      throw error
     }
   },
 })
 ```
 
-## 🔄 Migrations
+A client acquired once in an `environment-setup` hook must be kept in a store rather than a module-level variable, because hooks run once per realm and a shared variable would be overwritten by each of them.
 
-Use a `TargetMigrationRegistry` when you change target schema in ways that affect existing effects (for example, renaming argument IDs, changing shapes, or removing fields).
+## Migrations
 
-- **Register migrations** on the `migrations` option of `TargetSchema`
-- **Align versions** with the target environment versioning
+Use a `TargetMigrationRegistry` when a change to your target's parameters would leave existing effects holding arguments in the old shape — renaming a parameter `_id`, changing its type, or removing it.
 
-> 📖 **For complete migration workflows**, see the **[Migrations Guide](migrations.md)** which covers version management, migration scripts, and best practices.
+- **Register migrations** against the target-environment version that introduced the change
+- **Use `MigrationToolbox`** for common operations such as renaming a parameter `_id`
+- An effect's stored arguments are an array of `{ _id, parameterId, type, value }` entries
 
-## 📚 Examples
+> **For complete migration workflows**, see the **[Migrations Guide](migrations.md)** which covers version management, migration scripts, and best practices.
+
+## Examples
 
 For end-to-end patterns (batch processing, file handling, progress, error strategies), see:
 
 - **[Basic Target Example](../examples/basic-target.md)** - Simple implementation walkthrough
 - **[Complex Target Example](../examples/complex-target.md)** - Advanced patterns and integrations
 
-## 🧪 Testing Your Targets
+## Testing Your Targets
 
 ### Local Testing Checklist
 
-1. **✅ Discovery** - Verify your target shows up and executes
-2. **🔍 Validation** - Try various input combinations
-3. **⚠️ Error Handling** - Trigger error conditions intentionally
-4. **⚡ Performance** - Watch for long-running operations
+1. **Discovery** - Verify your target shows up and executes
+2. **Validation** - Try various input combinations
+3. **Error Handling** - Trigger error conditions intentionally
+4. **Performance** - Watch for long-running operations
 
-### Debug Output
+### Reporting Progress
 
-```ts
-      try {
-        await MyApi.post(`/users/${user}/${operation}`)
-        ctx.sendOutput(`✓ ${user} processed successfully`)
-      } catch (error) {
-        throw error
-        ctx.sendOutput(`✗ Failed to process ${user}: ${error.message}`)
-      }
+Send output as work proceeds rather than only at the end, and let a thrown error mark the effect as failed:
+
+```typescript
+script: async (ctx, { notify, users }) => {
+  for (const user of users) {
+    try {
+      await MyApi.post(`/users/${user}/verify`)
+      ctx.sendOutput(`${user} processed successfully`, notify)
+    } catch (error: any) {
+      ctx.sendOutput(`Failed to process ${user}: ${error.message}`, notify)
+      throw error
     }
+  }
 
-    ctx.sendOutput('✓ Batch processing completed')
-  },
-})
+  ctx.sendOutput('Batch processing completed', notify)
+}
 ```
 
-## 📁 Folder Organization
+## Folder Organization
 
 ### Simple Structure
 
-```
+```text
 integration/target-env/my-service/
 ├── targets/
 │   ├── ping/
@@ -458,7 +513,7 @@ integration/target-env/my-service/
 
 ### Grouped Structure
 
-```
+```text
 integration/target-env/my-service/
 ├── targets/
 │   ├── monitoring/
@@ -478,7 +533,9 @@ integration/target-env/my-service/
 │           └── schema.ts
 ```
 
-## ⚡ Performance Considerations
+Discovery walks these folders looking for any `schema.ts`, so nesting is free. Grouping folders do not affect a target's `_id`.
+
+## Performance Considerations
 
 ### Async Best Practices
 
@@ -486,6 +543,7 @@ integration/target-env/my-service/
 - **Parallel operations** → Use `Promise.all()`
 - **External calls** → Implement timeouts
 - **Network failures** → Handle gracefully
+- **Delays** → Use `ctx.sleep()`; `setTimeout` is blocked in target-environment code
 
 ### Output Management
 
@@ -494,30 +552,35 @@ integration/target-env/my-service/
 - **Large content** → Avoid massive text blocks at once
 - **User feedback** → Include progress indicators when possible
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
-| Issue                         | Possible Cause                    | Solution                                  |
-| ----------------------------- | --------------------------------- | ----------------------------------------- |
-| 🚫 Target not appearing       | Wrong filename or export          | Ensure `schema.ts` exports `TargetSchema` |
-| 📝 Arguments not showing      | Invalid argument definition       | Check argument types and required fields  |
-| ⚠️ Script not executing       | Syntax error in script function   | Check console logs for JavaScript errors  |
-| 🌐 External API calls failing | Missing environment configuration | Check `.env` files and API client setup   |
+| Issue                                              | Possible Cause                                  | Solution                                                                 |
+| -------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------ |
+| Target not appearing                               | Wrong filename, or the export is not a `TargetSchema` | Confirm `schema.ts` default-exports `TargetSchema.create(...)`. A target that fails to load is skipped, so it simply will not appear |
+| Log says "does not export a valid TargetSchema instance" | The export is not built by the factory     | Use `TargetSchema.create(...)` rather than constructing the class        |
+| Every script argument reports "does not exist"     | One entry in `parameters` is malformed          | Look for a missing `default` on a required parameter, or a dropdown `default` that is not one of its option `_id`s |
+| A parameter never shows                            | A dependency names a parameter `_id` or compares a value that does not exist | Neither is compile-checked. Confirm the `_id` matches, and that the value matches an option's `value` rather than its `_id` |
+| A parameter property seems ignored                 | The property does not exist on that type         | Help text is `tooltipDescription`; a `boolean` has no `required`. Unknown properties compile but are dropped |
+| Script not executing                               | Error thrown before the first output             | Check server logs for the thrown error                                   |
+| External API calls failing                         | No configuration selected for the session        | Check `ctx.config.targetEnvConfig` and the environment's `configs.json`  |
 
-## 📖 Related Documentation
+## Related Documentation
 
-### 📋 Essential Guides
+### Essential Guides
 
 - **[Data Stores](data-stores.md)** - Session state management and caching patterns
-- **[Argument Types](argument-types.md)** - Complete argument system reference
+- **[Parameter and Argument Types](parameter-and-argument-types.md)** - Complete parameter system reference
 - **[Creating Target Environments](creating-target-environments.md)** - Environment setup guide
 - **[Tips & Conventions](tips-and-conventions.md)** - Best practices and naming conventions
 
-### 💡 Examples
+### Examples
 
 - **[Basic Target](../examples/basic-target.md)** - Simple implementation walkthrough
 - **[Complex Target](../examples/complex-target.md)** - Advanced patterns and integrations
 
-### 🔗 References
+### References
 
+- **[Context API](../references/context-api.md)** - Everything the context exposes
+- **[Schema Classes](../references/schemas.md)** - `TargetSchema` and `TargetEnvSchema` properties
 - **[REST API Reference](../references/rest-api.md)** - API client configuration
 - **[Environment Configuration](../references/environment-configuration.md)** - Configuration file reference
