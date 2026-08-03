@@ -168,12 +168,10 @@ Read by `RestApi.fromConfig`.
 | `host`               | `string`              | `localhost`                              | Domain or IP. May include a port                    |
 | `port`               | `number` \| numeric `string` | `80`, or `443` for `https`        | Port of the base URL                                |
 | `rejectUnauthorized` | `boolean`             | `true`                                   | When `false`, accepts invalid TLS certificates      |
-| `username`           | `string`              | —                                        | Exposed as `api.username`. **Not sent automatically** |
-| `password`           | `string`              | —                                        | Exposed as `api.password`. **Not sent automatically** |
-| `apiKey`             | `string`              | —                                        | Exposed as `api.apiKey`. **Not sent automatically**   |
 
-> **Important:** `RestApi` reads the three credential properties and exposes them,
-> but does not attach them to requests. Your script applies them. See
+> **Important:** These four are the only properties `RestApi` reads. It takes no
+> credentials and applies no authentication scheme — keep credentials under any
+> key you like and set them on `api.config` yourself. See
 > [Authentication](rest-api.md#authentication) in the REST API reference.
 
 ### WebSocket Properties

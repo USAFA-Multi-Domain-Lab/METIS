@@ -22,7 +22,7 @@ The `RestApi` class makes HTTP requests from a target environment to external se
 - TLS certificate validation through `rejectUnauthorized`
 - All five standard HTTP methods, each returning an axios response
 
-> **Important:** `RestApi` does **not** attach credentials to requests. It reads `username`, `password`, and `apiKey` from your configuration and exposes them as properties, but nothing is added to the outgoing request. Attaching them is your script's job — see [Authentication](#authentication).
+> **Important:** `RestApi` does **not** handle authentication. There is no one way to authenticate against a REST service, so the class takes no credentials at all — you set whatever your service expects on `api.config` and it is sent with every request. See [Authentication](#authentication).
 
 ## Creating a Client
 
@@ -72,11 +72,10 @@ These are the properties `RestApi` reads out of `data`. Everything else in `data
 | `host`               | `string`              | `localhost` | Domain or IP. May include a port                            |
 | `port`               | `number` \| numeric `string` | `80`, or `443` when `protocol` is `https` | Port of the base URL      |
 | `rejectUnauthorized` | `boolean`             | `true`   | When `false`, accepts invalid TLS certificates                 |
-| `username`           | `string`              | —        | Exposed as `api.username`. **Not sent automatically**          |
-| `password`           | `string`              | —        | Exposed as `api.password`. **Not sent automatically**          |
-| `apiKey`             | `string`              | —        | Exposed as `api.apiKey`. **Not sent automatically**            |
 
 `rejectUnauthorized` only takes effect when it is present in the configuration; leaving it out uses Node's default of `true`.
+
+Credentials are not among these. Keep them wherever you prefer — another key in `data`, or an environment variable — and apply them yourself as shown under [Authentication](#authentication). Values read from `data` are typed `unknown`, so narrow them before use.
 
 ### How the Base URL Is Built
 
@@ -124,40 +123,47 @@ await api.delete('/users/123', { headers: { 'X-Confirm': 'true' } })
 
 ## Authentication
 
-`RestApi` stores the credentials from your configuration but does not send them. Attach them per request, or build a config object once and reuse it.
+`RestApi` takes no credentials and applies no scheme. Set what your service expects on `api.config` once, and it goes out with every request.
 
-**Basic authentication** uses axios's `auth` option:
-
-```typescript
-let api = RestApi.fromConfig(context.config.targetEnvConfig.data)
-
-await api.get('/protected', {
-  auth: {
-    username: api.username ?? '',
-    password: api.password ?? '',
-  },
-})
-```
-
-**API key authentication** is a header, and the header name is whatever the external service expects:
-
-```typescript
-await api.get('/protected', {
-  headers: { 'api-key': api.apiKey ?? '' },
-})
-```
-
-**Reuse one set of options** rather than repeating it at every call site:
+**An API key** is a header, and the header name is whatever the service expects:
 
 ```typescript
 let api = RestApi.fromConfig(context.config.targetEnvConfig.data)
-let authenticated = { headers: { Authorization: `Bearer ${api.apiKey ?? ''}` } }
 
-await api.get('/users', authenticated)
-await api.post('/users', { name: 'Jane Doe' }, authenticated)
+let { apiKey } = context.config.targetEnvConfig.data
+if (typeof apiKey !== 'string') {
+  throw new Error('API key missing from the selected configuration.')
+}
+
+api.config.headers.common['X-API-Key'] = apiKey
+
+// Both requests carry the header.
+await api.get('/users')
+await api.post('/users', { name: 'Jane Doe' })
 ```
 
-Any scheme the service supports works, because you control the headers — bearer tokens, a signature header, a session cookie.
+**Basic authentication** uses axios's `auth` option, which builds the header for you:
+
+```typescript
+api.config.auth = { username: 'reporting', password: secret }
+```
+
+Credentials do not have to come from the configuration. A target environment that wants one set of credentials for every session can read them from the server's environment instead, which keeps them out of `configs.json` entirely:
+
+```typescript
+api.config.headers.common.Authorization = `Bearer ${process.env.WEATHER_API_TOKEN}`
+```
+
+> **Note:** Settings passed to an individual request are merged over the defaults rather than replacing them, so `api.get('/x', { headers: { Accept: 'text/csv' } })` keeps the headers set above.
+
+**A scheme that changes per request** — a signature over the body, a token that has to be refreshed — belongs in an interceptor on `api.client`:
+
+```typescript
+api.client.interceptors.request.use((request) => {
+  request.headers.set('X-Signature', sign(request.data))
+  return request
+})
+```
 
 ## Error Handling
 
@@ -230,7 +236,12 @@ const ManageUser = TargetSchema.create({
     }
 
     let api = RestApi.fromConfig(context.config.targetEnvConfig.data)
-    let authenticated = { headers: { 'api-key': api.apiKey ?? '' } }
+    let { apiKey } = context.config.targetEnvConfig.data
+    if (typeof apiKey !== 'string') {
+      throw new Error('API key missing from the selected configuration.')
+    }
+    api.config.headers.common['api-key'] = apiKey
+
     let parsed: unknown
 
     try {
@@ -241,11 +252,11 @@ const ManageUser = TargetSchema.create({
 
     try {
       if (action === 'create') {
-        let response = await api.post('/users', parsed, authenticated)
+        let response = await api.post('/users', parsed)
         context.sendOutput(`Created user ${response.data.username}.`, notify)
       } else {
         if (!userId) throw new Error('A user ID is required to update a user.')
-        let response = await api.put(`/users/${userId}`, parsed, authenticated)
+        let response = await api.put(`/users/${userId}`, parsed)
         context.sendOutput(`Updated user ${response.data.username}.`, notify)
       }
     } catch (error) {

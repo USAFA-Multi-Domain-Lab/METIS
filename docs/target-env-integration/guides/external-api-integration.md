@@ -20,7 +20,7 @@ Connection details live in `configs.json` and a session manager picks which conf
 
 - **`RestApi`** builds a base URL and applies TLS settings from the configuration
 - **`context.config.targetEnvConfig`** is the selected configuration, or `null` when none was chosen
-- **Credentials are yours to attach** — the client reads them but does not send them
+- **Credentials are yours to attach** — the client takes none and applies no scheme
 
 ## Setting Up
 
@@ -59,49 +59,41 @@ Connection details, in `integration/target-env/my-service/configs.json`:
 
 ## Authentication
 
-> **Important:** `RestApi` reads `username`, `password`, and `apiKey` from the configuration and exposes them as properties. It does **not** attach them to requests. If you call `api.get('/protected')` and expect the configured API key to be sent, nothing is sent and the service will reject the call.
+> **Important:** `RestApi` takes no credentials. It does not know your service's scheme and will not invent one, so a call to `api.get('/protected')` on a fresh client is unauthenticated and will be rejected.
 
-Attach credentials per request. The header name is whatever the external service expects:
-
-```typescript
-let api = RestApi.fromConfig(context.config.targetEnvConfig.data)
-
-// API key in a header.
-await api.get('/users', {
-  headers: { 'X-API-Key': api.apiKey ?? '' },
-})
-
-// Bearer token.
-await api.get('/users', {
-  headers: { Authorization: `Bearer ${api.apiKey ?? ''}` },
-})
-
-// HTTP basic authentication.
-await api.get('/users', {
-  auth: {
-    username: api.username ?? '',
-    password: api.password ?? '',
-  },
-})
-```
-
-Build the options once and reuse them rather than repeating the header at every call site:
+Set what the service expects on `api.config` once, after building the client. Values in `data` are typed `unknown`, so narrow before use:
 
 ```typescript
 let api = RestApi.fromConfig(context.config.targetEnvConfig.data)
-let authenticated = { headers: { 'X-API-Key': api.apiKey ?? '' } }
 
-await api.get('/users', authenticated)
-await api.post('/users', { name: 'Jane Doe' }, authenticated)
-```
-
-Reading a credential straight out of `data` works too, but the values there are typed `unknown`, so narrow before use:
-
-```typescript
 let { apiKey } = context.config.targetEnvConfig.data
 if (typeof apiKey !== 'string') {
   throw new Error('The selected configuration has no API key.')
 }
+
+// Whichever one the service expects.
+api.config.headers.common['X-API-Key'] = apiKey
+api.config.headers.common.Authorization = `Bearer ${apiKey}`
+api.config.auth = { username: 'reporting', password: apiKey }
+
+// Every request from here on carries it.
+await api.get('/users')
+await api.post('/users', { name: 'Jane Doe' })
+```
+
+Credentials do not have to live in `configs.json`. Reading them from the server's environment keeps them out of the file altogether, at the cost of the per-session switching a config gives you:
+
+```typescript
+api.config.headers.common.Authorization = `Bearer ${process.env.MY_SERVICE_TOKEN}`
+```
+
+A scheme that has to run per request — signing the body, refreshing an expired token — goes in an interceptor instead:
+
+```typescript
+api.client.interceptors.request.use((request) => {
+  request.headers.set('X-Signature', sign(request.data))
+  return request
+})
 ```
 
 ## Common Request Patterns
@@ -121,26 +113,30 @@ const ManageUsers = TargetSchema.create({
     }
 
     let api = RestApi.fromConfig(context.config.targetEnvConfig.data)
-    let authenticated = { headers: { 'X-API-Key': api.apiKey ?? '' } }
+    let { apiKey } = context.config.targetEnvConfig.data
+    if (typeof apiKey !== 'string') {
+      throw new Error('The selected configuration has no API key.')
+    }
+    api.config.headers.common['X-API-Key'] = apiKey
 
     switch (operation) {
       case 'read': {
-        let response = await api.get(`/users/${userId}`, authenticated)
+        let response = await api.get(`/users/${userId}`)
         context.sendOutput(`Found user: ${response.data.name}`, notify)
         break
       }
       case 'create': {
-        let response = await api.post('/users', { name }, authenticated)
+        let response = await api.post('/users', { name })
         context.sendOutput(`Created user ${response.data.id}`, notify)
         break
       }
       case 'update': {
-        await api.patch(`/users/${userId}`, { name }, authenticated)
+        await api.patch(`/users/${userId}`, { name })
         context.sendOutput(`Updated user ${userId}`, notify)
         break
       }
       case 'remove': {
-        await api.delete(`/users/${userId}`, authenticated)
+        await api.delete(`/users/${userId}`)
         context.sendOutput(`Removed user ${userId}`, notify)
         break
       }
@@ -202,7 +198,7 @@ Axios rejects on any non-2xx status. The thrown value is typed `unknown`, so use
 import axios from 'axios'
 
 try {
-  let response = await api.get(`/users/${userId}`, authenticated)
+  let response = await api.get(`/users/${userId}`)
   context.sendOutput(`Retrieved ${response.data.name}`, notify)
 } catch (error) {
   if (!axios.isAxiosError(error) || !error.response) {
@@ -236,7 +232,7 @@ Timers are blocked inside target-environment code — calling `setTimeout` or `s
 let userIds = userList.split('\n').filter((line) => line.trim().length > 0)
 
 for (let userId of userIds) {
-  await api.get(`/users/${userId}`, authenticated)
+  await api.get(`/users/${userId}`)
   await context.sleep(200)
 }
 ```
@@ -245,11 +241,11 @@ for (let userId of userIds) {
 // Back off and retry once when the service reports a rate limit.
 let response
 try {
-  response = await api.get('/users', authenticated)
+  response = await api.get('/users')
 } catch (error) {
   if (!axios.isAxiosError(error) || error.response?.status !== 429) throw error
   await context.sleep(2000)
-  response = await api.get('/users', authenticated)
+  response = await api.get('/users')
 }
 ```
 
@@ -267,7 +263,7 @@ if (!emailPattern.test(email)) {
   throw new Error('Enter a valid email address.')
 }
 
-await api.post('/users', { email: email.toLowerCase().trim() }, authenticated)
+await api.post('/users', { email: email.toLowerCase().trim() })
 ```
 
 A `pattern` and `title` on the parameter itself catches most of this in the interface before the script ever runs — see [string validation](parameter-and-argument-types.md#string). Keep the script-side check anyway for values saved before you added the pattern.
@@ -299,12 +295,12 @@ const CreateUser = TargetSchema.create({
     }
 
     let api = RestApi.fromConfig(context.config.targetEnvConfig.data)
-    let authenticated = {
-      headers: {
-        'X-API-Key': api.apiKey ?? '',
-        'X-Request-Source': 'METIS',
-      },
+    let { apiKey } = context.config.targetEnvConfig.data
+    if (typeof apiKey !== 'string') {
+      throw new Error('The selected configuration has no API key.')
     }
+    api.config.headers.common['X-API-Key'] = apiKey
+    api.config.headers.common['X-Request-Source'] = 'METIS'
 
     context.sendOutput(`Creating user account for ${name}...`, notify)
 
@@ -317,7 +313,7 @@ const CreateUser = TargetSchema.create({
     }
 
     try {
-      let response = await api.post('/users', newUser, authenticated)
+      let response = await api.post('/users', newUser)
       context.sendOutput(`User created with ID ${response.data.id}`, notify)
     } catch (error) {
       if (!axios.isAxiosError(error) || !error.response) {
