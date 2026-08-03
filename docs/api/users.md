@@ -167,7 +167,7 @@ Reports whether a username can be taken, without attempting to create anything.
 **Status Codes**:
 
 - 200 OK – Returned for all three outcomes, including a username that is taken
-- 400 Bad Request – No `username` in the query string
+- 400 Bad Request – No `username` in the query string, or an empty one
 - 401 Unauthorized – Missing authentication
 - 403 Forbidden – Insufficient permissions
 - 500 Internal Server Error – Server error during the check

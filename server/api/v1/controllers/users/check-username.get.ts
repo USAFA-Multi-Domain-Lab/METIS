@@ -2,6 +2,7 @@ import { UserModel } from '@server/database/models/users'
 import { databaseLogger } from '@server/logging'
 import type { TUsernameCheckJson } from '@shared/users/User'
 import { ApiResponse } from '../../library/ApiResponse'
+import { StatusError } from '../../library/StatusError'
 
 /**
  * Checks whether a username is available.
@@ -12,10 +13,13 @@ import { ApiResponse } from '../../library/ApiResponse'
  * deleted user holds it. All three outcomes are returned with a 200 status.
  */
 export const checkUsername: TExpressHandler = async (request, response) => {
-  // Extract the username from the query string.
+  // Extract the username from the query string. The route's required-query
+  // check only looks for the key, so `?username=` reaches here with an empty
+  // value and has to be rejected as a bad request rather than a server fault.
   let username = request.query.username
   if (!username) {
-    return ApiResponse.error(new Error('Username is required.'), response)
+    let error = new StatusError('Username is required.', 400)
+    return ApiResponse.error(error, response)
   }
 
   // The answer describes who currently holds the username, which can change
