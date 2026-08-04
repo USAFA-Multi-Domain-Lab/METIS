@@ -70,7 +70,7 @@ async function validateSource(
 
     // Download schema.ts and test content.
     let content = await fetchContent(schemaUrl, headers)
-    let hasTargetEnvSchema = /new\s+TargetEnvSchema\s*\(/i.test(content)
+    let hasTargetEnvSchema = /TargetEnvSchema\s*\.\s*create\s*\(/i.test(content)
 
     return hasTargetEnvSchema
   } catch (err) {

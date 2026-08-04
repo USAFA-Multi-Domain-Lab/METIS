@@ -27,7 +27,7 @@ Connection details live in `configs.json` and a session manager picks which conf
 The environment schema, in `integration/target-env/my-service/schema.ts`:
 
 ```typescript
-const MyService = new TargetEnvSchema({
+const MyService = TargetEnvSchema.create({
   name: 'My Service Integration',
   description: 'Integration with My Service API',
   version: '1.0.0',

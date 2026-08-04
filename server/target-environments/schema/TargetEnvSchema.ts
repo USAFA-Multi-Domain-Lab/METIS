@@ -69,16 +69,39 @@ export class TargetEnvSchema {
   }
 
   /**
-   * @param options Options for creating the target environment.
+   * @param options The data used to define the target environment.
    */
-  public constructor(options: TTargetEnvironmentOptions) {
-    this._id = ServerFileToolbox.getCallerFolder()
+  private constructor(options: TTargetEnvSchemaOptions) {
+    this._id = options._id
     this._name = options.name
     this._description = options.description
     this._version = options.version
     this._multiRealmSupport = options.multiRealmSupport ?? false
     this._targets = []
     this._hooks = []
+  }
+
+  /**
+   * Creates a new {@link TargetEnvSchema} based on the options passed.
+   * The environment's ID is the name of the folder holding the file
+   * that made the call.
+   *
+   * @example
+   * ```typescript
+   * const AlertSystem = TargetEnvSchema.create({
+   *   name: 'Alert System',
+   *   description: 'Sends alerts to an external notification service.',
+   *   version: '1.0.0',
+   * })
+   * ```
+   */
+  public static create(
+    options: TTargetEnvSchemaCreateOptions,
+  ): TargetEnvSchema {
+    return new TargetEnvSchema({
+      ...options,
+      _id: ServerFileToolbox.getCallerFolder(),
+    })
   }
 
   /**
@@ -103,9 +126,20 @@ export class TargetEnvSchema {
 /* -- TYPES -- */
 
 /**
- * Options passed to the TargetEnvSchema constructor.
+ * Defines the target environment data.
  */
-interface TTargetEnvironmentOptions extends Omit<
+export interface TTargetEnvSchemaOptions extends Omit<
   TTargetEnvJson,
-  'targets' | '_id' | 'configs'
+  'targets' | 'configs'
+> {}
+
+/**
+ * Options for {@link TargetEnvSchema.create}.
+ *
+ * Like {@link TTargetEnvSchemaOptions} except that `_id` is left out,
+ * because `create` fills it in with the folder the calling file sits in.
+ */
+export interface TTargetEnvSchemaCreateOptions extends Omit<
+  TTargetEnvSchemaOptions,
+  '_id'
 > {}

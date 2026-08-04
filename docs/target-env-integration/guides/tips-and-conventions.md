@@ -78,7 +78,7 @@ integration/target-env/
 
 ## Use the provided schema classes
 
-Global constructors are available without imports:
+Global classes are available without imports:
 
 - `TargetEnvSchema` - For defining target environments
 - `TargetSchema` - For defining individual targets
@@ -89,7 +89,7 @@ Minimal examples
 ```typescript
 // integration/target-env/my-env/schema.ts
 
-export default new TargetEnvSchema({
+export default TargetEnvSchema.create({
   name: 'My Environment',
   description: 'Example environment',
   version: '1.0.0',

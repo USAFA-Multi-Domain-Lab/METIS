@@ -33,7 +33,7 @@ touch integration/target-env/my-alerts/schema.ts
 Define your environment in `schema.ts`:
 
 ```typescript
-const alertEnvironment = new TargetEnvSchema({
+const alertEnvironment = TargetEnvSchema.create({
   name: 'Alert System',
   description: 'Send alerts to external monitoring system.',
   version: '1.0.0',

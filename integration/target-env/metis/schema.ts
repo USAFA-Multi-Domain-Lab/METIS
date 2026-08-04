@@ -1,7 +1,7 @@
 /**
  * Represents the `metis` target environment.
  */
-const metis = new TargetEnvSchema({
+const metis = TargetEnvSchema.create({
   name: 'METIS (Internal Effects)',
   description:
     'A target-environment which allows effects to be produced within METIS itself, without interfacing with external software.',

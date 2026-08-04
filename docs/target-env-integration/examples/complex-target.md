@@ -34,7 +34,7 @@ import { RestApi } from '@metis/api/RestApi'
 /**
  * Advanced target environment for mission control operations.
  */
-const MissionControl = new TargetEnvSchema({
+const MissionControl = TargetEnvSchema.create({
   name: 'Mission Control System',
   description:
     'Advanced target environment for secure communications, file management, and system monitoring',

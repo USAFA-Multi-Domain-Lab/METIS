@@ -870,7 +870,7 @@ import { WebSocketApi } from '@metis/api/WebSocketApi'
 
 let wsConnection: WebSocketApi | null = null
 
-const environment = new TargetEnvSchema({
+const environment = TargetEnvSchema.create({
   name: 'WebSocket Environment',
   // ... other properties
 })

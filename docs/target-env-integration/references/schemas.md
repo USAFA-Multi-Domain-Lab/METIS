@@ -18,7 +18,7 @@ METIS provides two primary schema classes for building target environment plugin
 - **`TargetEnvSchema`** - Defines the overall target environment (collection of targets)
 - **`TargetSchema`** - Defines individual targets within an environment
 
-The two are created differently. An environment is constructed with `new TargetEnvSchema({ ... })`, while a target is created through the static factory `TargetSchema.create({ ... })`. The factory exists so TypeScript can read the target's `parameters` and type the argument values its script receives.
+Both are made through a static factory — `TargetEnvSchema.create({ ... })` and `TargetSchema.create({ ... })`. Neither constructor is accessible. For a target, the factory is also what lets TypeScript read the target's `parameters` and type the argument values its script receives.
 
 An environment's ID is assigned automatically from the name of the folder that holds its `schema.ts`. A target's ID is **not** — every target declares its own `_id`, which is independent of its folder name.
 
@@ -28,8 +28,10 @@ The `TargetEnvSchema` class represents a complete target environment: a collecti
 
 ### Creating an Environment
 
+Environments are created with `TargetEnvSchema.create()`. The constructor is not accessible.
+
 ```typescript
-const targetEnv = new TargetEnvSchema({
+const targetEnv = TargetEnvSchema.create({
   name: 'My Target Environment',
   description: 'A collection of targets for system integration',
   version: '1.0.0',
@@ -50,7 +52,7 @@ export default targetEnv
 A **standalone** session gives every participant their own realm, and runs them in parallel. An environment that has not declared `multiRealmSupport` is **disabled for the whole session** in that mode — its effects do not execute, and the manager cannot switch it back on. Declare it only if the environment can tell concurrent realms apart, for example by keying external state on the realm rather than sharing one connection or one remote record across all of them.
 
 ```typescript
-const targetEnv = new TargetEnvSchema({
+const targetEnv = TargetEnvSchema.create({
   name: 'User Management System',
   description:
     'Provides targets for managing user accounts, permissions, and authentication in the corporate directory system',
@@ -250,7 +252,7 @@ Each target environment gets its own file with a single default export:
 ```typescript
 // File: integration/target-env/user-management/schema.ts
 
-const userManagementEnv = new TargetEnvSchema({
+const userManagementEnv = TargetEnvSchema.create({
   name: 'User Management System',
   description:
     'Targets for managing user accounts and permissions in the corporate directory',

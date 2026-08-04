@@ -39,7 +39,7 @@ Create your environment folder and main schema file:
 ```typescript
 // integration/target-env/acme-cloud/schema.ts
 
-export default new TargetEnvSchema({
+export default TargetEnvSchema.create({
   name: 'ACME Cloud',
   description: 'Targets for managing ACME Cloud resources',
   version: '1.0.0',
@@ -77,7 +77,7 @@ For HTTP/HTTPS REST API calls, you'll create a REST client within your target sc
 ```typescript
 // integration/target-env/acme-cloud/schema.ts
 
-export default new TargetEnvSchema({
+export default TargetEnvSchema.create({
   name: 'ACME Cloud',
   description: 'Targets for managing ACME Cloud resources',
   version: '1.0.0',

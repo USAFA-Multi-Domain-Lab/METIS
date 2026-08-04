@@ -62,7 +62,7 @@ Hooks are registered in your target environment's `schema.ts` file using the `.o
 ```typescript
 // integration/target-env/my-environment/schema.ts
 
-const environment = new TargetEnvSchema({
+const environment = TargetEnvSchema.create({
   name: 'My Environment',
   description: 'Example environment with hooks',
   version: '1.0.0',
@@ -124,7 +124,7 @@ A hook context exposes seven members, and nothing else:
 ```typescript
 import { DatabaseClient } from 'some-database-library'
 
-const environment = new TargetEnvSchema({
+const environment = TargetEnvSchema.create({
   name: 'Database Environment',
   version: '1.0.0',
 })
@@ -174,7 +174,7 @@ export default environment
 ```typescript
 import { RestApi } from '@metis/api/RestApi'
 
-const environment = new TargetEnvSchema({
+const environment = TargetEnvSchema.create({
   name: 'API Environment',
   version: '1.0.0',
 })
@@ -239,7 +239,7 @@ export default environment
 ```typescript
 import { RestApi } from '@metis/api/RestApi'
 
-const environment = new TargetEnvSchema({
+const environment = TargetEnvSchema.create({
   name: 'Cached API',
   version: '1.0.0',
 })
@@ -416,7 +416,7 @@ environment.on('environment-setup', async (context) => {
 ```typescript
 import { WebSocketApi } from '@metis/api/WebSocketApi'
 
-const environment = new TargetEnvSchema({
+const environment = TargetEnvSchema.create({
   name: 'WebSocket Environment',
   version: '1.0.0',
 })

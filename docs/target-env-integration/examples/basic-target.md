@@ -29,7 +29,7 @@ First, create the target environment schema at `/integration/target-env/hello-wo
 /**
  * A simple target environment for demonstration purposes.
  */
-const HelloWorld = new TargetEnvSchema({
+const HelloWorld = TargetEnvSchema.create({
   name: 'Hello World',
   description:
     'A basic target environment that demonstrates fundamental concepts',
@@ -126,7 +126,7 @@ export default Greeting
 ### Target Environment Schema
 
 ```typescript
-const HelloWorld = new TargetEnvSchema({
+const HelloWorld = TargetEnvSchema.create({
   name: 'Hello World', // Display name in METIS UI
   description: 'A basic target environment...', // Description for users
   version: '1.0.0', // Semantic version

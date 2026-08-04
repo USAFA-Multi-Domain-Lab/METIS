@@ -83,7 +83,7 @@ Lives in `server/`. When an effect executes during a session, METIS creates a se
 First, the environment, in `integration/target-env/traffic-control-system/schema.ts`:
 
 ```typescript
-const TrafficControlSystem = new TargetEnvSchema({
+const TrafficControlSystem = TargetEnvSchema.create({
   name: 'Traffic Control System',
   description: 'Integration with city traffic management',
   version: '1.0.0',
