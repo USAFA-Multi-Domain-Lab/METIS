@@ -126,11 +126,11 @@ export const onRequestExecuteAction =
           realmId: realm._id,
           cheats,
           onInit: (execution: ServerActionExecution) =>
-            this.onExecution(member, request, execution),
+            this.onExecution(member, request, execution, realm),
         })
 
         // Handle the outcome of the action.
-        this.onOutcome(member, request, outcome)
+        this.onOutcome(member, request, outcome, realm)
       } catch (error) {
         // Emit an error if the action could not be executed.
         member.emitError(

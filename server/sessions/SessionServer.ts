@@ -1220,17 +1220,15 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * @param member The member provided to `onRequestExecuteAction`.
    * @param event The event provided to `onRequestExecuteAction`.
    * @param execution The execution that was initiated.
+   * @param realm The realm in which the execution was initiated.
    */
   protected onExecution(
     member: ServerSessionMember,
     request: TRequestOfResponse,
     execution: ServerActionExecution,
+    realm: ServerSessionRealm,
   ): void {
     let { action } = execution
-    // The realm the action was taken in, recorded on the execution when
-    // it began. The member's own subscription is not consulted, since it
-    // can change while the action is still processing.
-    let realm = this.getRealm(execution.realmId)!
 
     // Construct payload for action execution
     // initiated event.
@@ -1274,17 +1272,28 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     )
     // Apply the effects for the action that are triggered
     // immediately.
-    this.applyActionEffects(member, action, 'execution-initiation', execution)
+    this.applyActionEffects(
+      member,
+      action,
+      'execution-initiation',
+      execution,
+      realm,
+    )
   }
 
   /**
    * Sub-handler of `onRequestExecuteAction` which processes the
    * outcome of an action execution.
+   * @param member The member provided to `onRequestExecuteAction`.
+   * @param event The event provided to `onRequestExecuteAction`.
+   * @param outcome The outcome of the execution that was initiated.
+   * @param realm The realm in which the execution was initiated.
    */
   protected onOutcome(
     member: ServerSessionMember,
     request: TRequestOfResponse,
     outcome: ServerExecutionOutcome,
+    realm: ServerSessionRealm,
   ): void {
     const { action, node } = outcome
 
@@ -1344,14 +1353,21 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // even if the member has since switched realms.
     for (let forceMember of this.getMembersForForce(
       outcome.forceId,
-      outcome.execution.realmId,
+      realm._id,
     )) {
       forceMember.emit('action-execution-completed', completionPayload)
     }
 
     // Apply effects, if the outcome calls for it.
-    if (effectTrigger)
-      this.applyActionEffects(member, action, effectTrigger, outcome.execution)
+    if (effectTrigger) {
+      this.applyActionEffects(
+        member,
+        action,
+        effectTrigger,
+        outcome.execution,
+        realm,
+      )
+    }
   }
 
   /**
@@ -1494,12 +1510,14 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * @param action The action to process.
    * @param trigger The trigger to look for in the effects.
    * @param execution The action execution that is being processed.
+   * @param realm The realm in which the action execution is being processed.
    */
   private async applyActionEffects(
     member: ServerSessionMember,
     action: ServerMissionAction,
     trigger: TEffectExecutionTriggered,
     execution: ServerActionExecution,
+    realm: ServerSessionRealm,
   ): Promise<void> {
     // Phase 1 — enumerate the effects for this trigger and bind each to a
     // queued task. Disabled environments are excluded here, so they never
@@ -1516,6 +1534,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         effect,
         member,
         execution,
+        realm,
       }),
     )
     for (let task of tasks) task.announce()

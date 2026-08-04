@@ -22,6 +22,14 @@ RUN ARCH=$(uname -m) && \
     mv /tmp/mongodb-database-tools-*/bin/* /usr/local/bin/ && \
     rm -rf /tmp/mongodb-tools.tgz /tmp/mongodb-database-tools-*
 
+# Install the MongoDB Shell, used to run the database migration scripts
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "aarch64" ]; then MONGOSH_ARCH="arm64"; else MONGOSH_ARCH="x64"; fi && \
+    wget "https://downloads.mongodb.com/compass/mongosh-2.5.0-linux-${MONGOSH_ARCH}.tgz" -O /tmp/mongosh.tgz && \
+    tar -xzf /tmp/mongosh.tgz -C /tmp && \
+    mv /tmp/mongosh-*/bin/* /usr/local/bin/ && \
+    rm -rf /tmp/mongosh.tgz /tmp/mongosh-*
+
 # Install jq
 RUN wget -O /usr/local/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && \
     chmod +x /usr/local/bin/jq
@@ -35,10 +43,10 @@ WORKDIR /opt/metis
 COPY . .
 
 # Create directories for persistent data
-RUN mkdir -p ./files/store && \
-    mkdir -p ./database/backups && \
-    chmod -R 777 ./files/store && \
-    chmod -R 777 ./database/backups
+RUN mkdir -p ./server/files/store && \
+    mkdir -p ./server/database/backups && \
+    chmod -R 777 ./server/files/store && \
+    chmod -R 777 ./server/database/backups
 
 # Install dependencies and build
 RUN npm install && \
