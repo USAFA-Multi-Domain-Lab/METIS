@@ -175,7 +175,7 @@ export default function DetailMultiSelect<TOption>(
             }}
             disabled={disabled}
           >
-            ✕
+            <div className='RemoveButtonText'>x</div>
           </button>
         </div>
       )
