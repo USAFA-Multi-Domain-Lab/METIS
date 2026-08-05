@@ -169,20 +169,21 @@ script: async (context, { 'api-endpoint': apiEndpoint, 'API_KEY': apiKey }) => {
 
 An argument the user never touched is still present. What it holds depends on the type and on whether the parameter is required.
 
-| `type`              | Required                     | Optional, left untouched |
-| ------------------- | ---------------------------- | ------------------------ |
-| `string`            | The parameter's `default`    | `''`                     |
-| `large-string`      | The parameter's `default`    | `''`                     |
-| `number`            | The parameter's `default`    | `null`                   |
-| `dropdown`          | The default option's `value` | `null`                   |
-| `boolean`           | n/a                          | `default`, or `false`    |
-| `mission-component` | n/a                          | `[]`                     |
+| `type`         | Required                     | Optional, left untouched |
+| -------------- | ---------------------------- | ------------------------ |
+| `string`       | The parameter's `default`    | `''`                     |
+| `large-string` | The parameter's `default`    | `''`                     |
+| `number`       | The parameter's `default`    | `null`                   |
+| `dropdown`     | The default option's `value` | `null`                   |
 
-Three consequences worth internalizing:
+`boolean` and `mission-component` have no `required` field, so the distinction does not apply to them. An untouched `boolean` holds its `default`, or `false` if none is declared; an untouched `mission-component` holds `[]`.
+
+Four consequences worth internalizing:
 
 - **An untouched optional value is not `undefined`.** Checking `!== undefined` on an optional number passes even when the user left it blank, because the value is `null`. Check the type's own empty value instead — `null` for a number, `''` for a string, `[]` for a selection.
 - **`undefined` means one thing only:** the parameter's dependencies are not met. See the next section.
-- **Defaults apply to required parameters only.** Declaring `default` on an optional parameter compiles and is then ignored, so the argument still arrives as that type's empty value. If you want a fallback on an optional parameter, apply it in the script with `??`.
+- **Defaults apply to required parameters only, plus `boolean`.** Declaring `default` on an optional parameter compiles and is then ignored, so the argument still arrives as that type's empty value. If you want a fallback on an optional parameter, apply it in the script with `??`. A `boolean` is the exception: it has no `required` field, yet its `default` seeds the initial value.
+- **A misplaced `default` is not a compile error.** `TargetSchema.create` takes its parameters through a generic constraint rather than a declared type, so TypeScript does not reject extra properties on them. Writing `default` on an optional parameter, or on a `mission-component` that has no such field at all, compiles silently and does nothing.
 
 ```typescript
 script: async (context, { region, maxRetries, notify }) => {
