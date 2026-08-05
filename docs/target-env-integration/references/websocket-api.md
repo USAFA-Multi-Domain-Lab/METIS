@@ -9,7 +9,9 @@ The WebSocket API provides real-time, bidirectional communication between your t
 - [Configuration](#configuration)
 - [Connection Management](#connection-management)
 - [Event System](#event-system)
+- [Event Handler Examples](#event-handler-examples)
 - [Sending Messages](#sending-messages)
+- [Message Patterns](#message-patterns)
 - [Connection State](#connection-state)
 - [Error Handling](#error-handling)
 - [Type Definitions](#type-definitions)
@@ -42,14 +44,22 @@ The `WebSocketApi` class is built on the `ws` library and provides:
 
 ### Basic Setup
 
-```ts
+```typescript
 import { WebSocketApi } from '@metis/api/WebSocketApi'
-import type { TargetScriptContext } from '@metis/target-environments/context/TargetScriptContext'
 
-export default new TargetSchema({
+export default TargetSchema.create({
   _id: 'websocket-example',
   name: 'WebSocket Example',
-  script: async (context: TargetScriptContext) => {
+  description: 'Connect to a WebSocket service and exchange a message',
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      validComponentTypes: ['mission', 'force'],
+    },
+  ],
+  script: async (context, { notify }) => {
     // Verify configuration is selected
     if (!context.config.targetEnvConfig) {
       throw new Error('No configuration selected.')
@@ -60,11 +70,11 @@ export default new TargetSchema({
 
     // Add event listeners
     ws.addEventListener('open', () => {
-      context.sendOutput('✅ Connected to WebSocket')
+      context.sendOutput('✅ Connected to WebSocket', notify)
     })
 
     ws.addEventListener('message', (event) => {
-      context.sendOutput(`Received: ${JSON.stringify(event.data)}`)
+      context.sendOutput(`Received: ${JSON.stringify(event.data)}`, notify)
     })
 
     // Connect
@@ -83,7 +93,7 @@ export default new TargetSchema({
 
 The `fromConfig()` static method automatically parses your environment configuration:
 
-```ts
+```typescript
 // Automatically reads: protocol, host, port, rejectUnauthorized, connectTimeout
 const ws = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
 ```
@@ -104,7 +114,7 @@ const ws = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
 
 ### Connection Options
 
-```ts
+```typescript
 interface TWebSocketApiOptions {
   protocol?: 'ws' | 'wss' // Default: 'ws'
   host?: string // Default: 'localhost'
@@ -214,14 +224,14 @@ The WebSocket API automatically constructs connection URLs:
 
 ### Establishing Connections
 
-```ts
+```typescript
 const ws = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
 
 try {
   await ws.connect()
-  context.sendOutput('Connected successfully')
+  context.sendOutput('Connected successfully', context.mission)
 } catch (error) {
-  context.sendOutput(`Connection failed: ${error.message}`)
+  context.sendOutput(`Connection failed: ${error.message}`, context.mission)
   throw error
 }
 ```
@@ -235,7 +245,7 @@ try {
 
 ### Checking Connection State
 
-```ts
+```typescript
 // Check if currently connected
 if (ws.isConnected) {
   await ws.send('Hello!')
@@ -244,16 +254,16 @@ if (ws.isConnected) {
 // Check raw state
 switch (ws.state) {
   case WebSocket.CONNECTING:
-    context.sendOutput('Connecting...')
+    context.sendOutput('Connecting...', context.mission)
     break
   case WebSocket.OPEN:
-    context.sendOutput('Connected')
+    context.sendOutput('Connected', context.mission)
     break
   case WebSocket.CLOSING:
-    context.sendOutput('Closing...')
+    context.sendOutput('Closing...', context.mission)
     break
   case WebSocket.CLOSED:
-    context.sendOutput('Disconnected')
+    context.sendOutput('Disconnected', context.mission)
     break
 }
 ```
@@ -267,7 +277,7 @@ switch (ws.state) {
 
 ### Disconnecting
 
-```ts
+```typescript
 // Graceful disconnect
 ws.disconnect()
 
@@ -288,13 +298,16 @@ ws.disconnect(1003, 'Invalid data') // Unsupported data received
 
 ### Connection Properties
 
-```ts
+```typescript
 // Access connection URL
-context.sendOutput(`Connecting to: ${ws.url}`)
+context.sendOutput(`Connecting to: ${ws.url}`, context.mission)
 
 // Access connection options
-context.sendOutput(`Timeout: ${ws.connectTimeout}ms`)
-context.sendOutput(`TLS Verification: ${ws.rejectUnauthorized}`)
+context.sendOutput(`Timeout: ${ws.connectTimeout}ms`, context.mission)
+context.sendOutput(
+  `TLS Verification: ${ws.rejectUnauthorized}`,
+  context.mission,
+)
 
 // Access raw WebSocket connection (advanced)
 if (ws.connection) {
@@ -320,149 +333,34 @@ The WebSocket API provides six event types:
 
 ### Adding Event Listeners
 
-```ts
+```typescript
 // Single event type
 ws.addEventListener('message', (event) => {
-  context.sendOutput(`Received: ${JSON.stringify(event.data)}`)
+  context.sendOutput(`Received: ${JSON.stringify(event.data)}`, context.mission)
 })
 
 // Multiple event types with same handler
 ws.addEventListener(['open', 'close'], (event) => {
   if (event.method === 'open') {
-    context.sendOutput('Connected')
+    context.sendOutput('Connected', context.mission)
   } else if (event.method === 'close') {
-    context.sendOutput(`Disconnected: ${event.reason}`)
+    context.sendOutput(`Disconnected: ${event.reason}`, context.mission)
   }
 })
 
 // Type-safe event handlers
 ws.addEventListener('error', (event) => {
   // event.error is typed as Error
-  context.sendOutput(`Error: ${event.error.message}`)
-})
-```
-
-### Event Handler Examples
-
-#### Open Event
-
-Fired when connection is successfully established:
-
-```ts
-ws.addEventListener('open', (event) => {
-  context.sendOutput('✅ WebSocket connection established')
-
-  // Safe to send messages now
-  ws.sendMessage({ type: 'authenticate', token: 'abc123' })
-})
-```
-
-#### Message Event
-
-Fired when a message is received:
-
-```ts
-ws.addEventListener('message', (event) => {
-  // event.data is automatically parsed from JSON if possible
-  const { type, payload } = event.data
-
-  switch (type) {
-    case 'status-update':
-      context.sendOutput(`Status: ${payload.status}`)
-      break
-    case 'alert':
-      context.sendOutput(`⚠️ Alert: ${payload.message}`)
-      break
-    default:
-      context.sendOutput(`Unknown message type: ${type}`)
-  }
-
-  // Access raw message data if needed
-  context.sendOutput(`Raw: ${event.raw}`)
-})
-```
-
-**Message parsing:**
-
-- Automatically attempts JSON parsing for string/buffer messages
-- Falls back to raw string if JSON parsing fails
-- Access original data via `event.raw`
-
-#### Close Event
-
-Fired when connection closes:
-
-```ts
-ws.addEventListener('close', (event) => {
-  context.sendOutput(`Connection closed: ${event.reason}`)
-  context.sendOutput(`Close code: ${event.code}`)
-
-  // Check close code for specific handling
-  if (event.code === 1006) {
-    context.sendOutput('⚠️ Abnormal closure - connection lost')
-  } else if (event.code === 1000) {
-    context.sendOutput('✅ Normal closure')
-  }
-})
-```
-
-**Common close codes:**
-
-- 1000: Normal closure
-- 1001: Going away
-- 1006: Abnormal closure (no close frame received)
-- 1011: Internal server error
-
-#### Error Event
-
-Fired when an error occurs:
-
-```ts
-ws.addEventListener('error', (event) => {
-  context.sendOutput(`❌ WebSocket error: ${event.error.message}`)
-
-  // Log full error for debugging
-  console.error('WebSocket error details:', event.error)
-
-  // Clean up resources
-  ws.disconnect()
-})
-```
-
-#### Connection-Change Event
-
-Fired when connection state changes (open or close):
-
-```ts
-ws.addEventListener('connection-change', (event) => {
-  if (event.isConnected) {
-    context.sendOutput('🟢 Connected')
-    // Start sending periodic updates
-  } else {
-    context.sendOutput('🔴 Disconnected')
-    // Stop operations
-  }
-})
-```
-
-#### Activity Event
-
-Fired after any other event (useful for logging/monitoring):
-
-```ts
-ws.addEventListener('activity', (event) => {
-  // Log all WebSocket activity
-  const timestamp = new Date().toISOString()
-  context.sendOutput(`[${timestamp}] Activity: ${event.eventType}`)
+  context.sendOutput(`Error: ${event.error.message}`, context.mission)
 })
 ```
 
 ### Removing Event Listeners
 
-```ts
+```typescript
 // Define handler function
 const messageHandler = (event) => {
-  context.sendOutput(event.data)
+  context.sendOutput(event.data, context.mission)
 }
 
 // Add listener
@@ -478,11 +376,132 @@ ws.clearEventListeners()
 ws.clearEventListeners(['message', 'error'])
 ```
 
+## Event Handler Examples
+
+### Open Event
+
+Fired when connection is successfully established:
+
+```typescript
+ws.addEventListener('open', (event) => {
+  context.sendOutput('✅ WebSocket connection established', context.mission)
+
+  // Safe to send messages now
+  ws.sendMessage({ type: 'authenticate', token: 'abc123' })
+})
+```
+
+### Message Event
+
+Fired when a message is received:
+
+```typescript
+ws.addEventListener('message', (event) => {
+  // event.data is automatically parsed from JSON if possible
+  const { type, payload } = event.data
+
+  switch (type) {
+    case 'status-update':
+      context.sendOutput(`Status: ${payload.status}`, context.mission)
+      break
+    case 'alert':
+      context.sendOutput(`⚠️ Alert: ${payload.message}`, context.mission)
+      break
+    default:
+      context.sendOutput(`Unknown message type: ${type}`, context.mission)
+  }
+
+  // Access raw message data if needed
+  context.sendOutput(`Raw: ${event.raw}`, context.mission)
+})
+```
+
+**Message parsing:**
+
+- Automatically attempts JSON parsing for string/buffer messages
+- Falls back to raw string if JSON parsing fails
+- Access original data via `event.raw`
+
+### Close Event
+
+Fired when connection closes:
+
+```typescript
+ws.addEventListener('close', (event) => {
+  context.sendOutput(`Connection closed: ${event.reason}`, context.mission)
+  context.sendOutput(`Close code: ${event.code}`, context.mission)
+
+  // Check close code for specific handling
+  if (event.code === 1006) {
+    context.sendOutput('⚠️ Abnormal closure - connection lost', context.mission)
+  } else if (event.code === 1000) {
+    context.sendOutput('✅ Normal closure', context.mission)
+  }
+})
+```
+
+**Common close codes:**
+
+- 1000: Normal closure
+- 1001: Going away
+- 1006: Abnormal closure (no close frame received)
+- 1011: Internal server error
+
+### Error Event
+
+Fired when an error occurs:
+
+```typescript
+ws.addEventListener('error', (event) => {
+  context.sendOutput(
+    `❌ WebSocket error: ${event.error.message}`,
+    context.mission,
+  )
+
+  // Log full error for debugging
+  console.error('WebSocket error details:', event.error)
+
+  // Clean up resources
+  ws.disconnect()
+})
+```
+
+### Connection-Change Event
+
+Fired when connection state changes (open or close):
+
+```typescript
+ws.addEventListener('connection-change', (event) => {
+  if (event.isConnected) {
+    context.sendOutput('🟢 Connected', context.mission)
+    // Start sending periodic updates
+  } else {
+    context.sendOutput('🔴 Disconnected', context.mission)
+    // Stop operations
+  }
+})
+```
+
+### Activity Event
+
+Fired after any other event (useful for logging/monitoring):
+
+```typescript
+ws.addEventListener('activity', (event) => {
+  // Log all WebSocket activity
+  const timestamp = new Date().toISOString()
+  context.sendOutput(
+    `[${timestamp}] Activity: ${event.eventType}`,
+    context.mission,
+  )
+})
+```
+
 ## Sending Messages
 
 ### Basic Sending
 
-```ts
+```typescript
 // Send string
 await ws.send('Hello, WebSocket!')
 
@@ -493,11 +512,11 @@ await ws.send({ type: 'command', action: 'execute' })
 await ws.sendMessage({ type: 'command', action: 'execute' })
 ```
 
-### Message Patterns
+## Message Patterns
 
-#### Request-Response Pattern
+### Request-Response Pattern
 
-```ts
+```typescript
 script: async (context) => {
   const ws = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
 
@@ -530,18 +549,18 @@ script: async (context) => {
   }
 
   if (responseReceived) {
-    context.sendOutput(`Received: ${JSON.stringify(response)}`)
+    context.sendOutput(`Received: ${JSON.stringify(response)}`, context.mission)
   } else {
-    context.sendOutput('⚠️ Response timeout')
+    context.sendOutput('⚠️ Response timeout', context.mission)
   }
 
   ws.disconnect()
 }
 ```
 
-#### Streaming Data Pattern
+### Streaming Data Pattern
 
-```ts
+```typescript
 script: async (context) => {
   const ws = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
 
@@ -550,10 +569,14 @@ script: async (context) => {
   ws.addEventListener('message', (event) => {
     if (event.data.type === 'stream-data') {
       receivedCount++
-      context.sendOutput(`Stream update #${receivedCount}: ${event.data.value}`)
+      context.sendOutput(
+        `Stream update #${receivedCount}: ${event.data.value}`,
+        context.mission,
+      )
     } else if (event.data.type === 'stream-end') {
       context.sendOutput(
         `✅ Stream complete. Received ${receivedCount} updates`,
+        context.mission,
       )
     }
   })
@@ -580,9 +603,9 @@ script: async (context) => {
 }
 ```
 
-#### Heartbeat/Keep-Alive Pattern
+### Heartbeat/Keep-Alive Pattern
 
-```ts
+```typescript
 script: async (context) => {
   const ws = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
 
@@ -596,7 +619,7 @@ script: async (context) => {
   const sendHeartbeat = async () => {
     while (keepRunning && ws.isConnected) {
       await ws.sendMessage({ type: 'heartbeat', timestamp: Date.now() })
-      context.sendOutput('💓 Heartbeat sent')
+      context.sendOutput('💓 Heartbeat sent', context.mission)
       await context.sleep(heartbeatInterval)
     }
   }
@@ -617,7 +640,7 @@ script: async (context) => {
 
 ### State Properties
 
-```ts
+```typescript
 // Connection object (null if not connected)
 const connection: WebSocket | null = ws.connection
 
@@ -634,7 +657,7 @@ const options: ClientOptions = ws.options
 
 ### State Checking Patterns
 
-```ts
+```typescript
 // Before sending
 if (!ws.isConnected) {
   context.sendOutput('⚠️ Not connected, attempting reconnection...')
@@ -645,7 +668,7 @@ await ws.send('Hello!')
 // State-based logic
 switch (ws.state) {
   case WebSocket.CONNECTING:
-    context.sendOutput('Waiting for connection...')
+    context.sendOutput('Waiting for connection...', context.mission)
     break
   case WebSocket.OPEN:
     await ws.send('Ready to communicate')
@@ -675,23 +698,35 @@ ws.addEventListener('connection-change', (event) => {
 
 ### Connection Errors
 
-```ts
+```typescript
 script: async (context) => {
   const ws = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
 
   try {
-    context.sendOutput('Attempting connection...')
+    context.sendOutput('Attempting connection...', context.mission)
     await ws.connect()
-    context.sendOutput('✅ Connected successfully')
+    context.sendOutput('✅ Connected successfully', context.mission)
   } catch (error) {
     if (error.message.includes('ECONNREFUSED')) {
-      context.sendOutput('❌ Connection refused - server not running')
+      context.sendOutput(
+        '❌ Connection refused - server not running',
+        context.mission,
+      )
     } else if (error.message.includes('ETIMEDOUT')) {
-      context.sendOutput('❌ Connection timeout - check network')
+      context.sendOutput(
+        '❌ Connection timeout - check network',
+        context.mission,
+      )
     } else if (error.message.includes('certificate')) {
-      context.sendOutput('❌ TLS certificate error - check rejectUnauthorized')
+      context.sendOutput(
+        '❌ TLS certificate error - check rejectUnauthorized',
+        context.mission,
+      )
     } else {
-      context.sendOutput(`❌ Connection error: ${error.message}`)
+      context.sendOutput(
+        `❌ Connection error: ${error.message}`,
+        context.mission,
+      )
     }
     throw error
   }
@@ -700,12 +735,12 @@ script: async (context) => {
 
 ### Runtime Errors
 
-```ts
+```typescript
 // Add error listener for runtime errors
 ws.addEventListener('error', (event) => {
   const error = event.error
 
-  context.sendOutput(`❌ WebSocket error: ${error.message}`)
+  context.sendOutput(`❌ WebSocket error: ${error.message}`, context.mission)
 
   // Log detailed error information
   if (error.stack) {
@@ -718,7 +753,7 @@ ws.addEventListener('error', (event) => {
   } else {
     context.sendOutput('Connection lost, attempting reconnection...')
     ws.connect().catch((err) => {
-      context.sendOutput(`Reconnection failed: ${err.message}`)
+      context.sendOutput(`Reconnection failed: ${err.message}`, context.mission)
     })
   }
 })
@@ -726,16 +761,16 @@ ws.addEventListener('error', (event) => {
 
 ### Send Errors
 
-```ts
+```typescript
 try {
   await ws.sendMessage({ type: 'command', data: 'execute' })
 } catch (error) {
   if (error.message === 'WebSocket is not connected') {
-    context.sendOutput('⚠️ Cannot send - not connected')
+    context.sendOutput('⚠️ Cannot send - not connected', context.mission)
     await ws.connect()
     await ws.sendMessage({ type: 'command', data: 'execute' })
   } else {
-    context.sendOutput(`Send error: ${error.message}`)
+    context.sendOutput(`Send error: ${error.message}`, context.mission)
     throw error
   }
 }
@@ -743,12 +778,15 @@ try {
 
 ### Configuration Errors
 
-```ts
+```typescript
 try {
   const ws = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
 } catch (error) {
   if (error.message.includes('Invalid WebSocket API configuration')) {
-    context.sendOutput('❌ Configuration error - check configs.json')
+    context.sendOutput(
+      '❌ Configuration error - check configs.json',
+      context.mission,
+    )
     context.sendOutput('Required: protocol, host, port')
     throw new Error('WebSocket configuration invalid')
   }
@@ -759,7 +797,7 @@ try {
 
 ### WebSocketApiOptions
 
-```ts
+```typescript
 interface TWebSocketApiOptions {
   protocol?: 'ws' | 'wss'
   host?: string
@@ -771,7 +809,7 @@ interface TWebSocketApiOptions {
 
 ### WebSocket Event Types
 
-```ts
+```typescript
 type TWebSocketEventType =
   | 'open'
   | 'close'
@@ -783,7 +821,7 @@ type TWebSocketEventType =
 
 ### WebSocket Events
 
-```ts
+```typescript
 type TWebSocketEvents = {
   'open': {
     method: 'open'
@@ -815,7 +853,7 @@ type TWebSocketEvents = {
 
 ### Event Handler Type
 
-```ts
+```typescript
 type TWebSocketEventHandler<T extends TWebSocketEventType> = (
   event: TWebSocketEvents[T],
 ) => void
@@ -827,7 +865,7 @@ type TWebSocketEventHandler<T extends TWebSocketEventType> = (
 
 Using WebSocket with environment lifecycle hooks:
 
-```ts
+```typescript
 import { WebSocketApi } from '@metis/api/WebSocketApi'
 
 let wsConnection: WebSocketApi | null = null
@@ -843,30 +881,30 @@ environment.on('environment-setup', async (context) => {
     throw new Error('No WebSocket configuration selected.')
   }
 
-  context.sendOutput('Establishing WebSocket connection...')
+  console.log('Establishing WebSocket connection...')
 
   try {
     wsConnection = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
 
     // Configure event listeners
     wsConnection.addEventListener('open', () => {
-      context.sendOutput('✅ WebSocket connected')
+      console.log('✅ WebSocket connected')
     })
 
     wsConnection.addEventListener('close', (event) => {
-      context.sendOutput(`⚠️ WebSocket disconnected: ${event.reason}`)
+      console.log(`⚠️ WebSocket disconnected: ${event.reason}`)
     })
 
     wsConnection.addEventListener('error', (event) => {
-      context.sendOutput(`❌ WebSocket error: ${event.error.message}`)
+      console.log(`❌ WebSocket error: ${event.error.message}`)
     })
 
     // Connect
     await wsConnection.connect()
-    context.sendOutput('WebSocket ready for use')
+    console.log('WebSocket ready for use')
   } catch (error) {
     wsConnection = null
-    context.sendOutput(`❌ WebSocket setup failed: ${error.message}`)
+    console.log(`❌ WebSocket setup failed: ${error.message}`)
     throw error
   }
 })
@@ -874,45 +912,61 @@ environment.on('environment-setup', async (context) => {
 // Clean up during teardown
 environment.on('environment-teardown', async (context) => {
   if (wsConnection) {
-    context.sendOutput('Closing WebSocket connection...')
+    console.log('Closing WebSocket connection...')
     try {
       wsConnection.disconnect(1000, 'Environment teardown')
       wsConnection = null
-      context.sendOutput('✅ WebSocket disconnected')
+      console.log('✅ WebSocket disconnected')
     } catch (error) {
-      context.sendOutput(`⚠️ WebSocket disconnect error: ${error.message}`)
+      console.log(`⚠️ WebSocket disconnect error: ${error.message}`)
     }
   }
 })
 
 // Use connection in target scripts
-targets.operations.use(
-  new TargetSchema({
-    _id: 'send-websocket-message',
-    name: 'Send WebSocket Message',
-    script: async (context) => {
-      if (!wsConnection || !wsConnection.isConnected) {
-        throw new Error('WebSocket not connected')
-      }
-
-      await wsConnection.sendMessage({
-        type: 'command',
-        payload: context.effect.args,
-      })
-
-      context.sendOutput('✅ Message sent via WebSocket')
+// integration/target-env/<your-env>/targets/send-websocket-message/schema.ts
+export default TargetSchema.create({
+  _id: 'send-websocket-message',
+  name: 'Send WebSocket Message',
+  description: 'Send a command over the shared WebSocket connection',
+  parameters: [
+    {
+      _id: 'payload',
+      name: 'Payload',
+      type: 'large-string',
+      required: true,
+      default: '',
     },
-  }),
-)
+  ],
+  script: async (context, { payload }) => {
+    if (!wsConnection || !wsConnection.isConnected) {
+      throw new Error('WebSocket not connected')
+    }
+
+    await wsConnection.sendMessage({
+      type: 'command',
+      payload,
+    })
+
+    context.sendOutput('✅ Message sent via WebSocket', context.mission)
+  },
+})
 ```
 
 ### Real-Time Monitoring System
 
-```ts
-export default new TargetSchema({
+```typescript
+export default TargetSchema.create({
   _id: 'monitor-system',
   name: 'Monitor System Status',
-  args: [
+  description: 'Watch a WebSocket feed for a fixed period and report metrics',
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      validComponentTypes: ['mission', 'force'],
+    },
     {
       _id: 'duration',
       name: 'Monitor Duration (seconds)',
@@ -921,24 +975,23 @@ export default new TargetSchema({
       default: 60,
     },
   ],
-  script: async (context) => {
+  script: async (context, { notify, duration }) => {
     if (!context.config.targetEnvConfig) {
       throw new Error('No configuration selected.')
     }
 
-    const { duration } = context.effect.args
     const ws = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
 
     // Track metrics
     const metrics = {
       messagesReceived: 0,
       errorsEncountered: 0,
-      alerts: [],
+      alerts: [] as string[],
     }
 
     // Set up listeners
     ws.addEventListener('open', () => {
-      context.sendOutput('🟢 Monitoring started')
+      context.sendOutput('🟢 Monitoring started', notify)
     })
 
     ws.addEventListener('message', (event) => {
@@ -948,25 +1001,25 @@ export default new TargetSchema({
 
       switch (type) {
         case 'status-update':
-          context.sendOutput(`Status: ${data.status}`)
+          context.sendOutput(`Status: ${data.status}`, notify)
           break
         case 'metric':
-          context.sendOutput(`Metric ${data.name}: ${data.value}`)
+          context.sendOutput(`Metric ${data.name}: ${data.value}`, notify)
           break
         case 'alert':
           metrics.alerts.push(data.message)
-          context.sendOutput(`⚠️ ALERT: ${data.message}`)
+          context.sendOutput(`⚠️ ALERT: ${data.message}`, notify)
           break
       }
     })
 
     ws.addEventListener('error', (event) => {
       metrics.errorsEncountered++
-      context.sendOutput(`❌ Error: ${event.error.message}`)
+      context.sendOutput(`❌ Error: ${event.error.message}`, notify)
     })
 
     ws.addEventListener('close', () => {
-      context.sendOutput('🔴 Monitoring stopped')
+      context.sendOutput('🔴 Monitoring stopped', notify)
     })
 
     try {
@@ -988,15 +1041,21 @@ export default new TargetSchema({
       })
 
       // Report summary
-      context.sendOutput('\n📊 Monitoring Summary:')
-      context.sendOutput(`Messages received: ${metrics.messagesReceived}`)
-      context.sendOutput(`Errors encountered: ${metrics.errorsEncountered}`)
-      context.sendOutput(`Alerts triggered: ${metrics.alerts.length}`)
+      context.sendOutput('\n📊 Monitoring Summary:', notify)
+      context.sendOutput(
+        `Messages received: ${metrics.messagesReceived}`,
+        notify,
+      )
+      context.sendOutput(
+        `Errors encountered: ${metrics.errorsEncountered}`,
+        notify,
+      )
+      context.sendOutput(`Alerts triggered: ${metrics.alerts.length}`, notify)
 
       if (metrics.alerts.length > 0) {
-        context.sendOutput('\nAlerts:')
+        context.sendOutput('\nAlerts:', notify)
         metrics.alerts.forEach((alert, i) => {
-          context.sendOutput(`  ${i + 1}. ${alert}`)
+          context.sendOutput(`  ${i + 1}. ${alert}`, notify)
         })
       }
     } finally {
@@ -1008,16 +1067,24 @@ export default new TargetSchema({
 
 ### Bidirectional Command System
 
-```ts
-export default new TargetSchema({
+```typescript
+export default TargetSchema.create({
   _id: 'interactive-command',
   name: 'Interactive Command Session',
-  args: [
+  description: 'Send a command over WebSocket and optionally await its response',
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      validComponentTypes: ['mission', 'force'],
+    },
     {
       _id: 'command',
       name: 'Command',
-      type: 'text',
+      type: 'string',
       required: true,
+      default: '',
     },
     {
       _id: 'waitForResponse',
@@ -1026,12 +1093,11 @@ export default new TargetSchema({
       default: true,
     },
   ],
-  script: async (context) => {
+  script: async (context, { notify, command, waitForResponse }) => {
     if (!context.config.targetEnvConfig) {
       throw new Error('No configuration selected.')
     }
 
-    const { command, waitForResponse } = context.effect.args
     const ws = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
 
     let commandResponse: any = null
@@ -1058,7 +1124,7 @@ export default new TargetSchema({
         timestamp: Date.now(),
       })
 
-      context.sendOutput(`📤 Command sent: ${command}`)
+      context.sendOutput(`📤 Command sent: ${command}`, notify)
 
       if (waitForResponse) {
         // Wait for response (30 second timeout)
@@ -1070,19 +1136,25 @@ export default new TargetSchema({
         }
 
         if (commandResponse) {
-          context.sendOutput('📥 Response received:')
-          context.sendOutput(JSON.stringify(commandResponse.data, null, 2))
+          context.sendOutput('📥 Response received:', notify)
+          context.sendOutput(
+            JSON.stringify(commandResponse.data, null, 2),
+            notify,
+          )
 
           if (commandResponse.success) {
-            context.sendOutput('✅ Command executed successfully')
+            context.sendOutput('✅ Command executed successfully', notify)
           } else {
-            context.sendOutput(`❌ Command failed: ${commandResponse.error}`)
+            context.sendOutput(
+              `❌ Command failed: ${commandResponse.error}`,
+              notify,
+            )
           }
         } else {
-          context.sendOutput('⚠️ Response timeout (30s)')
+          context.sendOutput('⚠️ Response timeout (30s)', notify)
         }
       } else {
-        context.sendOutput('✅ Command sent (no response expected)')
+        context.sendOutput('✅ Command sent (no response expected)', notify)
       }
     } finally {
       ws.disconnect()
@@ -1201,20 +1273,20 @@ export default new TargetSchema({
 
 ## Related Documentation
 
-### 📋 Essential Guides
+### Essential Guides
 
 - **[Environment Hooks](../guides/environment-hooks.md)** - Lifecycle management for persistent connections
 - **[Environment Configuration](environment-configuration.md)** - Configuration system and `configs.json`
 - **[External API Integration](../guides/external-api-integration.md)** - REST API patterns and best practices
 - **[Context API](context-api.md)** - Complete runtime context reference
 
-### 🔗 References
+### References
 
 - **[REST API](rest-api.md)** - HTTP-based integration patterns
 - **[Configs.json](configs-json.md)** - Configuration file reference
 - **[Schemas](schemas.md)** - Type definitions and validation
 
-### 📖 Core Documentation
+### Core Documentation
 
-- **[Target Environment Architecture](/docs/target-env-integration/architecture.md)** - System design and patterns
-- **[WebSocket System](/docs/devs/websocket.md)** - METIS internal WebSocket implementation
+- **[Target Environment Architecture](../architecture.md)** - System design and patterns
+- **[WebSocket System](../../devs/websocket.md)** - METIS internal WebSocket implementation

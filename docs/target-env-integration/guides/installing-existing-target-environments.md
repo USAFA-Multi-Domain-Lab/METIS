@@ -6,6 +6,7 @@ Use the METIS CLI to install target environments that already exist in GitHub re
 
 - [When to Use This Guide](#when-to-use-this-guide)
 - [Install a Public Target Environment](#install-a-public-target-environment)
+- [Install a Specific Version](#install-a-specific-version)
 - [Install a Private Target Environment](#install-a-private-target-environment)
   - [Create a GitHub Token](#create-a-github-token)
   - [Install Commands](#install-commands)
@@ -31,6 +32,16 @@ If the repository owner is not in the CLI's recognized author list, specify the 
 ```bash
 metis install <target-env-id> --author <github-owner>
 ```
+
+## Install a Specific Version
+
+By default the CLI installs the latest release. Pass `--version` with a release tag to install a particular one:
+
+```bash
+metis install <target-env-id> --version <release-tag>
+```
+
+`--version` combines with any of the other flags. If the tag does not exist for that target environment, the install fails and names the version it could not find.
 
 ## Install a Private Target Environment
 

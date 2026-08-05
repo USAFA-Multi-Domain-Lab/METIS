@@ -36,7 +36,7 @@ metis restart
 metis status
 ```
 
-> MongoDB users are auto-generated during installation. With the correct permissions, you can retrieve the credentials for these users from `/root/.metis-credentials.txt`.
+> **Note:** MongoDB users are auto-generated during installation. With the correct permissions, you can retrieve the credentials for these users from `/root/.metis-credentials.txt`.
 
 The METIS web app should now be accessible on your host machine at your configured port (default is `http://localhost:8080`). You can now access the web app in the browser. To log in, a temporary user has been created with the following credentials:
 
@@ -62,7 +62,7 @@ git clone https://github.com/USAFA-Multi-Domain-Lab/METIS
 cd METIS
 ```
 
-> If you don't have Git, you may also download the repository as a ZIP file, extract it, and navigate into the extracted folder.
+> **Note:** If you don't have Git, you may also download the repository as a ZIP file, extract it, and navigate into the extracted folder.
 
 **Step 3:** Create a `.env` file in the root directory.
 
@@ -77,9 +77,9 @@ MONGO_USERNAME='metis-server'
 MONGO_PASSWORD='metispass'
 ```
 
-> Whatever you set for the database credentials will be initialized when you build the containers. Therefore, you will need to recreate the containers if you wish to change the database credentials after the initial setup. Make sure to update the file permissions for your `.env` file to restrict access to authorized users only, as it contains sensitive information.
+> **Note:** Whatever you set for the database credentials will be initialized when you build the containers. Therefore, you will need to recreate the containers if you wish to change the database credentials after the initial setup. Make sure to update the file permissions for your `.env` file to restrict access to authorized users only, as it contains sensitive information.
 
-> See the [Environment Configuration Guide](/docs/setup/environment.md#configuration-options) for additional settings which can be configured from this file.
+> **Note:** See the [Environment Configuration Guide](environment.md#configuration-options) for additional settings which can be configured from this file.
 
 **Step 5:** Run the following command to build the METIS project with Docker Compose and start the services:
 
@@ -148,7 +148,7 @@ metis restart
 metis status
 ```
 
-> MongoDB users are auto-generated during installation. With the correct permissions, you can retrieve the credentials for these users from `C:\ProgramData\METIS\.metis-credentials.txt`.
+> **Note:** MongoDB users are auto-generated during installation. With the correct permissions, you can retrieve the credentials for these users from `C:\ProgramData\METIS\.metis-credentials.txt`.
 
 The METIS web app should now be accessible on your host machine at your configured port (default is `http://localhost:8080`). You can now access the web app in the browser. To log in, a temporary user has been created with the following credentials:
 
@@ -204,8 +204,8 @@ After completing setup, you can verify your installation with this checklist:
 
 ## Related Documentation
 
-- **[Environment Configuration](/docs/setup/environment.md)** - Configure server port, rate limiting, file-store location, and more
+- **[Environment Configuration](environment.md)** - Configure server port, rate limiting, file-store location, and more
 
-- **[API Documentation](/docs/api/index.md)** - Integration and automation after setup
-- **[Developer Documentation](/docs/devs/index.md)** - Architecture and development info
-- **[Target Environment Integration](/docs/target-env-integration/index.md)** - Custom integrations
+- **[API Documentation](../api/index.md)** - Integration and automation after setup
+- **[Developer Documentation](../devs/index.md)** - Architecture and development info
+- **[Target Environment Integration](../target-env-integration/index.md)** - Custom integrations

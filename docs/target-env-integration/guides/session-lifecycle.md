@@ -29,14 +29,14 @@ Sessions in METIS have a lifecycle with multiple states and can be reset without
 
 **Why this matters:**
 
-```ts
+```typescript
 // ❌ Without protection, this could fail:
 script: async (context) => {
   await context.sleep(30000) // 30 seconds
 
   // What if session reset during sleep?
   // Without protection, this would execute against NEW session state
-  context.sendOutput('This is dangerous!')
+  context.sendOutput('This is dangerous!', context.mission)
 }
 
 // ✅ With protection, METIS automatically prevents this:
@@ -45,7 +45,7 @@ script: async (context) => {
 
   // If session reset, this throws OutdatedContextError
   // Preventing execution against wrong session instance
-  context.sendOutput('This is safe!')
+  context.sendOutput('This is safe!', context.mission)
 }
 ```
 
@@ -72,7 +72,7 @@ The instance ID is regenerated in two scenarios:
 
 **1. Session Creation**
 
-```ts
+```typescript
 // New session created
 const session = new SessionServer(_id, name, owner, config, mission)
 // Instance ID: "abc123def456" (random)
@@ -80,7 +80,7 @@ const session = new SessionServer(_id, name, owner, config, mission)
 
 **2. Session Reset**
 
-```ts
+```typescript
 // Session reset triggered
 await session.reset()
 // Instance ID: "xyz789ghi012" (NEW random ID)
@@ -125,11 +125,11 @@ Session Continues (with NEW instance)
 
 ### Accessing Instance Information
 
-```ts
+```typescript
 script: async (context) => {
   // Session ID (permanent)
   const sessionId = context.session._id
-  context.sendOutput(`Session ID: ${sessionId}`)
+  context.sendOutput(`Session ID: ${sessionId}`, context.mission)
 
   // Instance ID (not directly exposed, but used internally)
   // You cannot access instance ID directly from context
@@ -164,11 +164,11 @@ unstarted → starting → started → resetting → started
 
 ### Context Operations by State
 
-```ts
+```typescript
 // Context methods check both state AND instance ID
 script: async (context) => {
   // This works in "started" state
-  context.sendOutput('Hello!')
+  context.sendOutput('Hello!', context.mission)
 
   // If session resets during this sleep...
   await context.sleep(30000)
@@ -176,7 +176,7 @@ script: async (context) => {
   // This throws OutdatedContextError after reset
   // - State changed: started → resetting → started
   // - Instance ID changed: abc123 → xyz789
-  context.sendOutput('This will error!')
+  context.sendOutput('This will error!', context.mission)
 }
 ```
 
@@ -190,7 +190,7 @@ Every context method performs two checks:
 
 **1. Instance ID Match**
 
-```ts
+```typescript
 if (context._instanceId !== session.instanceId) {
   throw new OutdatedContextError(
     'Context instance ID does not match current session instance ID',
@@ -200,7 +200,7 @@ if (context._instanceId !== session.instanceId) {
 
 **2. Session State Check**
 
-```ts
+```typescript
 if (['unstarted', 'ended'].includes(session.state)) {
   throw new OutdatedContextError('Session is not in "started" state')
 }
@@ -210,9 +210,9 @@ if (['unstarted', 'ended'].includes(session.state)) {
 
 All context methods are automatically protected:
 
-```ts
+```typescript
 // All of these check context validity before execution:
-context.sendOutput('message')
+context.sendOutput('message', context.mission)
 context.blockNode()
 context.modifySuccessChance(25)
 context.modifyResourcePool(50)
@@ -228,7 +228,7 @@ counter.value++ // Protected access
 
 Pure JavaScript operations are NOT protected:
 
-```ts
+```typescript
 script: async (context) => {
   let localVariable = 0
 
@@ -239,7 +239,7 @@ script: async (context) => {
   console.log(localVariable)
 
   // ✅ This is protected (throws OutdatedContextError)
-  context.sendOutput(localVariable.toString())
+  context.sendOutput(localVariable.toString(), context.mission)
 }
 ```
 
@@ -251,7 +251,7 @@ script: async (context) => {
 
 **Error structure:**
 
-```ts
+```typescript
 class OutdatedContextError extends Error {
   name: 'OutdatedContextError'
   message: string
@@ -284,12 +284,12 @@ from the previous session instance.
 
 **METIS handles these errors automatically** - you typically don't need to catch them:
 
-```ts
+```typescript
 // ❌ Don't do this (unnecessary)
 script: async (context) => {
   try {
     await context.sleep(30000)
-    context.sendOutput('After sleep')
+    context.sendOutput('After sleep', context.mission)
   } catch (error) {
     if (error.name === 'OutdatedContextError') {
       // METIS already handles this gracefully
@@ -301,7 +301,7 @@ script: async (context) => {
 // ✅ Let METIS handle it (recommended)
 script: async (context) => {
   await context.sleep(30000)
-  context.sendOutput('After sleep') // Automatically protected
+  context.sendOutput('After sleep', context.mission) // Automatically protected
 }
 ```
 
@@ -309,7 +309,7 @@ script: async (context) => {
 
 Only catch if you need **custom cleanup logic**:
 
-```ts
+```typescript
 script: async (context) => {
   const externalConnection = await establishConnection()
 
@@ -317,13 +317,16 @@ script: async (context) => {
     // Long-running operation
     for (let i = 0; i < 100; i++) {
       await context.sleep(1000)
-      context.sendOutput(`Progress: ${i}%`)
+      context.sendOutput(`Progress: ${i}%`, context.mission)
     }
   } catch (error) {
     if (error.name === 'OutdatedContextError') {
       // Clean up external resources before letting error propagate
       await externalConnection.close()
-      context.sendOutput('Session reset - cleaned up connection')
+      context.sendOutput(
+        'Session reset - cleaned up connection',
+        context.mission,
+      )
     }
     throw error // Re-throw for METIS to handle
   } finally {
@@ -336,7 +339,7 @@ script: async (context) => {
 
 Outdated context errors are automatically logged:
 
-```ts
+```typescript
 // Logged by METIS target environment logger
 targetEnvLogger.warn(
   'Cannot perform target-environment callback operation. ' +
@@ -353,7 +356,7 @@ Check logs at `/server/logs/` for debugging.
 
 Asynchronous code can execute after session state changes:
 
-```ts
+```typescript
 // ⚠️ Problem scenario
 script: async (context) => {
   // Session instance: abc123, state: started
@@ -361,7 +364,7 @@ script: async (context) => {
   setTimeout(() => {
     // Session may have reset by now!
     // Instance: xyz789, state: started (NEW instance)
-    context.sendOutput('Danger!') // Would fail without protection
+    context.sendOutput('Danger!', context.mission) // Would fail without protection
   }, 30000)
 }
 ```
@@ -370,13 +373,13 @@ script: async (context) => {
 
 Always use `context.sleep()` instead of `setTimeout()`:
 
-```ts
+```typescript
 // ✅ Safe with context.sleep()
 script: async (context) => {
   await context.sleep(30000)
 
   // Protected: If session reset, OutdatedContextError thrown
-  context.sendOutput('Safe!') // Won't execute if session reset
+  context.sendOutput('Safe!', context.mission) // Won't execute if session reset
 }
 ```
 
@@ -391,15 +394,15 @@ script: async (context) => {
 
 METIS blocks `setTimeout` and `setInterval` in target scripts:
 
-```ts
+```typescript
 // ❌ This throws an error
 setTimeout(() => {
-  context.sendOutput('This will error')
+  context.sendOutput('This will error', context.mission)
 }, 5000)
 
 // ❌ This also throws an error
 setInterval(() => {
-  context.sendOutput('This will error')
+  context.sendOutput('This will error', context.mission)
 }, 1000)
 
 // ✅ Use context.sleep() instead
@@ -408,12 +411,12 @@ const delay = async (ms: number) => {
 }
 
 await delay(5000)
-context.sendOutput('Safe alternative')
+context.sendOutput('Safe alternative', context.mission)
 ```
 
 ### Safe Polling Pattern
 
-```ts
+```typescript
 script: async (context) => {
   const pollInterval = 2000 // 2 seconds
   const maxPolls = 30 // 60 seconds total
@@ -423,11 +426,14 @@ script: async (context) => {
     const status = await checkExternalStatus()
 
     if (status === 'complete') {
-      context.sendOutput('✅ Operation complete')
+      context.sendOutput('✅ Operation complete', context.mission)
       break
     }
 
-    context.sendOutput(`Polling... attempt ${i + 1}/${maxPolls}`)
+    context.sendOutput(
+      `Polling... attempt ${i + 1}/${maxPolls}`,
+      context.mission,
+    )
 
     // Safe sleep - aborts if session resets
     await context.sleep(pollInterval)
@@ -442,7 +448,7 @@ script: async (context) => {
 
 Use environment hooks for persistent operations:
 
-```ts
+```typescript
 import { WebSocketApi } from '@metis/api/WebSocketApi'
 
 let wsConnection: WebSocketApi | null = null
@@ -454,7 +460,7 @@ environment.on('environment-setup', async (context) => {
   // Event listener is tied to session instance
   wsConnection.addEventListener('message', (event) => {
     // ✅ Safe: context is from setup, automatically invalidated on reset
-    context.sendOutput(`Message: ${event.data}`)
+    console.log(`Message: ${event.data}`)
   })
 
   await wsConnection.connect()
@@ -475,13 +481,13 @@ environment.on('environment-teardown', async (context) => {
 
 Data stores are scoped to session instance:
 
-```ts
+```typescript
 script: async (context) => {
   // Accessing store for current instance (abc123)
   const counter = context.localStore.use('count', 0)
   counter.value++ // count = 1
 
-  context.sendOutput(`Count: ${counter.value}`)
+  context.sendOutput(`Count: ${counter.value}`, context.mission)
 }
 
 // After session reset...
@@ -493,7 +499,7 @@ script: async (context) => {
   const counter = context.localStore.use('count', 0)
   // count = 0 (starts fresh)
 
-  context.sendOutput(`Count: ${counter.value}`) // Outputs: 0
+  context.sendOutput(`Count: ${counter.value}`, context.mission) // Outputs: 0
 }
 ```
 
@@ -501,7 +507,7 @@ script: async (context) => {
 
 Stores use instance-aware keys internally:
 
-```ts
+```typescript
 // Local store key format:
 ;`${sessionId}::${instanceId}::${environmentId}`// Global store key format:
 `${sessionId}::${instanceId}`
@@ -519,7 +525,7 @@ Stores use instance-aware keys internally:
 
 Stores are automatically cleaned up on session reset:
 
-```ts
+```typescript
 // Before reset
 const data = context.localStore.use('cache', { items: [] })
 data.value.items.push('item1')
@@ -541,7 +547,7 @@ const data = context.localStore.use('cache', { items: [] })
 
 If you need data to survive resets, use external storage:
 
-```ts
+```typescript
 // ❌ Does NOT persist across resets
 const config = context.localStore.use('config', { setting: 'value' })
 
@@ -556,7 +562,7 @@ const config = await api.get('/config')
 
 ### DO: Use context.sleep()
 
-```ts
+```typescript
 ✅ await context.sleep(5000)
 ❌ setTimeout(() => {...}, 5000)
 ❌ await new Promise(resolve => setTimeout(resolve, 5000))
@@ -564,18 +570,18 @@ const config = await api.get('/config')
 
 ### DO: Let METIS Handle Errors
 
-```ts
+```typescript
 // ✅ Automatic protection
 script: async (context) => {
   await longRunningOperation()
-  context.sendOutput('Done') // Protected automatically
+  context.sendOutput('Done', context.mission) // Protected automatically
 }
 
 // ❌ Unnecessary error handling
 script: async (context) => {
   try {
     await longRunningOperation()
-    context.sendOutput('Done')
+    context.sendOutput('Done', context.mission)
   } catch (error) {
     if (error.name === 'OutdatedContextError') {
       // METIS already handles this
@@ -586,7 +592,7 @@ script: async (context) => {
 
 ### DO: Use Environment Hooks for Persistent Connections
 
-```ts
+```typescript
 // ✅ Connection lifecycle matches session instance
 environment.on('environment-setup', async (context) => {
   connection = await createConnection()
@@ -605,7 +611,7 @@ script: async (context) => {
 
 ### DO: Design for Idempotency
 
-```ts
+```typescript
 // ✅ Idempotent setup (can run multiple times safely)
 environment.on('environment-setup', async (context) => {
   if (connection && connection.isConnected) {
@@ -622,26 +628,26 @@ environment.on('environment-setup', async (context) => {
 
 ### DON'T: Store Instance-Specific Data in Module Scope
 
-```ts
+```typescript
 // ❌ Module-scope variable survives resets
 let messageCount = 0
 
 script: async (context) => {
   messageCount++ // Wrong instance's count!
-  context.sendOutput(`Messages: ${messageCount}`)
+  context.sendOutput(`Messages: ${messageCount}`, context.mission)
 }
 
 // ✅ Use data stores (automatically scoped to instance)
 script: async (context) => {
   const counter = context.localStore.use('messageCount', 0)
   counter.value++
-  context.sendOutput(`Messages: ${counter.value}`)
+  context.sendOutput(`Messages: ${counter.value}`, context.mission)
 }
 ```
 
 ### DON'T: Assume State Persistence
 
-```ts
+```typescript
 // ❌ Assumes session won't reset during operation
 script: async (context) => {
   const initialState = captureState()
@@ -666,19 +672,19 @@ script: async (context) => {
 
 ### DON'T: Use External Timers
 
-```ts
+```typescript
 // ❌ External timer not protected
 import { setTimeout } from 'timers/promises'
 
 script: async (context) => {
   await setTimeout(5000)
-  context.sendOutput('Done') // May execute on wrong instance
+  context.sendOutput('Done', context.mission) // May execute on wrong instance
 }
 
 // ✅ Use context.sleep()
 script: async (context) => {
   await context.sleep(5000)
-  context.sendOutput('Done') // Protected automatically
+  context.sendOutput('Done', context.mission) // Protected automatically
 }
 ```
 
@@ -688,7 +694,7 @@ script: async (context) => {
 
 **Problem:** Collecting data over 60 seconds, session resets at 30 seconds.
 
-```ts
+```typescript
 script: async (context) => {
   const results = []
 
@@ -697,14 +703,17 @@ script: async (context) => {
     const sample = await collectSample()
     results.push(sample)
 
-    context.sendOutput(`Sample ${i + 1}/60: ${sample}`)
+    context.sendOutput(`Sample ${i + 1}/60: ${sample}`, context.mission)
 
     // If session resets during this sleep, operation aborts
     await context.sleep(1000)
   }
 
   // This only executes if session never reset
-  context.sendOutput(`Final results: ${results.length} samples`)
+  context.sendOutput(
+    `Final results: ${results.length} samples`,
+    context.mission,
+  )
 }
 ```
 
@@ -720,7 +729,7 @@ script: async (context) => {
 
 **Problem:** WebSocket connection should survive individual effect executions but reset with session.
 
-```ts
+```typescript
 let wsConnection: WebSocketApi | null = null
 
 // Connection lifecycle matches session instance
@@ -730,7 +739,7 @@ environment.on('environment-setup', async (context) => {
 
   wsConnection.addEventListener('message', (event) => {
     // ✅ This context is from setup, validated automatically
-    context.sendOutput(`WebSocket: ${event.data}`)
+    console.log(`WebSocket: ${event.data}`)
   })
 
   await wsConnection.connect()
@@ -745,22 +754,31 @@ environment.on('environment-teardown', async (context) => {
 })
 
 // Individual effects just use the connection
-targets.operations.use(
-  new TargetSchema({
-    _id: 'send-message',
-    name: 'Send Message',
-    script: async (context) => {
-      if (!wsConnection?.isConnected) {
-        throw new Error('WebSocket not connected')
-      }
-
-      await wsConnection.sendMessage({
-        type: 'command',
-        payload: context.effect.args,
-      })
+// integration/target-env/<your-env>/targets/send-message/schema.ts
+export default TargetSchema.create({
+  _id: 'send-message',
+  name: 'Send Message',
+  description: 'Send a command over the shared WebSocket connection',
+  parameters: [
+    {
+      _id: 'payload',
+      name: 'Payload',
+      type: 'large-string',
+      required: true,
+      default: '',
     },
-  }),
-)
+  ],
+  script: async (context, { payload }) => {
+    if (!wsConnection?.isConnected) {
+      throw new Error('WebSocket not connected')
+    }
+
+    await wsConnection.sendMessage({
+      type: 'command',
+      payload,
+    })
+  },
+})
 ```
 
 **What happens on reset:**
@@ -776,9 +794,8 @@ targets.operations.use(
 
 **Problem:** Need to respect API rate limits with delays between requests.
 
-```ts
-script: async (context) => {
-  const { endpoints } = context.effect.args
+```typescript
+script: async (context, { endpoints }) => {
   const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
   const rateLimitDelay = 1000 // 1 second between requests
@@ -788,9 +805,9 @@ script: async (context) => {
 
     try {
       const response = await api.get(endpoint)
-      context.sendOutput(`✅ ${endpoint}: ${response.status}`)
+      context.sendOutput(`✅ ${endpoint}: ${response.status}`, context.mission)
     } catch (error) {
-      context.sendOutput(`❌ ${endpoint}: ${error.message}`)
+      context.sendOutput(`❌ ${endpoint}: ${error.message}`, context.mission)
     }
 
     // Respect rate limit (safely aborts if session resets)
@@ -799,7 +816,7 @@ script: async (context) => {
     }
   }
 
-  context.sendOutput('All endpoints checked')
+  context.sendOutput('All endpoints checked', context.mission)
 }
 ```
 
@@ -815,7 +832,7 @@ script: async (context) => {
 
 **Problem:** Share connection pool across effects, clean up on reset.
 
-```ts
+```typescript
 import { createPool, type Pool } from 'generic-db-library'
 
 let connectionPool: Pool | null = null
@@ -835,7 +852,7 @@ environment.on('environment-setup', async (context) => {
     maxConnections: 10,
   })
 
-  context.sendOutput('✅ Database pool initialized')
+  console.log('✅ Database pool initialized')
 })
 
 environment.on('environment-teardown', async (context) => {
@@ -843,43 +860,46 @@ environment.on('environment-teardown', async (context) => {
     // Close all connections before instance changes
     await connectionPool.close()
     connectionPool = null
-    context.sendOutput('✅ Database pool closed')
+    console.log('✅ Database pool closed')
   }
 })
 
 // Effects use the shared pool
-targets.operations.use(
-  new TargetSchema({
-    _id: 'database-query',
-    name: 'Execute Database Query',
-    args: [
-      {
-        _id: 'query',
-        name: 'SQL Query',
-        type: 'text',
-        required: true,
-      },
-    ],
-    script: async (context) => {
-      if (!connectionPool) {
-        throw new Error('Database pool not initialized')
-      }
-
-      const { query } = context.effect.args
-      const result = await connectionPool.query(query)
-
-      context.sendOutput(`Query returned ${result.rows.length} rows`)
+// integration/target-env/<your-env>/targets/database-query/schema.ts
+export default TargetSchema.create({
+  _id: 'database-query',
+  name: 'Execute Database Query',
+  description: 'Run a SQL query against the shared connection pool',
+  parameters: [
+    {
+      _id: 'query',
+      name: 'SQL Query',
+      type: 'large-string',
+      required: true,
+      default: '',
     },
-  }),
-)
+  ],
+  script: async (context, { query }) => {
+    if (!connectionPool) {
+      throw new Error('Database pool not initialized')
+    }
+
+    const result = await connectionPool.query(query)
+
+    context.sendOutput(
+      `Query returned ${result.rows.length} rows`,
+      context.mission,
+    )
+  },
+})
 ```
 
 **Benefits:**
 
-- Pool created once per session instance
 - Shared across all effects efficiently
 - Automatically cleaned up on reset
-- No connection leaks
+
+> **Note:** The module-level `connectionPool` above only holds up in a session with a single realm. Setup and teardown hooks run **once per realm**, so in a standalone session each participant's setup overwrites the variable and the first teardown closes the pool for everyone. Keep the pool in `context.localStore` instead, and declare [`multiRealmSupport`](../references/schemas.md#environment-properties) on the environment.
 
 ## Troubleshooting
 
@@ -903,28 +923,28 @@ current session instance ID "xyz789".
 
 ✅ **For delayed operations:**
 
-```ts
+```typescript
 // Use context.sleep() instead of setTimeout
 await context.sleep(5000)
 ```
 
 ✅ **For event listeners:**
 
-```ts
+```typescript
 // Recreate listeners in environment-setup hook
 environment.on('environment-setup', async (context) => {
   connection = await createConnection()
 
   // New listener for new instance
   connection.on('data', (data) => {
-    context.sendOutput(data)
+    console.log(data)
   })
 })
 ```
 
 ✅ **For background tasks:**
 
-```ts
+```typescript
 // Check if should continue before each context operation
 for (let i = 0; i < 100; i++) {
   await context.sleep(1000)
@@ -943,7 +963,7 @@ Stores are scoped to session instance. New instance = new stores.
 
 **Solution:**
 
-```ts
+```typescript
 // ❌ Data lost on reset
 const cache = context.localStore.use('cache', [])
 cache.value.push('data')
@@ -963,7 +983,7 @@ Connections created in target scripts don't automatically clean up.
 
 **Solution:**
 
-```ts
+```typescript
 // ✅ Use environment hooks for connection lifecycle
 let connection = null
 
@@ -989,7 +1009,7 @@ Module-scope variables survive session resets (they're not reset).
 
 **Solution:**
 
-```ts
+```typescript
 // ❌ Module scope survives resets
 let count = 0
 
@@ -1024,7 +1044,7 @@ Error: setTimeout is not defined
 
 **Solution:**
 
-```ts
+```typescript
 // ❌ Blocked
 setTimeout(() => { ... }, 5000)
 
@@ -1040,23 +1060,23 @@ while (condition) {
 
 ## Related Documentation
 
-### 📋 Essential Guides
+### Essential Guides
 
 - **[Environment Hooks](environment-hooks.md)** - Lifecycle management with setup/teardown hooks
 - **[Data Stores](data-stores.md)** - Caching and state management patterns
 - **[External API Integration](external-api-integration.md)** - REST and WebSocket patterns
 
-### 🔗 References
+### References
 
 - **[Context API](../references/context-api.md)** - Complete context method reference
 - **[WebSocket API](../references/websocket-api.md)** - Real-time connection management
 - **[REST API](../references/rest-api.md)** - HTTP integration patterns
 
-### 💡 Examples
+### Examples
 
 - **[Complex Target Example](../examples/complex-target.md)** - Advanced patterns with lifecycle management
 
-### 📖 Core Documentation
+### Core Documentation
 
 - **[Architecture](../architecture.md)** - System design and patterns
 - **[Overview](../overview.md)** - Core concepts and terminology

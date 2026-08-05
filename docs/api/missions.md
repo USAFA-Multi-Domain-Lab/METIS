@@ -19,6 +19,7 @@ METIS provides API endpoints for managing missions. All operations require appro
   - [Mission Object](#mission-object)
   - [Mission Structure Requirements](#mission-structure-requirements)
 - [Notes](#notes)
+- [Related Documentation](#related-documentation)
 
 ## Endpoints
 
@@ -31,7 +32,7 @@ Creates a new mission with specified configuration and resources.
 
 **Required Permission(s)**: `missions_write`
 
-#### Request Body
+**Request Body**
 
 ```json
 {
@@ -82,11 +83,12 @@ Creates a new mission with specified configuration and resources.
       "depthPadding": 0
     }
   ],
-  "files": []
+  "files": [],
+  "effects": []
 }
 ```
 
-#### Response
+**Response**
 
 ```json
 {
@@ -139,6 +141,8 @@ Creates a new mission with specified configuration and resources.
     }
   ],
   "files": [],
+  "effects": [],
+  "launchedAt": null,
   "createdAt": "2025-07-15T10:30:00.000Z",
   "updatedAt": "2025-07-15T10:30:00.000Z",
   "createdBy": "000000000000000000000001",
@@ -158,14 +162,14 @@ Creates a new mission with specified configuration and resources.
 
 Retrieves all missions with basic metadata.
 
-> For full mission details, get an individual mission by ID via the [get-mission endpoint](#get-mission). Forces, resources, prototypes, files, and the structure are intentionally omitted from this endpoint for performance reasons.
+> **Note:** For full mission details, get an individual mission by ID via the [get-mission endpoint](#get-mission). Forces, resources, prototypes, files, and the structure are intentionally omitted from this endpoint for performance reasons.
 
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/missions/`
 
 **Required Permission(s)**: `missions_read`
 
-#### Response
+**Response**
 
 ```json
 [
@@ -173,6 +177,8 @@ Retrieves all missions with basic metadata.
     "_id": "662270879c5ca781c218123c",
     "name": "Mission Name",
     "versionNumber": 1,
+    "launchedAt": "2025-07-20T14:05:00.000Z",
+    "effects": [],
     "createdAt": "2025-07-15T10:30:00.000Z",
     "updatedAt": "2025-07-15T10:30:00.000Z",
     "createdBy": "000000000000000000000001",
@@ -183,10 +189,9 @@ Retrieves all missions with basic metadata.
 
 **Status Codes**:
 
-- 200 OK – Missions retrieved successfully
+- 200 OK – Missions retrieved successfully. An empty database returns an empty array, not a 404
 - 401 Unauthorized – Missing authentication
 - 403 Forbidden – Insufficient permissions
-- 404 Not Found – No missions found
 - 500 Internal Server Error – Server error during retrieval
 
 ### Get Mission
@@ -198,7 +203,7 @@ Retrieves a specific mission by ID with full details.
 
 **Required Permission(s)**: `missions_read`
 
-#### Response
+**Response**
 
 ```json
 {
@@ -251,6 +256,8 @@ Retrieves a specific mission by ID with full details.
     }
   ],
   "files": [],
+  "effects": [],
+  "launchedAt": "2025-07-20T14:05:00.000Z",
   "createdAt": "2025-07-15T10:30:00.000Z",
   "updatedAt": "2025-07-15T10:30:00.000Z",
   "createdBy": "000000000000000000000001",
@@ -275,7 +282,7 @@ Updates an existing mission.
 
 **Required Permission(s)**: `missions_write`
 
-#### Request Body
+**Request Body**
 
 ```json
 {
@@ -327,9 +334,14 @@ Updates an existing mission.
       "depthPadding": 0
     }
   ],
-  "files": []
+  "files": [],
+  "effects": []
 }
 ```
+
+**Response**
+
+The updated mission, in the same shape as the [Get Mission](#get-mission) response.
 
 **Status Codes**:
 
@@ -349,7 +361,7 @@ Creates a copy of an existing mission.
 
 **Required Permission(s)**: `missions_write`
 
-#### Request Body
+**Request Body**
 
 ```json
 {
@@ -357,6 +369,10 @@ Creates a copy of an existing mission.
   "copyName": "Mission Copy"
 }
 ```
+
+**Response**
+
+The newly created copy, in the same shape as the [Get Mission](#get-mission) response, with its own `_id` and a `launchedAt` of `null`. The copy carries over the original's forces, prototypes, resources, files, and effects.
 
 **Status Codes**:
 
@@ -376,15 +392,32 @@ Imports a mission from a .metis file.
 
 **Required Permission(s)**: `missions_write`
 
-#### Request Body
+**Request Body**
 
 - Form data with file(s) under key `files`
 - Supports up to 12 files
 - Files must be valid .metis format
 
+**Response**
+
+A summary of the import rather than the imported missions. Check `failedImportCount` — a request that imported nothing still returns 200.
+
+```json
+{
+  "successfulImportCount": 2,
+  "failedImportCount": 1,
+  "failedImportErrorMessages": [
+    {
+      "fileName": "broken.metis",
+      "errorMessage": "The file could not be read as a METIS mission."
+    }
+  ]
+}
+```
+
 **Status Codes**:
 
-- 200 OK – Mission imported successfully
+- 200 OK – Request processed. This does **not** mean every file imported
 - 400 Bad Request – Invalid file format/validation failed
 - 401 Unauthorized – Missing authentication
 - 403 Forbidden – Insufficient permissions
@@ -400,7 +433,7 @@ Exports a mission to a .metis file.
 
 **Required Permission(s)**: `missions_read`, `missions_write`
 
-#### Response
+**Response**
 
 - Downloads .metis file containing:
   - Mission data
@@ -438,22 +471,28 @@ Soft deletes a mission (sets deleted flag).
 
 ### Mission Object
 
-| Field               | Type       | List view | Description           |
-| ------------------- | ---------- | --------- | --------------------- |
-| `_id`               | `objectId` | ✓         | Unique identifier     |
-| `name`              | `string`   | ✓         | Mission name          |
-| `versionNumber`     | `number`   | ✓         | Version number        |
-| `resources`         | `array`    | —         | Resource definitions  |
-| `structure`         | `object`   | —         | Mission structure     |
-| `forces`            | `array`    | —         | Force configurations  |
-| `prototypes`        | `array`    | —         | Prototype objects     |
-| `files`             | `array`    | —         | Associated files      |
-| `createdAt`         | `string`   | ✓         | Creation timestamp    |
-| `updatedAt`         | `string`   | ✓         | Last update timestamp |
-| `createdBy`         | `objectId` | ✓         | Creator's ID          |
-| `createdByUsername` | `string`   | ✓         | Creator's username    |
+| Field               | Type       | List view | Description                                        |
+| ------------------- | ---------- | --------- | -------------------------------------------------- |
+| `_id`               | `objectId` | ✓         | Unique identifier                                  |
+| `name`              | `string`   | ✓         | Mission name                                       |
+| `versionNumber`     | `number`   | ✓         | Version number                                     |
+| `effects`           | `array`    | ✓         | Session-lifecycle effects held at the mission root |
+| `launchedAt`        | `string`   | ✓         | When a session was last launched for it, or `null` |
+| `resources`         | `array`    | —         | Resource definitions                               |
+| `structure`         | `object`   | —         | Mission structure                                  |
+| `forces`            | `array`    | —         | Force configurations                               |
+| `prototypes`        | `array`    | —         | Prototype objects                                  |
+| `files`             | `array`    | —         | Associated files                                   |
+| `createdAt`         | `string`   | ✓         | Creation timestamp                                 |
+| `updatedAt`         | `string`   | ✓         | Last update timestamp                              |
+| `createdBy`         | `objectId` | ✓         | Creator's ID                                       |
+| `createdByUsername` | `string`   | ✓         | Creator's username                                 |
 
-> **Note:** The **List view** column indicates fields returned by `GET /api/v1/missions/`. Fields marked — are omitted from the list response for performance and are only present in the full mission response (`GET /api/v1/missions/:_id`).
+> **Note:** The **List view** column indicates fields returned by `GET /api/v1/missions/`. Fields marked — are omitted from the list response for performance and are only present in the full mission response (`GET /api/v1/missions/:_id`). Note that `effects` is **not** among them: the mission's root-level effects come back on both.
+
+`effects` holds only the effects triggered by the session lifecycle. Effects attached to an action live inside `forces`, so they arrive with the full mission rather than the list.
+
+`launchedAt` is maintained by the server — launching a session for a mission stamps it. It is not accepted in a request body.
 
 ---
 
@@ -462,7 +501,7 @@ Soft deletes a mission (sets deleted flag).
 The `structure` field defines the hierarchical organization of the prototypes. Each prototype has
 a unique `structureKey` that corresponds to a key in the `structure` object. Every force must have
 a corresponding prototype defined in the `prototypes` array, and each prototype must have a `structureKey`
-that matches one key (no more, no less) in the `structure object. The mission also requires at least one
+that matches one key (no more, no less) in the `structure` object. The mission also requires at least one
 force and at least one resource definition, minimum.
 
 ## Notes
@@ -474,3 +513,11 @@ force and at least one resource definition, minimum.
   - Exports include all associated files and metadata
   - Imports preserve all mission data and relationships
   - Mission files are managed through the file store
+
+## Related Documentation
+
+- **[API Overview](overview.md)** - Conventions, authentication, and error handling shared by every endpoint
+- **[Sessions API](sessions.md)** - Launching a mission once it is authored
+- **[Files API](files.md)** - Uploading and attaching mission resources
+- **[Target Environments API](target-environments.md)** - The targets a mission's effects invoke
+- **[Target Environment Integration](../target-env-integration/index.md)** - Building the targets themselves

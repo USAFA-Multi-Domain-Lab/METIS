@@ -9,7 +9,7 @@ The target-effect system is METIS's framework for creating reusable, configurabl
 ## Quick Start
 
 - **[Install an Existing Target Environment](guides/installing-existing-target-environments.md)** - Use the METIS CLI to install public or private target environment repositories
-- **[Quickstart Guide](quickstart.md)** - Create your first target environment in 10 minutes
+- **[Quickstart Guide](quickstart.md)** - Create your first target environment in 5 minutes
 - **[Overview](overview.md)** - Understand the core concepts first
 - **[Architecture](architecture.md)** - See how everything fits together
 
@@ -24,7 +24,7 @@ The target-effect system is METIS's framework for creating reusable, configurabl
 5. **[Basic Example](examples/basic-target.md)** → See it in action
 6. **[Session Lifecycle](guides/session-lifecycle.md)** → Understand session resets and context protection
 7. **[Data Stores](guides/data-stores.md)** → Cache and share data between scripts
-8. **[Argument Types](guides/argument-types.md)** → Create better UIs
+8. **[Parameter and Argument Types](guides/parameter-and-argument-types.md)** → Create better UIs
 9. **[Advanced Example](examples/complex-target.md)** → Learn advanced patterns
 
 ### Integrating External Systems?
@@ -55,7 +55,8 @@ The target-effect system is METIS's framework for creating reusable, configurabl
 - **[Environment Hooks](guides/environment-hooks.md)** - Lifecycle management and persistent connections
 - **[Data Stores](guides/data-stores.md)** - Caching and sharing data between script executions
 - **[External API Integration](guides/external-api-integration.md)** - Connecting to external systems
-- **[Argument Types](guides/argument-types.md)** - Building typed user interfaces
+- **[Parameter and Argument Types](guides/parameter-and-argument-types.md)** - Building typed user interfaces
+- **[Target-Effect Conversion](guides/target-effect-conversion.md)** - What your script receives, and how stored arguments are reconciled
 - **[Migrations](guides/migrations.md)** - Version management and upgrades
 - **[Tips & Conventions](guides/tips-and-conventions.md)** - Best practices and patterns
 
@@ -75,6 +76,6 @@ The target-effect system is METIS's framework for creating reusable, configurabl
 
 ## Related Documentation
 
-- **[Target Environments API](/docs/api/target-environments.md)** - REST API endpoints
-- **[WebSocket System](/docs/devs/websocket.md)** - Real-time communication
-- **[System Architecture](/docs/devs/architecture.md)** - Overall METIS architecture
+- **[Target Environments API](../api/target-environments.md)** - REST API endpoints
+- **[WebSocket System](../devs/websocket.md)** - Real-time communication
+- **[System Architecture](../devs/architecture.md)** - Overall METIS architecture

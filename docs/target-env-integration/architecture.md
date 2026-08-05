@@ -2,6 +2,17 @@
 
 This document provides a high-level overview of the target-effect system architecture and how it enables METIS to integrate with external systems.
 
+## Table of Contents
+
+- [System Overview](#system-overview)
+- [How It Works](#how-it-works)
+  - [Integration Layer](#integration-layer)
+  - [Registry Layer](#registry-layer)
+  - [Execution Layer](#execution-layer)
+- [Key Concepts](#key-concepts)
+- [Quick Example](#quick-example)
+- [Related Documentation](#related-documentation)
+
 ## System Overview
 
 The target-effect system allows METIS to interact with external systems through a three-layer architecture:
@@ -10,14 +21,14 @@ The target-effect system allows METIS to interact with external systems through 
 2. **Registry Layer** - Discover and manage available integrations
 3. **Execution Layer** - Execute effects against external systems during METIS sessions
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                      METIS APPLICATION                          │
 ├─────────────────────────────────────────────────────────────────┤
 │  EXECUTION LAYER                                                │
 │  • Execute effects during missions                              │
 │  • Secure context creation                                      │
-│  • Session-scoped data persistence                              │
+│  • Realm-scoped data persistence                                │
 │  • Real-time feedback                                           │
 ├─────────────────────────────────────────────────────────────────┤
 │  REGISTRY LAYER                                                 │
@@ -42,21 +53,21 @@ The target-effect system allows METIS to interact with external systems through 
 
 ## How It Works
 
-### Integration Layer (`/integration` directory)
+### Integration Layer
 
-Developers define target environments (external systems) and targets (specific actions) using TypeScript schemas. These schemas specify what arguments are needed and what script should execute.
+Lives in `integration/`. Developers define target environments (external systems) and targets (specific actions) using TypeScript schemas. These schemas specify what parameters the target declares and what script should execute.
 
 **Key Benefit**: New integrations can be added without modifying core METIS code.
 
-### Registry Layer (`/shared` & `/server` directories)
+### Registry Layer
 
-At startup, METIS scans the integration folder and builds a registry of all available target environments and their targets. This registry is shared between client and server.
+Lives in `shared/` and `server/`. At startup, METIS scans the integration folder and builds a registry of all available target environments and their targets. This registry is shared between client and server.
 
 **Key Benefit**: Automatic discovery means no manual registration required.
 
-### Execution Layer (`/server` directory)
+### Execution Layer
 
-When an effect executes during a session, METIS creates a secure context and runs the target's script with user-provided arguments.
+Lives in `server/`. When an effect executes during a session, METIS creates a secure context and runs the target's script with the arguments the mission author supplied.
 
 **Key Benefit**: External systems can be affected while maintaining security and isolation.
 
@@ -69,55 +80,53 @@ When an effect executes during a session, METIS creates a secure context and run
 
 ## Quick Example
 
+First, the environment, in `integration/target-env/traffic-control-system/schema.ts`:
+
 ```typescript
-// 1. Create your target environment in "/integration/target-env/traffic-control-system/schema.ts"
-const myEnvironment = new TargetEnvSchema({
+const TrafficControlSystem = new TargetEnvSchema({
   name: 'Traffic Control System',
   description: 'Integration with city traffic management',
   version: '1.0.0',
 })
 
-// 2. Define a target in "/integration/target-env/traffic-control-system/targets/traffic-light/schema.ts"
-const changeLight = new TargetSchema({
+export default TrafficControlSystem
+```
+
+Then a target, in `integration/target-env/traffic-control-system/targets/traffic-light/schema.ts`:
+
+```typescript
+const ChangeLight = TargetSchema.create({
+  _id: 'traffic-light',
   name: 'Change Traffic Light',
-  script: async (context) => {
+  description: 'Set a traffic light to the selected color.',
+  script: async (context, { color }) => {
     // Call external API to change light
+    void color
   },
-  args: [
+  parameters: [
     {
       _id: 'color',
       name: 'Light Color',
       type: 'dropdown',
       required: true,
+      default: 'green',
       options: [
-        {
-          _id: 'green',
-          name: 'Green',
-          value: 'green',
-        },
-        {
-          _id: 'red',
-          name: 'Red',
-          value: 'red',
-        },
-        {
-          _id: 'yellow',
-          name: 'Yellow',
-          value: 'yellow',
-        },
+        { _id: 'green', name: 'Green', value: 'green' },
+        { _id: 'red', name: 'Red', value: 'red' },
+        { _id: 'yellow', name: 'Yellow', value: 'yellow' },
       ],
     },
   ],
 })
 
-// 3. METIS automatically discovers this target at startup
-// 4. Users can create effects from this target in mission editor
-// 5. During mission execution, the script runs with user's chosen color
+export default ChangeLight
 ```
+
+From there METIS takes over: it discovers the target at startup, mission authors create effects from it in the mission editor, and during a session the script runs with the color each author chose.
 
 ## Related Documentation
 
 - **[Target Environment Integration Guide](guides/index.md)** - Step-by-step guide for integrating external systems
 - **[Quickstart Guide](quickstart.md)** - Get started with your first integration
-- **[API Reference](/docs/api/overview.md)** - Complete API documentation
+- **[API Reference](../api/overview.md)** - Complete API documentation
 - **[Examples](examples/index.md)** - Real-world integration examples

@@ -2,118 +2,103 @@
 
 **Base URL:** `/api/v1/info/`
 
-METIS provides API endpoints for retrieving system information and metadata. Basic system information (name, description, version) is publicly available, while the changelog requires authentication.
+METIS provides API endpoints for reading the project's identity and version, and for retrieving the changelog and credits. None of them touch the database — the version comes from the project manifest and the other two are read from files on disk.
 
 ## Table of Contents
 
 - [Endpoints](#endpoints)
   - [Get System Info](#get-system-info)
   - [Get Changelog](#get-changelog)
+  - [Get Credits](#get-credits)
 - [Data Types](#data-types)
   - [Info Object](#info-object)
-- [Notes](#notes)
-  - [Server Implementation](#server-implementation)
-  - [Security Considerations](#security-considerations)
-  - [Error Handling](#error-handling)
-  - [Content Delivery](#content-delivery)
+- [Related Documentation](#related-documentation)
 
 ## Endpoints
 
 ### Get System Info
 
-Retrieves basic system information about the METIS system.
+Returns the project's name, description, and version.
 
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/info/`
 
-**Required Permission(s)**: None required (public endpoint)
+**Required Permission(s)**: None — this endpoint is public.
 
-#### Response
+**Response**
 
 ```json
 {
-  "name": "METIS",
-  "description": "Modular Effects-Based Transmitter for Integrated Simulations",
-  "version": "2.1.1"
+  "name": "metis",
+  "description": "METIS uses an ambiguous node-topography and hierarchy structure to build a framework relayed effects from across all war-fighting domains...",
+  "version": "2.5.0"
 }
 ```
 
+All three values are read straight from the project's `package.json`, so `name` is the package name in lower case rather than a display name, and `description` is the full package description — abbreviated above, but returned in full.
+
 **Status Codes**:
 
-- 200 OK – System info retrieved successfully
-- 500 Internal Server Error – Server error during retrieval
+- 200 OK – Info retrieved successfully
 
 ### Get Changelog
 
-Retrieves the system changelog containing version history and updates.
+Returns the contents of the project changelog.
 
 **HTTP Method:** `GET`  
 **Path:** `/api/v1/info/changelog/`
 
 **Required Permission(s)**: `changelog_read`
 
-#### Response
+**Response**
 
-Returns the changelog in Markdown format:
+The changelog is Markdown, but it is sent as a **JSON string**, not as a Markdown document. The response's content type is `application/json` and the body is a single quoted, escaped string:
 
+```json
+"# changelog\n\n# version-2.5.0 | 7-30-2025\n..."
 ```
-# changelog
 
-# version-2.1.1 | 7-9-2025
-...
-# version-2.1.0 | 7-3-2025
-...
-```
+Parse the response as JSON and render the resulting string as Markdown; do not treat the body as Markdown directly.
 
 **Status Codes**:
 
 - 200 OK – Changelog retrieved successfully
 - 401 Unauthorized – Missing authentication
-- 403 Forbidden – Insufficient permissions
-- 404 Not Found – Changelog not found
-- 500 Internal Server Error – Server error during retrieval
+- 403 Forbidden – Missing the `changelog_read` permission
+- 500 Internal Server Error – The changelog file could not be read
+
+### Get Credits
+
+Returns the contents of the project credits.
+
+**HTTP Method:** `GET`  
+**Path:** `/api/v1/info/credits/`
+
+**Required Permission(s)**: None — this endpoint is public.
+
+**Response**
+
+Markdown sent as a JSON string, exactly as [Get Changelog](#get-changelog) does.
+
+**Status Codes**:
+
+- 200 OK – Credits retrieved successfully
+- 500 Internal Server Error – The credits file could not be read
 
 ## Data Types
 
 ### Info Object
 
-| Field         | Type     | Description         |
-| ------------- | -------- | ------------------- |
-| `name`        | `string` | Project name        |
-| `description` | `string` | Project description |
-| `version`     | `string` | Project version     |
+| Field         | Type     | Description                                |
+| ------------- | -------- | ------------------------------------------ |
+| `name`        | `string` | Project name                               |
+| `description` | `string` | Full project description                   |
+| `version`     | `string` | Current METIS version, `MAJOR.MINOR.PATCH` |
 
-> _All fields are read-only_
+All three are read-only.
 
-## Notes
+## Related Documentation
 
-- #### Server Implementation:
-
-  - Routes defined in `/server/api/v1/routes/info.ts`
-  - Controllers in `/server/api/v1/controllers/info/`
-  - Project metadata constants in MetisServer class
-  - Changelog file accessed directly from filesystem
-  - No database interaction required
-
-- #### Security Considerations:
-
-  - `/info` endpoint is public with no authentication required
-  - `/info/changelog` requires `changelog_read` permission
-  - Response data is static/read-only
-  - File paths are fixed to prevent traversal
-  - No sensitive data exposed
-
-- #### Error Handling:
-
-  - Filesystem errors when reading changelog
-  - Authentication/permission validation
-  - Standard HTTP status codes
-  - JSON error response format
-  - Stack traces logged but not returned
-
-- #### Content Delivery:
-  - Info endpoint returns JSON
-  - Changelog endpoint returns raw Markdown
-  - UTF-8 encoding enforced
-  - No caching headers (always fresh reads)
-  - Content-Type headers set automatically
+- **[API Overview](overview.md)** - Conventions, authentication, and error handling shared by every endpoint
+- **[Changelog](../changelog.md)** - The release notes this endpoint returns
+- **[Credits](../credits.md)** - The acknowledgements this endpoint returns

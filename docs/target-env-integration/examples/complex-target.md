@@ -42,67 +42,68 @@ const MissionControl = new TargetEnvSchema({
 })
 
 /**
- * Shared REST API client instance initialized during environment setup.
- * Available to all targets within this environment during the session.
+ * The key under which each realm keeps its REST API client.
  */
-let MissionControlApi: RestApi | null = null
+export const API_CLIENT_KEY = 'apiClient'
 
 /**
- * Initialize API client when session starts.
+ * Initialize the API client when the session starts.
  */
 MissionControl.on('environment-setup', async (context) => {
   if (!context.config.targetEnvConfig) {
     throw new Error('No Mission Control configuration selected.')
   }
 
-  // Initialize REST API client from selected configuration
-  MissionControlApi = RestApi.fromConfig(context.config.targetEnvConfig.data)
-  context.sendOutput('✅ Mission Control API client initialized')
+  // The local store is scoped to this environment within a single realm,
+  // so each realm holds its own client.
+  const client = context.localStore.use<RestApi | null>(API_CLIENT_KEY, null)
+  client.value = RestApi.fromConfig(context.config.targetEnvConfig.data)
 })
 
 /**
- * Clean up API client when session ends or resets.
+ * Clean up the API client when the session ends or resets.
  */
 MissionControl.on('environment-teardown', async (context) => {
-  MissionControlApi = null
-  context.sendOutput('✅ Mission Control API client cleaned up')
+  const client = context.localStore.use<RestApi | null>(API_CLIENT_KEY, null)
+  client.value = null
 })
 
 export default MissionControl
-export { MissionControlApi }
 ```
+
+Setup and teardown hooks run once per realm, so a client held in a module-level variable would be shared by every realm in the session and torn down by whichever finished first. Keeping it in `context.localStore` gives each realm its own.
+
+Hooks receive the same context as target scripts minus the mission-manipulation methods, so they can read `config`, `session`, and `mission`, and use the data stores. They cannot send output.
 
 ## Step 2: Environment Configuration
 
 Configure connection details in `/integration/target-env/mission-control/configs.json`:
 
 ```json
-{
-  "configs": [
-    {
-      "name": "Production Mission Control",
-      "data": {
-        "protocol": "https",
-        "host": "api.mission-control.example.com",
-        "port": 443,
-        "apiKey": "your-production-api-key",
-        "rejectUnauthorized": true
-      },
-      "permissions": ["update-environment-config"]
-    },
-    {
-      "name": "Development Mission Control",
-      "data": {
-        "protocol": "http",
-        "host": "localhost",
-        "port": 8080,
-        "apiKey": "dev-api-key",
-        "rejectUnauthorized": false
-      },
-      "permissions": ["update-environment-config"]
+[
+  {
+    "_id": "mission-control-production",
+    "name": "Production Mission Control",
+    "data": {
+      "protocol": "https",
+      "host": "api.mission-control.example.com",
+      "port": 443,
+      "apiKey": "your-production-api-key",
+      "rejectUnauthorized": true
     }
-  ]
-}
+  },
+  {
+    "_id": "mission-control-development",
+    "name": "Development Mission Control",
+    "data": {
+      "protocol": "http",
+      "host": "localhost",
+      "port": 8080,
+      "apiKey": "dev-api-key",
+      "rejectUnauthorized": false
+    }
+  }
+]
 ```
 
 **Configuration Selection:**
@@ -116,20 +117,26 @@ Configure connection details in `/integration/target-env/mission-control/configs
 Create `/integration/target-env/mission-control/targets/communication/schema.ts`:
 
 ```typescript
-import { MissionControlApi } from '../../schema'
+import { RestApi } from '@metis/api/RestApi'
+import { API_CLIENT_KEY } from '../../schema'
 
 /**
  * Secure communication target demonstrating API calls and dependency patterns.
  */
-const SecureCommunication = new TargetSchema({
+const SecureCommunication = TargetSchema.create({
+  _id: 'communication',
   name: 'Secure Communication',
   description: 'Send encrypted messages with delivery confirmation',
-  script: async (context) => {
-    const { forceMetadata, recipientId, message, priority, encryptionLevel } =
-      context.effect.args
-
+  script: async (
+    context,
+    { notify, recipientId, message, priority, encryptionLevel },
+  ) => {
     // Verify API client is initialized
-    if (!MissionControlApi) {
+    const { value: api } = context.localStore.use<RestApi | null>(
+      API_CLIENT_KEY,
+      null,
+    )
+    if (!api) {
       throw new Error(
         'Mission Control API not initialized. Check environment setup.',
       )
@@ -143,9 +150,7 @@ const SecureCommunication = new TargetSchema({
 
       context.sendOutput(
         `Sending ${priority} priority message ${encryptionInfo}...`,
-        {
-          forceKey: forceMetadata.forceKey,
-        },
+        notify,
       )
 
       const payload = {
@@ -156,30 +161,26 @@ const SecureCommunication = new TargetSchema({
         timestamp: new Date().toISOString(),
       }
 
-      // Send message using configured REST API client
-      const result = await MissionControlApi.post('/v1/communications', payload)
+      // Send message using configured REST API client.
+      // A non-2xx response rejects, so it is handled by the catch below.
+      const response = await api.post('/v1/communications', payload)
 
-      if (!result.success) {
-        throw new Error(`Failed to send message: ${result.error}`)
-      }
-
-      context.sendOutput(`✓ Message delivered! ID: ${result.data.messageId}`, {
-        forceKey: forceMetadata.forceKey,
-      })
+      context.sendOutput(
+        `✓ Message delivered! ID: ${response.data.messageId}`,
+        notify,
+      )
     } catch (error: any) {
-      context.sendOutput(`✗ Communication failed: ${error.message}`, {
-        forceKey: forceMetadata.forceKey,
-      })
+      context.sendOutput(`✗ Communication failed: ${error.message}`, notify)
       throw error
     }
   },
-  args: [
+  parameters: [
     {
-      _id: 'forceMetadata',
+      _id: 'notify',
       name: 'Target Force',
-      type: 'force',
-      required: true,
+      type: 'mission-component',
       groupingId: 'target',
+      validComponentTypes: ['mission', 'force'],
     },
     {
       _id: 'recipientId',
@@ -205,7 +206,7 @@ const SecureCommunication = new TargetSchema({
       type: 'dropdown',
       required: true,
       groupingId: 'security',
-      default: { _id: 'normal', name: 'Normal Priority', value: 'normal' },
+      default: 'normal',
       options: [
         { _id: 'low', name: 'Low Priority', value: 'low' },
         { _id: 'normal', name: 'Normal Priority', value: 'normal' },
@@ -235,31 +236,34 @@ const SecureCommunication = new TargetSchema({
 export default SecureCommunication
 ```
 
+Because `encryptionLevel` declares a dependency, its value is `undefined` whenever that dependency is unmet, so the script checks it before use.
+
 ## Step 4: File Transfer Target
 
 Create `/integration/target-env/mission-control/targets/file-transfer/schema.ts`:
 
 ```typescript
-import { MissionControlApi } from '../../schema'
+import { RestApi } from '@metis/api/RestApi'
+import { API_CLIENT_KEY } from '../../schema'
 
 /**
  * File transfer target demonstrating file operations and boolean dependencies.
  */
-const FileTransfer = new TargetSchema({
+const FileTransfer = TargetSchema.create({
+  _id: 'file-transfer',
   name: 'Secure File Transfer',
   description:
     'Upload or download files with encryption and compression options',
-  script: async (context) => {
-    const {
-      forceMetadata,
-      operation,
-      filePath,
-      encryptionEnabled,
-      compressionLevel,
-    } = context.effect.args
-
+  script: async (
+    context,
+    { notify, operation, filePath, encryptionEnabled, compressionLevel },
+  ) => {
     // Verify API client is initialized
-    if (!MissionControlApi) {
+    const { value: api } = context.localStore.use<RestApi | null>(
+      API_CLIENT_KEY,
+      null,
+    )
+    if (!api) {
       throw new Error(
         'Mission Control API not initialized. Check environment setup.',
       )
@@ -275,11 +279,11 @@ const FileTransfer = new TargetSchema({
 
         context.sendOutput(
           `Uploading file: ${filePath} ${encryptionInfo} ${compressionInfo}`,
-          { forceKey: forceMetadata.forceKey },
+          notify,
         )
 
         // Upload file using configured REST API client
-        const result = await MissionControlApi.post('/v1/files', {
+        const response = await api.post('/v1/files', {
           filePath: filePath,
           operation: 'upload',
           encrypted: encryptionEnabled || false,
@@ -287,39 +291,30 @@ const FileTransfer = new TargetSchema({
           uploadedBy: 'METIS-System',
         })
 
-        if (!result.success) throw new Error(`Upload failed: ${result.error}`)
-
-        context.sendOutput(`✓ File uploaded! ID: ${result.data.fileId}`, {
-          forceKey: forceMetadata.forceKey,
-        })
+        context.sendOutput(
+          `✓ File uploaded! ID: ${response.data.fileId}`,
+          notify,
+        )
       } else {
         // Download operation
-        context.sendOutput(`Downloading file: ${filePath}`, {
-          forceKey: forceMetadata.forceKey,
-        })
+        context.sendOutput(`Downloading file: ${filePath}`, notify)
 
-        const result = await MissionControlApi.get(`/v1/files/${filePath}`)
+        await api.get(`/v1/files/${filePath}`)
 
-        if (!result.success) throw new Error(`Download failed: ${result.error}`)
-
-        context.sendOutput(`✓ File downloaded successfully!`, {
-          forceKey: forceMetadata.forceKey,
-        })
+        context.sendOutput(`✓ File downloaded successfully!`, notify)
       }
     } catch (error: any) {
-      context.sendOutput(`✗ File transfer failed: ${error.message}`, {
-        forceKey: forceMetadata.forceKey,
-      })
+      context.sendOutput(`✗ File transfer failed: ${error.message}`, notify)
       throw error
     }
   },
-  args: [
+  parameters: [
     {
-      _id: 'forceMetadata',
+      _id: 'notify',
       name: 'Target Force',
-      type: 'force',
-      required: true,
+      type: 'mission-component',
       groupingId: 'target',
+      validComponentTypes: ['mission', 'force'],
     },
     {
       _id: 'operation',
@@ -327,7 +322,7 @@ const FileTransfer = new TargetSchema({
       type: 'dropdown',
       required: true,
       groupingId: 'operation',
-      default: { _id: 'upload', name: 'Upload File', value: 'upload' },
+      default: 'upload',
       options: [
         { _id: 'upload', name: 'Upload File', value: 'upload' },
         { _id: 'download', name: 'Download File', value: 'download' },
@@ -346,7 +341,6 @@ const FileTransfer = new TargetSchema({
       _id: 'encryptionEnabled',
       name: 'Enable Encryption',
       type: 'boolean',
-      required: false,
       groupingId: 'operation',
       dependencies: [TargetDependency.EQUALS('operation', 'upload')],
       tooltipDescription: 'Encrypt file during upload',
@@ -370,6 +364,8 @@ const FileTransfer = new TargetSchema({
 
 export default FileTransfer
 ```
+
+A `boolean` parameter has no `required` property. It is unchecked until the user turns it on, and takes an optional `default`.
 
 ## Step 5: Testing Your Implementation
 
@@ -403,8 +399,8 @@ Now that you've built both targets, let's test them to see the dependency patter
 
 ### **Key Observations**
 
-- **Arguments only appear when their dependencies are satisfied**
-- **The script receives only the visible arguments in `context.effect.args`**
+- **Parameters only appear when their dependencies are satisfied**
+- **An argument whose dependencies are unmet resolves to `undefined` in the script**
 - **Dependencies create a logical flow that guides users through configuration**
 
 ## Understanding the Dependency System
@@ -426,8 +422,8 @@ dependencies: [TargetDependency.TRUTHY('encryptionEnabled')]
 
 ### **How Dependencies Work**
 
-1. **UI Control** - Arguments only show when dependencies are met
-2. **Effect Validation** - Only visible arguments get added to `effect.args`
+1. **UI Control** - Parameters only show when dependencies are met
+2. **Value Resolution** - An argument whose dependencies are unmet resolves to `undefined`, and its type includes `undefined` so the compiler requires a check
 3. **User Experience** - Creates a guided, progressive disclosure interface
 
 ## Production Considerations
@@ -436,7 +432,7 @@ When implementing similar patterns in production:
 
 ### **API Configuration**
 
-- Store configurations in `configs.json` with appropriate permissions
+- Store configurations in `configs.json`, and ensure the file is readable by the account the server runs as
 - Use proper SSL/TLS certificate validation (`rejectUnauthorized: true`)
 - Use environment hooks for API client initialization and cleanup
 - Implement retry logic for network failures
@@ -470,16 +466,23 @@ For production scenarios requiring state persistence or cross-target coordinatio
 
 ```typescript
 script: async (context) => {
-  // Store data for the current session
-  await context.localStore.set('lastMessageId', messageId)
+  // Retrieve a stored value, supplying the value to start from
+  // if nothing has been stored yet
+  const lastMessage = context.localStore.use<string | null>('lastMessageId', null)
 
-  // Retrieve previously stored data
-  const lastId = await context.localStore.get('lastMessageId')
+  // Read it
+  const previousId = lastMessage.value
 
-  // Share data across all sessions (global scope)
-  await context.globalStore.set('systemStatus', 'active')
+  // Update it
+  lastMessage.value = messageId
+
+  // Share data across every realm and environment in the session
+  const status = context.globalStore.use('systemStatus', 'idle')
+  status.value = 'active'
 }
 ```
+
+Stores are accessed through `use(key, initialValue)`, which returns a holder whose `value` can be read and written. The call is synchronous. Three scopes are available: `localStore` for one environment within one realm, `realmStore` for every environment within one realm, and `globalStore` for the whole session.
 
 **Learn more:** See the **[Data Stores Guide](../guides/data-stores.md)** and **[Context API Reference](../references/context-api.md)** for complete usage patterns, caching strategies, and cross-target coordination examples.
 
@@ -511,7 +514,7 @@ dependencies: [
 - **[Migration Guide](../guides/migrations.md)** - Schema changes
 - **[Tips & Conventions](../guides/tips-and-conventions.md)** - Practical patterns and conventions
 - **[Context API Reference](../references/context-api.md)** - Full context capabilities
-- **[Argument Types Guide](../guides/argument-types.md)** - All available argument types
+- **[Parameter and Argument Types](../guides/parameter-and-argument-types.md)** - All available argument types
 
 ### **Build Your Own**
 
@@ -546,18 +549,12 @@ TargetDependency.TRUTHY('booleanField')
 ### **Script Structure**
 
 ```typescript
-script: async (context) => {
-  const { forceMetadata, arg1, arg2 } = context.effect.args
-
+script: async (context, { notify, arg1, arg2 }) => {
   try {
     // Your logic here
-    context.sendOutput('Success message', {
-      forceKey: forceMetadata.forceKey,
-    })
+    context.sendOutput('Success message', notify)
   } catch (error: any) {
-    context.sendOutput(`Error: ${error.message}`, {
-      forceKey: forceMetadata.forceKey,
-    })
+    context.sendOutput(`Error: ${error.message}`, notify)
     throw error
   }
 }

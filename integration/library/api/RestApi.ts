@@ -1,5 +1,9 @@
 import type { TAnyObject } from '@metis/toolbox/objects/ObjectToolbox'
-import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
+import axios, {
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type AxiosResponse,
+} from 'axios'
 import https from 'https'
 import z from 'zod'
 import { Api, apiOptionsSchema } from './Api'
@@ -20,47 +24,36 @@ export class RestApi extends Api {
   }
 
   /**
-   * The configuration for the request.
+   * The axios instance every request is sent through.
    */
-  private _config: AxiosRequestConfig<any>
+  private _client: AxiosInstance
   /**
-   * The configuration for the request.
+   * The axios instance every request is sent through. Use this to add
+   * interceptors, which is how a scheme that has to run per request —
+   * signing a request, refreshing an expired token — is applied.
    */
-  public get config(): AxiosRequestConfig<any> {
-    return this._config
+  public get client(): AxiosInstance {
+    return this._client
   }
 
   /**
-   * The API key used for authentication.
+   * The settings applied to every request this instance sends.
+   *
+   * This object is live and meant to be written to. Authentication is not
+   * handled for you, because there is no one way to do it — set whatever
+   * your service expects and it is sent with every request:
+   *
+   * ```typescript
+   * api.config.headers.common['X-API-Key'] = process.env.MY_API_KEY
+   * api.config.auth = { username: 'user', password: 'pass' }
+   * ```
+   *
+   * Settings passed to an individual request are merged over these rather
+   * than replacing them, so a per-request header does not drop the ones
+   * set here.
    */
-  private _apiKey?: string
-  /**
-   * The API key used for authentication.
-   */
-  public get apiKey(): string | undefined {
-    return this._apiKey
-  }
-
-  /**
-   * The username for basic authentication.
-   */
-  private _username?: string
-  /**
-   * The username for basic authentication.
-   */
-  public get username(): string | undefined {
-    return this._username
-  }
-
-  /**
-   * The password for basic authentication.
-   */
-  private _password?: string
-  /**
-   * The password for basic authentication.
-   */
-  public get password(): string | undefined {
-    return this._password
+  public get config(): AxiosInstance['defaults'] {
+    return this._client.defaults
   }
 
   /**
@@ -73,8 +66,8 @@ export class RestApi extends Api {
     // Build the base URL.
     this._baseUrl = this.buildBaseUrl(options)
 
-    // Build the request configuration.
-    this._config = this.buildRequestConfig(options)
+    // Build the client every request goes through.
+    this._client = axios.create(this.buildRequestConfig(options))
   }
 
   /**
@@ -158,11 +151,6 @@ export class RestApi extends Api {
       }
     }
 
-    // Remaining properties.
-    this._username = options.username
-    this._password = options.password
-    this._apiKey = options.apiKey
-
     // Set the base URL.
     config.baseURL = this.baseUrl
 
@@ -183,11 +171,11 @@ export class RestApi extends Api {
     data?: TRequestData,
     config: AxiosRequestConfig<TRequestData> = {},
   ): Promise<AxiosResponse<TResponseData>> {
-    return axios.post<
+    return this._client.post<
       TResponseData,
       AxiosResponse<TResponseData>,
       TRequestData
-    >(uri, data, { ...this.config, ...config })
+    >(uri, data, config)
   }
 
   /**
@@ -201,10 +189,7 @@ export class RestApi extends Api {
     uri: string,
     config: AxiosRequestConfig = {},
   ): Promise<AxiosResponse<TResponseData>> {
-    return axios.get<TResponseData>(uri, {
-      ...this.config,
-      ...config,
-    })
+    return this._client.get<TResponseData>(uri, config)
   }
 
   /**
@@ -220,14 +205,11 @@ export class RestApi extends Api {
     data?: TRequestData,
     config: AxiosRequestConfig<TRequestData> = {},
   ): Promise<AxiosResponse<TResponseData>> {
-    return axios.put<TResponseData, AxiosResponse<TResponseData>, TRequestData>(
-      uri,
-      data,
-      {
-        ...this.config,
-        ...config,
-      },
-    )
+    return this._client.put<
+      TResponseData,
+      AxiosResponse<TResponseData>,
+      TRequestData
+    >(uri, data, config)
   }
 
   /**
@@ -243,14 +225,11 @@ export class RestApi extends Api {
     data?: TRequestData,
     config: AxiosRequestConfig<TRequestData> = {},
   ): Promise<AxiosResponse<TResponseData>> {
-    return axios.patch<
+    return this._client.patch<
       TResponseData,
       AxiosResponse<TResponseData>,
       TRequestData
-    >(uri, data, {
-      ...this.config,
-      ...config,
-    })
+    >(uri, data, config)
   }
 
   /**
@@ -264,10 +243,7 @@ export class RestApi extends Api {
     uri: string,
     config: AxiosRequestConfig = {},
   ): Promise<AxiosResponse<TResponseData>> {
-    return axios.delete<TResponseData>(uri, {
-      ...this.config,
-      ...config,
-    })
+    return this._client.delete<TResponseData>(uri, config)
   }
 
   /**
@@ -299,25 +275,6 @@ const restApiOptionsSchema = apiOptionsSchema.extend({
    * @default 'http'
    */
   protocol: z.enum(['http', 'https']).optional(),
-  /**
-   * The username for basic authentication.
-   * This is added to the request headers and is used to authenticate the
-   * user making the request in conjunction with the password.
-   * @default undefined
-   */
-  username: z.string().optional(),
-  /**
-   * The password for basic authentication.
-   * This is used in conjunction with the username to authenticate the user making the request.
-   * @default undefined
-   */
-  password: z.string().optional(),
-  /**
-   * The API key to use for authentication.
-   * This is a token that is used to authenticate the user making the request.
-   * @default undefined
-   */
-  apiKey: z.string().optional(),
 })
 
 /**

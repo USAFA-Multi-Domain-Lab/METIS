@@ -14,7 +14,7 @@ The `configs.json` file is the core configuration system for target environments
 - [CLI Generation](#cli-generation)
 - [Best Practices](#best-practices)
 - [Examples](#examples)
-- [Troubleshooting](#troubleshooting)
+- [Related Documentation](#related-documentation)
 
 ## Overview
 
@@ -25,14 +25,20 @@ Each target environment can have multiple configurations (e.g., development, sta
 - **Multiple Configurations**: Define dev, staging, and production configs in one file
 - **Session-Scoped**: Each session can use a different configuration
 - **Runtime Selection**: Session managers choose configuration at session launch time
+- **Reloaded From Disk**: Edits take effect without restarting the server
 - **Security Recommendations**: Guidance for protecting sensitive configuration data
 - **Type-Safe**: Schema validation ensures data integrity
+
+> **Note:** A session stores the **ID** of the configuration that was selected, not a
+> copy of it. The file is re-read whenever a script reads
+> `context.config.targetEnvConfig`, so edits reach running sessions as well as new
+> ones — as long as the `_id` stays the same.
 
 ## File Location
 
 Place `configs.json` in your target environment's root directory:
 
-```
+```text
 integration/target-env/
   my-environment/
     schema.ts
@@ -45,15 +51,15 @@ integration/target-env/
 
 ### Configuration Object Structure
 
-```typescript
-{
-  _id: string           // Unique identifier for this config
-  name: string          // Display name shown to users
-  targetEnvId: string   // Auto-populated by METIS (folder name)
-  description?: string  // Optional description
-  data: object          // Configuration data (API keys, URLs, etc.)
-}
-```
+| Property      | Required | Notes                                                             |
+| ------------- | -------- | ----------------------------------------------------------------- |
+| `_id`         | Yes      | Unique identifier for this config. Cannot be empty                |
+| `name`        | Yes      | Display name shown to session managers. Cannot be empty           |
+| `targetEnvId` | No       | Set by METIS from the environment's folder name — do not write it |
+| `description` | No       | Defaults to an empty string                                       |
+| `data`        | No       | Configuration data. Defaults to `{}`                              |
+
+The file itself must be a JSON **array** of these objects, even for a single configuration.
 
 ### Complete Example
 
@@ -137,6 +143,11 @@ The `data` object is completely flexible - structure it based on your needs:
 }
 ```
 
+> **Note:** `RestApi` reads only the properties listed in the
+> [Environment Configuration](environment-configuration.md) reference. Anything else
+> in `data` is ignored by the client and left for your script to read — a per-request
+> `timeout`, for instance, is passed to the request rather than set here.
+
 **For WebSocket APIs:**
 
 ```json
@@ -194,7 +205,7 @@ Use your operating system's file permission tools to restrict access to the `con
 chmod 600 integration/target-env/my-environment/configs.json
 ```
 
-> _For Windows or other operating systems, consult your OS documentation for setting file permissions that restrict read/write access to the file owner only._
+> **Note:** _For Windows or other operating systems, consult your OS documentation for setting file permissions that restrict read/write access to the file owner only._
 
 **Security Considerations:**
 
@@ -204,21 +215,12 @@ chmod 600 integration/target-env/my-environment/configs.json
 
 ### What Gets Exposed to Client
 
-**Server-side:**
+| Where                          | `targetEnvConfig.data` holds                                             |
+| ------------------------------ | ------------------------------------------------------------------------ |
+| Server, inside a target script | The full object — `{ protocol: 'https', host: '...', apiKey: 'secret' }` |
+| Client, in the browser         | `{}` — always empty, whatever the file contains                          |
 
-```typescript
-// Full data available on server
-context.config.targetEnvConfig.data
-// { protocol: "https", host: "...", apiKey: "secret", ... }
-```
-
-**Client-side:**
-
-```typescript
-// Empty object sent to browser (security)
-session.config.targetEnvConfig.data
-// {}
-```
+Stripping happens on the way out, so a value that never leaves `data` never reaches a browser.
 
 ### Best Practices
 
@@ -226,7 +228,7 @@ session.config.targetEnvConfig.data
 2. **Use different configs** for each environment
 3. **Rotate API keys** regularly
 4. **Secure file permissions** to protect sensitive data
-5. **Ensure METIS has read and write access** to the configuration file
+5. **Ensure the METIS server process can read the file** — it never writes to it
 6. **Document required fields** for your team
 7. **Use descriptive names** for each config
 
@@ -237,12 +239,13 @@ session.config.targetEnvConfig.data
 ```typescript
 import { RestApi } from '@metis/api/RestApi'
 
-export default new TargetSchema({
+const MyTarget = TargetSchema.create({
   _id: 'my-target',
   name: 'My Target',
+  description: 'Reads the configuration selected for the session.',
   script: async (context) => {
     // Get the configuration selected for this session
-    const { config } = context
+    let { config } = context
 
     // Check if a configuration was selected
     if (!config.targetEnvConfig) {
@@ -252,52 +255,58 @@ export default new TargetSchema({
     }
 
     // Access the configuration data
-    const configData = config.targetEnvConfig.data
+    let configData = config.targetEnvConfig.data
 
     // Use configuration with API clients
-    const api = RestApi.fromConfig(configData)
+    let api = RestApi.fromConfig(configData)
+    void api
 
-    // Or access specific fields
-    const apiKey = configData.apiKey
-    const endpoint = `${configData.protocol}://${configData.host}:${configData.port}`
+    // Or access specific fields. Values are typed `unknown`, so narrow
+    // them before use.
+    let apiKey = configData.apiKey
+    void apiKey
   },
+  parameters: [],
 })
+
+export default MyTarget
 ```
 
 ### Configuration Properties
 
-```typescript
-context.config.targetEnvConfig = {
-  _id: string           // Selected configuration ID
-  name: string          // Configuration display name
-  targetEnvId: string   // Target environment ID
-  description?: string  // Optional description
-  data: object          // Your configuration data
-}
-```
+| Property      | Type                      | Notes                                                       |
+| ------------- | ------------------------- | ----------------------------------------------------------- |
+| `_id`         | `string`                  | The selected configuration's ID                             |
+| `name`        | `string`                  | Display name shown to session managers                      |
+| `targetEnvId` | `string`                  | Set by METIS from the environment's folder name             |
+| `description` | `string`                  | Empty string when the file omits it                         |
+| `data`        | `Record<string, unknown>` | Your configuration data. Values are `unknown` — narrow them |
 
 ### Handling Missing Configurations
 
 ```typescript
-script: async (context) => {
-  const { config } = context
+script: async (context, { notify }) => {
+  let { config } = context
 
   // Check if ANY config was selected
   if (!config.targetEnvConfig) {
-    context.sendOutput('⚠️ No configuration selected. Using default behavior.')
-    // Provide fallback behavior or throw error
+    context.sendOutput(
+      'No configuration selected. Using default behavior.',
+      notify,
+    )
+    // Provide fallback behavior or throw an error
     return
   }
 
   // Check for specific required fields
-  const { data } = config.targetEnvConfig
+  let { data } = config.targetEnvConfig
   if (!data.apiKey) {
     throw new Error('API key not found in configuration.')
   }
 
   // Proceed with configured operation
-  const api = RestApi.fromConfig(data)
-  // ...
+  let api = RestApi.fromConfig(data)
+  void api
 }
 ```
 
@@ -313,44 +322,27 @@ When launching a session, users see a dropdown with all available configurations
 
 ### Configuration Availability
 
-```typescript
-// Server determines available configs for each target environment
-targetEnvironment.configs // Array of all configs from configs.json
-```
+The dropdown lists every configuration the environment's `configs.json` currently
+contains. The file is read at that moment rather than cached at startup, so a
+configuration added while the server is running shows up without a restart.
 
 ### Default Behavior
 
-If no `configs.json` exists:
+If no `configs.json` exists, or none was selected:
 
-- `context.config.targetEnvConfig` will be `null`
+- `context.config.targetEnvConfig` is `null`
 - Target scripts should handle this gracefully
-- Provide fallback behavior or clear error messages
+- Provide fallback behavior or a clear error message
 
 ## CLI Generation
 
 METIS provides a CLI tool to generate `configs.json` files:
 
-**Linux/macOS/WSL:**
-
 ```bash
-# Generate new configs.json
-./cli.sh config generate my-environment
-
-# This will:
-# 1. Create integration/target-env/my-environment/configs.json
-# 2. Generate template configuration
-# 3. Provide security recommendations
+metis config generate <target-env-id>
 ```
 
-**Windows (Git Bash/WSL recommended):**
-
-The CLI script requires a bash environment. Use WSL, Git Bash, or manually create the file:
-
-```powershell
-# Manual creation on Windows
-New-Item -Path "integration\target-env\my-environment\configs.json" -ItemType File
-# Then edit with your preferred editor
-```
+The command creates `integration/target-env/<target-env-id>/configs.json` with a template configuration. If the file already exists, it asks before overwriting.
 
 > **Tip:** After generation, consider setting restrictive file permissions (see Security & Permissions section for guidance).
 
@@ -475,41 +467,6 @@ New-Item -Path "integration\target-env\my-environment\configs.json" -ItemType Fi
   }
 ]
 ```
-
-## Troubleshooting
-
-### Configuration Not Available
-
-**Problem:** `context.config.targetEnvConfig` is `null`
-
-**Solutions:**
-
-1. Check if `configs.json` exists in target environment directory
-2. Verify JSON is valid (no syntax errors)
-3. Ensure user selected a configuration when launching session
-4. Restart server to reload configurations
-
-### Configuration Not Loading
-
-**Problem:** Changes to `configs.json` not reflected
-
-**Solution:**
-
-- Restart METIS server to reload configurations
-- Configuration changes apply to new sessions only
-- End current session and start new one to see changes
-- Check server logs for loading errors
-
-### Validation Errors
-
-**Problem:** Server logs configuration validation errors
-
-**Solutions:**
-
-1. Ensure `_id` is unique across all configs
-2. Verify `name` is not empty
-3. Check JSON syntax is valid
-4. Confirm `data` object structure matches your needs
 
 ## Related Documentation
 

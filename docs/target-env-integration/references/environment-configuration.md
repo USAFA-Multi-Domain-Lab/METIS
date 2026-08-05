@@ -35,7 +35,7 @@ METIS uses `configs.json` files within each target environment directory for sto
 
 METIS configurations are defined in a `configs.json` file located in your target environment's root directory:
 
-```
+```text
 integration/target-env/your-environment/
 ├── schema.ts
 ├── configs.json          ← Configuration file
@@ -61,12 +61,16 @@ integration/target-env/your-environment/
 ]
 ```
 
-### Required Fields
+### Fields
 
-- **\_id** (string): Unique identifier for this configuration
-- **name** (string): Display name shown to users in the UI
-- **description** (string): Description of this configuration's purpose
-- **data** (object): Your custom configuration data
+| Field         | Required | Notes                                                     |
+| ------------- | -------- | --------------------------------------------------------- |
+| `_id`         | Yes      | Unique identifier. Cannot be empty                         |
+| `name`        | Yes      | Display name shown to session managers. Cannot be empty    |
+| `description` | No       | Defaults to an empty string                                |
+| `data`        | No       | Your custom configuration data. Defaults to `{}`           |
+
+`targetEnvId` is set by METIS from the environment's folder name — do not write it yourself.
 
 ### Data Property
 
@@ -91,7 +95,7 @@ The `data` property can contain any structure your environment needs. Common pat
 ```json
 {
   "data": {
-    "wsProtocol": "wss",
+    "protocol": "wss",
     "host": "websocket.example.com",
     "port": 443,
     "apiKey": "your-key-here"
@@ -115,15 +119,13 @@ The `data` property can contain any structure your environment needs. Common pat
 
 ### Creating configs.json
 
-**Using CLI (Recommended):**
+**Using the CLI (recommended):**
 
 ```bash
-# Linux/macOS/WSL
-./cli.sh config generate your-environment
-
-# Then edit the generated file
-vim integration/target-env/your-environment/configs.json
+metis config generate <target-env-id>
 ```
+
+The command writes a template to `integration/target-env/<target-env-id>/configs.json`, asking first if the file already exists.
 
 **Manual Creation (Linux/macOS):**
 
@@ -150,7 +152,7 @@ notepad integration\target-env\your-environment\configs.json
 # Recommended: Set secure permissions (see Security & Permissions section)
 ```
 
-> 🔒 **Security Tip:** Consider setting restrictive file permissions to protect sensitive data in your configs.json file.
+> **Security Tip:** Consider setting restrictive file permissions to protect sensitive data in your configs.json file.
 
 ## Configuration Properties
 
@@ -158,71 +160,38 @@ The properties you include in `data` depend on your target environment's needs. 
 
 ### REST API Properties
 
-**protocol**
+Read by `RestApi.fromConfig`.
 
-- Type: `'http' | 'https'`
-- Default: `'http'`
-- Format: Protocol name only (no `://`)
+| Property             | Type                  | Default                                  | Effect                                             |
+| -------------------- | --------------------- | ---------------------------------------- | -------------------------------------------------- |
+| `protocol`           | `'http'` \| `'https'` | `'http'`                                | Scheme of the base URL. Name only, no `://`         |
+| `host`               | `string`              | `localhost`                              | Domain or IP. May include a port                    |
+| `port`               | `number` \| numeric `string` | `80`, or `443` for `https`        | Port of the base URL                                |
+| `rejectUnauthorized` | `boolean`             | `true`                                   | When `false`, accepts invalid TLS certificates      |
 
-**host**
-
-- Type: `string` (domain or IP)
-- Example: `'api.example.com'`, `'192.168.1.100'`
-
-**port**
-
-- Type: `number`
-- Default: `80` for HTTP, `443` for HTTPS
-- Example: `3000`, `8080`
-
-**username/password**
-
-- Type: `string`
-- For HTTP Basic Authentication
-- Example: `"username": "admin"`, `"password": "secret"`
-
-**apiKey**
-
-- Type: `string`
-- For token-based authentication
-- Example: `"apiKey": "sk-1234567890abcdef"`
-
-**rejectUnauthorized**
-
-- Type: `boolean`
-- Default: `true`
-- Controls TLS certificate validation
+> **Important:** These four are the only properties `RestApi` reads. It takes no
+> credentials and applies no authentication scheme — keep credentials under any
+> key you like and set them on `api.config` yourself. See
+> [Authentication](rest-api.md#authentication) in the REST API reference.
 
 ### WebSocket Properties
 
-**protocol**
+Read by `WebSocketApi.fromConfig`.
 
-- Type: `'ws' | 'wss'`
-- Default: `'ws'`
-- WebSocket protocol
-
-**host**
-
-- Type: `string` (domain or IP)
-- Example: `'api.example.com'`, `'192.168.1.100'`
-
-**port**
-
-- Type: `number`
-- Default: `80` for ws, `443` for wss
-- Example: `3000`, `8080`
-
-**rejectUnauthorized**
-
-- Type: `boolean`
-- Default: `true`
-- Controls TLS certificate validation
-
-**connectTimeout**
-
-- Type: `number`
-- Default: `5000` (milliseconds)
-- Timeout for establishing connections
+| Property                 | Type                | Default                     | Range        | Effect                                                        |
+| ------------------------ | ------------------- | --------------------------- | ------------ | ------------------------------------------------------------- |
+| `protocol`               | `'ws'` \| `'wss'`  | `'ws'`                      | —            | Scheme, and which default port applies                         |
+| `host`                   | `string`            | `localhost`                 | —            | Domain or IP. May include a port                               |
+| `port`                   | `number` \| numeric `string` | `80`, or `443` for `wss` | 1–65535 | Port of the connection URL                                 |
+| `rejectUnauthorized`     | `boolean`           | `true`                      | —            | When `false`, accepts invalid TLS certificates                 |
+| `connectTimeout`         | `number`            | `10000`                     | 1000–60000   | How long to wait for the handshake, in milliseconds            |
+| `autoReconnect`          | `boolean`           | `true`                      | —            | Reconnect after an unexpected close                            |
+| `reconnectDelay`         | `number`            | `1000`                      | 250–60000    | Base delay before the first reconnect attempt, in milliseconds |
+| `maxReconnectDelay`      | `number`            | `30000`                     | 1000–300000  | Ceiling for the backoff between attempts, in milliseconds      |
+| `keepAliveInterval`      | `number`            | `30000`                     | 0–300000     | Ping interval in milliseconds. `0` disables keepalive          |
+| `keepAliveTimeout`       | `number`            | `10000`                     | 0–60000      | Terminate if no pong arrives within this window                |
+| `queueWhileDisconnected` | `boolean`           | `false`                     | —            | Hold messages sent while disconnected and flush them on reopen |
+| `maxQueueSize`           | `number`            | `100`                       | 1–10000      | Queue capacity. `send()` rejects once it is full               |
 
 ### Custom Properties
 
@@ -253,13 +222,17 @@ One of the key features of `configs.json` is that session managers select which 
 ### How It Works
 
 1. **Session manager creates session** and chooses a configuration from the dropdown
-2. **METIS loads the selected config** and makes it available via context
+2. **METIS records the configuration's ID** on the session
 3. **All session members** use the same configuration
-4. **Configuration persists** for the session's lifetime
+4. **The file is re-read** each time a script reads `context.config.targetEnvConfig`, so edits reach running sessions without a restart
+
+Because the session stores the ID rather than a copy, changing a configuration's
+`_id` in `configs.json` while a session is running leaves that session pointing at
+nothing, and `context.config.targetEnvConfig` becomes `null`.
 
 ### UI Experience
 
-```
+```text
 Create Session:
 ├── Mission: [Select Mission ▼]
 ├── Environment Config: [Production ▼]
@@ -283,46 +256,56 @@ Configuration data is accessed through the `context` object passed to your targe
 ### Basic Usage
 
 ```typescript
-export default new TargetSchema({
+import { RestApi } from '@metis/api/RestApi'
+
+const SendAlert = TargetSchema.create({
   _id: 'send-alert',
   name: 'Send Alert',
-  description: 'Send an alert to the API',
-  script: async (context) => {
+  description: 'Send an alert to the API.',
+  script: async (context, { notify }) => {
     // Check if configuration is selected
     if (!context.config.targetEnvConfig) {
       throw new Error('No configuration selected for this session.')
     }
 
     // Access configuration data
-    const config = context.config.targetEnvConfig.data
+    let config = context.config.targetEnvConfig.data
 
     // Use with REST API
-    const api = RestApi.fromConfig(config)
-    const response = await api.post('/alerts', {
+    let api = RestApi.fromConfig(config)
+    let response = await api.post('/alerts', {
       message: 'Alert message',
       severity: 'high',
     })
 
-    context.sendOutput(`Alert sent: ${response.data.id}`)
+    context.sendOutput(`Alert sent: ${response.data.id}`, notify)
   },
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      validComponentTypes: ['mission', 'force'],
+    },
+  ],
 })
+
+export default SendAlert
 ```
 
 ### Configuration Structure in Context
 
-```typescript
-context.config.targetEnvConfig = {
-  _id: 'production-config',
-  name: 'Production',
-  description: 'Production API configuration',
-  data: {
-    protocol: 'https',
-    host: 'api.example.com',
-    apiKey: 'your-key-here',
-    // ... your configuration properties
-  },
-}
-```
+When a configuration is selected, `context.config.targetEnvConfig` carries:
+
+| Property      | Example                          |
+| ------------- | -------------------------------- |
+| `_id`         | `'production-config'`            |
+| `name`        | `'Production'`                   |
+| `targetEnvId` | `'your-environment'`             |
+| `description` | `'Production API configuration'` |
+| `data`        | Your configuration properties    |
+
+It is `null` when no configuration was selected.
 
 ### Handling Missing Configuration
 
@@ -330,7 +313,7 @@ Always check if a configuration is selected:
 
 ```typescript
 script: async (context) => {
-  const { config } = context
+  let { config } = context
 
   if (!config.targetEnvConfig) {
     throw new Error(
@@ -340,29 +323,27 @@ script: async (context) => {
   }
 
   // Safe to use config now
-  const api = RestApi.fromConfig(config.targetEnvConfig.data)
-  // ...
+  let api = RestApi.fromConfig(config.targetEnvConfig.data)
+  void api
 }
 ```
 
 ### Using Configuration with REST API
 
 ```typescript
-import { RestApi } from '@metis/api/RestApi'
-
-script: async (context) => {
+script: async (context, { notify }) => {
   if (!context.config.targetEnvConfig) {
     throw new Error('No configuration selected.')
   }
 
   // Create API client from configuration
-  const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
+  let api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
   // Make requests
-  const users = await api.get('/users')
-  const device = await api.post('/devices', { name: 'Device 1' })
+  let users = await api.get<{ length: number }[]>('/users')
+  await api.post('/devices', { name: 'Device 1' })
 
-  context.sendOutput(`Found ${users.data.length} users`)
+  context.sendOutput(`Found ${users.data.length} users`, notify)
 }
 ```
 
@@ -381,7 +362,7 @@ Use your operating system's file permission tools to restrict access to the `con
 chmod 600 integration/target-env/your-environment/configs.json
 ```
 
-> _For Windows or other operating systems, consult your OS documentation for setting file permissions that restrict read/write access to the file owner only._
+> **Note:** _For Windows or other operating systems, consult your OS documentation for setting file permissions that restrict read/write access to the file owner only._
 
 **Why This Matters:**
 
@@ -421,7 +402,7 @@ Configurations are visible in the METIS client UI, but sensitive data is **hidde
 
 1. **Never commit sensitive data** to version control
 2. **Secure file permissions**: Use restrictive permissions to protect sensitive data
-3. **Ensure METIS can read and write to the file**: Verify the server process has appropriate access
+3. **Ensure the METIS server process can read the file**: It never writes to it
 4. **Use environment-specific configs**: Create separate configs for dev/staging/prod
 5. **Rotate credentials regularly**: Update API keys and passwords periodically
 6. **Document required fields**: Add comments or README explaining expected configuration structure
@@ -506,13 +487,13 @@ Configurations are visible in the METIS client UI, but sensitive data is **hidde
     "name": "WebSocket Server",
     "description": "Real-time WebSocket connection",
     "data": {
-      "wsProtocol": "wss",
+      "protocol": "wss",
       "host": "ws.example.com",
       "port": 443,
       "apiKey": "ws-api-key",
-      "reconnect": true,
-      "reconnectInterval": 5000,
-      "heartbeatInterval": 30000
+      "autoReconnect": true,
+      "reconnectDelay": 5000,
+      "keepAliveInterval": 30000
     }
   }
 ]
@@ -570,13 +551,14 @@ Configurations are visible in the METIS client UI, but sensitive data is **hidde
 
 ### Configuration Not Loading
 
-**Problem:** `context.config.targetEnvConfig` is `undefined`
+**Problem:** `context.config.targetEnvConfig` is `null`
 
 **Solutions:**
 
-1. **Check session creation** - Ensure instructor selected a configuration when creating the session
-2. **Verify configs.json exists** - File must be in target environment root directory
-3. **Check file permissions** - Should be `-rw-------` or similar to allow METIS server read/write access
+1. **Check session creation** - Ensure a configuration was selected when the session was created
+2. **Verify configs.json exists** - The file must be in the target environment's root directory
+3. **Check file permissions** - The server process needs read access; it never writes to the file
+4. **Check the target-environment log** - Loading failures never throw. They log and leave the environment with no configurations at all
 
 ### Connection Failures
 
@@ -611,4 +593,4 @@ Configurations are visible in the METIS client UI, but sensitive data is **hidde
 - **[Context API](./context-api.md)** - Complete context object reference
 - **[Creating Target Environments](../guides/creating-target-environments.md)** - Step-by-step setup guide
 - **[External API Integration](../guides/external-api-integration.md)** - Connecting to external systems
-- **[Quickstart Guide](../quickstart.md)** - Get started in 10 minutes
+- **[Quickstart Guide](../quickstart.md)** - Get started in 5 minutes

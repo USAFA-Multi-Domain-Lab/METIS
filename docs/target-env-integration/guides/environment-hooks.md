@@ -11,7 +11,7 @@ Environment hooks are lifecycle methods that allow your target environment to ex
 - [Common Use Cases](#common-use-cases)
 - [Execution Order](#execution-order)
 - [Best Practices](#best-practices)
-- [Complete Examples](#complete-examples)
+- [Complete Example](#complete-example)
 - [Troubleshooting](#troubleshooting)
 - [Related Documentation](#related-documentation)
 
@@ -26,7 +26,7 @@ Environment hooks provide a way to run initialization and cleanup code at the en
 
 **Key Features:**
 
-- Execute once per session (not per target execution)
+- Execute once per **realm** (not per target execution). A multiplayer session has one realm, so this is once per session; a standalone session has one realm per participant, so the hooks run once for each of them. See [`multiRealmSupport`](../references/schemas.md#environment-properties).
 - Run before/after mission-level effects
 - Access to session context and data stores
 - Async support for long-running operations
@@ -70,20 +70,20 @@ const environment = new TargetEnvSchema({
 
 // Register setup hook
 environment.on('environment-setup', async (context) => {
-  context.sendOutput('🔧 Setting up My Environment...')
+  console.log('🔧 Setting up My Environment...')
 
   // Your setup logic here
 
-  context.sendOutput('✅ My Environment ready')
+  console.log('✅ My Environment ready')
 })
 
 // Register teardown hook
 environment.on('environment-teardown', async (context) => {
-  context.sendOutput('🧹 Cleaning up My Environment...')
+  console.log('🧹 Cleaning up My Environment...')
 
   // Your cleanup logic here
 
-  context.sendOutput('✅ My Environment cleaned up')
+  console.log('✅ My Environment cleaned up')
 })
 
 export default environment
@@ -95,49 +95,17 @@ Hooks receive a context object with access to session data and utilities:
 
 ### Available Properties
 
-```typescript
-context = {
-  // Session information
-  session: {
-    _id: string,
-    name: string,
-    state: TSessionState,
-    config: TSessionConfig,
-    // ... other session properties
-  },
+A hook context exposes seven members, and nothing else:
 
-  // Configuration (if selected for this session)
-  config: {
-    targetEnvConfig?: {
-      _id: string,
-      name: string,
-      data: object,  // Your configuration data
-    }
-  },
-
-  // Target environment information
-  environment: {
-    _id: string,
-    name: string,
-    version: string,
-  },
-
-  // User who created the session
-  user: {
-    _id: string,
-    username: string,
-    // ... other user properties
-  },
-
-  // Data storage
-  localStore: Map<string, any>,
-  globalStore: Map<string, any>,
-
-  // Utility functions
-  sendOutput: (message: string) => void,
-  sleep: (ms: number) => Promise<void>,
-}
-```
+| Member        | Purpose                                                                  |
+| ------------- | ------------------------------------------------------------------------ |
+| `session`     | The session that invoked the hook                                        |
+| `config`      | The configuration selected for this environment, under `targetEnvConfig` |
+| `mission`     | The mission associated with the session                                  |
+| `localStore`  | Store scoped to this realm and this target environment                   |
+| `realmStore`  | Store scoped to this realm, shared across target environments            |
+| `globalStore` | Store scoped to the session instance, shared across realms               |
+| `sleep`       | Async delay that aborts automatically if the session resets              |
 
 ### Key Methods
 
@@ -169,7 +137,7 @@ environment.on('environment-setup', async (context) => {
   const { host, port, database, username, password } =
     context.config.targetEnvConfig.data
 
-  context.sendOutput('Connecting to database...')
+  console.log('Connecting to database...')
 
   dbConnection = new DatabaseClient({
     host,
@@ -181,7 +149,7 @@ environment.on('environment-setup', async (context) => {
 
   await dbConnection.connect()
 
-  context.sendOutput(`✅ Connected to database: ${database}`)
+  console.log(`✅ Connected to database: ${database}`)
 
   // Store connection in globalStore for targets to access
   context.globalStore.set('dbConnection', dbConnection)
@@ -189,10 +157,10 @@ environment.on('environment-setup', async (context) => {
 
 environment.on('environment-teardown', async (context) => {
   if (dbConnection) {
-    context.sendOutput('Closing database connection...')
+    console.log('Closing database connection...')
     await dbConnection.disconnect()
     dbConnection = null
-    context.sendOutput('✅ Database connection closed')
+    console.log('✅ Database connection closed')
   }
 })
 
@@ -217,7 +185,7 @@ environment.on('environment-setup', async (context) => {
   const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
   const { username, password } = context.config.targetEnvConfig.data
 
-  context.sendOutput('Authenticating with API...')
+  console.log('Authenticating with API...')
 
   // Get authentication token
   const response = await api.post('/auth/login', {
@@ -231,7 +199,7 @@ environment.on('environment-setup', async (context) => {
   context.globalStore.set('authToken', token)
   context.globalStore.set('tokenExpiry', expiresAt)
 
-  context.sendOutput('✅ API authentication successful')
+  console.log('✅ API authentication successful')
 })
 
 environment.on('environment-teardown', async (context) => {
@@ -242,7 +210,7 @@ environment.on('environment-teardown', async (context) => {
 
   const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
-  context.sendOutput('Logging out of API...')
+  console.log('Logging out of API...')
 
   try {
     await api.post(
@@ -252,9 +220,9 @@ environment.on('environment-teardown', async (context) => {
         headers: { Authorization: `Bearer ${token}` },
       },
     )
-    context.sendOutput('✅ Logged out successfully')
+    console.log('✅ Logged out successfully')
   } catch (error) {
-    context.sendOutput('⚠️ Logout failed (token may have expired)')
+    console.log('⚠️ Logout failed (token may have expired)')
   } finally {
     context.globalStore.delete('authToken')
     context.globalStore.delete('tokenExpiry')
@@ -281,7 +249,7 @@ environment.on('environment-setup', async (context) => {
 
   const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
-  context.sendOutput('Preloading reference data...')
+  console.log('Preloading reference data...')
 
   // Fetch commonly-used data
   const [users, devices, locations] = await Promise.all([
@@ -295,7 +263,7 @@ environment.on('environment-setup', async (context) => {
   context.globalStore.set('devices', devices.data)
   context.globalStore.set('locations', locations.data)
 
-  context.sendOutput(
+  console.log(
     `✅ Cached ${users.data.length} users, ${devices.data.length} devices, ${locations.data.length} locations`,
   )
 })
@@ -306,7 +274,7 @@ environment.on('environment-teardown', async (context) => {
   context.globalStore.delete('devices')
   context.globalStore.delete('locations')
 
-  context.sendOutput('✅ Cache cleared')
+  console.log('✅ Cache cleared')
 })
 
 export default environment
@@ -347,11 +315,11 @@ Always handle errors gracefully in hooks:
 ```typescript
 environment.on('environment-setup', async (context) => {
   try {
-    context.sendOutput('Connecting to service...')
+    console.log('Connecting to service...')
     // ... connection logic
-    context.sendOutput('✅ Connected')
+    console.log('✅ Connected')
   } catch (error) {
-    context.sendOutput(`❌ Setup failed: ${error.message}`)
+    console.log(`❌ Setup failed: ${error.message}`)
     throw error // Re-throw to prevent session from starting
   }
 })
@@ -373,7 +341,7 @@ environment.on('environment-teardown', async (context) => {
     try {
       await connection.close()
     } catch (error) {
-      context.sendOutput(`⚠️ Cleanup warning: ${error.message}`)
+      console.log(`⚠️ Cleanup warning: ${error.message}`)
     } finally {
       connection = null
     }
@@ -428,14 +396,14 @@ Use `context.sleep()` instead of timers:
 // ❌ BAD - Will cause issues on session reset
 environment.on('environment-setup', async (context) => {
   setTimeout(() => {
-    context.sendOutput('Delayed message')
+    console.log('Delayed message')
   }, 5000)
 })
 
 // ✅ GOOD - Safe and session-aware
 environment.on('environment-setup', async (context) => {
   await context.sleep(5000)
-  context.sendOutput('Delayed message')
+  console.log('Delayed message')
 })
 ```
 
@@ -458,22 +426,22 @@ environment.on('environment-setup', async (context) => {
     throw new Error('No WebSocket configuration selected.')
   }
 
-  context.sendOutput('Establishing WebSocket connection...')
+  console.log('Establishing WebSocket connection...')
 
   try {
     wsConnection = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
 
     // Set up event handlers
     wsConnection.on('connect', () => {
-      context.sendOutput('✅ WebSocket connected')
+      console.log('✅ WebSocket connected')
     })
 
     wsConnection.on('disconnect', () => {
-      context.sendOutput('⚠️ WebSocket disconnected')
+      console.log('⚠️ WebSocket disconnected')
     })
 
     wsConnection.on('error', (error) => {
-      context.sendOutput(`❌ WebSocket error: ${error.message}`)
+      console.log(`❌ WebSocket error: ${error.message}`)
     })
 
     // Connect
@@ -482,20 +450,20 @@ environment.on('environment-setup', async (context) => {
     // Store for targets to use
     context.globalStore.set('wsConnection', wsConnection)
   } catch (error) {
-    context.sendOutput(`❌ WebSocket setup failed: ${error.message}`)
+    console.log(`❌ WebSocket setup failed: ${error.message}`)
     throw error
   }
 })
 
 environment.on('environment-teardown', async (context) => {
   if (wsConnection) {
-    context.sendOutput('Closing WebSocket connection...')
+    console.log('Closing WebSocket connection...')
 
     try {
       await wsConnection.disconnect()
-      context.sendOutput('✅ WebSocket disconnected')
+      console.log('✅ WebSocket disconnected')
     } catch (error) {
-      context.sendOutput(`⚠️ WebSocket disconnect error: ${error.message}`)
+      console.log(`⚠️ WebSocket disconnect error: ${error.message}`)
     } finally {
       wsConnection = null
       context.globalStore.delete('wsConnection')

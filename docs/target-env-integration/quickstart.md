@@ -2,6 +2,17 @@
 
 Get your first integration running in 5 minutes! This guide walks you through creating a simple target that sends alerts to an external system.
 
+## Table of Contents
+
+- [What You'll Build](#what-youll-build)
+- [Step 1: Create Your Target Environment](#step-1-create-your-target-environment)
+- [Step 2: Create Your Target](#step-2-create-your-target)
+- [Step 3: Test Your Integration](#step-3-test-your-integration)
+- [Step 4: Run and Verify](#step-4-run-and-verify)
+- [Next Steps](#next-steps)
+- [Troubleshooting](#troubleshooting)
+- [Related Documentation](#related-documentation)
+
 ## What You'll Build
 
 An "Alert System" target that:
@@ -44,38 +55,50 @@ touch integration/target-env/my-alerts/targets/send-alert/schema.ts
 Define your target in `targets/send-alert/schema.ts`:
 
 ```typescript
-const sendAlert = new TargetSchema({
+const sendAlert = TargetSchema.create({
   _id: 'send-alert',
   name: 'Send Alert',
-  description: 'Send an alert message to external system.',
-  script: async (context) => {
-    const { message, priority } = context.effect.args
-
-    // Simulate API call to external system
+  description: 'Send an alert message to an external system.',
+  script: async (context, { notify, message, priority }) => {
+    // Call the external system.
     const response = await fetch('https://api.example.com/alerts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message, priority }),
     })
 
-    if (response.ok) {
-      context.sendOutput(`✅ Alert sent: ${message} (Priority: ${priority})`)
-    } else {
+    if (!response.ok) {
       throw new Error(`Failed to send alert: ${response.statusText}`)
     }
+
+    // Report back to whoever the effect's author chose.
+    context.sendOutput(`Alert sent: ${message} (Priority: ${priority})`, notify)
   },
-  args: [
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      groupingId: 'alert',
+      validComponentTypes: ['mission', 'force'],
+      tooltipDescription:
+        'The force that sees the confirmation. Select the mission to send it to everyone.',
+    },
     {
       _id: 'message',
       name: 'Alert Message',
       type: 'string',
       required: true,
+      groupingId: 'alert',
+      default: 'Enter your alert message.',
     },
     {
       _id: 'priority',
       name: 'Priority Level',
       type: 'dropdown',
       required: true,
+      groupingId: 'alert',
+      default: 'medium',
       options: [
         { _id: 'low', name: 'Low', value: 'low' },
         { _id: 'medium', name: 'Medium', value: 'medium' },
@@ -100,10 +123,12 @@ export default sendAlert
 
 ## Step 4: Run and Verify
 
-1. **Start a mission session** with your configured mission
+1. **Play-test the mission** - From the mission list, choose **Play Test**. This launches, joins, and starts a disposable session in one step and takes you straight into it.
 2. **Trigger the action** that contains your effect
-3. **Watch for output** - You should see your alert message appear
+3. **Watch for output** - Your alert message appears in the output panel of the force selected in the **Notify** field
 4. **Check external system** - Verify the API call was made (check logs, monitoring, etc.)
+
+> **Note:** A play-test session is disposable and is destroyed once you leave it. To run a session with other participants, choose **Launch** instead and start it from the lobby.
 
 ## Next Steps
 
@@ -119,7 +144,7 @@ Congratulations! You've created your first target-effect integration. Here's wha
 
 - **[External API Integration](guides/external-api-integration.md)** - Authentication, error handling, and API patterns
 - **[Context API](references/context-api.md)** - Modify mission state, access files, etc.
-- **[Argument Types](guides/argument-types.md)** - Use all available input types
+- **[Parameter and Argument Types](guides/parameter-and-argument-types.md)** - Use all available input types
 - **[Environment Integration](index.md)** - Detailed integration patterns
 - **[Migrations](guides/migrations.md)** - Version management and data migrations
 
@@ -141,3 +166,10 @@ Congratulations! You've created your first target-effect integration. Here's wha
 - Check server logs for runtime errors
 - Verify target script syntax
 - Ensure external system is reachable
+
+## Related Documentation
+
+- **[Creating Target Environments](guides/creating-target-environments.md)** - The full walkthrough this quickstart condenses
+- **[Defining Targets](guides/defining-targets.md)** - Complete target creation guide
+- **[Parameter and Argument Types](guides/parameter-and-argument-types.md)** - Every parameter type and its options
+- **[Context API](references/context-api.md)** - Everything a target script's context exposes

@@ -9,6 +9,7 @@ The schema classes provide the foundation for defining target environments and t
 - [TargetSchema Class](#targetschema-class)
 - [Best Practices](#best-practices)
 - [Examples](#examples)
+- [Related Documentation](#related-documentation)
 
 ## Overview
 
@@ -17,13 +18,15 @@ METIS provides two primary schema classes for building target environment plugin
 - **`TargetEnvSchema`** - Defines the overall target environment (collection of targets)
 - **`TargetSchema`** - Defines individual targets within an environment
 
-These classes provide the structure for your target environment definitions. METIS automatically handles ID assignment based on your file structure during server startup.
+The two are created differently. An environment is constructed with `new TargetEnvSchema({ ... })`, while a target is created through the static factory `TargetSchema.create({ ... })`. The factory exists so TypeScript can read the target's `parameters` and type the argument values its script receives.
+
+An environment's ID is assigned automatically from the name of the folder that holds its `schema.ts`. A target's ID is **not** — every target declares its own `_id`, which is independent of its folder name.
 
 ## TargetEnvSchema Class
 
-The `TargetEnvSchema` class represents a complete target environment - a collection of related targets that work together as a cohesive system.
+The `TargetEnvSchema` class represents a complete target environment: a collection of related targets that work together as a cohesive system.
 
-### Constructor
+### Creating an Environment
 
 ```typescript
 const targetEnv = new TargetEnvSchema({
@@ -35,71 +38,74 @@ const targetEnv = new TargetEnvSchema({
 export default targetEnv
 ```
 
-### Properties You Configure
+### Environment Properties
 
-#### `name` (string, required)
+| Property | Type | Required | Description |
+| -------- | ---- | :------: | ----------- |
+| `name` | `string` | ✓ | The human-readable name shown in the METIS interface. Should clearly identify the environment's purpose. |
+| `description` | `string` | ✓ | Explains what the environment does and its intended use cases. |
+| `version` | `string` | ✓ | The current version. Use semantic versioning, since migrations are keyed to these values. |
+| `multiRealmSupport` | `boolean` | | Whether the environment can be used by a session running several realms at once. Absent means `false`. |
 
-The human-readable name of your target environment. This appears in the METIS interface and should clearly identify the environment's purpose.
+A **standalone** session gives every participant their own realm, and runs them in parallel. An environment that has not declared `multiRealmSupport` is **disabled for the whole session** in that mode — its effects do not execute, and the manager cannot switch it back on. Declare it only if the environment can tell concurrent realms apart, for example by keying external state on the realm rather than sharing one connection or one remote record across all of them.
 
 ```typescript
 const targetEnv = new TargetEnvSchema({
   name: 'User Management System',
-  // ... other properties
-})
-```
-
-#### `description` (string, required)
-
-A detailed description explaining what this target environment does and its intended use cases.
-
-```typescript
-const targetEnv = new TargetEnvSchema({
   description:
     'Provides targets for managing user accounts, permissions, and authentication in the corporate directory system',
-  // ... other properties
+  version: '2.1.0',
 })
 ```
 
-#### `version` (string, required)
+The environment's `_id` is not configured here. It comes from the folder name, so an environment in `integration/target-env/user-management/` has the ID `user-management`.
 
-The current version of your target environment. Use semantic versioning (e.g., "1.0.0", "2.1.3") to track environment evolution.
+Hooks are registered on the environment after it is created, using `.on()`:
 
 ```typescript
-const targetEnv = new TargetEnvSchema({
-  version: '2.1.0',
-  // ... other properties
+targetEnv.on('environment-setup', async (context) => {
+  // Acquire connections or validate configuration
+})
+
+targetEnv.on('environment-teardown', async (context) => {
+  // Release whatever setup acquired
 })
 ```
+
+> **See also:** [Environment Hooks Guide](../guides/environment-hooks.md) for what a hook can and cannot do.
 
 ## TargetSchema Class
 
-The `TargetSchema` class represents an individual target within a target environment - a specific action or capability that can be executed.
+The `TargetSchema` class represents an individual target within an environment: a specific action or capability an effect can invoke.
 
-### Constructor
+### Creating a Target
+
+Targets are created with `TargetSchema.create()`. The constructor is not accessible.
 
 ```typescript
-const target = new TargetSchema({
+const target = TargetSchema.create({
+  _id: 'create-user',
   name: 'Create User',
   description: 'Creates a new user account in the system',
-  migrations: new TargetMigrationRegistry(),
-  script: async (context) => {
-    // Target implementation
-    await createUser(context.effect.args.username, context.effect.args.email)
+  script: async (context, { username, email }) => {
+    await createUser(username, email)
   },
-  args: [
+  parameters: [
     {
       _id: 'username',
       name: 'Username',
       type: 'string',
       required: true,
-      description: 'The username for the new account',
+      default: 'john_doe',
+      tooltipDescription: 'The username for the new account',
     },
     {
       _id: 'email',
       name: 'Email',
       type: 'string',
       required: true,
-      description: 'The email address for the new account',
+      default: 'john_doe@example.com',
+      tooltipDescription: 'The email address for the new account',
     },
   ],
 })
@@ -107,125 +113,133 @@ const target = new TargetSchema({
 export default target
 ```
 
-### Properties You Configure
+### Target Properties
 
-#### `name` (string, required)
+| Property | Type | Required | Description |
+| -------- | ---- | :------: | ----------- |
+| `_id` | `string` | ✓ | Unique identifier for the target within its environment. Independent of the folder name. |
+| `name` | `string` | ✓ | The human-readable name shown in the METIS interface. Should describe the action the target performs. |
+| `description` | `string` | ✓ | Explains what the target does and any important usage notes. |
+| `parameters` | `TTargetParameterJson[]` | ✓ | Defines the form an effect's author fills in. Pass an empty array for a target that needs no input. |
+| `script` | `function` | ✓ | The function that carries out the target's action. |
+| `migrations` | `TargetMigrationRegistry` | — | Handles converting existing effects when the target's parameters change. |
 
-The human-readable name of your target. This appears in the METIS interface and should clearly describe what action the target performs.
+### The Script Function
 
-```typescript
-const target = new TargetSchema({
-  name: 'Create User Account',
-  // ... other properties
-})
-```
-
-#### `description` (string, required)
-
-A detailed description explaining what this target does, its purpose, and any important usage notes.
+The script receives two arguments: the context, and an object holding the argument values named after each parameter's `_id`.
 
 ```typescript
-const target = new TargetSchema({
-  description:
-    'Creates a new user account in the corporate directory with specified permissions and sends a welcome email',
-  // ... other properties
-})
-```
-
-#### `script` (function, required)
-
-The execution function that performs the target's action. This function receives a context object with properties for accessing effect data, mission information, and methods for interacting with METIS. The context also provides data stores for caching and sharing data between script executions within a session.
-
-```typescript
-const target = new TargetSchema({
-  script: async (context) => {
-    // Access effect arguments
-    const { username, email } = context.effect.args
-
-    // Use data stores for caching or session state
+const target = TargetSchema.create({
+  _id: 'create-user',
+  name: 'Create User',
+  description: 'Creates a new user account',
+  script: async (context, { notify, username, email }) => {
+    // Use data stores for caching or shared state
     const userCache = context.localStore.use('userCache', new Map())
 
     // Your target logic here
     await performAction({ username, email })
 
-    // Send output to mission interface
-    context.sendOutput('User created successfully')
+    // Send output to a mission interface
+    context.sendOutput('User created successfully', notify)
   },
-  // ... other properties
-})
-```
-
-#### `args` (array, required)
-
-An array defining the arguments that users must provide when executing this target. These arguments are used by METIS to automatically generate forms in the user interface, allowing end-users to create effects by filling out the form fields. Each argument specifies its ID, display name, type, requirements, and default values.
-
-```typescript
-const target = new TargetSchema({
-  args: [
-    {
-      _id: 'username',
-      name: 'Username',
-      type: 'string',
-      required: true,
-      default: 'john_doe',
-    },
-    {
-      _id: 'email',
-      name: 'Email Address',
-      type: 'string',
-      required: true,
-      default: 'john@example.com',
-    },
-    {
-      _id: 'role',
-      name: 'User Role',
-      type: 'string',
-      required: false,
-    },
+  parameters: [
+    /* ... */
   ],
-  // ... other properties
 })
 ```
 
-#### `migrations` (TargetMigrationRegistry, optional)
+A script returns nothing. To report a result, send output or leave the value in a data store for another target to read.
 
-Optional migration registry for handling target evolution over time. Allows you to define how to migrate existing effects when your target changes.
+> **See also:** [Context API Reference](context-api.md) for everything the context exposes.
+
+### Parameters
+
+Each parameter specifies its ID, display name, type, and whether a value is required. METIS builds the effect-creation form from this array.
 
 ```typescript
-import TargetMigrationRegistry from 'metis/target-environments/targets/migrations/registry'
+parameters: [
+  {
+    _id: 'username',
+    name: 'Username',
+    type: 'string',
+    required: true,
+    default: 'john_doe',
+    tooltipDescription: 'Unique username for the account',
+  },
+  {
+    _id: 'role',
+    name: 'User Role',
+    type: 'string',
+    required: false,
+  },
+]
+```
+
+Two details catch people out:
+
+- A `required` `string`, `large-string`, `number`, or `dropdown` **must** declare a `default`. A required dropdown's `default` is the `_id` of one of its options.
+- Help text goes in `tooltipDescription`. A `description` property on a parameter is accepted by the compiler but never rendered, so it is silently ignored.
+
+> **See also:** [Parameter and Argument Types](../guides/parameter-and-argument-types.md) for every parameter type and its options.
+
+### Migrations
+
+Supply a `TargetMigrationRegistry` when a change to the target's parameters would leave existing effects with arguments in the old shape.
+
+```typescript
+// File: targets/create-user/migrations.ts
+import { TargetMigrationRegistry } from '@metis/schema/TargetMigrationRegistry'
+import { MigrationToolbox } from '@metis/toolbox/migrations/MigrationToolbox'
 
 const migrations = new TargetMigrationRegistry()
-// Configure migrations as needed
 
-const target = new TargetSchema({
-  name: 'My Target',
+migrations.register('2.0.0', (effect) => {
+  MigrationToolbox.updateParameterId(effect, 'user', 'username')
+})
+
+export { migrations }
+```
+
+```typescript
+// File: targets/create-user/schema.ts
+import { migrations } from './migrations'
+
+const target = TargetSchema.create({
+  _id: 'create-user',
+  name: 'Create User',
   description: 'Example target',
   script: myTargetScript,
-  args: [],
-  migrations: migrations,
+  parameters: [],
+  migrations,
 })
 ```
+
+Each migration is registered against the target-environment version that introduced the change.
+
+> **See also:** [Migrations Guide](../guides/migrations.md) for the full migration workflow.
 
 ## Best Practices
 
 ### Environment Organization
 
 - Use descriptive names that clearly identify the environment's purpose
-- Include version numbers for tracking environment evolution
+- Keep the version accurate, since migrations are keyed to it
 - Group related targets within the same environment
 
 ### Target Definition
 
 - Keep target names concise but descriptive
 - Provide detailed descriptions explaining what the target does
-- Define clear, well-documented arguments with appropriate types
+- Give every target an `_id` that stays stable, since saved effects reference it
 - Implement the target logic in the script function
 
-### Argument Design
+### Parameter Design
 
-- Use clear, descriptive argument IDs and names
-- Set appropriate `required` flags
-- Provide `default` values for required arguments
+- Use clear, descriptive parameter IDs and names
+- Set appropriate `required` flags, and supply a `default` wherever `required` is true
+- Put help text in `tooltipDescription`
+- Group related parameters with a shared `groupingId`
 
 ## Examples
 
@@ -254,11 +268,11 @@ Each target gets its own file with a single default export:
 // File: integration/target-env/user-management/targets/create-user/schema.ts
 import { RestApi } from '@metis/api/RestApi'
 
-const createUserTarget = new TargetSchema({
+const createUserTarget = TargetSchema.create({
+  _id: 'create-user',
   name: 'Create User',
   description: 'Creates a new user account with specified permissions',
-  script: async (context) => {
-    const { username, email, role } = context.effect.args
+  script: async (context, { notify, username, email, role }) => {
     // Verify configuration is selected
     if (!context.config.targetEnvConfig) {
       throw new Error('No configuration selected.')
@@ -272,30 +286,39 @@ const createUserTarget = new TargetSchema({
       email: email,
       role: role || 'user',
     })
+
+    context.sendOutput(`Created account for ${username}`, notify)
   },
-  args: [
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      validComponentTypes: ['mission', 'force'],
+      tooltipDescription: 'Where to report the result',
+    },
     {
       _id: 'username',
       name: 'Username',
       type: 'string',
       required: true,
-      description: 'Unique username for the account (3-50 characters)',
       default: 'john_doe',
+      tooltipDescription: 'Unique username for the account (3-50 characters)',
     },
     {
       _id: 'email',
       name: 'Email',
       type: 'string',
       required: true,
-      description: 'Email address for account notifications',
       default: 'john_doe@example.com',
+      tooltipDescription: 'Email address for account notifications',
     },
     {
       _id: 'role',
       name: 'Role',
       type: 'string',
       required: false,
-      description: 'User role: admin, manager, or user',
+      tooltipDescription: 'User role: admin, manager, or user',
     },
   ],
 })
@@ -309,26 +332,35 @@ export default createUserTarget
 // File: integration/target-env/user-management/targets/delete-user/schema.ts
 import { RestApi } from '@metis/api/RestApi'
 
-const deleteUserTarget = new TargetSchema({
+const deleteUserTarget = TargetSchema.create({
+  _id: 'delete-user',
   name: 'Delete User',
   description: 'Removes a user account from the system',
-  script: async (context) => {
-    const { userId } = context.effect.args
+  script: async (context, { notify, userId }) => {
     if (!context.config.targetEnvConfig) {
       throw new Error('No configuration selected.')
     }
     const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
     await api.delete(`/users/${userId}`)
+
+    context.sendOutput(`Deleted user ${userId}`, notify)
   },
-  args: [
+  parameters: [
+    {
+      _id: 'notify',
+      name: 'Notify',
+      type: 'mission-component',
+      validComponentTypes: ['mission', 'force'],
+      tooltipDescription: 'Where to report the result',
+    },
     {
       _id: 'userId',
       name: 'User ID',
       type: 'string',
       required: true,
-      description: 'The unique ID of the user to delete',
       default: '12345',
+      tooltipDescription: 'The unique ID of the user to delete',
     },
   ],
 })
@@ -340,7 +372,9 @@ export default deleteUserTarget
 
 - **[Creating Target Environments](../guides/creating-target-environments.md)** - Step-by-step guide for building environments
 - **[Defining Targets](../guides/defining-targets.md)** - Best practices for target definition
+- **[Environment Hooks](../guides/environment-hooks.md)** - Setup and teardown for an environment
 - **[Data Stores](../guides/data-stores.md)** - Caching and sharing data between script executions
-- **[Context API](./context-api.md)** - Complete context object reference and data store API
-- **[Argument Types](../guides/argument-types.md)** - Working with target arguments
-- **[REST API](./rest-api.md)** - HTTP client for target implementations
+- **[Context API](context-api.md)** - Complete context object reference and data store API
+- **[Parameter and Argument Types](../guides/parameter-and-argument-types.md)** - Working with target parameters
+- **[Migrations](../guides/migrations.md)** - Converting existing effects when a target changes
+- **[REST API](rest-api.md)** - HTTP client for target implementations
