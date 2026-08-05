@@ -37,8 +37,7 @@ const FileAccess = TargetSchema.create({
         { _id: 'revoked', name: 'Revoked', value: 'revoked' },
       ],
       default: 'granted',
-      tooltipDescription:
-        'Grants or revokes access to the file for the force. If no change is selected, then the access will be left unmodified.',
+      tooltipDescription: 'Grants or revokes access to the file for the force.',
     },
   ],
   migrations,

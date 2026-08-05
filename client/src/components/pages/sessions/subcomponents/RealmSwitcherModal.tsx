@@ -59,7 +59,7 @@ export default function RealmSwitcherModal({}: TRealmSwitcherModal_P): TReactEle
       await session.$switchRealm(realm._id)
       // On success the page's `realm-switched` listener re-navigates and
       // unmounts this modal; `navigateTo` finishes the loading state.
-    } catch (error) {
+    } catch {
       finishLoading()
       handleError({
         message: 'Failed to switch realm.',

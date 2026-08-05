@@ -212,6 +212,70 @@ describe('TargetArgument issues', () => {
     )
   })
 
+  test('treats an unset optional dropdown as valid rather than as a mismatched option', async () => {
+    // An optional dropdown starts at `null` and stays there until the user
+    // picks an option.
+    let choiceParameter = DropdownTargetParameter.fromJson({
+      _id: 'choice',
+      name: 'Choice',
+      required: false,
+      groupingId: 'group-1',
+      type: 'dropdown',
+      options: [
+        { _id: 'opt-1', name: 'One', value: 1 },
+        { _id: 'opt-2', name: 'Two', value: 2 },
+      ],
+    })
+    registerTarget([choiceParameter])
+
+    let effect = buildEffect([
+      {
+        _id: 'arg-choice',
+        parameterId: 'choice',
+        type: 'dropdown',
+        value: null,
+      },
+    ])
+    await flushIssues()
+
+    let choice = effect.getArgumentByParameterId('choice')
+    expect(choice?.valueIsInvalidOption).toBe(false)
+    expect(choice?.issues).toHaveLength(0)
+  })
+
+  test('reports a dropdown-value-mismatch issue for an unset required dropdown', async () => {
+    // A required dropdown whose `default` names no existing option keeps `null`.
+    let choiceParameter = DropdownTargetParameter.fromJson({
+      _id: 'choice',
+      name: 'Choice',
+      required: true,
+      groupingId: 'group-1',
+      type: 'dropdown',
+      default: 'opt-missing',
+      options: [
+        { _id: 'opt-1', name: 'One', value: 1 },
+        { _id: 'opt-2', name: 'Two', value: 2 },
+      ],
+    })
+    registerTarget([choiceParameter])
+
+    let effect = buildEffect([
+      {
+        _id: 'arg-choice',
+        parameterId: 'choice',
+        type: 'dropdown',
+        value: null,
+      },
+    ])
+    await flushIssues()
+
+    let choice = effect.getArgumentByParameterId('choice')
+    expect(choice?.valueIsInvalidOption).toBe(true)
+    expect(choice?.issues.map((issue) => issue.key)).toContain(
+      TargetArgument.ISSUE_KEY_DROPDOWN_VALUE_MISMATCH,
+    )
+  })
+
   test('reports a pattern-mismatch issue for a string value that violates the parameter pattern', async () => {
     let callsignParameter: TStringTargetParameter = {
       _id: 'callsign',

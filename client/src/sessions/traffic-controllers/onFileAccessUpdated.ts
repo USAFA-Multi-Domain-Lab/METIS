@@ -30,7 +30,7 @@ export const onFileAccessUpdated =
 
         if (!force) {
           console.warn(
-            `Event "file-access-updated" was triggered with granted=true, but the force with the given forceId ("${forceId}") could not be found.`,
+            `Event "file-access-updated" was triggered with granted=${data.granted}, but the force with the given forceId ("${forceId}") could not be found.`,
           )
           continue
         }

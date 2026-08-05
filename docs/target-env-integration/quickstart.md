@@ -160,7 +160,6 @@ Congratulations! You've created your first target-effect integration. Here's wha
 - Ensure server was restarted after creating files
 - Check server logs for scanning errors
 - Verify file paths and exports are correct
-- If the server log reports `does not export a valid TargetSchema instance`, the schema file's default export is not a `TargetSchema`. Confirm it is built with `TargetSchema.create(...)` and exported with `export default`. A target that fails to load is skipped, so it simply will not appear.
 
 **Effect not executing?**
 

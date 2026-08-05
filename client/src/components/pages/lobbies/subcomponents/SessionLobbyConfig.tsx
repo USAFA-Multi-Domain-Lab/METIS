@@ -6,18 +6,17 @@ import TargetEnvironmentConfig from '@client/components/content/session/config/T
 import { useGlobalContext } from '@client/context/global'
 import type { SessionClient } from '@client/sessions/SessionClient'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
-import { s } from '@shared/toolbox/strings/StringToolbox'
 import './SessionLobbyConfig.scss'
 
 /**
- * Auto-saving session configuration with an inner side menu
- * for switching between configuration sections. Intended for
- * embedding within the lobby's configuration view.
+ * Auto-saving session configuration, divided into a panel view per
+ * configuration section. Intended for embedding within the lobby's
+ * configuration view.
  */
-export default function SessionConfigMenu({
+export default function SessionLobbyConfig({
   session,
   disabled = false,
-}: TSessionConfigMenu_P): TReactElement | null {
+}: TSessionLobbyConfig_P): TReactElement | null {
   /* -- STATE -- */
 
   const { mission } = session
@@ -59,19 +58,14 @@ export default function SessionConfigMenu({
       }
     }
 
-    // Switching to standalone converts any limited observers into
-    // participants (standalone has no place for them), performed
-    // server-side; confirm with the actor first.
+    // Switching to standalone reworks the roster server-side, clearing
+    // force assignments and converting any limited observers into
+    // participants; confirm with the actor first.
     if (updates.mode === 'standalone' && session.config.mode !== 'standalone') {
-      let { limitedObservers } = session
-
-      if (limitedObservers.length) {
-        let observerCount = `${limitedObservers.length} limited observer${s(limitedObservers.length)}`
-        let confirmation = `Switching to \`Standalone\` will change ${observerCount} to participants. Continue?`
-
-        let { choice } = await prompt(confirmation, Prompt.ConfirmationChoices)
-        if (choice === 'Cancel') return false
-      }
+      let confirmation =
+        'Switching to `Standalone` will clear all force assignments and change any limited observers to participants. Continue?'
+      let { choice } = await prompt(confirmation, Prompt.ConfirmationChoices)
+      if (choice === 'Cancel') return false
     }
 
     return true
@@ -133,28 +127,9 @@ export default function SessionConfigMenu({
 /* -- types -- */
 
 /**
- * The configuration section currently shown in the side menu.
+ * Props for `SessionLobbyConfig` component.
  */
-type TConfigSectionKey = 'general' | 'target-environments'
-
-/**
- * A configuration section available in the side menu.
- */
-type TConfigSection = {
-  /**
-   * The unique identifier for the section.
-   */
-  key: TConfigSectionKey
-  /**
-   * A human-readable title to display in the side menu.
-   */
-  label: string
-}
-
-/**
- * Props for `SessionConfigMenu` component.
- */
-export type TSessionConfigMenu_P = {
+export type TSessionLobbyConfig_P = {
   /**
    * The session whose configuration is being modified.
    */

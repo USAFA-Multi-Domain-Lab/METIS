@@ -119,7 +119,7 @@ export default function TimelineDragHandle<TType extends TEffectType>({
    * Callback to handle mouse down events on the
    * root element.
    */
-  const onMouseDown = (event: React.MouseEvent<HTMLDivElement>): void => {
+  const onMouseDown = (): void => {
     setDraggedItem(item)
     setSelection(null)
 

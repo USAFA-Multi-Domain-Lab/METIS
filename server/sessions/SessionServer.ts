@@ -56,7 +56,6 @@ import type { User } from '@shared/users/User'
 import { targetEnvLogger } from '../logging'
 import type { ServerChatChannel } from './chat/ServerChatChannel'
 import { ServerSessionMember } from './ServerSessionMember'
-import type { TServerRealmJsonOptions } from './ServerSessionRealm'
 import { ServerSessionRealm } from './ServerSessionRealm'
 import { TargetEnvStore } from './TargetEnvStore'
 
@@ -207,20 +206,20 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * be subscribed.
    * @param options Additional options to tailor the members returned based on
    * the callers needs.
-   * @returns the members of the session which have visibility of the force
-   * with the given ID. List will be further refined based on any additional
-   * options provided.
+   * @returns the joined members of the session which have visibility of the
+   * force with the given ID. List will be further refined based on any
+   * additional options provided.
    */
-  public getMembersForForce(
+  public getJoinedMembersForForce(
     forceId: string,
     realmId: string,
     options: TMembersForForceOptions = {},
   ): ServerSessionMember[] {
     const { limitedVisibilityOnly = false } = options
 
-    // Get all members that either have complete visibility
+    // Get all joined members that either have complete visibility
     // or are assigned to the force with the given ID.
-    return this.members.filter((member) => {
+    return this.joinedMembers.filter((member) => {
       let hasCompleteVisibility = member.isAuthorized('completeVisibility')
       let isAssignedToForce = member.assignedForceId === forceId
       let isSubscribedToRealm = member.subscribedRealmId === realmId
@@ -239,12 +238,14 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
   /**
    * @param permissions The permission(s) to check for.
-   * @returns The members with the specified permission(s).
+   * @returns The joined members with the specified permission(s).
    */
-  public getMembersWithPermissions(
+  public getJoinedMembersWithPermissions(
     permissions: TSessionAuthParam,
   ): ServerSessionMember[] {
-    return this.members.filter((member) => member.isAuthorized(permissions))
+    return this.joinedMembers.filter((member) =>
+      member.isAuthorized(permissions),
+    )
   }
 
   /**
@@ -313,9 +314,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
   // Implemented
   public toJson(options: TSessionServerJsonOptions = {}): TSessionJson {
-    // Gather details.
+    // Gather details. Without a requester there is no member whose
+    // exposure to serialize under, so nothing member-facing is exposed.
     const { requester } = options
-    let realmOptions: TMissionJsonOptions = {
+    let missionJsonOptions: TMissionJsonOptions = {
       forceExposure: { expose: 'none' },
       fileExposure: { expose: 'none' },
       sessionDataExposure: { expose: 'all' },
@@ -330,38 +332,13 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     // Handler a requester being passed.
     if (requester) {
-      // Gather details.
-      let { assignedForceId: forceId } = requester
+      // Serialize everything this requester receives under the exposure
+      // their permissions and force assignment allow.
+      missionJsonOptions = requester.missionJsonOptions
 
-      // Update the session-data exposure to be user
-      // specific to the requester.
-      realmOptions.sessionDataExposure = {
-        expose: 'member-specific',
-        memberId: requester._id,
-      }
-
-      // If the requester is assigned to a force,
-      // then update the mission options to include
-      // data pertinent to the force.
-      if (forceId) {
-        realmOptions.forceExposure = {
-          expose: 'force-with-revealed-nodes',
-          forceId,
-        }
-        realmOptions.fileExposure = {
-          expose: 'accessible',
-          forceId,
-        }
-      }
-
-      // If the requester has complete visibility,
-      // then update the mission options to expose
-      // all force data, file data, and root effects, and hand them a
-      // shallow listing of every realm so they can switch between them.
+      // A requester with complete visibility is handed a shallow listing
+      // of every realm so they can switch between them.
       if (requester.isAuthorized('completeVisibility')) {
-        realmOptions.forceExposure = { expose: 'all' }
-        realmOptions.fileExposure = { expose: 'all' }
-        realmOptions.rootEffectsExposure = { expose: 'all' }
         realmBasics = this.realms.map((realm) => realm.toBasicJson())
       }
 
@@ -388,7 +365,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
       // Include subscribed realm if it is not the default realm.
       if (requester.subscribedRealm !== this.defaultRealm) {
-        realms.push(requester.subscribedRealm.toJson(realmOptions))
+        realms.push(requester.subscribedRealmJson)
       }
     }
 
@@ -402,7 +379,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       ownerFirstName: this.ownerFirstName,
       ownerLastName: this.ownerLastName,
       launchedAt: this.launchedAt.toISOString(),
-      mission: this.mission.toExistingJson(realmOptions),
+      mission: this.mission.toExistingJson(missionJsonOptions),
       realms,
       realmBasics,
       members: this._members.map((member) => member.toJson()),
@@ -971,6 +948,13 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * Sets up the session to function in the configured mode,
    * creating mode-specific realms and enforcing any mode-specific
    * restrictions on the session configuration.
+   * @note Calling this method will almost certainly update the
+   * state of the member list. Therefore, any callers of this
+   * method should call {@link emitMembersUpdated} afterward to
+   * notify all members of the changes. The only reason it isn't
+   * called here is because some callers may want to perform additional
+   * member updates before notifying members and don't want to
+   * notify twice.
    */
   protected initializeMode(): void {
     // Create the realms now that the participant roster is known. In
@@ -979,6 +963,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // below treats them as assigned); in multiplayer it is the single
     // shared realm.
     if (this.config.mode === 'standalone') {
+      this.enforceStandaloneMembership()
       this.enforceStandaloneRoles()
       this.spawnStandaloneRealms()
     } else {
@@ -1032,13 +1017,48 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   }
 
   /**
+   * In standalone mode, unassigns every member from any force or realm
+   * they may have been assigned to in another mode. Any ghost members
+   * who no longer have any reason to persist are also removed.
+   * @returns Any updated/removed members. Provides feedback to callers so
+   * they can delineate between calls that did nothing vs calls that did.
+   * @note A no-op outside standalone mode.
+   */
+  protected enforceStandaloneMembership(): ServerSessionMember[] {
+    if (this.config.mode !== 'standalone') return []
+
+    let toRemove: ServerSessionMember[] = []
+    let toUnassign: ServerSessionMember[] = []
+
+    for (let member of this.members) {
+      let isRemovableGhost =
+        !member.joined && !member.banned && member.userId !== this.ownerId
+
+      if (isRemovableGhost) {
+        toRemove.push(member)
+      } else if (member.isAssignedToForce || member.isAssignedToRealm) {
+        toUnassign.push(member)
+      }
+    }
+
+    for (let member of toUnassign) {
+      member.assignToForce(null)
+      member.assignToRealm(null)
+    }
+
+    this.removeMembers(toRemove)
+
+    return [...toRemove, ...toUnassign]
+  }
+
+  /**
    * In standalone mode, converts every limited observer into a
    * participant. A limited observer is routed to a dedicated,
    * do-nothing realm, which is meaningless in standalone where every
    * participant already has their own isolated realm; rather than mint
    * that dead realm, the member is switched to a playable participant.
-   * @returns The members whose role was changed, so callers can decide
-   * whether to notify clients of the updated roster.
+   * @returns Any updated members. Provides feedback to callers so
+   * they can delineate between calls that did nothing vs calls that did.
    * @note A no-op outside standalone mode.
    */
   protected enforceStandaloneRoles(): ServerSessionMember[] {
@@ -1136,39 +1156,6 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
 
     for (let member of this.joinedMembers) {
       let hasCompleteVisibility = member.isAuthorized('completeVisibility')
-      let subscribedRealm = member.subscribedRealm
-      let assignedForceId = member.assignedForceId
-      let realmJsonOptions: TServerRealmJsonOptions
-
-      // Decide serialization options based on the member's visibility
-      // and assignments.
-      if (!hasCompleteVisibility && assignedForceId) {
-        realmJsonOptions = {
-          forceExposure: {
-            expose: 'force-with-revealed-nodes',
-            forceId: assignedForceId,
-          },
-          fileExposure: { expose: 'accessible', forceId: assignedForceId },
-          sessionDataExposure: {
-            expose: 'member-specific',
-            memberId: member._id,
-          },
-        }
-      } else if (hasCompleteVisibility) {
-        realmJsonOptions = {
-          forceExposure: { expose: 'all' },
-          fileExposure: { expose: 'all' },
-          sessionDataExposure: { expose: 'all' },
-        }
-      } else {
-        realmJsonOptions = {
-          forceExposure: { expose: 'none' },
-          fileExposure: { expose: 'none' },
-          sessionDataExposure: { expose: 'all' },
-        }
-      }
-
-      let subscribedRealmJson = subscribedRealm.toJson(realmJsonOptions)
       let realmBasicsJson = hasCompleteVisibility
         ? this.realms.map((realm) => realm.toBasicJson())
         : []
@@ -1176,7 +1163,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       member.emit(responseMethod, {
         method: responseMethod,
         data: {
-          subscribedRealm: subscribedRealmJson,
+          subscribedRealm: member.subscribedRealmJson,
           chatChannels: [],
           realmBasics: realmBasicsJson,
         },
@@ -1250,7 +1237,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // Emit action execution initiated event
     // to each member. Scope to the acting action's realm so the
     // initiation only reaches members in that realm.
-    for (let recipient of this.getMembersForForce(
+    for (let recipient of this.getJoinedMembersForForce(
       action!.force._id,
       realm._id,
     )) {
@@ -1351,7 +1338,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     // The realm is taken from the execution rather than the member so
     // that the completion lands in the realm the action was taken in,
     // even if the member has since switched realms.
-    for (let forceMember of this.getMembersForForce(
+    for (let forceMember of this.getJoinedMembersForForce(
       outcome.forceId,
       realm._id,
     )) {
@@ -1775,7 +1762,7 @@ export type TOutputTo = {
 }
 
 /**
- * Additional options for {@link SessionServer.getMembersForForce} method.
+ * Additional options for {@link SessionServer.getJoinedMembersForForce} method.
  */
 export type TMembersForForceOptions = {
   /**

@@ -6,16 +6,6 @@
     padding-bottom: 31px;
   }
 
-  &.Boolean:only-child {
-    padding-bottom: 20px;
-  }
-
-  &.Node,
-  &.Action {
-    display: grid;
-    row-gap: 1.5em;
-  }
-
   .Detail {
     min-width: 0.83em;
 
@@ -50,7 +40,6 @@
         .ComponentItemContent {
           display: grid;
           grid-template-columns: 1em 1fr;
-          grid-template-rows: auto auto;
           column-gap: 0.75em;
 
           .Icon {
@@ -67,16 +56,6 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             min-width: 0;
-          }
-
-          .SourceName {
-            font-size: 0.8em;
-            opacity: 0.5;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            min-width: 0;
-            line-height: 1.3;
           }
         }
       }

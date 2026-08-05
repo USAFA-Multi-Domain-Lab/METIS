@@ -28,23 +28,23 @@ To configure your environment, edit the appropriate `.env` file for your deploym
 All available environment options are outlined below (example for `prod.env`):
 
 ```env
-PORT=8080                        # Default: 8080 (Optional)
-MONGO_DB='metis'                 # Default: "metis" (Optional)
-MONGO_HOST='localhost'           # Default: "localhost" (Optional) 🐳❌
-MONGO_PORT=27017                 # Default: 27017 (Optional) 🐳❌
-MONGO_USERNAME='<your-username>' # Required
-MONGO_PASSWORD='<your-password>' # Required
+PORT=8080                             # Default: 8080 (Optional)
+MONGO_DB='metis'                      # Default: "metis" (Optional)
+MONGO_HOST='localhost'                # Default: "localhost" (Optional) 🐳❌
+MONGO_PORT=27017                      # Default: 27017 (Optional) 🐳❌
+MONGO_USERNAME='<your-username>'      # Required
+MONGO_PASSWORD='<your-password>'      # Required
 FILE_STORE_DIR='./server/files/store' # Default: "./server/files/store" (Optional) 🐳❌
-HTTP_RATE_LIMIT=100               # Default: 100 (Optional)
-HTTP_RATE_LIMIT_DURATION=1       # Default: 1 (second) (Optional)
-WS_RATE_LIMIT=100                # Default: 100 (Optional)
-WS_RATE_LIMIT_DURATION=1         # Default: 1 (second) (Optional)
-DB_BACKUPS_ENABLED=true          # Default: true (Optional)
-MAX_LOGIN_ATTEMPTS=5             # Default: 5 (Optional)
-LOGIN_ATTEMPT_WINDOW=300         # Default: 300 (seconds) (Optional)
-LOGIN_LOCKOUT_DURATION=900       # Default: 900 (seconds) (Optional)
-SSL_KEY_PATH='<path-to-key>'     # (Optional) HTTPS needs both SSL paths, and only applies in production
-SSL_CERT_PATH='<path-to-cert>'   # (Optional) HTTPS needs both SSL paths, and only applies in production
+HTTP_RATE_LIMIT=100                   # Default: 100 (Optional)
+HTTP_RATE_LIMIT_DURATION=1            # Default: 1 (second) (Optional)
+WS_RATE_LIMIT=100                     # Default: 100 (Optional)
+WS_RATE_LIMIT_DURATION=1              # Default: 1 (second) (Optional)
+DB_BACKUPS_ENABLED=true               # Default: true (Optional)
+MAX_LOGIN_ATTEMPTS=5                  # Default: 5 (Optional)
+LOGIN_ATTEMPT_WINDOW=300              # Default: 300 (seconds) (Optional)
+LOGIN_LOCKOUT_DURATION=900            # Default: 900 (seconds) (Optional)
+SSL_KEY_PATH='<path-to-key>'          # (Optional) HTTPS needs both SSL paths
+SSL_CERT_PATH='<path-to-cert>'        # (Optional) HTTPS needs both SSL paths
 
 
 # Note: Options marked with 🐳❌ will not function properly with Docker setups. If using Docker, do not configure these values if using the native docker-compose provided with the project.

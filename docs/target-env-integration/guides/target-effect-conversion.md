@@ -23,11 +23,11 @@ For the properties each parameter type accepts, see the [Parameter and Argument 
 
 Three separate shapes are involved, and confusing them is the source of most argument bugs.
 
-| Stage         | What it is                                                    | Where it lives                         |
-| ------------- | ------------------------------------------------------------- | -------------------------------------- |
-| **Parameter** | Your declaration — an `_id`, a `type`, and its options         | The `parameters` array of your target  |
-| **Argument**  | One stored value bound to one parameter, saved with the effect | The mission's saved data               |
-| **Value**     | The resolved argument handed to your script                    | The script's second parameter          |
+| Stage         | What it is                                                     | Where it lives                        |
+| ------------- | -------------------------------------------------------------- | ------------------------------------- |
+| **Parameter** | Your declaration — an `_id`, a `type`, and its options         | The `parameters` array of your target |
+| **Argument**  | One stored value bound to one parameter, saved with the effect | The mission's saved data              |
+| **Value**     | The resolved argument handed to your script                    | The script's second parameter         |
 
 An effect holds exactly one argument per parameter. There is no filtering step that drops arguments a user left alone — every parameter produces one, and an untouched one carries the value described under [What an Unset Argument Holds](#what-an-unset-argument-holds).
 
@@ -38,7 +38,10 @@ const DeployService = TargetSchema.create({
   _id: 'deploy-service',
   name: 'Deploy Service',
   description: 'Deploy a service to the selected environment.',
-  script: async (context, { notify, serviceName, environment, enableMonitoring }) => {
+  script: async (
+    context,
+    { notify, serviceName, environment, enableMonitoring },
+  ) => {
     context.sendOutput(`Deploying ${serviceName} to ${environment}`, notify)
 
     if (enableMonitoring) {
@@ -88,12 +91,12 @@ export default DeployService
 
 When the effect runs, the values reaching that script are these:
 
-| Value              | Holds                                            |
-| ------------------ | ------------------------------------------------ |
-| `notify`           | An array of the selected mission or forces        |
-| `serviceName`      | `'api-service'`                                   |
+| Value              | Holds                                                |
+| ------------------ | ---------------------------------------------------- |
+| `notify`           | An array of the selected mission or forces           |
+| `serviceName`      | `'api-service'`                                      |
 | `environment`      | `'production'` — the option's `value`, not its `_id` |
-| `enableMonitoring` | `true`                                            |
+| `enableMonitoring` | `true`                                               |
 
 Each step of the way:
 
@@ -154,10 +157,7 @@ script: async (context, { apiEndpoint, retryCount, sslVerify }) => {
 Other casings still work — quote the key and bind it to a name:
 
 ```typescript
-script: async (
-  context,
-  { 'api-endpoint': apiEndpoint, 'API_KEY': apiKey },
-) => {
+script: async (context, { 'api-endpoint': apiEndpoint, 'API_KEY': apiKey }) => {
   void apiEndpoint
   void apiKey
 }
@@ -169,22 +169,21 @@ script: async (
 
 An argument the user never touched is still present. What it holds depends on the type and on whether the parameter is required.
 
-| `type`              | Required                    | Optional, left untouched |
-| ------------------- | --------------------------- | ------------------------ |
-| `string`            | The parameter's `default`    | `''`                     |
-| `large-string`      | The parameter's `default`    | `''`                     |
-| `number`            | The parameter's `default`    | `null`                   |
-| `dropdown`          | The default option's `value` | `null`                   |
-| `boolean`           | n/a                         | `default`, or `false`    |
-| `mission-component` | n/a                         | `[]`                     |
+| `type`         | Required                     | Optional, left untouched |
+| -------------- | ---------------------------- | ------------------------ |
+| `string`       | The parameter's `default`    | `''`                     |
+| `large-string` | The parameter's `default`    | `''`                     |
+| `number`       | The parameter's `default`    | `null`                   |
+| `dropdown`     | The default option's `value` | `null`                   |
 
-Three consequences worth internalizing:
+`boolean` and `mission-component` have no `required` field, so the distinction does not apply to them. An untouched `boolean` holds its `default`, or `false` if none is declared; an untouched `mission-component` holds `[]`.
+
+Four consequences worth internalizing:
 
 - **An untouched optional value is not `undefined`.** Checking `!== undefined` on an optional number passes even when the user left it blank, because the value is `null`. Check the type's own empty value instead — `null` for a number, `''` for a string, `[]` for a selection.
 - **`undefined` means one thing only:** the parameter's dependencies are not met. See the next section.
-- **Defaults apply to required parameters only.** Declaring `default` on an optional parameter compiles and is then ignored, so the argument still arrives as that type's empty value. If you want a fallback on an optional parameter, apply it in the script with `??`.
-
-> **Note:** An optional `dropdown` is the one place where the declared type understates what can arrive. Its argument type is the union of the declared option values, but an unselected optional dropdown holds `null`. Guard for it, or make the dropdown `required` with an explicit "None" option so the empty state is one of your values.
+- **Defaults apply to required parameters only, plus `boolean`.** Declaring `default` on an optional parameter compiles and is then ignored, so the argument still arrives as that type's empty value. If you want a fallback on an optional parameter, apply it in the script with `??`. A `boolean` is the exception: it has no `required` field, yet its `default` seeds the initial value.
+- **A misplaced `default` is not a compile error.** `TargetSchema.create` takes its parameters through a generic constraint rather than a declared type, so TypeScript does not reject extra properties on them. Writing `default` on an optional parameter, or on a `mission-component` that has no such field at all, compiles silently and does nothing.
 
 ```typescript
 script: async (context, { region, maxRetries, notify }) => {
@@ -326,14 +325,14 @@ Two things follow from the array being live objects:
 
 ## Reconciliation and Stale Arguments
 
-Stored arguments and declared parameters drift apart as a target environment evolves. METIS reconciles them every time an effect loads, on both the client and the server, so the two agree on what the script will receive.
+Stored arguments and declared parameters drift apart as a target environment evolves. METIS reconciles them as an effect loads, on both the client and the server, so the two agree on what the script will receive. The one exception is an effect awaiting a migration, which is left alone until that migration runs.
 
-| Situation                                                     | What happens                                                                                      |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| A parameter has no stored argument — you added it              | A fresh argument is created at the parameter's default                                            |
-| A stored argument's `type` no longer matches its parameter     | The argument is marked **stale** and hidden from the script; a fresh one is created alongside it   |
-| A stored argument's `parameterId` matches no current parameter | It is ignored and not rendered, but stays in storage                                              |
-| The effect predates the target's newest migration             | Reconciliation is skipped entirely — the migration runs first and supplies the correct arguments   |
+| Situation                                                      | What happens                                                                                     |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| A parameter has no stored argument — you added it              | A fresh argument is created at the parameter's default                                           |
+| A stored argument's `type` no longer matches its parameter     | The argument is marked **stale** and hidden from the script; a fresh one is created alongside it |
+| A stored argument's `parameterId` matches no current parameter | It is ignored and not rendered, but stays in storage                                             |
+| The effect predates the target's newest migration              | Reconciliation is skipped entirely — the migration runs first and supplies the correct arguments |
 
 Reconciliation also re-sorts an effect's arguments into your `parameters` declaration order, so reordering that array reorders the interface for existing effects, not only new ones.
 
@@ -351,16 +350,16 @@ See the [Migrations Guide](migrations.md) for how versions and the registry fit 
 
 ## Common Pitfalls
 
-| Pitfall                                                          | What actually happens                                                                                                  |
-| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Checking an optional argument with `!== undefined`                | Passes even when blank. An optional number is `null`, an optional string is `''`, a selection is `[]`.                   |
-| Declaring `default` on an optional parameter                      | Compiles and is ignored. Apply the fallback in the script with `??` instead.                                             |
-| Treating an optional number as a number                          | It is `number \| null`. Use `?? fallback`.                                                                              |
-| Assuming an unselected optional dropdown matches an option value | It holds `null`, which the declared type does not show. Guard, or make it required with a "None" option.                 |
-| Using a dependent argument without a guard                       | A compile error, because the type includes `undefined`. The guard is not optional even when the logic implies it is set. |
-| Expecting a `mission-component` array to match the author's selection | Deleted components are filtered out on load, so it can be shorter — or empty.                                       |
-| Renaming a parameter `_id` without a migration                   | Every existing effect silently loses that value and falls back to the default.                                          |
-| Reading a value in a helper that has the context but not the arguments | Use `context.getArguments(...)` rather than threading the object through.                                           |
+| Pitfall                                                                | What actually happens                                                                                                    |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Checking an optional argument with `!== undefined`                     | Passes even when blank. An optional number is `null`, an optional string is `''`, a selection is `[]`.                   |
+| Declaring `default` on an optional parameter                           | Compiles and is ignored. Apply the fallback in the script with `??` instead.                                             |
+| Treating an optional number as a number                                | It is `number \| null`. Use `?? fallback`.                                                                               |
+| Assuming an unselected optional dropdown matches an option value       | It holds `null`, which the declared type does not show. Guard, or make it required with a "None" option.                 |
+| Using a dependent argument without a guard                             | A compile error, because the type includes `undefined`. The guard is not optional even when the logic implies it is set. |
+| Expecting a `mission-component` array to match the author's selection  | Deleted components are filtered out on load, so it can be shorter — or empty.                                            |
+| Renaming a parameter `_id` without a migration                         | Every existing effect silently loses that value and falls back to the default.                                           |
+| Reading a value in a helper that has the context but not the arguments | Use `context.getArguments(...)` rather than threading the object through.                                                |
 
 Validate what the interface cannot. Range checks that span two parameters, or values saved before you tightened a constraint, only get caught in the script:
 

@@ -1,6 +1,6 @@
 # Target Migrations
 
-A migration updates the arguments an effect already has so they still fit a target whose parameters have changed. METIS reconciles most changes on its own; a migration is what you write for the ones it cannot.
+A target migration carries the arguments on existing effects across a change you made to your target's parameters between two versions of your environment. You write it because only you know the intent of the change — that `hostName` became `hostname`, or that a value should survive a type change. METIS cannot infer either.
 
 ## Table of Contents
 
@@ -29,7 +29,7 @@ A migration is a function keyed to a target-environment version. It receives the
 
 ## When a Migration Is Needed
 
-Most parameter changes need nothing. Whenever an effect loads, METIS reconciles its stored arguments against the target's current parameters and backfills anything missing — see [Reconciliation](target-effect-conversion.md#reconciliation-and-stale-arguments).
+Not every change to a parameter needs one. When an effect loads and no migration is pending for it, METIS reconciles its stored arguments against the target's current parameters and backfills anything missing — see [Reconciliation](target-effect-conversion.md#reconciliation-and-stale-arguments). Reconciliation is a repair pass, not a substitute for a migration: it knows what your parameters look like now, never what you renamed or how a value should carry across.
 
 | Change to a parameter          | Migration needed?                                                                 |
 | ------------------------------ | --------------------------------------------------------------------------------- |
@@ -186,9 +186,9 @@ An effect records the target-environment version it was built against. That beco
 | v1.2.0            | v2.1.0          | `2.0.0` only         | Compatible with v2.1.0 |
 | v2.0.0 or later   | v2.1.0          | none                 | Already compatible     |
 
-Register a migration only for a version that actually needed one. Versions without a migration are skipped, and gaps bridge automatically.
+Register a migration only for a version that actually needed one. Versions without a migration are skipped, and gaps bridge automatically. Releasing a new version of your environment does not by itself mark anything outdated — METIS flags an effect only when your target carries a migration registered for a version later than the effect's.
 
-**After every migration has run, the resulting arguments are validated against the argument schema.** A migration that leaves a `value` disagreeing with its `type` — a `number` argument holding a string, say — throws, and the effect is left untouched. Failure is loud rather than silent.
+**Once all pending migrations have run, the resulting arguments are validated against the argument schema.** The check happens once, at the end of the chain, so an intermediate migration is free to leave arguments in a state a later one resolves. A migration that leaves a `value` disagreeing with its `type` — a `number` argument holding a string, say — throws, and nothing is applied: the effect keeps the arguments it had, including whatever an earlier migration in the chain had already changed. Failure is loud rather than silent.
 
 A mission author starts this from the mission page: METIS reports the effect as outdated, and running the migration calls `POST /api/v1/target-environments/migrate/effect-args` with the mission and effect IDs. The response carries the migrated arguments, which the client applies to the effect. Until that happens the effect keeps its old arguments, and reconciliation is skipped so nothing overwrites data a migration is about to convert.
 

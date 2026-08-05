@@ -6,8 +6,9 @@ METIS is a real-time training system: a Node.js server holding live session stat
 
 - [System Overview](#system-overview)
 - [Missions, Sessions, and Realms](#missions-sessions-and-realms)
-  - [The Realm Model](#the-realm-model)
-  - [What a Realm Owns](#what-a-realm-owns)
+  - [Missions](#missions)
+  - [Sessions](#sessions)
+  - [Realms](#realms)
 - [Backend Services](#backend-services)
   - [API](#api)
   - [WebSocket](#websocket)
@@ -37,47 +38,39 @@ Sessions are held in memory on the server rather than in the database. A session
 
 ## Missions, Sessions, and Realms
 
-Three concepts sit at the center of the system, and the distinction between the second and third is the one most likely to cause confusion.
+Three concepts sit at the center of the system:
 
 | Concept | What it is                                                                 |
 | ------- | -------------------------------------------------------------------------- |
 | Mission | The authored scenario, stored in MongoDB — forces, nodes, actions, effects |
-| Session | A live instance of a mission, with its members and configuration           |
-| Realm   | An isolated, playable copy of the mission inside that session              |
+| Session | A joinable group of members configured to execute a selected mission       |
+| Realm   | Hosts an isolated, playable copy of the mission inside a session           |
 
-### The Realm Model
+### Missions
+
+A **mission** is the authored scenario, which is stored in the database until it is launched into a session. A mission is built using a customizable node structure, which can be thought of as a hierarchy or a tree of interrelated components. **Forces**, which are instances of this structure, can be built out to create a custom experience for participants. Each force shares the same structure. However, each force can customize the actions and effects available in the structure, so that each force can have different tasks and objectives.
+
+### Sessions
+
+A **session** is in charge of taking a mission and configuring into a playable state for users. A session is launched from one mission and can be joined by session members. Administrative members, known as **managers**, can configure the session experience for the members by setting different modes for the session, assigning members to different roles, forces, and realms, and by changing other settings to build a unique experience, beyond what is already coded into the mission.
+
+### Realms
 
 A **realm** is a parallel copy of a mission within a session — usefully thought of as an alternate timeline for it. The session holds an **authoring template** of the mission; realms are minted from that template and are where play actually happens.
 
 How many realms a session has depends on its mode:
 
-- **Multiplayer** — exactly one realm, a full copy of the launched mission, shared by everyone. Here the realm's mission and the session's template are the same object.
+- **Multiplayer** — exactly one realm, a full copy of the session's template, shared by everyone.
 - **Standalone** — one realm per participant, each containing only that participant's assigned force. Participants cannot see or affect one another.
 
-Every member is subscribed to exactly one realm at a time. A manager or observer may switch between them, which is what the `request-switch-realm` and `realm-switched` events on the [WebSocket API](websocket.md) exist for. When a member's realm cannot be resolved, they land in the session's **default realm** — a deliberately blank realm that acts as the system's equivalent of a 404 page.
-
-### What a Realm Owns
-
-The practical consequence of the realm model is that **a realm, not the session, is the unit of gameplay state.** Resolving a force, node, or action for a member goes through that member's realm rather than the session's template.
-
-A realm owns its own copy of the mission and everything mutable derived from it. That extends to target-environment storage, which is scoped in three tiers:
-
-| Store         | Scope                                         |
-| ------------- | --------------------------------------------- |
-| `localStore`  | One realm, within one target environment      |
-| `realmStore`  | One realm, across all target environments     |
-| `globalStore` | The whole session instance, across all realms |
-
-In a standalone session this means `localStore` no longer sees data from other participants — `globalStore` is the only store that crosses realms. Integrations that assume a single shared world need to account for this; see [Target Environment Integration](../target-env-integration/index.md).
-
-Realms are a sibling of sessions and members, not a component inside a mission. A realm _owns_ a mission rather than living within one.
+Every member is subscribed to exactly one realm at a time, with managers and observers being able to switch between them.
 
 ## Backend Services
 
 ### API
 
 - RESTful endpoints for CRUD operations
-- Express session-based authentication in HTTP-only cookies
+- Express session-based authentication
 - Rate limiting and permission-based access control
 - Environment-specific configuration
 - [API Documentation](../api/overview.md)
@@ -99,11 +92,12 @@ Realms are a sibling of sessions and members, not a component inside a mission. 
 ### Target-Effect System
 
 - Target environments are registered integrations, discovered by the server at startup
-- A **target** declares **parameters**; an **effect** supplies **arguments** for them
+- Targets expose configurable operations with typed parameters
+- Effects supply custom arguments to targets to peform operations
 - Effects execute over the WebSocket connection during a session
 - Argument reconciliation and versioned migrations keep existing effects working as targets change
 - Validation logic is shared between client and server
-- Environment data stores are realm-scoped, as described above
+- Environment data stores
 
 ## Frontend Application
 

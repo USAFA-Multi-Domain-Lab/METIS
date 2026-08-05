@@ -16,6 +16,8 @@ const BlockStatus = TargetSchema.create({
       type: 'mission-component',
       _id: 'applyTo',
       name: 'Apply To',
+      description:
+        'Blocks or unblocks a node(s), preventing access to that node and cutting off access to its descendants.',
       groupingId: 'node',
       validComponentTypes: ['mission', 'force', 'node'],
       tooltipDescription:

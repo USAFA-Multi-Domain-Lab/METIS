@@ -29,7 +29,9 @@ migrations.register('2.4.0', (effect) => {
   let forceId = forceSelection.ids[0]
   let forceName = forceSelection.lastKnownName
 
-  let force = effect.mission.forces.find((f) => f._id === forceId)
+  let force = effect.mission.forces.find(
+    (missionForce) => missionForce._id === forceId,
+  )
   if (!force) {
     throw new Error(
       `Migration failed. Force "${forceName}" not found. ` +

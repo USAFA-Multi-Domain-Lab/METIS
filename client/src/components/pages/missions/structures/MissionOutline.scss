@@ -73,6 +73,8 @@
         // -- Row patterns --
 
         .OutlineItem {
+          min-width: max-content;
+
           &.Selectable {
             .OutlineItemContent > .SelectionZone {
               cursor: pointer;
@@ -106,10 +108,6 @@
               .Indicator {
                 opacity: 0;
                 pointer-events: none;
-              }
-
-              .MissionOutlineChildren {
-                display: none;
               }
             }
           }

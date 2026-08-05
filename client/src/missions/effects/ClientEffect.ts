@@ -34,9 +34,6 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
   public readonly outlineIcon: TMetisIcon = 'waves'
 
   // Implemented
-  public expandedInOutline: boolean = false
-
-  // Implemented
   public get outlineChildren(): TMissionOutlineItem[] {
     return []
   }
@@ -81,8 +78,9 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
         // to the parameter in type. This could cause duplicate arguments. However,
         // arguments with mismatching types will be filtered out in the UI.
         let foundWithMatchingType = targetArguments.find(
-          (arg) =>
-            arg.parameterId === parameter._id && arg.type === parameter.type,
+          (argument) =>
+            argument.parameterId === parameter._id &&
+            argument.type === parameter.type,
         )
         if (!foundWithMatchingType) {
           targetArguments.push(
@@ -143,7 +141,9 @@ export class ClientEffect<TType extends TEffectType = TEffectType>
     // Duplicate the arguments. Stale ones are carried over so the duplicate
     // stores what the original stores.
     duplicatedEffect.allArguments = new JsonSerializableArray(
-      ...this.allArguments.map((arg) => arg.duplicate(duplicatedEffect)),
+      ...this.allArguments.map((argument) =>
+        argument.duplicate(duplicatedEffect),
+      ),
     )
 
     return duplicatedEffect

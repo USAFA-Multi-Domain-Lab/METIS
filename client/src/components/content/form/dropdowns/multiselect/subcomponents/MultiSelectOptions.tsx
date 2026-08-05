@@ -18,7 +18,9 @@ export default function MultiSelectOptions<TOption>(): TReactElement {
 
     let currentValues = Array.isArray(value) ? [...value] : []
     let optionKey = getKey(option)
-    let existingIndex = currentValues.findIndex((v) => getKey(v) === optionKey)
+    let existingIndex = currentValues.findIndex(
+      (cursor) => getKey(cursor) === optionKey,
+    )
 
     if (existingIndex >= 0) {
       // Remove the option
@@ -28,7 +30,7 @@ export default function MultiSelectOptions<TOption>(): TReactElement {
       currentValues.push(option)
     }
 
-    setValue(currentValues as any)
+    setValue(currentValues)
   }
 
   /**
@@ -39,7 +41,7 @@ export default function MultiSelectOptions<TOption>(): TReactElement {
   const isOptionSelected = (option: TOption): boolean => {
     if (!Array.isArray(value)) return false
     let optionKey = getKey(option)
-    return value.some((v) => getKey(v) === optionKey)
+    return value.some((cursor) => getKey(cursor) === optionKey)
   }
 
   return (

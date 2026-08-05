@@ -145,8 +145,8 @@ export default OutputPanel
 - Wrong filename: `schema.ts` is required; `index.ts` or others will not be discovered
 - Multiple targets in one folder are not supported
 - Putting `schema.ts` in a non-leaf folder makes that folder a target (ensure that's intended)
-- Renaming an environment folder changes its ID; **coordinate migrations for existing effects**
-- Renaming a target folder changes nothing — but changing its declared `_id` orphans existing effects
+- Renaming an environment folder changes its ID;
+- Renaming a target folder changes nothing — but changing its declared `_id` orphans existing effects **coordinate migrations for existing effects**
 
 ## Do and Don't
 

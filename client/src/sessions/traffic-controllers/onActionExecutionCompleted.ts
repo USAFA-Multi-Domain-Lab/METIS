@@ -31,14 +31,14 @@ export const onActionExecutionCompleted =
 
       // Handle outcome on different levels.
       execution.onOutcome(outcome)
-      prototype.onOpen(revealedDescendantPrototypes, structure)
-      node.onOpen(revealedDescendants)
+      prototype.onOpen(revealedDescendantPrototypes, structure, member)
+      let addedDescendants = node.onOpen(revealedDescendants, member)
 
       node.emitEvent('exec-state-change')
 
-      // Remap actions if there are revealed nodes, since
-      // those revealed nodes may contain new actions.
-      if (revealedDescendants) this.subscribedRealm.mapActions()
+      // Remap actions if nodes were added, since those
+      // revealed nodes may contain new actions.
+      if (addedDescendants) this.subscribedRealm.mapActions()
 
       // Remove execution from active executions.
       this._activeExecutions = this._activeExecutions.filter(

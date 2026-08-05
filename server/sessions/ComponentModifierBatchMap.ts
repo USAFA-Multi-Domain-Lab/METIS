@@ -79,8 +79,10 @@ export class ComponentModifierBatchMap<
    */
   private getCompleteVisibilityMembers(): ServerSessionMember[] {
     let realm = this.realm
-    let members = realm.session.getMembersWithPermissions('completeVisibility')
-    return members.filter((member) => member.subscribedRealm._id === realm._id)
+    let members = realm.session.getJoinedMembersWithPermissions(
+      'completeVisibility',
+    )
+    return members.filter((member) => member.subscribedRealmId === realm._id)
   }
 
   /**
@@ -95,97 +97,121 @@ export class ComponentModifierBatchMap<
   >(
     method: TMethod,
     constructPayload: (
-      components: MissionComponentArray<TComponent>,
+      components: TNonEmptyArray<TComponent> &
+        MissionComponentArray<TComponent>,
       members: TNonEmptyArray<ServerSessionMember>,
       batchId: string,
     ) => TPayloadData,
   ): void {
-    let completeVisibilityMembers = this.getCompleteVisibilityMembers()
-
-    // Emit a force-agnostic event to all complete-visibility members,
-    // if any.
-    if (completeVisibilityMembers.length) {
+    this.forCompleteVisibilityBatch((components, members, batchId) => {
       ServerSessionMember.emitToGroup(
-        completeVisibilityMembers,
+        members,
         method,
-        constructPayload(
-          this.internalMap.get(
-            ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY,
-          )!,
-          completeVisibilityMembers as TNonEmptyArray<ServerSessionMember>,
-          ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY,
-        ),
+        constructPayload(components, members, batchId),
       )
-    }
-
-    // Emit per-force events to force-specific (non-complete-visibility) members,
-    // if any.
-    this.internalMap.forEach((components, forceId) => {
-      if (
-        forceId !==
-        ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY
-      ) {
-        let members = this.session.getMembersForForce(forceId, this.realm._id, {
-          limitedVisibilityOnly: true,
-        })
-        if (!members.length) return
-        ServerSessionMember.emitToGroup(
-          members,
-          method,
-          constructPayload(
-            components,
-            members as TNonEmptyArray<ServerSessionMember>,
-            forceId,
-          ),
-        )
-      }
+    })
+    this.forEachLimitedVisibilityBatch((components, members, forceId) => {
+      ServerSessionMember.emitToGroup(
+        members,
+        method,
+        constructPayload(components, members, forceId),
+      )
     })
   }
 
+  /**
+   * Emits an event to each client individually, in the same batches
+   * {@link emit} uses, so the payload can be constructed for one member.
+   * @param method The server method to emit.
+   * @param constructPayload A function that constructs the payload for
+   * the event, given a list of component IDs and the receiving member.
+   */
   public emitMemberSpecific<
     TMethod extends TServerMethod,
     TPayloadData extends Omit<TServerEvents[TMethod], 'method'>,
   >(
     method: TMethod,
     constructPayload: (
-      components: MissionComponentArray<TComponent>,
+      components: TNonEmptyArray<TComponent> &
+        MissionComponentArray<TComponent>,
       member: ServerSessionMember,
       batchId: string,
     ) => TPayloadData,
   ): void {
-    let completeVisibilityMembers = this.getCompleteVisibilityMembers()
-
-    // Emit a force-agnostic event to all complete-visibility members,
-    // if any.
-    if (completeVisibilityMembers.length) {
-      for (let member of completeVisibilityMembers) {
-        member.emit(
-          method,
-          constructPayload(
-            this.internalMap.get(
-              ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY,
-            )!,
-            member,
-            ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY,
-          ),
-        )
+    this.forCompleteVisibilityBatch((components, members, batchId) => {
+      for (let member of members) {
+        member.emit(method, constructPayload(components, member, batchId))
       }
-    }
+    })
+    this.forEachLimitedVisibilityBatch((components, members, batchId) => {
+      for (let member of members) {
+        member.emit(method, constructPayload(components, member, batchId))
+      }
+    })
+  }
 
-    // Emit per-force events to force-specific (non-complete-visibility) members,
-    // if any.
+  /**
+   * Calls the callback once for the complete-visibility batch,
+   * providing the components, members, and batch ID for that batch.
+   * @param callback A function that will be called for the
+   * complete-visibility batch.
+   * @note Will not call the callback if there are no components
+   * or members for the complete-visibility batch.
+   */
+  private forCompleteVisibilityBatch(
+    callback: (
+      components: TNonEmptyArray<TComponent> &
+        MissionComponentArray<TComponent>,
+      members: TNonEmptyArray<ServerSessionMember>,
+      batchId: string,
+    ) => void,
+  ): void {
+    let components = this.internalMap.get(
+      ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY,
+    )!
+    if (!ArrayToolbox.isNotEmpty(components)) return
+    let members = this.getCompleteVisibilityMembers()
+    if (!ArrayToolbox.isNotEmpty(members)) return
+
+    callback(
+      components,
+      members,
+      ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY,
+    )
+  }
+
+  /**
+   * Loops through each limited-visibility batch in the internal
+   * map and executes the provided callback with the components,
+   * members, and batch ID (force ID) for that batch.
+   * @param callback A function that will be called for each batch.
+   * @note Will not call the callback if there are no components
+   * or members for the given batch.
+   */
+  private forEachLimitedVisibilityBatch(
+    callback: (
+      components: TNonEmptyArray<TComponent> &
+        MissionComponentArray<TComponent>,
+      members: TNonEmptyArray<ServerSessionMember>,
+      forceId: string,
+    ) => void,
+  ): void {
     this.internalMap.forEach((components, forceId) => {
       if (
-        forceId !==
-        ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY
+        forceId ===
+          ComponentModifierBatchMap.COMPONENT_MODIFIER_BATCH_COMPLETE_VISIBILITY ||
+        !ArrayToolbox.isNotEmpty(components)
       ) {
-        let members = this.session.getMembersForForce(forceId, this.realm._id, {
-          limitedVisibilityOnly: true,
-        })
-        for (let member of members) {
-          member.emit(method, constructPayload(components, member, forceId))
-        }
+        return
       }
+      let members = this.session.getJoinedMembersForForce(
+        forceId,
+        this.realm._id,
+        { limitedVisibilityOnly: true },
+      )
+      if (!ArrayToolbox.isNotEmpty(members)) return
+
+      callback(components, members, forceId)
     })
   }
 

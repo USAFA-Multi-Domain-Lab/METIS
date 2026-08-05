@@ -23,7 +23,7 @@ import { Mission, type TMission } from '../../missions/Mission'
 import { MissionComponent } from '../../missions/MissionComponent'
 import type {
   TDropdownTargetParameter,
-  TDropdownTargetParameterOptionVal,
+  TDropdownTargetParameterOptionValue,
 } from '../parameters/DropdownTargetParameter'
 import type { TLargeStringTargetParameter } from '../parameters/LargeStringTargetParameter'
 import type { TNumberTargetParameter } from '../parameters/NumberTargetParameter'
@@ -85,7 +85,7 @@ export abstract class TargetArgument<
 
   /**
    * The {@link TTargetParameter} this argument satisfies.
-   * @note If `null`, the parameter could not be found for
+   * @note If `undefined`, the parameter could not be found for
    * the {@link parameterId} on the target.
    */
   public get parameter(): TTargetParameter | undefined {
@@ -154,30 +154,25 @@ export abstract class TargetArgument<
   }
 
   /**
-   * Whether the type of this argument's value conflicts with the type of the
-   * corresponding parameter on the target. If `parameter` is `undefined, `false`
-   * is returned.
-   */
-  public get hasTypeMismatch(): boolean {
-    return this.parameter?.type !== this.type
-  }
-
-  /**
    * Whether this argument has a dropdown parameter whose options do not include
-   * the assigned value. If `parameter` is `undefined` or not a dropdown type, `false`
+   * the assigned value.
+   * @note If {@link parameter} is `undefined` or not a dropdown type, `false`
    * is returned.
+   * @note If the dropdown is optional, the value can also be `null` or `undefined`.
    */
   public get valueIsInvalidOption(): boolean {
-    return (
-      this.parameter?.type === 'dropdown' &&
-      this.parameter.options.every((option) => option.value !== this.value)
-    )
+    if (this.parameter?.type !== 'dropdown') return false
+
+    let valueIsUnset = this.value === null || this.value === undefined
+    if (valueIsUnset && !this.parameter.required) return false
+
+    return this.parameter.options.every((option) => option.value !== this.value)
   }
 
   /**
    * Whether this argument has a string parameter with a pattern that does not match
    * the assigned value.
-   * @note If `parameter` is `undefined` or not a string type, `false` is returned.
+   * @note If {@link parameter} is `undefined` or not a string type, `false` is returned.
    */
   public get hasPatternMismatch(): boolean {
     return (
@@ -247,8 +242,8 @@ export abstract class TargetArgument<
    * the target script.
    * @param _id The unique identifier for this argument entry.
    * @param parameterId The `_id` of the parameter this argument satisfies.
-   * @param type The type of the parameter this argument satisfies.
-   * @param value The value supplied for the parameter.
+   * @param context Dynamic data gated by a `type` discriminant, which determines
+   * the nature of the argument and the type of its value.
    */
   protected constructor(
     effect: T[TEffectType] | Effect<T, any>,
@@ -279,6 +274,32 @@ export abstract class TargetArgument<
       }
     }
   }
+
+  /**
+   * The default properties for a {@link TargetArgument} object.
+   */
+  public static get DEFAULT_PROPERTIES(): Omit<
+    TTargetArgumentJson,
+    'parameterId' | 'value'
+  > {
+    return {
+      _id: StringToolbox.generateRandomId(),
+      type: 'string',
+    }
+  }
+
+  /**
+   * Key used to index an issue when a target argument has a dropdown value that
+   * does not match any of the parameter's options.
+   */
+  public static readonly ISSUE_KEY_DROPDOWN_VALUE_MISMATCH =
+    'dropdown-value-mismatch'
+
+  /**
+   * Key used to index an issue when a target argument has a pattern mismatch
+   * with its parameter.
+   */
+  public static readonly ISSUE_KEY_PATTERN_MISMATCH = 'pattern-mismatch'
 
   /**
    * If the argument is required and its value is unset for its type, this replaces
@@ -497,32 +518,6 @@ export abstract class TargetArgument<
   }
 
   /**
-   * The default properties for a {@link TargetArgument} object.
-   */
-  public static get DEFAULT_PROPERTIES(): Omit<
-    TTargetArgumentJson,
-    'parameterId' | 'value'
-  > {
-    return {
-      _id: StringToolbox.generateRandomId(),
-      type: 'string',
-    }
-  }
-
-  /**
-   * Key used to index an issue when a target argument has a dropdown value that
-   * does not match any of the parameter's options.
-   */
-  public static readonly ISSUE_KEY_DROPDOWN_VALUE_MISMATCH =
-    'dropdown-value-mismatch'
-
-  /**
-   * Key used to index an issue when a target argument has a pattern mismatch
-   * with its parameter.
-   */
-  public static readonly ISSUE_KEY_PATTERN_MISMATCH = 'pattern-mismatch'
-
-  /**
    * Deserializes a selection of serialized mission components back into
    * their live mission component objects. Components that no longer exist
    * in the mission (e.g. deleted since the selection was saved), and
@@ -596,7 +591,11 @@ export abstract class TargetArgument<
   ): TMissionComponentSerializedSelection[] {
     return components.map(
       (item: MissionComponent<T>): TMissionComponentSerializedSelection => {
-        if (!(item instanceof MissionComponent)) throw new Error('')
+        if (!(item instanceof MissionComponent)) {
+          throw new Error(
+            'One of the items passed to serializeMissionComponents is not a MissionComponent.',
+          )
+        }
         let { name: lastKnownName } = item
 
         if (item instanceof Mission) {
@@ -713,7 +712,7 @@ export type TSelectArgumentSerializedValue = TSatisfies<
     'string': string
     'large-string': string
     'boolean': boolean
-    'dropdown': TDropdownTargetParameterOptionVal
+    'dropdown': TDropdownTargetParameterOptionValue
     'mission-component': TMissionComponentSerializedSelection[]
     'unknown': TTargetArgumentSerializedValue
   },

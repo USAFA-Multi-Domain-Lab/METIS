@@ -1,6 +1,6 @@
 export class VersionToolbox {
   /**
-   * @param value The string to validate.
+   * @param version The string to validate.
    * @returns Whether the string is a valid semantic version.
    */
   public static isValidVersion(version: string): boolean {
@@ -51,6 +51,7 @@ export class VersionToolbox {
    * @param versionA The first version string.
    * @param versionB The second version string.
    * @returns Whether versionA is later than versionB.
+   * @throws If either version is invalid.
    */
   public static isLaterThan(versionA: string, versionB: string): boolean {
     return this.compareVersions(versionA, versionB) === 'later'
@@ -61,6 +62,7 @@ export class VersionToolbox {
    * @param versionA The first version string.
    * @param versionB The second version string.
    * @returns Whether versionA is earlier than versionB.
+   * @throws If either version is invalid.
    */
   public static isEarlierThan(versionA: string, versionB: string): boolean {
     return this.compareVersions(versionA, versionB) === 'earlier'

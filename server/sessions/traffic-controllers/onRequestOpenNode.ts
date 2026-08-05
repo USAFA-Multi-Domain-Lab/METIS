@@ -117,7 +117,7 @@ export const onRequestOpenNode =
         }
 
         // Emit open event.
-        for (let forceMember of this.getMembersForForce(
+        for (let forceMember of this.getJoinedMembersForForce(
           node.force._id,
           member.subscribedRealmId,
         )) {

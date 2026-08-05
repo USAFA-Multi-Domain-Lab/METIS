@@ -47,7 +47,6 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
       filter: () => true,
       isSelectable: () => false,
       isIndirectlySelectable: () => true,
-      onSelectionChange: () => {},
     })
 
     /* -- STATE -- */
@@ -101,13 +100,11 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
     /**
      * @param item The item to check.
      * @returns whether the given item is expanded, reading from the local
-     * expansion map first and falling back to the item's own property.
+     * expansion map and defaulting to collapsed for items it has no entry for.
      */
     const isExpanded = (item: TMissionOutlineItem): boolean => {
       if (searchText) return true
-      return expansionMap.has(item._id)
-        ? expansionMap.get(item._id)!
-        : item.expandedInOutline
+      return expansionMap.get(item._id) ?? false
     }
 
     /**
@@ -122,8 +119,8 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
 
     /**
      * Toggles the selection of an item. If the item is already selected it will
-     * be deselected; otherwise it will be added to the selection. Calls
-     * `onSelectionChange` with the updated selection after each change.
+     * be deselected; otherwise it will be added to the selection. Writes the
+     * updated selection back through the `selectionState` setter.
      * @param item The item to toggle selection for.
      */
     const toggleSelection = (item: TMissionOutlineItem): void => {
@@ -280,7 +277,7 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
       }
       visit(defaultedProps.root)
       return result
-    }, [searchText])
+    }, [searchText, defaultedProps.root])
     defaultedProps.filter = (item: TMissionOutlineItem): boolean => {
       if (!originalFilter(item)) return false
       if (matchingIds === null) return true
@@ -299,7 +296,7 @@ const MissionOutline = forwardRef<TMissionOutlineHandle, TMissionOutline_P>(
         }
       }
       return true
-    }, [expansionMap])
+    }, [searchText /*Used by isExpanded.*/, expansionMap])
 
     // Determine where to render badges showing counts
     // in the outline tree.
@@ -524,8 +521,8 @@ export type TMissionOutline_C = {
    */
   toggleItem: (item: TMissionOutlineItem) => void
   /**
-   * Toggles the selection of the given item, then calls `onSelectionChange`
-   * with the updated selection.
+   * Toggles the selection of the given item, writing the updated selection
+   * back through the `selectionState` setter.
    * @param item The item to toggle selection for.
    */
   toggleSelection: (item: TMissionOutlineItem) => void
@@ -580,11 +577,6 @@ export interface TMissionOutlineItem {
    * The icon representing this item in the mission outline.
    */
   readonly outlineIcon: TMetisIcon
-  /**
-   * Whether this item is currently expanded in the mission outline,
-   * revealing its `outlineChildren`.
-   */
-  expandedInOutline: boolean
   /**
    * The children of this item in the mission outline tree.
    */

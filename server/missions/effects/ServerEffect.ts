@@ -79,7 +79,7 @@ export class ServerEffect<
    * safe to expose in target-environment code.
    */
   public toTargetEnvContext(): TTargetEnvExposedEffect<TType> {
-    const self = this
+    let self = this
     return {
       _id: self._id,
       localKey: self.localKey,
@@ -135,8 +135,8 @@ export class ServerEffect<
       order: self.order,
       // Stale arguments included in case type ever
       // changes again.
-      arguments: self.allArguments.map((arg) => arg.json),
-      versionCursor: this.targetEnvironmentVersion,
+      arguments: self.allArguments.map((argument) => argument.json),
+      versionCursor: self.targetEnvironmentVersion,
       get mission() {
         return self.mission.toTargetEnvContext()
       },

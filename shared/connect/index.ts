@@ -282,10 +282,8 @@ export type TNodeBlockStatusData = {
 }
 
 /**
- * The data emitted when one or more files are granted access to one or more forces.
- */
-/**
- * The data emitted when the access to a file is granted or revoked for a force.
+ * The data emitted when access to one or more files is granted
+ * or revoked for one or more forces.
  */
 export type TFileAccessData = {
   /**

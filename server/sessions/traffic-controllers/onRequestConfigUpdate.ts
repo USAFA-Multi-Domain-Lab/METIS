@@ -76,6 +76,11 @@ export const onRequestConfigUpdate =
       // be sent to all of the clients, if so.
       let membersChanged = false
 
+      // Clear out ghosts in standalone. Runs before the role coercion
+      // so roles are not rewritten on members about to be removed.
+      let membersWithNewMembership = this.enforceStandaloneMembership()
+      if (membersWithNewMembership.length) membersChanged = true
+
       // Force participant role in standalone.
       let membersWithNewRoles = this.enforceStandaloneRoles()
       if (membersWithNewRoles.length) membersChanged = true

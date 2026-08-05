@@ -1,5 +1,4 @@
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
-import type { TServerRealmJsonOptions } from '../ServerSessionRealm'
 import { createServerSessionController } from './createServerSessionController'
 
 /**
@@ -47,17 +46,11 @@ export const onRequestSwitchRealm =
       // Subscribe the member to the requested realm for routing purposes.
       member.subscribeToRealm(realm)
 
-      // Respond to the requester with the realm serialized under complete
-      // visibility (guaranteed by the authorization check above), mirroring
-      // the exposure branch used in `emitStartResponses`.
-      let realmJsonOptions: TServerRealmJsonOptions = {
-        forceExposure: { expose: 'all' },
-        fileExposure: { expose: 'all' },
-        sessionDataExposure: { expose: 'all' },
-      }
+      // Respond to the requester with the realm they now subscribe to,
+      // serialized under their own exposure.
       member.emit('realm-switched', {
         method: 'realm-switched',
-        data: { subscribedRealm: realm.toJson(realmJsonOptions) },
+        data: { subscribedRealm: member.subscribedRealmJson },
         request: member.buildResponseRequestData(event, { fulfilled: true }),
       })
 

@@ -6,6 +6,17 @@ import { TargetParameter } from './TargetParameter'
  */
 export class DropdownTargetParameter {
   /**
+   * The dropdown parameter option value types.
+   */
+  public static readonly OPTION_VALUE_TYPES = [
+    'string',
+    'number',
+    'boolean',
+    'object',
+    'undefined',
+  ]
+
+  /**
    * Converts TDropdownTargetParameter to TDropdownTargetParameterJson.
    * @param parameter The dropdown parameter to convert.
    * @returns The dropdown parameter as JSON.
@@ -48,7 +59,7 @@ export class DropdownTargetParameter {
    * @param options The dropdown parameter options to convert.
    * @returns The dropdown parameter options as JSON.
    */
-  public static OPTIONS_TO_JSON<T extends TDropdownTargetParameterOptionVal>(
+  public static OPTIONS_TO_JSON<T extends TDropdownTargetParameterOptionValue>(
     options: TDropdownTargetParameterOption<T>[],
   ): TDropdownTargetParameterOptionJson<T>[] {
     return options.map((option) => {
@@ -98,12 +109,15 @@ export class DropdownTargetParameter {
           options: DropdownTargetParameter.OPTIONS_FROM_JSON(parameter.options),
         }
   }
+
   /**
    * Converts TDropdownTargetParameterJson options to TDropdownTargetParameter options.
    * @param options The dropdown parameter options as JSON to convert.
    * @returns The dropdown parameter options.
    */
-  public static OPTIONS_FROM_JSON<T extends TDropdownTargetParameterOptionVal>(
+  public static OPTIONS_FROM_JSON<
+    T extends TDropdownTargetParameterOptionValue,
+  >(
     options: TDropdownTargetParameterOptionJson<T>[],
   ): TDropdownTargetParameterOption<T>[] {
     return options.map((option) => {
@@ -115,16 +129,6 @@ export class DropdownTargetParameter {
       }
     })
   }
-  /**
-   * The dropdown parameter option value types.
-   */
-  public static readonly OPTION_VALUE_TYPES = [
-    'string',
-    'number',
-    'boolean',
-    'object',
-    'undefined',
-  ]
 }
 
 /* -- TYPES -- */
@@ -193,7 +197,7 @@ type TDropdownTargetParameterOptional = {
   /**
    * The options for the parameter.
    */
-  options: TDropdownTargetParameterOption<TOptDropdownTargetParameterOptionVal>[]
+  options: TDropdownTargetParameterOption<TOptionalDropdownTargetParameterOptionValue>[]
 }
 /**
  * The required dropdown parameter type for a target.
@@ -206,7 +210,7 @@ type TDropdownTargetParameterRequired = {
   /**
    * The options for the parameter.
    */
-  options: TDropdownTargetParameterOption<TReqDropdownTargetParameterOptionVal>[]
+  options: TDropdownTargetParameterOption<TRequiredDropdownTargetParameterOptionValue>[]
   /**
    * The `_id` of the option that is selected by default.
    */
@@ -216,8 +220,8 @@ type TDropdownTargetParameterRequired = {
  * The dropdown parameter option type for a target.
  */
 export type TDropdownTargetParameterOption<
-  Value extends TDropdownTargetParameterOptionVal =
-    TDropdownTargetParameterOptionVal,
+  Value extends TDropdownTargetParameterOptionValue =
+    TDropdownTargetParameterOptionValue,
 > = {
   /**
    * The ID of the option.
@@ -349,7 +353,7 @@ type TDropdownTargetParameterOptionalJson = {
   /**
    * The options for the parameter.
    */
-  options: TDropdownTargetParameterOptionJson<TOptDropdownTargetParameterOptionVal>[]
+  options: TDropdownTargetParameterOptionJson<TOptionalDropdownTargetParameterOptionValue>[]
 }
 /**
  * The required dropdown parameter type for a target as JSON.
@@ -366,14 +370,14 @@ type TDropdownTargetParameterRequiredJson = {
   /**
    * The options for the parameter.
    */
-  options: TDropdownTargetParameterOptionJson<TReqDropdownTargetParameterOptionVal>[]
+  options: TDropdownTargetParameterOptionJson<TRequiredDropdownTargetParameterOptionValue>[]
 }
 /**
  * The dropdown parameter option type for a target.
  */
 export type TDropdownTargetParameterOptionJson<
-  Value extends TDropdownTargetParameterOptionVal =
-    TDropdownTargetParameterOptionVal,
+  Value extends TDropdownTargetParameterOptionValue =
+    TDropdownTargetParameterOptionValue,
 > = {
   /**
    * The ID of the option.
@@ -442,7 +446,7 @@ export type TDropdownTargetParameterOptionJson<
 /**
  * The option value types for a required dropdown parameter.
  */
-export type TReqDropdownTargetParameterOptionVal =
+export type TRequiredDropdownTargetParameterOptionValue =
   | string
   | number
   | boolean
@@ -451,7 +455,7 @@ export type TReqDropdownTargetParameterOptionVal =
 /**
  * The option value types for an optional dropdown parameter.
  */
-export type TOptDropdownTargetParameterOptionVal =
+export type TOptionalDropdownTargetParameterOptionValue =
   | string
   | number
   | boolean
@@ -462,6 +466,6 @@ export type TOptDropdownTargetParameterOptionVal =
 /**
  * The option value types for a dropdown parameter.
  */
-export type TDropdownTargetParameterOptionVal =
-  | TReqDropdownTargetParameterOptionVal
-  | TOptDropdownTargetParameterOptionVal
+export type TDropdownTargetParameterOptionValue =
+  | TRequiredDropdownTargetParameterOptionValue
+  | TOptionalDropdownTargetParameterOptionValue

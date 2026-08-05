@@ -480,7 +480,7 @@ export class ServerSessionRealm extends SessionRealm<TMetisServerComponents> {
       // scoped to this realm so a realm's output never leaks into
       // another realm sharing the same force.
       ServerSessionMember.emitToGroup(
-        this.session.getMembersForForce(force._id, this._id),
+        this.session.getJoinedMembersForForce(force._id, this._id),
         'send-output',
         {
           data: {
@@ -489,7 +489,7 @@ export class ServerSessionRealm extends SessionRealm<TMetisServerComponents> {
         },
       )
       this.session.emitSessionPanelAlert(
-        this.session.getMembersForForce(force._id, this._id),
+        this.session.getJoinedMembersForForce(force._id, this._id),
         'Output',
       )
     }

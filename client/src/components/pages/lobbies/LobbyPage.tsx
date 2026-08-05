@@ -55,6 +55,11 @@ export default function LobbyPage({
   const [startInitiated, setStartInitiated] = useState<boolean>(
     session.state === 'starting',
   )
+  const [noParticipantsInStandalone, setNoParticipantsInStandalone] =
+    useState<boolean>(
+      session.config.mode === 'standalone' &&
+        !session.hasForceAssignableMembers,
+    )
   const [setupFailed, setSetupFailed] = useState<boolean>(session.setupFailed)
   const [setupTasks, setSetupTasks] = useState<ClientEnvironmentTask[]>([
     ...session.setupTasks,
@@ -86,6 +91,20 @@ export default function LobbyPage({
    */
   const startStatusClasses = compute<ClassList>(() => {
     return new ClassList('StartStatus').set('StartStatusFailure', setupFailed)
+  })
+
+  /**
+   * Checks if the session can be started, and if not, marks the
+   * reason why the start is blocked.
+   */
+  const startButtonDisabledReason = compute<string>(() => {
+    if (startInitiated) {
+      return 'Session start has been initiated by a manager.'
+    } else if (noParticipantsInStandalone) {
+      return 'A standalone session cannot be started without any participants.'
+    } else {
+      return ''
+    }
   })
 
   /* -- FUNCTIONS -- */
@@ -147,6 +166,19 @@ export default function LobbyPage({
     setConfigVersion((version) => version + 1)
   })
 
+  // Check start requirements whenever the members or config are
+  // updated.
+  useEventListener(
+    server,
+    ['session-config-updated', 'session-members-updated'],
+    () => {
+      setNoParticipantsInStandalone(
+        session.config.mode === 'standalone' &&
+          !session.hasForceAssignableMembers,
+      )
+    },
+  )
+
   // Add navigation middleware to properly
   // quit the session before the user navigates
   // away.
@@ -171,11 +203,19 @@ export default function LobbyPage({
     }
   })
 
-  // Disable the start session button if the session
-  // start has been initiated.
+  // Disable the start session button if the session start has been
+  // initiated, or if something still blocks the start, describing
+  // the blocker in the button's tooltip.
   useEffect(() => {
-    navigationButtonEngine.setDisabled('start-session', startInitiated)
-  }, [startInitiated])
+    navigationButtonEngine.setDisabled(
+      'start-session',
+      Boolean(startButtonDisabledReason),
+    )
+    navigationButtonEngine.setDescription(
+      'start-session',
+      startButtonDisabledReason || 'Start session',
+    )
+  }, [startButtonDisabledReason])
 
   // todo: Uncomment this when task-management system is overhauled.
   // Once session start is initiated, auto-select the setup view

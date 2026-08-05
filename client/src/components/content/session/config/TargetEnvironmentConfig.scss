@@ -42,8 +42,18 @@
     background-color: rgba($color-primary-dark, 0.3);
     border-radius: 0.35em;
 
-    .DetailToggle {
+    .Detail.DetailToggle {
       margin-bottom: 0.5em;
+
+      .TitleRow {
+        .Label {
+          // Special exception for label color here because
+          // it is hard to tell which environments are locked
+          // and which are not when the label is the same faded
+          // color in both.
+          color: $color-primary-light;
+        }
+      }
     }
 
     .DetailDropdown {
@@ -51,7 +61,7 @@
     }
 
     &.LockedWithNoRealmSupport {
-      .DetailToggle {
+      .Detail.DetailToggle {
         &::after {
           content: '🔒 No multi-realm support';
           display: block;
@@ -59,6 +69,12 @@
           font-size: 0.7em;
           font-style: italic;
           color: $color-faded;
+        }
+
+        .TitleRow {
+          .Label {
+            color: $color-faded;
+          }
         }
       }
     }

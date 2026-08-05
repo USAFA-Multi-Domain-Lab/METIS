@@ -97,17 +97,15 @@ Hooks receive a context object with access to session data and utilities:
 
 A hook context exposes seven members, and nothing else:
 
-| Member        | Purpose                                                                    |
-| ------------- | --------------------------------------------------------------------------- |
-| `session`     | The session that invoked the hook                                           |
-| `config`      | The configuration selected for this environment, under `targetEnvConfig`    |
-| `mission`     | The mission associated with the session                                     |
-| `localStore`  | Store scoped to this realm and this target environment                      |
-| `realmStore`  | Store scoped to this realm, shared across target environments               |
-| `globalStore` | Store scoped to the session instance, shared across realms                  |
-| `sleep`       | Async delay that aborts automatically if the session resets                 |
-
-> **Note:** A hook **cannot send output to the session.** `sendOutput` belongs to the target script context, not this one, so a hook that needs to report progress logs it on the server instead. See [Data Stores](data-stores.md) for how the three stores differ.
+| Member        | Purpose                                                                  |
+| ------------- | ------------------------------------------------------------------------ |
+| `session`     | The session that invoked the hook                                        |
+| `config`      | The configuration selected for this environment, under `targetEnvConfig` |
+| `mission`     | The mission associated with the session                                  |
+| `localStore`  | Store scoped to this realm and this target environment                   |
+| `realmStore`  | Store scoped to this realm, shared across target environments            |
+| `globalStore` | Store scoped to the session instance, shared across realms               |
+| `sleep`       | Async delay that aborts automatically if the session resets              |
 
 ### Key Methods
 

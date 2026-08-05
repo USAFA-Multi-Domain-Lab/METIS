@@ -41,9 +41,6 @@ export class ClientMissionForce
   public readonly outlineIcon: TMetisIcon = 'shield'
 
   // Implemented
-  public expandedInOutline: boolean = false
-
-  // Implemented
   public get outlineChildren(): TMissionOutlineItem[] {
     return this.subComponents
   }

@@ -26,8 +26,14 @@ export type TBaseTargetParameter = {
    * @note If the parameter depends on multiple parameters, all dependencies must be met for the parameter to be displayed.
    * @note If the parameter has no dependencies (i.e. set to `undefined` or `[]`), the parameter will always be displayed.
    * @default undefined
+   * @note This field holds decoded {@link TargetDependency} instances. A target
+   * environment does not construct them directly — it calls a factory such as
+   * {@link TargetDependency.TRUTHY}, which returns the dependency already
+   * encoded as a string.
    * @example
    * ```typescript
+   * // Declared on a target schema, where each factory call is an encoded string.
+   *
    * // This parameter is always displayed because it has no dependencies.
    * {
    *    _id: 'parameter1',
@@ -45,7 +51,7 @@ export type TBaseTargetParameter = {
    *    required: false,
    *    groupingId: 'parameter',
    *    type: 'number',
-   *    dependencies: [Dependency.TRUTHY('parameter1')],
+   *    dependencies: [TargetDependency.TRUTHY('parameter1')],
    * }
    * ```
    *
@@ -67,7 +73,7 @@ export type TBaseTargetParameter = {
    *    required: false,
    *    groupingId: 'parameter',
    *    type: 'number',
-   *    dependencies: [Dependency.SOME('parameter1', [1, 2, 3])],
+   *    dependencies: [TargetDependency.EQUALS_SOME('parameter1', [1, 2, 3])],
    * }
    * ```
    */

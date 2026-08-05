@@ -1,12 +1,12 @@
 export type * from '../../../shared/target-environments/types'
 
-export { TTargetScriptExposedContext } from '../../../server/target-environments/context/TargetScriptContext'
+export type { TTargetScriptExposedContext } from '../../../server/target-environments/context/TargetScriptContext'
 
 export type {
   TScriptArgumentValues,
-  TTargetScriptContext,
   TTargetSchemaOptions,
   TTargetScript,
+  TTargetScriptContext,
 } from '../../../server/target-environments/schema/TargetSchema'
 
 export type { TMissionComponentSerializedSelection } from '../../../shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
