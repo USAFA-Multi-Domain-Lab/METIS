@@ -36,7 +36,7 @@ export class TargetEnvRegistry<
    * skipped.
    */
   public register(environment: T['targetEnv']): void {
-    if (!this.has(environment)) {
+    if (!this.has(environment._id)) {
       this.environments.set(environment._id, environment)
     } else {
       console.warn(
