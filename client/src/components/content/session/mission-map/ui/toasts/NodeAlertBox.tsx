@@ -1,3 +1,4 @@
+import RichText from '@client/components/content/general-layout/rich-text/RichText'
 import { ButtonText } from '@client/components/content/user-controls/buttons/ButtonText'
 import { compute } from '@client/toolbox'
 import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
@@ -70,10 +71,13 @@ export default function NodeAlertBox({
         <div className='AlertTitle'>{severityLevel}</div>
       </div>
       <div className='AlertMessage'>
-        <div
-          className='AlertMessageContent'
-          dangerouslySetInnerHTML={{ __html: message }}
-        ></div>
+        <RichText
+          options={{
+            className: 'AlertMessageContent',
+            content: message,
+            editable: false,
+          }}
+        />
       </div>
       <div className='AlertButtons'>
         {areMorePendingAlerts && (

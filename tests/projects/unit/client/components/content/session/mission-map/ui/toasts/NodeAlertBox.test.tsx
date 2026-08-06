@@ -19,6 +19,21 @@ jest.mock('@client/components/content/general-layout/Markdown', () => ({
   ),
 }))
 
+// Mock RichText to keep Tiptap and the icon loader, which needs Vite,
+// out of the test. The mock renders the content it is given so the
+// message assertions still describe what a member would read.
+jest.mock(
+  '@client/components/content/general-layout/rich-text/RichText',
+  () => ({
+    __esModule: true,
+    default: ({ options }: { options?: any }) => (
+      <div className={options?.className} data-testid='rich-text'>
+        {options?.content}
+      </div>
+    ),
+  }),
+)
+
 describe('NodeAlertBox', () => {
   function renderNodeAlertBox(
     alert: NodeAlert | null,
@@ -57,7 +72,7 @@ describe('NodeAlertBox', () => {
     expect(screen.getByText('warning')).toBeInTheDocument()
   })
 
-  test('renders the alert message content via the Markdown component', () => {
+  test('renders the alert message content', () => {
     let alert = NodeAlert.createNew(
       'node-1',
       '**Escalate immediately**',

@@ -282,6 +282,19 @@ jest.mock('@client/components/content/general-layout/Markdown', () => ({
   default: ({ markdown }: { markdown: string }) => <div>{markdown}</div>,
 }))
 
+// The alert box shows its message through RichText. These tests are about
+// which alerts appear and when, so the message renders as plain content
+// here and Tiptap stays out of the run.
+jest.mock(
+  '@client/components/content/general-layout/rich-text/RichText',
+  () => ({
+    __esModule: true,
+    default: ({ options }: { options?: any }) => (
+      <div className={options?.className}>{options?.content}</div>
+    ),
+  }),
+)
+
 jest.mock('@client/components/content/session/mission-map/MissionMap', () => {
   let React = require('react')
 

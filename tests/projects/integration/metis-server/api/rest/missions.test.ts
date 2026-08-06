@@ -204,6 +204,86 @@ describe('/api/v1/missions', () => {
     assertMissionMatchesExpectedData(fetched, updatePayload)
   })
 
+  test('POST /api/v1/missions/ sanitizes large-string effect arguments and leaves other argument types alone', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let payload = createMissionPayload()
+    let effect = payload.effects[0]
+    let numberArgument = effect.arguments[0]
+    let messageArgumentId = generateRandomId()
+
+    effect.arguments.push({
+      _id: messageArgumentId,
+      parameterId: 'message',
+      type: 'large-string',
+      value:
+        '<p>Reactor offline</p><img src="x" onerror="alert(1)"><svg onload="alert(2)"></svg>',
+    })
+
+    let { _id: missionId } = await createMission(client, payload)
+    let fetched = await fetchMission(client, missionId)
+    let savedArguments = fetched.effects?.[0].arguments ?? []
+    let savedMessage = savedArguments.find(
+      (argument) => argument._id === messageArgumentId,
+    )
+
+    // The formatting an author wrote is kept. The parts that would run in
+    // a member's browser are not.
+    expect(savedMessage?.value).toBe('<p>Reactor offline</p>')
+    expect(savedMessage?.value).not.toContain('onerror')
+    expect(savedMessage?.value).not.toContain('onload')
+
+    // An argument holding something other than HTML is stored as it was.
+    let savedNumber = savedArguments.find(
+      (argument) => argument._id === numberArgument._id,
+    )
+    expect(savedNumber?.value).toBe(numberArgument.value)
+  })
+
+  test('POST /api/v1/missions/ sanitizes an untyped argument holding HTML and leaves untyped plain text alone', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let payload = createMissionPayload()
+    let effect = payload.effects[0]
+    let htmlArgumentId = generateRandomId()
+    let plainTextArgumentId = generateRandomId()
+
+    // A mission saved before the typed-argument format arrived records its
+    // arguments as "unknown", which is how an imported file can present one.
+    effect.arguments.push({
+      _id: htmlArgumentId,
+      parameterId: 'message',
+      type: 'unknown',
+      value: '<p>Reactor offline</p><img src="x" onerror="alert(1)">',
+    } as unknown as (typeof effect.arguments)[number])
+
+    // Plain writing that happens to carry angle brackets must survive intact.
+    effect.arguments.push({
+      _id: plainTextArgumentId,
+      parameterId: 'callSign',
+      type: 'unknown',
+      value: 'Report to <commander> at <time> when a < b',
+    } as unknown as (typeof effect.arguments)[number])
+
+    let { _id: missionId } = await createMission(client, payload)
+    let fetched = await fetchMission(client, missionId)
+    let savedArguments = fetched.effects?.[0].arguments ?? []
+
+    let savedHtml = savedArguments.find(
+      (argument) => argument._id === htmlArgumentId,
+    )
+    expect(savedHtml?.value).toBe('<p>Reactor offline</p>')
+
+    let savedPlainText = savedArguments.find(
+      (argument) => argument._id === plainTextArgumentId,
+    )
+    expect(savedPlainText?.value).toBe(
+      'Report to <commander> at <time> when a < b',
+    )
+  })
+
   test('POST /api/v1/missions/copy/ preserves mission data for copy-safe fields', async () => {
     let { client } = await createTestContext()
     await loginWithAccess(client, 'admin')
