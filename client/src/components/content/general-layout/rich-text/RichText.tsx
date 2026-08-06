@@ -274,6 +274,7 @@ export default function RichText(props: TRichText_P): TReactElement | null {
    */
   const rootClassName = compute<string>(() => {
     let classList = new ClassList('RichText')
+    classList.set('ReadOnly', !editable)
     if (className) classList.add(className)
     return classList.value
   })
@@ -777,8 +778,10 @@ export default function RichText(props: TRichText_P): TReactElement | null {
           // always a way to move the cursor out of a code block or blockquote
           // that finishes the text. Headings are excluded because they need no
           // escape route, and adding a line after one causes the heading
-          // controls to keep applying to that new empty line.
-          trailingNode: { notAfter: ['heading'] },
+          // controls to keep applying to that new empty line. Someone reading
+          // has no cursor to move, so the extra line is left out entirely when
+          // the editor is not editable.
+          trailingNode: editable ? { notAfter: ['heading'] } : false,
           listItem: {
             HTMLAttributes: {
               class: listClassName,
