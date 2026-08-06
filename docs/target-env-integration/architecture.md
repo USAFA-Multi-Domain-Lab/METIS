@@ -17,7 +17,7 @@ This document provides a high-level overview of the target-effect system archite
 
 The target-effect system allows METIS to interact with external systems through a three-layer architecture:
 
-1. **Integration Layer** - Define what external systems METIS can affect and how
+1. **Integration Layer** - Define what systems METIS can affect and how
 2. **Registry Layer** - Discover and manage available integrations
 3. **Execution Layer** - Execute effects against external systems during METIS sessions
 
@@ -73,9 +73,9 @@ Lives in `server/`. When an effect executes during a session, METIS creates a se
 
 ## Key Concepts
 
-- **Target Environment**: An external system with which METIS can integrate (e.g., "Traffic Control System")
-- **Target**: A specific action within an environment (e.g., "Change Traffic Light")
-- **Effect**: A configured target with user-provided arguments, ready to execute
+- **Target Environment**: A system with which METIS can integrate (e.g., "Traffic Control System")
+- **Target**: An object within an environment that can be acted upon (e.g., "Traffic Light")
+- **Effect**: A change enacted upon a target, caused by a chosen event (e.g., "Change Traffic Light to Red when an Action Succeeds")
 - **Context**: The secure execution environment within which the target scripts run
 
 ## Quick Example
