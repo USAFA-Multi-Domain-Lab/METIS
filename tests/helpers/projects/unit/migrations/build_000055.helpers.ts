@@ -33,6 +33,12 @@ export function createPreMigrationMission(
   }
 }
 
+// The v4 UUID this build generates its IDs with. The version digit and the
+// variant digit are both fixed, so a value that satisfies this came from a
+// real UUID generator rather than from some other string.
+const UUID_V4_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 /**
  * Asserts that a migrated mission matches the build 55 shape.
  * @param result The migrated mission data.
@@ -60,13 +66,43 @@ export function assertMigratedMission(
     )
     assertMigratedForce(migratedForce, originalForce, resource._id)
   }
+
+  assertGeneratedIdsAreDistinct(migratedMission)
+}
+
+/**
+ * Asserts that every _id the build generated is its own value. A generator
+ * that handed back the same string every time would still pass a check for the
+ * UUID shape, so the values have to be compared against each other too.
+ * @param migratedMission The migrated mission data.
+ */
+function assertGeneratedIdsAreDistinct(
+  migratedMission: TMigratedMission,
+): void {
+  let generatedIds = migratedMission.resources.map((resource) => resource._id)
+
+  for (let force of migratedMission.forces) {
+    for (let pool of force.resourcePools) {
+      generatedIds.push(pool._id)
+    }
+
+    for (let node of force.nodes) {
+      for (let action of node.actions) {
+        for (let resourceCost of action.resourceCosts) {
+          generatedIds.push(resourceCost._id)
+        }
+      }
+    }
+  }
+
+  expect(new Set(generatedIds).size).toBe(generatedIds.length)
 }
 
 function assertMigratedResource(
   resource: TMigratedResource,
   originalMission: TOriginalMission,
 ): void {
-  assertNonEmptyString(resource._id)
+  assertUuid(resource._id)
   expect(resource.icon).toBe('resources/coins')
   expect(resource.order).toBe(0)
   expect(resource.name).toBe(originalMission.resourceLabel)
@@ -83,8 +119,8 @@ function assertMigratedForce(
   expect(force).not.toHaveProperty('allowNegativeResources')
 
   let [pool] = force.resourcePools
-  assertNonEmptyString(pool._id)
-  assertNonEmptyString(pool.resourceId)
+  assertUuid(pool._id)
+  assertUuid(pool.resourceId)
   expect(pool.localKey).toBe('1')
   expect(typeof pool.initialBalance).toBe('number')
   expect(typeof pool.allowNegative).toBe('boolean')
@@ -123,8 +159,8 @@ function assertMigratedAction(
   expect(action).not.toHaveProperty('resourceCostHidden')
 
   let [resourceCost] = action.resourceCosts
-  assertNonEmptyString(resourceCost._id)
-  assertNonEmptyString(resourceCost.resourceId)
+  assertUuid(resourceCost._id)
+  assertUuid(resourceCost.resourceId)
   expect(typeof resourceCost.baseAmount).toBe('number')
   expect(typeof resourceCost.hidden).toBe('boolean')
   expect(resourceCost.baseAmount).toBe(originalAction.resourceCost)
@@ -132,9 +168,9 @@ function assertMigratedAction(
   expect(resourceCost.resourceId).toBe(resourceId)
 }
 
-function assertNonEmptyString(value: string): void {
+function assertUuid(value: string): void {
   expect(typeof value).toBe('string')
-  expect(value.length).toBeGreaterThan(0)
+  expect(value).toMatch(UUID_V4_PATTERN)
 }
 
 function findRequiredById<TItem extends { _id: string }>(

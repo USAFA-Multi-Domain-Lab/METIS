@@ -19,9 +19,9 @@ import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import type { TListenerTarget } from '@shared/events/EventManager'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import type { TSingleTypeObject } from '@shared/toolbox/objects/ObjectToolbox'
+import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { Socket } from 'socket.io-client'
 import { io } from 'socket.io-client'
-import { v4 as generateHash } from 'uuid'
 
 /**
  * METIS web-socket-based, server connection.
@@ -672,7 +672,7 @@ export class ServerConnection implements TListenerTarget<TServerMethod> {
    * Generates a new request ID for a request to the server.
    */
   private static generateRequestId(): any {
-    return `request_${generateHash()}`
+    return `request_${StringToolbox.generateRandomId()}`
   }
 }
 

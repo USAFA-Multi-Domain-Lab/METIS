@@ -83,10 +83,10 @@ Mission documents use two distinct ID formats depending on nesting level:
 - **Top-level `_id`** (the mission document itself) is a MongoDB `ObjectId` — never generate or overwrite these.
 - **All embedded document `_id`s** (forces, nodes, actions, effects, resource pools, resource costs, etc.) are UUIDs.
 
-When a migration must generate a new embedded document `_id`, use the `uuid` package's v4 function, following the convention established across the build scripts:
+When a migration must generate a new embedded document `_id`, use Node's built-in `crypto.randomUUID()`, following the convention established across the build scripts:
 
 ```js
-const generateHash = require('uuid').v4
+const generateHash = () => crypto.randomUUID()
 
 // Later, when creating an embedded document:
 let embeddedDoc = {
