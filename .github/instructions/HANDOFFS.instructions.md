@@ -1,256 +1,133 @@
 # METIS: Code Handoff Guide
 
-> For a workspace-wide index of instruction files, see [AGENTS.md](../../AGENTS.md). This document is the authoritative reference for creating code handoff documents in METIS.
+> For a workspace-wide index of instruction files, see [AGENTS.md](../../AGENTS.md). This document defines what a code handoff is and how it is laid out. It does not describe how to produce one — that lives in the handoff skills.
 
 ## Overview
 
-A **code handoff** is a Markdown document written for a coworker who will be performing a code review of a feature you have developed. It is not a code review itself — it is a structured briefing that tells the reviewer exactly which files to look at, what behavior to verify manually, and which tests still need to be written.
+A **code handoff** is a single Markdown document written for a coworker who will review a feature you have developed. It tells the reviewer what changed, what to verify by hand, what to cover with tests, and — once the review is underway — records what was found and what was done about it.
 
-A **handoff report** is the second half of the same process. It is written after the review and test work has been performed, and it records what was actually reviewed, what findings were identified, what automated coverage was added, and what still remains open.
+1. **The author writes it.** Summary, manual test checklist, automatic test checklist, and coverage specifics. Every checkbox starts unchecked and the Findings section starts empty.
+2. **The reviewer works through it.** Boxes get checked as the work is done, findings are added as they are discovered, and results are recorded.
+3. **Findings get resolved in place.** Whoever fixes a finding checks its box and appends a reply beneath it.
 
-Together, these two documents form the complete handoff workflow:
+The document is edited continuously, not written once at the end. Its state at any moment is the state of the review.
 
-1. The feature author creates the code handoff.
-2. A reviewer uses that handoff to perform review and testing.
-3. The reviewer creates or updates the handoff report with findings and results.
-
-When a user says something like _"create a code handoff for this feature"_, you should:
-
-1. Inspect the git changes (staged, unstaged, and commits) to identify which files are relevant to the feature. The changes may have been made very recently, or they may already be a couple of months old. Navigate as far back as deemed necessary to understand the full scope of the feature.
-2. Analyze the changed files to understand the shape of the feature.
-3. Produce a handoff document in the `handoffs/` directory at the project root.
-
-When a user says something like _"update the handoff report"_, _"document what was reviewed"_, or _"record the testing results"_, you should:
-
-1. Read the original handoff document first.
-2. Review the implemented code, findings, tests, and test results that now exist.
-3. Produce or update a handoff report in the `handoffs/` directory at the project root.
-
----
-
-## Output Location
-
-All handoff documents and reports must be written to the `handoffs/` directory at the root of the workspace:
-
-```
-handoffs/{feature-name}.md
-handoffs/{feature-name}-report.md
-```
-
-Use kebab-case for the filename (e.g., `handoffs/node-alert-system.md`, `handoffs/mission-export.md`, `handoffs/node-alert-report.md`). Create the `handoffs/` directory if it does not already exist.
-
-Use these naming rules:
-
-- The initial reviewer briefing uses `handoffs/{feature-name}.md`.
-- The follow-up review artifact uses `handoffs/{feature-name}-report.md`.
-- The report should generally use the same feature name as the original handoff so the pairing is obvious.
+Every file link and line number in it — in findings, in coverage specifics, anywhere — is accurate when written and is not maintained afterward. Code moves, and a reference that no longer lands where it did is expected rather than a defect. Each one records where something was at the moment it was written, not where it is now.
 
 ---
 
 ## Document Format
 
-Every code handoff document must follow this exact structure. The prose lines under each section heading (e.g. "First things first...", "Secondly...", "Thirdly...") are fixed boilerplate and must be copied verbatim into every generated document.
-
 ```markdown
 # {Feature Name} — Code Handoff
 
-## Files to Review
+**Status:** {Awaiting review | In review | Complete} — manual {n}/{n}, automatic {n}/{n} written, {n} findings open
 
-First things first, review the following files and verify the code matches style-guide rules and
-general best practices. Skim code for any glaring issues. Make note of any security concerns or potential bugs.
+## Summary of Changes and Coverage
 
-- [path/to/File.ts](/path/to/File.ts) — Brief description of what this file contains and why it is relevant to the feature.
-- [path/to/Component.tsx](/path/to/Component.tsx) — Brief description.
+{Two to four sentences on what this change is. **New feature** — the purpose it serves: what a user could not do before, and what it is for. **Refactor or overhaul** — why the change was necessary: what the previous design cost and what forced the rework. Name sibling handoffs that cover adjacent work so the reviewer knows what is deliberately out of scope.}
 
----
-
-## Manual Tests - Test End-User Experience Via UI
-
-Secondly, run the application and verify the following behaviors by interacting with the UI:
-
-- [ ] Manually verifiable behavior item.
-- [ ] Another behavior item.
-
----
-
-## Automatic Tests - Write Repeatable Jest Tests
-
-Thirdly, write Jest tests to verify the following test cases:
-
-### `ClassName.methodName`
-
-Tests should be placed in `path-to-file/ClassName.test.tsx`.
-
-- [ ] Specific test case.
-- [ ] Another test case.
-
-### `ComponentName`
-
-Tests should be placed in `path-to-file/ComponentName.test.tsx`.
-
-- [ ] Specific test case.
-- [ ] Another test case.
-```
-
----
-
-## Handoff Report Format
-
-Every handoff report must follow this structure. Unlike the code handoff, this document is issue-first and result-oriented. It should summarize what the reviewer actually found and completed while carrying out the original handoff, not expand the assigned scope of work.
-
-````markdown
-# {Feature Name} Report
-
-This report captures review findings for the {feature-name} system using the same top-level structure as the original handoff. The goal is to give the original architect a feature-specific review artifact that is easy to compare against the implementation summary and easy to extend with future findings. Use it to record the results of the manual tests and automated tests requested by the handoff, along with any findings or advisory follow-up suggestions discovered during that work.
-
-## Files to Review
-
-### Review Summary
-
-The following findings summarize the review, manual test execution, and automated test work completed for the assigned handoff scope.
-
-### Findings
-
-#### Severity Snapshot
-
-- Highest current severity: Medium
-- Critical: 0
-- High: 0
-- Medium: 1
-- Low: 2
-
-#### Medium
-
-- path/to/File.ts:123 — Medium. Finding description.
-
-#### Low
-
-- path/to/OtherFile.tsx:45 — Low. Finding description.
+{A brief walkthrough of how the system works and the biggest players in it, linking the main classes and entry points by name. Trace what happens on a typical operation — where it enters, what carries it, where it lands. Orientation only.}
 
 ## Manual Tests
 
-### Execution Result
-
-Short summary of the current manual test pass. If no manual issues were found, say so plainly.
-
-{Copy the manual test checklist from the original handoff verbatim, preserving each item as an unchecked checkbox for the reviewing engineer to perform. If the original handoff explicitly stated that no manual testing was required, write a single sentence such as: "No manual testing was required for this handoff."}
-
-- [ ] Manual test item copied from the original handoff.
-- [ ] Another manual test item.
+- [ ] A discrete, verifiable behavior.
+- [ ] Another behavior.
 
 ## Automatic Tests
 
-### Summary
+### `ClassName.methodName`
 
-Reference the original handoff's requested automated test work at a high level, note which existing suites were inspected or executed during the report pass, and state whether any of the originally requested tests were actually written.
+`tests/projects/unit/shared/path/ClassName.test.ts`
 
-### New Tests Written
+- [ ] A specific test case.
+- [ ] Another test case.
 
-- path/to/new-test-file.test.ts — New automated coverage written during this report pass.
+## Findings
 
-### Tests That Need To Be Repaired
+**Critical 0 · High 2 · Medium 1 · Low 3 · Advisory 2**
 
-- path/to/existing-test.test.tsx — Existing test coverage that is stale, broken, or no longer aligned with the implementation changes introduced by the feature.
+### High
 
-### Additional Tests That Would Be Helpful
+- [ ] [File.ts:41](/path/to/File.ts) — **The claim, in one bold sentence.** Supporting detail: what
+      the code does, why it is wrong, and what closing it would take.
 
-- path/to/source-file.tsx — Advisory follow-up automated coverage that would improve regression protection.
+### Medium
 
-### Overall Results
+- [x] [OtherFile.ts:118](/path/to/OtherFile.ts) — **The claim.** Supporting detail.
 
-Short summary of the current focused runs relevant to the feature or system under review.
+  > **{Reviewer Name}** _{MM:DD:YYYY:HH:MM}_ What was changed, and why — especially if the fix
+  > differs from what the finding proposed.
 
-```text
-N files
-X tests passed
-Y tests failed
+### Advisory
+
+- [ ] [ThirdFile.ts:9](/path/to/ThirdFile.ts) — Not a defect, but worth knowing.
+
+## Coverage Specifics
+
+- [shared/missions/effects/Effect.ts](/shared/missions/effects/Effect.ts) — What this file is and the role it plays in the feature.
+- [client/src/sessions/SessionClient.ts](/client/src/sessions/SessionClient.ts) — Scoped here to the batched update handlers. (The realm architecture is covered by [handoffs/other-feature.md](/handoffs/other-feature.md).)
 ```
-````
 
 ---
 
 ## Section Guidelines
 
-### Title
+### Title and Status
 
-The title should name the feature concisely followed by `— Code Handoff`.
+The title names the feature concisely, followed by `— Code Handoff`.
+
+The status line is one line, kept current as work proceeds. `Awaiting review` before anyone picks it up, `In review` while work is in progress, `Complete` when every box is checked and every finding is resolved.
+
+### Summary of Changes and Coverage
+
+Two paragraphs: what the change is and why it was made, then a brief walkthrough of how the system works and its biggest players, with the main classes and entry points linked by name.
+
+### Manual Tests
+
+A checklist of behaviors verified by hand in a running instance. A checked box means the behavior passed. A failure stays unchecked with a one-line note indented beneath it, linking to the finding it confirms:
 
 ```markdown
-# NodeAlert System — Code Handoff
-
-# Mission Export — Code Handoff
+- [ ] Update an outdated effect whose data cannot be migrated cleanly and confirm the update reports failure.
+  - Reported success instead, and the issue stayed in the list — see High #1.
 ```
 
-### Files to Review
+When no manual testing is required, the section is a single sentence saying so and why, in place of the list.
 
-- List **only files that changed** as part of this feature. Do not list files that were unchanged.
-- Use absolute Markdown links so the links resolve correctly regardless of where the document is opened. The display text should be the workspace-relative path; the link target should be the same path prefixed with `/` (e.g. `[shared/missions/nodes/NodeAlert.ts](/shared/missions/nodes/NodeAlert.ts)`). Do **not** use relative paths (`../`) or bare workspace-relative paths as link targets.
-- After each link, write a one-sentence description of what the file is and what role it plays in this feature. Be specific — avoid generic descriptions like "was updated".
-- Order files from most foundational (shared models, server logic) to most surface-level (client components).
+### Automatic Tests
 
-### Handoff Reports
+A checklist of test cases, grouped under a `###` heading named for the class or component, with the target test file path directly beneath it. The suite is green when the handoff is written.
 
-- A handoff report is not a rewrite of the original handoff. It should report outcomes from the assigned review work: findings, written tests, executed tests, and remaining gaps.
-- The title should name the feature concisely followed by `Report`.
-- Keep the same top-level headings as the original handoff where practical: `Files to Review`, `Manual Tests`, and `Automatic Tests`. This makes side-by-side comparison easy.
-- Under `Review Summary`, include a short `Severity Snapshot` that makes the current urgency obvious at a glance. A simple count by severity plus the highest current severity is usually enough.
-- Findings should come first and should be ordered by severity, then by practical impact.
-- Group findings under severity-specific subheaders such as `Critical`, `High`, `Medium`, and `Low`. Omit empty groups if there are no findings at that severity.
-- Each finding should include the file path and line number when available.
-- When a handoff report references a workspace file path in findings or automated-test sections, render it as a Markdown link so the reader can navigate directly from the report.
-- The reviewer should perform the manual tests and automated test work requested by the original handoff, then record the results in the report. Do not expand the scope by fixing defects, changing implementation, or writing additional automated coverage unless the user explicitly asks for that extra work.
-- Keep the concerns separated: `Findings` should capture issues discovered while reviewing the files listed in the handoff, while automated-test status should be reported only inside the `Automatic Tests` section.
-- The `Manual Tests` section should preserve the original checklist verbatim and may include a short execution summary describing whether the manual pass was completed and whether any issues were found.
-- The `Automatic Tests` section should begin with a summary that references the original handoff's requested automated test work and identifies which relevant suites were executed during the report pass.
-- Do not duplicate the original handoff's required automated-test checklist inside the report unless the user explicitly asks for that mirrored format. The original handoff should remain the source of truth for the required new test backlog.
-- If no new tests were written during the report pass, state that explicitly under `New Tests Written` rather than implying the work was completed.
-- Existing tests that were broken or made stale by the feature changes belong under `Tests That Need To Be Repaired`, not under `Findings`.
-- If a requested test was written but currently fails because it exposes a real product mismatch, record it under `New Tests Written` and describe the failing status explicitly in `Overall Results`.
-- If the original handoff requested a test location that does not map cleanly to the repository's runnable Jest configuration, keep the intent but document the implemented equivalent path that actually runs in the current test setup.
-- Do not silently convert product defects into "coverage gaps" once the test exists. At that point it is a failing implementation against a covered requirement.
-- Prefer clear report language such as `Tests That Need To Be Repaired` for stale or broken existing suites and `Additional Tests That Would Be Helpful` for advisory follow-up coverage suggestions.
-- `Additional Tests That Would Be Helpful` should be reserved for extra advisory coverage ideas discovered during review, not for restating the original handoff's required tests.
-- Phrase new automated coverage or implementation fixes discovered during review as advisory follow-up work rather than assigning them to a specific developer. Prefer wording such as `would be useful`, `would be valuable`, or `should be updated` over imperative language like `write these tests now` unless the user explicitly asks for that stronger framing.
-- Manual testing and automated testing may overlap, but the report should still document them separately. The Manual Tests section records execution of the handoff's manual QA checklist, and the Automatic Tests section records the status of the original handoff's requested automated coverage, any broken pre-existing suites affected by the feature, any new tests written, and any additional advisory test suggestions.
-- The Manual Tests section of a handoff report must copy the manual test checklist from the original handoff verbatim, with each item preserved as an unchecked checkbox for the reviewing engineer to work through. Do not replace the list with placeholder prose or a "reserved" note.
-- If the original handoff explicitly stated that no manual testing was required (e.g. "Manual UI validation is intentionally skipped for this feature"), the report's Manual Tests section must reflect that directly with a single sentence such as "No manual testing was required for this handoff." Do not use the generic reserved-section boilerplate in that case.
-- Likewise, if the original handoff explicitly stated that no automated tests were required, the report's Automatic Tests section must reflect that directly with a single sentence such as "No automated tests were required for this handoff." Do not treat the absence of requested tests as a coverage gap.
-- The report should be updated as work progresses. It does not need to be written only once at the end.
-- If both documents exist, the handoff remains the request for review work, and the handoff report becomes the record of completed review work.
+A checked box means the test is written **and passing**. A test written but failing stays unchecked with a one-line note beneath it, the same as a failed manual item:
 
-## Manual Tests - Test End-User Experience Via UI
+```markdown
+- [ ] A script producing schema-violating output causes `migrate` to throw.
+  - Written, fails today — the cursor advances before validation runs. See High #2.
+```
 
-- Write these as manual QA steps a coworker could follow in a running instance of the application **without reading the code**. A non-developer tester should be able to work through the list.
-- Each item should describe a discrete, verifiable behavior — not an implementation detail. Do not reference class names, method names, component names, event names, or internal conditions.
-- Where relevant, include the trigger (e.g., "via the session page", "as an instructor").
-- Include both happy-path and edge-case scenarios (e.g., empty state, real-time sync behavior, most-severe-wins logic, behavior when no items exist).
+A test that fails because it exposes a real product defect makes that defect a **finding**, not a coverage gap. Additional coverage a reviewer writes is added to the checklist, checked.
 
-## Automatic Tests - Write Repeatable Jest Tests
+### Findings
 
-- Automated tests are reserved for critical functionality — behavior whose failure would be a big problem: security boundaries (e.g. data leaking across permission or visibility lines), corruption or loss of persisted data, or server crashes. We minimize test overhead, so do not request a test for every behavior; keep the requested list scoped to the things that really matter.
-- Presentation-layer and convenience behavior (rendering, styling, ordering, expansion state, and similar) is verified through the manual test checklist, not through Jest tests.
-- If a feature has no critical surface, the section should state explicitly that no automated tests are required — with a brief reason — rather than listing low-value cases.
-- When tests are requested, a short note at the top of the section may explain what was deliberately left untested so the reviewer knows the narrow scope is intentional and not an oversight.
-- Group test cases under a `###` heading named after the class or component being tested.
-- Each bullet is a single concrete test case — specific enough that a developer can write it without guessing.
-- Focus on public API surface: constructors, static methods, public methods, props, rendered output, and user interactions.
-- Consider unit vs integration tests. Individual components and classes should be tested in isolation as unit tests. When a test verifies the behavior of multiple components or layers working together as a system, it is an integration test.
-- Do not list tests that already exist.
-- Follow the existing test project layout:
-  - Shared class tests → `tests/projects/unit/shared/`
-  - Client component tests (isolated) → `tests/projects/unit/client/`
-  - Server class tests → `tests/projects/unit/server/`
-  - METIS REST API integration tests → `tests/projects/integration/metis-server/api/rest/`
-  - METIS Socket.IO integration tests → `tests/projects/integration/metis-server/api/socket/`
-  - Client-side component integration tests (multiple React components interacting as a system) → `tests/projects/integration/client/`
-- If the repository does not currently define a runnable Jest project for one of the ideal integration locations, place the test in the closest existing runnable project and document that decision in the handoff report.
-- If pathing isn't obvious for integration tests, explore current organization of tests and create directories that fit with the existing structure.
-- Unit tests should be placed in the same relative path as the source file, but with `.test` added before the extension. For example:
-  - `shared/missions/nodes/NodeAlert.ts` → `tests/projects/unit/shared/missions/nodes/NodeAlert.test.ts`
-  - `client/src/components/content/session/mission-map/ui/toasts/NodeAlertBox.tsx` → `tests/projects/unit/client/components/content/session/mission-map/ui/toasts/NodeAlertBox.test.tsx`
-- Integration tests should be placed in the appropriate directory
-  based on the type of integration, as described above. For example:
-  - Socket.IO integration test for mission map alerts → `tests/projects/integration/metis-server/api/socket/mission-map-alerts.test.ts`
-  - Client-side integration test for mission map alert behavior → `tests/projects/integration/client/session/mission-map/MissionMap.test.tsx`
+- The section opens with a one-line tally: `**Critical 0 · High 2 · Medium 1 · Low 3 · Advisory 2**`, omitting tiers with no entries.
+- Findings are grouped under `### Critical`, `### High`, `### Medium`, `### Low`, and `### Advisory`, omitting empty groups, and ordered by severity then practical impact.
+- Every finding is a checkbox. Unchecked means open; checked means resolved, declined, or determined to be a false flag.
+- Each finding leads with its file path and line as a Markdown link, then a **bold one-sentence claim**, then the supporting detail. Every workspace file path is a link, including those inside the detail.
+- `Advisory` holds non-defects and stays out of the tally's severity counts.
+- Findings are resolved **in place**: the box is checked and a reply appended beneath it.
 
----
+  ```markdown
+  > **Jordan Stokes** _07:29:2026:11:27_ Fixed. The getter now returns the array directly.
+  ```
+
+  Declines and false flags are checked off like any other resolution, marked **Declined** or **False flag** in the reply.
+
+- Resolved findings stay where they are. They are not moved to a separate section or deleted — the list is the record.
+
+### Coverage Specifics
+
+The changed-file inventory: what the reviewer reads, and what each file contributes. Each entry is a link followed by one sentence on the file's role in this feature.
+
+Links are absolute. Display text is the workspace-relative path; the link target is the same path prefixed with `/` (e.g. `[shared/missions/nodes/NodeAlert.ts](/shared/missions/nodes/NodeAlert.ts)`). Relative paths (`../`) and bare workspace-relative targets are not used.
+
+When only part of a file is in scope, the entry says so and points at the handoff covering the rest: _"Scoped here to `migrateEffect`. (Argument members are covered by [handoffs/target-argument-system.md](/handoffs/target-argument-system.md).)"_
