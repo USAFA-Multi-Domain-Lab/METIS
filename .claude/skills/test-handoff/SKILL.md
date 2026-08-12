@@ -17,29 +17,23 @@ this without asking). Do not write tests for anything else.
 
 ## Phase 1 — Confirm the target paths actually run
 
-**Do this before writing a line.** Jest here runs eight explicitly-rooted projects. A test outside every
-root is silently never executed — it does not fail, it does not appear in any count, and the checkbox
-gets ticked for coverage that does not exist.
+**Do this before writing a line.** Jest here runs a fixed set of explicitly-rooted projects. A test
+outside every root is silently never executed — it does not fail, it does not appear in any count, and
+the checkbox gets ticked for coverage that does not exist.
 
-| Project                          | Root                                                  |
-| -------------------------------- | ----------------------------------------------------- |
-| `unit:server`                    | `tests/projects/unit/server`                          |
-| `unit:shared`                    | `tests/projects/unit/shared`                          |
-| `unit:client`                    | `tests/projects/unit/client/`                         |
-| `unit:integration`               | `tests/projects/unit/integration`                     |
-| `integration:metis:rest`         | `tests/projects/integration/metis-server/api/rest`    |
-| `integration:metis:socket`       | `tests/projects/integration/metis-server/api/socket`  |
-| `integration:target-environment` | `tests/projects/integration/target-environment-library` |
-| `e2e`                            | `tests/projects/e2e/`                                 |
-
-Re-derive this rather than trusting the table if anything looks off:
+Read the roots from the config rather than assuming them; projects get added and moved:
 
 ```bash
 grep -n "displayName\|roots: \[" tests/jest.config.js
 ```
 
-New subdirectories **under** an existing root are fine — `tests/projects/unit/server/sessions/` runs
-because `unit:server` covers everything beneath it. A new top-level directory is not.
+Then confirm your intended path falls under one of them. New subdirectories **under** an existing root
+are fine — `tests/projects/unit/server/sessions/` runs because `unit:server` covers everything beneath
+it. A new top-level directory is not.
+
+Not every plausible-looking location has a project behind it. A path can match the repo's naming
+conventions perfectly and still be dead, so check the config every time rather than reasoning from what
+the directory tree looks like.
 
 If the handoff requests a path no project covers, place the test in the closest runnable project and
 note that decision beneath the test's heading in the document. Do not invent a directory and assume it

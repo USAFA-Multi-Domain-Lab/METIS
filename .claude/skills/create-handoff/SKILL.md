@@ -50,7 +50,7 @@ Rules:
 
 ## Phase 2 — Understand the mechanism
 
-Read the code, not just the diff. The Summary now requires a walkthrough of how the system works and
+Read the code, not just the diff. The Summary requires a walkthrough of how the system works and
 its biggest players, and you cannot write that from `git diff --stat`.
 
 Work out, concretely:
@@ -118,6 +118,8 @@ tester has to be able to work through the list.
 - After drafting, reread every item and strip any class, method, component, or event name that leaked
   in. This is the most common defect in generated handoffs — the author knows the internals and it
   shows.
+- Focus on intended behavior, not what the code currently does. If you already see an issue in the code,
+  still write the test as if it were correct so that the reviewer can discover the bug while performing the test.
 
 ### The Automatic Tests
 
@@ -127,13 +129,13 @@ server crashes. Requesting a test per behavior is wrong here and wastes reviewer
 - Presentation and convenience behavior — rendering, styling, ordering, expansion state — goes on the
   manual checklist instead.
 - If the feature has no critical surface, say so with a reason rather than padding the list.
-- If tests **are** requested but a surface was deliberately excluded, note that at the top of the
-  section. Without it a narrow list reads as an oversight rather than a decision.
 - Each bullet is one concrete case, specific enough that a developer can write it without guessing.
 - Do not list tests that already exist.
-- Each group names a target file path. Only eight Jest projects are rooted in this repo, and a path
-  outside all of them never runs — see `test-handoff` Phase 1 for the authoritative list before writing
-  a path into the document.
+- Each group names a target file path. A path outside every configured Jest root never runs, and a
+  plausible-looking directory is not evidence that one exists — see `test-handoff` Phase 1 for how to
+  check before writing a path into the document.
+- Focus on intended behavior, not what the code currently does. If you already see an issue in the code,
+  still write the test as if it were correct so that the reviewer can discover the bug while performing the test.
 
 ### The Coverage Specifics
 
@@ -144,7 +146,7 @@ Phase 2 was skipped.
 ### The rest
 
 - Status line starts `Awaiting review`, with the manual and automatic counts filled in and `0 findings
-  open`.
+open`.
 - Include the `## Findings` heading with nothing under it. No tally — the reviewer adds one.
 - Every checkbox starts unchecked.
 

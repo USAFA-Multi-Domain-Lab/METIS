@@ -50,13 +50,13 @@ If a claim does not survive this, drop it. Do not pad the list.
 
 ## Phase 3 — Assign severity
 
-| Tier         | What belongs                                                                                                                              |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| **Critical** | Corrupts or destroys production data now, or opens a security hole an unprivileged user can reach today. Rare — do not inflate into it.     |
-| **High**     | Wrong behavior that reaches users or data on a normal path: silent behavior inversion, a request that never responds, a crash on real input. |
+| Tier         | What belongs                                                                                                                                                                                   |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Critical** | Corrupts or destroys production data now, or opens a security hole an unprivileged user can reach today. Rare — do not inflate into it.                                                        |
+| **High**     | Wrong behavior that reaches users or data on a normal path: silent behavior inversion, a request that never responds, a crash on real input.                                                   |
 | **Medium**   | A real defect on a narrower path, or a latent one the code structurally guarantees: authorization gaps, a migration that cannot be re-run, a payload computed for one member and sent to many. |
-| **Low**      | Doc drift, dead code, unused imports, always-true conditions, naming and style-guide deviations, diagnosability costs.                      |
-| **Advisory** | Not a defect. Observations, latent hazards, things that surprised you. Excluded from the real tally so it stays meaningful.                 |
+| **Low**      | Doc drift, dead code, unused imports, always-true conditions, naming and style-guide deviations, diagnosability costs.                                                                         |
+| **Advisory** | Not a defect. Observations, latent hazards, things that surprised you. Excluded from the real tally so it stays meaningful.                                                                    |
 
 Order within a tier by practical impact, not by file order.
 
