@@ -25,7 +25,10 @@ services:
       - ./config/docker.defaults.env
       - .env
     ports:
-      - '0.0.0.0:${PORT:-8083}:${PORT:-8083}' # The container port and the default host port should match the one defined in docker.defaults.env.
+      # The container port and the default host port should match the one defined in docker.defaults.env.
+      # Set BIND_ADDRESS to 127.0.0.1 when the caddy service fronts this one, so that METIS
+      # is reachable only through the proxy.
+      - '${BIND_ADDRESS:-0.0.0.0}:${PORT:-8083}:${PORT:-8083}'
     volumes:
       - ./integration/target-env:/opt/metis/integration/target-env
       - metis_data:/opt/metis/server/files/store
@@ -33,6 +36,27 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+
+  # Reverse proxy terminating HTTPS in front of the web server. Only started when the
+  # 'tls' profile is active, which a deployment enables with COMPOSE_PROFILES=tls in .env.
+  caddy:
+    profiles: ['tls']
+    image: caddy:2
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+      SSL_MODE: ${SSL_MODE:-acme}
+      PORT: ${PORT:-8083}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/snippets:/etc/caddy/snippets:ro
+      - ${SSL_DIR:-./caddy/tls}:/etc/caddy/tls:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web-server
 
 volumes:
   # MongoDB persistence
@@ -45,4 +69,11 @@ volumes:
   metis_data:
     driver: local
   metis_backups:
+    driver: local
+
+  # Caddy persistence. caddy_data holds issued certificates and ACME account keys, and
+  # must survive rebuilds so that certificates are not re-issued on every start.
+  caddy_data:
+    driver: local
+  caddy_config:
     driver: local

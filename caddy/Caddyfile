@@ -1,0 +1,8 @@
+{$DOMAIN:localhost} {
+	# Selects how this deployment obtains its certificate. SSL_MODE is the name of a
+	# file in caddy/snippets: acme, internal, or file.
+	import /etc/caddy/snippets/{$SSL_MODE:acme}.conf
+
+	# WebSocket upgrades are proxied without additional configuration.
+	reverse_proxy web-server:{$PORT:8083}
+}
