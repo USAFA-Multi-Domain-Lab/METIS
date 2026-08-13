@@ -519,7 +519,7 @@ export class MetisServer {
 
       // Read the protocol a reverse proxy reports the client used, so that
       // requests arriving over HTTPS are recognized as secure even though
-      // the proxy forwards them as plain HTTP.
+      // the proxy forwards them as plain HTTP (Only allows 1 proxy).
       expressApp.set('trust proxy', this.trustProxy ? 1 : false)
 
       // activates third-party middleware

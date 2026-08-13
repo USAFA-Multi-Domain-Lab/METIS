@@ -14,6 +14,10 @@ export abstract class MissionComponent<
   Self extends MissionComponent<T, Self> = MissionComponent<T, any>,
 > extends MetisComponent {
   // Overridden
+  public get deleted(): boolean {
+    return super.deleted
+  }
+  // Overridden
   public set deleted(value: boolean) {
     if (value === true) {
       for (let component of this.subComponents) {
