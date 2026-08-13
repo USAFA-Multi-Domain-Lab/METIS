@@ -1,5 +1,13 @@
 # changelog
 
+# version-2.5.1 | 8-13-2026
+
+- An optional reverse proxy has been added for serving METIS over HTTPS. It runs alongside the application in Docker under the `tls` profile, so deployments that do not need it are unaffected. Certificates can be obtained automatically from Let's Encrypt, issued by a local certificate authority for internal use, or supplied by the deployment. A staging mode is also available for validating a setup without exhausting Let's Encrypt's rate limits.
+- The address the web server binds to is now configurable, allowing it to be restricted to the loopback interface when the proxy sits in front of it.
+- Session cookies are now marked secure per request, so they remain protected when a proxy terminates HTTPS ahead of the server. A new setting controls whether a proxy's forwarding headers are trusted, and it is disabled by default.
+- An issue was fixed where deleting a prototype from the master structure left its nodes behind in the forces. The same issue also prevented the "marked as deleted" warning from appearing on mission components.
+- The unban button in the session member list is now represented with a circle with a check mark inside, rather than an up arrow.
+
 # version-2.5.0 | 8-6-2026
 
 - Sessions are now built using realms. A realm is an isolated copy of a launched mission that is in charge of managing its own mission state. With multiple realms, multiple instances of the same mission can run independently of each other in the same session.

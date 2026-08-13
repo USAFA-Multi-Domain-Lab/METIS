@@ -45,6 +45,7 @@ services:
     environment:
       DOMAIN: ${DOMAIN:-localhost}
       SSL_MODE: ${SSL_MODE:-acme}
+      HSTS_MAX_AGE: ${HSTS_MAX_AGE:-31536000}
       PORT: ${PORT:-8083}
     ports:
       - '80:80'

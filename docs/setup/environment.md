@@ -53,6 +53,7 @@ BIND_ADDRESS='127.0.0.1'              # Default: "0.0.0.0" (Optional)
 DOMAIN='<your-domain>'                # Default: "localhost" (Optional)
 SSL_MODE='acme'                       # Default: "acme" (Optional)
 SSL_DIR='<path-to-cert-directory>'    # Default: "./caddy/tls" (Optional)
+HSTS_MAX_AGE=31536000                 # Default: 31536000 (seconds) (Optional)
 
 
 # Note: Options marked with 🐳❌ will not function properly with Docker setups. If using Docker, do not configure these values if using the native docker-compose provided with the project.
