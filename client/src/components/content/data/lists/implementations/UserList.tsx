@@ -68,27 +68,16 @@ export default function UserList({
    * Handles a request to delete a user.
    */
   const onDeleteRequest = async (user: ClientUser) => {
-    let isSelf = user.username === currentUser.username
-    let promptMessage = isSelf
-      ? `Please confirm the deletion of your account.` +
-        `\t\n` +
-        `***Note: This will log you out afterwards.***`
-      : 'Please confirm the deletion of this user.'
-
-    // Prompt the user for confirmation.
-    let { choice } = await prompt(promptMessage, Prompt.ConfirmationChoices)
+    let { choice } = await prompt(
+      'Are you sure you want to delete this user?',
+      Prompt.ConfirmationChoices,
+    )
 
     // If the user confirms the deletion, proceed.
     if (choice === 'Confirm') {
       try {
         beginLoading('Deleting user...')
         await ClientUser.$delete(user._id)
-        // If the user is deleting their own account,
-        // log them out.
-        if (isSelf) {
-          beginLoading('Logging out...')
-          await logout()
-        }
         finishLoading()
         notify(`Successfully deleted ${user.username}.`)
         onSuccessfulDeletion(user)

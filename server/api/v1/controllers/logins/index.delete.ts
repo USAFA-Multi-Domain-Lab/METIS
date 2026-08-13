@@ -2,22 +2,24 @@ import { ServerLogin } from '@server/logins/ServerLogin'
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
 import { databaseLogger } from '../../../../logging'
 import { ApiResponse } from '../../library/ApiResponse'
-import { StatusError } from '../../library/StatusError'
 
 /**
  * This will log the user out.
  * @param request The express request.
  * @param response The express response.
- * @returns 200 response if the user was logged out successfully.
+ * @returns 200 response if the user was logged out successfully, including
+ * when nobody was logged in to begin with.
  */
 export const logout: TExpressHandler = async (request, response) => {
   try {
     let forceful: boolean = request.headers.forceful === 'true'
     const login = ServerLogin.get(request)
 
-    // If there is no login, throw an error.
+    // Nobody is logged in, so the caller already has what it asked for. This
+    // happens when the login was ended elsewhere, such as when the account
+    // was deleted while the user was signed in.
     if (!login) {
-      throw new StatusError('No user is currently logged in.', 400)
+      return ApiResponse.sendStatus(response, 200)
     }
 
     // If the conflicting login has a client,

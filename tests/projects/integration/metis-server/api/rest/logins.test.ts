@@ -137,12 +137,12 @@ describe('/api/v1/logins', () => {
     expect(getResponse.data).toBeNull()
   })
 
-  test('Returns 400 when logging out without a login', async () => {
+  test('Returns 200 when logging out without a login', async () => {
     let { client } = await createTestContext()
 
     let response = await client.delete('/api/v1/logins/')
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(200)
   })
 
   test('Forceful logout disconnects current session', async () => {

@@ -383,6 +383,10 @@ const initializeActions = (
               // Wait three seconds, then display a connection
               // loss message.
               setTimeout(() => {
+                // The connection has since been dropped for good, such as by
+                // a logout, so there is no reconnection left to wait on.
+                if (refs.current.server !== server) return
+
                 // If the connection status is still not open,
                 // then display a connection loss message.
                 if (server.status !== 'open') {

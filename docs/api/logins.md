@@ -154,11 +154,10 @@ Destroys the caller's login.
 
 **Status Codes**:
 
-- 200 OK – Logged out
-- 400 Bad Request – Nobody is signed in
+- 200 OK – Logged out, or nobody was signed in to begin with
 - 500 Internal Server Error – Server error during logout
 
-> **Logging out when not signed in is an error, not a no-op.** It returns 400. A client that calls this defensively on startup should expect that.
+> **Logging out when not signed in is a no-op, not an error.** It returns 200, so a client can call this defensively without special-casing the response. This matters when the login was ended by the server rather than by the client, such as when the account was deleted while the user was signed in.
 
 ## Data Types
 

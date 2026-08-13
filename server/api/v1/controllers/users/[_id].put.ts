@@ -78,8 +78,8 @@ export const updateUser: TExpressHandler = async (request, response) => {
     // If the updated user is currently logged in and security-sensitive
     // fields changed, log them out and notify them.
     if (updatedUserLogin && requiresLogout) {
-      updatedUserLogin.destroy()
       updatedUserLogin.client?.emit('logout-user-update', { data: {} })
+      updatedUserLogin.destroy()
     }
     // Log the successful update of the user.
     databaseLogger.info(`User with ID "${userId}" updated.`)

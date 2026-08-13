@@ -1,4 +1,5 @@
 import { UserModel } from '@server/database/models/users'
+import { ServerLogin } from '@server/logins/ServerLogin'
 import { databaseLogger } from '../../../../logging'
 import { ApiResponse } from '../../library/ApiResponse'
 import { StatusError } from '../../library/StatusError'
@@ -14,6 +15,9 @@ export const deleteUser: TExpressHandler = async (request, response) => {
   // Extract the user ID from the request parameters.
   let userId = request.params._id.toString()
 
+  // Get the login for the user being deleted.
+  const deletedUserLogin = ServerLogin.get(userId)
+
   try {
     // Disable system-user write operations.
     preventSystemUserWrite({ currentUserId: userId })
@@ -27,6 +31,12 @@ export const deleteUser: TExpressHandler = async (request, response) => {
     // If the user was not found, throw an error.
     if (deletedUserDoc === null) {
       throw new StatusError(`User with ID "${userId}" not found.`, 404)
+    }
+    // If the deleted user is currently logged in, log them out and notify
+    // them.
+    if (deletedUserLogin) {
+      deletedUserLogin.client?.emit('logout-user-delete', { data: {} })
+      deletedUserLogin.destroy()
     }
     // Log the successful deletion of the user.
     databaseLogger.info(`Deleted user with the ID "${userId}".`)
