@@ -118,6 +118,7 @@ declare global {
     | 'test'
     | 'text-cursor'
     | 'timer'
+    | 'unban'
     | 'underline'
     | 'undo'
     | 'unlink'
