@@ -43,14 +43,24 @@ DB_BACKUPS_ENABLED=true               # Default: true (Optional)
 MAX_LOGIN_ATTEMPTS=5                  # Default: 5 (Optional)
 LOGIN_ATTEMPT_WINDOW=300              # Default: 300 (seconds) (Optional)
 LOGIN_LOCKOUT_DURATION=900            # Default: 900 (seconds) (Optional)
-SSL_KEY_PATH='<path-to-key>'          # (Optional) HTTPS needs both SSL paths
-SSL_CERT_PATH='<path-to-cert>'        # (Optional) HTTPS needs both SSL paths
+TRUST_PROXY=false                     # Default: false (Optional)
+SSL_KEY_PATH='<path-to-key>'          # (Optional) prod.env only. HTTPS needs both SSL paths 🐳❌
+SSL_CERT_PATH='<path-to-cert>'        # (Optional) prod.env only. HTTPS needs both SSL paths 🐳❌
+
+# Docker-Specific HTTPS configuration options
+COMPOSE_PROFILES='tls'                # (Optional) Set to "tls" to serve HTTPS
+BIND_ADDRESS='127.0.0.1'              # Default: "0.0.0.0" (Optional)
+DOMAIN='<your-domain>'                # Default: "localhost" (Optional)
+SSL_MODE='acme'                       # Default: "acme" (Optional)
+SSL_DIR='<path-to-cert-directory>'    # Default: "./caddy/tls" (Optional)
 
 
 # Note: Options marked with 🐳❌ will not function properly with Docker setups. If using Docker, do not configure these values if using the native docker-compose provided with the project.
 ```
 
 All properties are optional except for `MONGO_USERNAME` and `MONGO_PASSWORD`, which are required due to the authentication restrictions set up.
+
+Docker deployments serve HTTPS through the `caddy` service instead, configured with the Docker-specific options above. See [Docker HTTPS Setup](index.md#docker-https-setup-optional) for the full walkthrough.
 
 **After editing your `.env` file, restart the METIS server for changes to take effect.**
 

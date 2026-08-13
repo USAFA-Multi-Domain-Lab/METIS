@@ -252,20 +252,6 @@ export class MetisServer {
   }
 
   /**
-   * Whether the server is serving over HTTPS rather than HTTP.
-   */
-  private _usingHttps: boolean
-  /**
-   * Whether the server is serving over HTTPS rather than HTTP.
-   * @note Anything that has to match the protocol the server is actually
-   * running on, such as marking web session cookies as secure, reads this
-   * rather than working the answer out a second time.
-   */
-  public get usingHttps(): boolean {
-    return this._usingHttps
-  }
-
-  /**
    * The maximum number of failed login attempts before lockout.
    */
   private _maxLoginAttempts: number
@@ -296,6 +282,19 @@ export class MetisServer {
    */
   public get loginAttemptWindow(): number {
     return this._loginAttemptWindow
+  }
+
+  /**
+   * Whether the `X-Forwarded-*` headers set by a reverse proxy are trusted.
+   */
+  private _trustProxy: boolean
+  /**
+   * Whether the `X-Forwarded-*` headers set by a reverse proxy are trusted.
+   * @note These headers come from the client, so this stays off unless a
+   * proxy that overwrites them sits in front of the server.
+   */
+  public get trustProxy(): boolean {
+    return this._trustProxy
   }
 
   /**
@@ -352,6 +351,7 @@ export class MetisServer {
     this._maxLoginAttempts = completedOptions.maxLoginAttempts
     this._loginLockoutDuration = completedOptions.loginLockoutDuration * 1000 // ms
     this._loginAttemptWindow = completedOptions.loginAttemptWindow * 1000 // ms
+    this._trustProxy = completedOptions.trustProxy
 
     // Create third-party server objects.
     this._expressApp = express()
@@ -360,11 +360,9 @@ export class MetisServer {
       const key = fs.readFileSync(this.sslKeyPath)
       const cert = fs.readFileSync(this.sslCertPath)
       this._httpServer = https.createServer({ key, cert }, this.expressApp)
-      this._usingHttps = true
       console.log('SSL certificates found, running with HTTPS protocol.')
     } else {
       this._httpServer = http.createServer(this.expressApp)
-      this._usingHttps = false
       if (this.envType === 'prod') {
         console.warn('SSL certificates not found, running with HTTP protocol.')
       }
@@ -500,10 +498,12 @@ export class MetisServer {
           // Keep the cookie away from page scripts, so nothing running on a
           // page can read the session out of the browser.
           httpOnly: true,
-          // Only hand the cookie over an encrypted connection. This follows
-          // the protocol the server actually started on, since marking it
-          // secure while serving plain HTTP stops browsers storing it at all.
-          secure: this.usingHttps,
+          // Only hand the cookie over an encrypted connection. This is
+          // resolved per request rather than once at startup, so it also
+          // covers a proxy that terminates TLS and forwards plain HTTP.
+          // Marking it secure while serving plain HTTP stops browsers
+          // storing it at all, so it has to follow the real protocol.
+          secure: 'auto',
           // Leave the cookie off requests started by other sites, while still
           // sending it when someone follows a link into METIS.
           sameSite: 'lax',
@@ -516,6 +516,11 @@ export class MetisServer {
 
       // set the port
       expressApp.set('port', this.port)
+
+      // Read the protocol a reverse proxy reports the client used, so that
+      // requests arriving over HTTPS are recognized as secure even though
+      // the proxy forwards them as plain HTTP.
+      expressApp.set('trust proxy', this.trustProxy ? 1 : false)
 
       // activates third-party middleware
       expressApp.use(cors())
@@ -816,6 +821,7 @@ export class MetisServer {
       'MAX_LOGIN_ATTEMPTS',
       'LOGIN_LOCKOUT_DURATION',
       'LOGIN_ATTEMPT_WINDOW',
+      'TRUST_PROXY',
     ] as const
     const numericKeys = [
       'PORT',
@@ -865,6 +871,7 @@ export class MetisServer {
         maxLoginAttempts: parseInt(process.env.MAX_LOGIN_ATTEMPTS!),
         loginLockoutDuration: parseInt(process.env.LOGIN_LOCKOUT_DURATION!),
         loginAttemptWindow: parseInt(process.env.LOGIN_ATTEMPT_WINDOW!),
+        trustProxy: BooleanToolbox.parse(process.env.TRUST_PROXY!),
       }
     } catch (error) {
       console.error('Failed to load environment variables.')

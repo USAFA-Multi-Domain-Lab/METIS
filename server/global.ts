@@ -166,6 +166,13 @@ declare global {
      * @default 300
      */
     loginAttemptWindow: number
+
+    /**
+     * Whether to trust the `X-Forwarded-*` headers set by a reverse proxy in
+     * front of the server. Enable this only when such a proxy is present.
+     * @default false
+     */
+    trustProxy: boolean
   }
 
   /**
