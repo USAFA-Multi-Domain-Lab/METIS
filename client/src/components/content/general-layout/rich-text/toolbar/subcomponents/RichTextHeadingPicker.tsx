@@ -2,19 +2,19 @@ import Tooltip from '@client/components/content/communication/Tooltip'
 import { compute, getOs } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import type { Level } from '@tiptap/extension-heading'
-import { useRichTextContext } from '../RichText'
+import { useRichTextContext } from '../../RichText'
+import { HEADING_LEVELS } from '../helpers/heading'
+import { useRichTextToolbarContext } from '../RichTextToolbar'
 import './RichTextHeadingPicker.scss'
 
-export const HEADING_LEVELS: Level[] = [1, 2, 3, 4, 5, 6]
-
 /**
- * Heading picker panel for the {@link RichText} bubble toolbar.
+ * Heading picker panel for the {@link RichText} toolbar.
  * Renders H1–H6 buttons for applying heading levels to the current block.
  */
 export default function RichTextHeadingPicker(): TReactElement | null {
-  const { editor, state } = useRichTextContext()
-  const [isHeadingPickerOpen, setIsHeadingPickerOpen] =
-    state.isHeadingPickerOpen
+  const { editor } = useRichTextContext()
+  const { state } = useRichTextToolbarContext()
+  const [activePicker, setActivePicker] = state.activePicker
   const [containerWidth] = state.containerWidth
 
   /* -- FUNCTIONS -- */
@@ -42,7 +42,7 @@ export default function RichTextHeadingPicker(): TReactElement | null {
 
   /* -- RENDER -- */
 
-  if (!isHeadingPickerOpen) return null
+  if (activePicker !== 'heading') return null
 
   return (
     <div className='HeadingPicker' style={style}>
@@ -53,7 +53,7 @@ export default function RichTextHeadingPicker(): TReactElement | null {
           className={generateClassName(level)}
           onClick={() => {
             editor.commands.toggleHeading({ level })
-            setIsHeadingPickerOpen(false)
+            setActivePicker(null)
           }}
         >
           H{level}

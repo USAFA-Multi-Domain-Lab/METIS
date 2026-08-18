@@ -4,9 +4,7 @@ import { compute } from '@client/toolbox'
 import { useMountHandler } from '@client/toolbox/hooks'
 import { useState } from 'react'
 import { DefaultPageLayout } from '.'
-import Markdown, {
-  MarkdownTheme as EMarkdownTheme,
-} from '../content/general-layout/Markdown'
+import RichText from '../content/general-layout/rich-text/RichText'
 import type { TNavigation_P } from '../content/general-layout/Navigation'
 import { HomeButton, ProfileButton } from '../content/general-layout/Navigation'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
@@ -68,7 +66,7 @@ export default function DocPage({ source }: TDocPage_P): TReactElement | null {
     <div className='DocPage Page'>
       <DefaultPageLayout navigation={navigation} includeFooter={false}>
         <div className='Doc'>
-          <Markdown markdown={doc} theme={EMarkdownTheme.ThemePrimary} />
+          <RichText content={doc} type='viewer' format='markdown' />
         </div>
       </DefaultPageLayout>
     </div>

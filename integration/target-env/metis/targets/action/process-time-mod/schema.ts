@@ -1,4 +1,5 @@
 import { migrations } from './migrations'
+import { RichTextToolbox } from '@metis/toolbox/rich-text/RichTextToolbox'
 
 // Argument IDs for the process time modifier target.
 const hoursArgId = 'processTimeHours'
@@ -39,8 +40,8 @@ const ProcessTimeMod = TargetSchema.create({
       validComponentTypes: ['mission', 'force', 'node', 'action'],
       tooltipDescription:
         'Select a group of components within the mission ' +
-        'to which this modifier will be applied.\n' +
-        '\t\n' +
+        'to which this modifier will be applied.' +
+        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
         '*Selecting an action will apply the modifier to that action. ' +
         'Selecting a mission, force, or node, will apply the modifier ' +
         'to all actions within the selected item. ' +
@@ -57,10 +58,10 @@ const ProcessTimeMod = TargetSchema.create({
       default: 0,
       integersOnly: true,
       tooltipDescription:
-        `This allows you to offset the process time for all actions within the selected component range. A positive value increases the process time, while a negative value decreases the process time.\n` +
-        `\t\n` +
-        `For example, entering 1 here will change a process time of 0h 3m 59s to 1h 3m 59s.\n` +
-        `\t\n` +
+        `This allows you to offset the process time for all actions within the selected component range. A positive value increases the process time, while a negative value decreases the process time.` +
+        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
+        `For example, entering 1 here will change a process time of 0h 3m 59s to 1h 3m 59s.` +
+        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
         `*Note: A guard is in place which prevents the resulting process time from becoming less than 0 or greater than 1h 59m 59s.*`,
     },
     {
@@ -74,10 +75,10 @@ const ProcessTimeMod = TargetSchema.create({
       default: 0,
       integersOnly: true,
       tooltipDescription:
-        `This allows you to positively or negatively affect the process time for all selected actions. A positive value increases the process time, while a negative value decreases the process time.\n` +
-        `\t\n` +
-        `For example, entering 10 here will change a process time of 0h 3m 50s to 0h 13m 50s.\n` +
-        `\t\n` +
+        `This allows you to positively or negatively affect the process time for all selected actions. A positive value increases the process time, while a negative value decreases the process time.` +
+        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
+        `For example, entering 10 here will change a process time of 0h 3m 50s to 0h 13m 50s.` +
+        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
         `*Note: A guard is in place which prevents the resulting process time from becoming less than 0 or greater than 1h 59m 59s.*`,
     },
     {
@@ -91,10 +92,10 @@ const ProcessTimeMod = TargetSchema.create({
       default: 0,
       integersOnly: true,
       tooltipDescription:
-        `This allows you to positively or negatively affect the process time for all selected actions. A positive value increases the process time, while a negative value decreases the process time.\n` +
-        `\t\n` +
-        `For example, entering 15 here will change a process time of 0h 3m 50s to 0h 4m 5s.\n` +
-        `\t\n` +
+        `This allows you to positively or negatively affect the process time for all selected actions. A positive value increases the process time, while a negative value decreases the process time.` +
+        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
+        `For example, entering 15 here will change a process time of 0h 3m 50s to 0h 4m 5s.` +
+        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
         `*Note: A guard is in place which prevents the resulting process time from becoming less than 0 or greater than 1h 59m 59s.*`,
     },
   ],

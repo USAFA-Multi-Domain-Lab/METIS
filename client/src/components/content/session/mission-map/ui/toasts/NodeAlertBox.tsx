@@ -72,11 +72,9 @@ export default function NodeAlertBox({
       </div>
       <div className='AlertMessage'>
         <RichText
-          options={{
-            className: 'AlertMessageContent',
-            content: message,
-            editable: false,
-          }}
+          className='AlertMessageContent'
+          content={message}
+          type='viewer'
         />
       </div>
       <div className='AlertButtons'>

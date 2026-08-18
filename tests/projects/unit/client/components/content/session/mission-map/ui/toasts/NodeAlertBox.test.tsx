@@ -7,18 +7,6 @@ jest.mock('@client/components/content/session/mission-map/MissionMap', () => ({
   useMapContext: () => ({}),
 }))
 
-jest.mock('@client/components/content/general-layout/Markdown', () => ({
-  __esModule: true,
-  MarkdownTheme: {
-    ThemePrimary: 0,
-    ThemeSecondary: 1,
-    ThemeTertiary: 2,
-  },
-  default: ({ markdown }: { markdown: string }) => (
-    <div data-testid='markdown'>{markdown}</div>
-  ),
-}))
-
 // Mock RichText to keep Tiptap and the icon loader, which needs Vite,
 // out of the test. The mock renders the content it is given so the
 // message assertions still describe what a member would read.
@@ -26,9 +14,15 @@ jest.mock(
   '@client/components/content/general-layout/rich-text/RichText',
   () => ({
     __esModule: true,
-    default: ({ options }: { options?: any }) => (
-      <div className={options?.className} data-testid='rich-text'>
-        {options?.content}
+    default: ({
+      className,
+      content,
+    }: {
+      className?: string
+      content?: string
+    }) => (
+      <div className={className} data-testid='rich-text'>
+        {content}
       </div>
     ),
   }),

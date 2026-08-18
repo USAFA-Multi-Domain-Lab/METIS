@@ -351,8 +351,7 @@ The following conventions should be used when naming files:
 
 ### Types
 
-Types and interfaces both should be prefixed with the letter "T” when assigned a name. In general, types are preferred over interfaces. However, interfaces can be used also,
-especially if doing so improves readability.
+Types and interfaces both should be prefixed with the letter "T” when assigned a name. In general, types are preferred over interfaces. However, interfaces can be used also, especially if doing so improves readability.
 
 ```tsx
 type TMissionImportResult = // Type definition here...

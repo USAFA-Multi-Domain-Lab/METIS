@@ -498,11 +498,7 @@ Soft deletes a mission (sets deleted flag).
 
 ### Mission Structure Requirements
 
-The `structure` field defines the hierarchical organization of the prototypes. Each prototype has
-a unique `structureKey` that corresponds to a key in the `structure` object. Every force must have
-a corresponding prototype defined in the `prototypes` array, and each prototype must have a `structureKey`
-that matches one key (no more, no less) in the `structure` object. The mission also requires at least one
-force and at least one resource definition, minimum.
+The `structure` field defines the hierarchical organization of the prototypes. Each prototype has a unique `structureKey` that corresponds to a key in the `structure` object. Every force must have a corresponding prototype defined in the `prototypes` array, and each prototype must have a `structureKey` that matches one key (no more, no less) in the `structure` object. The mission also requires at least one force and at least one resource definition, minimum.
 
 ## Notes
 

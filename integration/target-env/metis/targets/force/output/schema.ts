@@ -1,4 +1,5 @@
 import { migrations } from './migrations'
+import { RichTextToolbox } from '@metis/toolbox/rich-text/RichTextToolbox'
 
 /**
  * A target available in the METIS target environment that enables a user
@@ -26,8 +27,8 @@ const Output = TargetSchema.create({
       required: false,
       groupingId: 'output',
       tooltipDescription:
-        `This is the message that will be displayed in the output panel for the force selected above.\n` +
-        `\t\n` +
+        `This is the message that will be displayed in the output panel for the force selected above.` +
+        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
         `**Note: If this field is left blank, then nothing will be displayed in the output panel.**`,
     },
   ],

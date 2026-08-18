@@ -1,21 +1,22 @@
 import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
-import { useRichTextContext } from '../RichText'
+import { useRichTextContext } from '../../RichText'
+import {
+  getActiveLineHeight,
+  LINE_HEIGHT_OPTIONS,
+  toggleLineSpacing,
+} from '../helpers/line-spacing'
+import { useRichTextToolbarContext } from '../RichTextToolbar'
 import './RichTextLineSpacingPicker.scss'
 
 /**
- * The line height options for the {@link RichTextLineSpacingPicker} component.
- */
-export const LINE_HEIGHT_OPTIONS = ['1', '1.5', '2', '2.5', '3']
-
-/**
- * Line spacing picker panel for the {@link RichText} bubble toolbar.
+ * Line spacing picker panel for the {@link RichText} toolbar.
  * Renders line height options from 1x to 3x.
  */
 export default function RichTextLineSpacingPicker(): TReactElement | null {
-  const { editor, state } = useRichTextContext()
-  const [isLineSpacingPickerOpen, setIsLineSpacingPickerOpen] =
-    state.isLineSpacingPickerOpen
+  const { editor } = useRichTextContext()
+  const { state } = useRichTextToolbarContext()
+  const [activePicker, setActivePicker] = state.activePicker
   const [containerWidth] = state.containerWidth
 
   /* -- FUNCTIONS -- */
@@ -44,13 +45,11 @@ export default function RichTextLineSpacingPicker(): TReactElement | null {
   /**
    * The active line height for the current selection.
    */
-  const activeLineHeight = compute<string | undefined>(() => {
-    return editor.getAttributes('textStyle').lineHeight
-  })
+  const activeLineHeight = getActiveLineHeight(editor)
 
   /* -- RENDER -- */
 
-  if (!isLineSpacingPickerOpen) return null
+  if (activePicker !== 'line-spacing') return null
 
   return (
     <div className='LineSpacingPicker' style={style}>
@@ -60,12 +59,8 @@ export default function RichTextLineSpacingPicker(): TReactElement | null {
           type='button'
           className={generateClassName(value)}
           onClick={() => {
-            if (activeLineHeight === value) {
-              editor.commands.unsetLineHeight()
-            } else {
-              editor.commands.setLineHeight(value)
-            }
-            setIsLineSpacingPickerOpen(false)
+            toggleLineSpacing(editor, value)
+            setActivePicker(null)
           }}
         >
           {value}x

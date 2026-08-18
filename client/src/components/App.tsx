@@ -19,7 +19,7 @@ import {
   tooltipsOffsetY,
 } from './content/communication/Tooltip'
 import { DevOptions } from './content/debug/DevOptions'
-import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
+import RichText from './content/general-layout/rich-text/RichText'
 import ButtonMenu from './content/user-controls/buttons/ButtonMenu'
 import type { TButtonText_P } from './content/user-controls/buttons/ButtonText'
 import { PAGE_REGISTRY } from './pages'
@@ -315,9 +315,10 @@ export default function (props: {}): TReactElement | null {
       <div className={rootClasses.value} key={'App'} ref={app}>
         {buttonMenuJsx}
         <div className='Tooltips' ref={tooltips}>
-          <Markdown
-            markdown={tooltipDescription}
-            theme={MarkdownTheme.ThemeSecondary}
+          <RichText
+            content={tooltipDescription}
+            type='viewer'
+            format='markdown'
           />
         </div>
         <Notifications />

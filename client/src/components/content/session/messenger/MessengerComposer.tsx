@@ -112,13 +112,11 @@ export default function MessengerComposer(): TReactElement {
           ref={composerScrollRef}
         >
           <RichText
-            options={{
-              editable: !!activeChannelId,
-              placeholder: activeChannelId ? 'Send a message...' : '',
-              editorRef,
-              onUpdate: ({ editor }) => setCharCount(editor.getText().length),
-              bubbleMenuAnchor: composerScrollRef,
-            }}
+            type={activeChannelId ? 'editor' : 'viewer'}
+            placeholder={activeChannelId ? 'Send a message...' : ''}
+            editorRef={editorRef}
+            onUpdate={({ editor }) => setCharCount(editor.getText().length)}
+            toolbarAnchor={composerScrollRef}
           />
         </div>
         <div className='ComposerToolbar'>

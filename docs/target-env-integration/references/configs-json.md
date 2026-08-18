@@ -322,9 +322,7 @@ When launching a session, users see a dropdown with all available configurations
 
 ### Configuration Availability
 
-The dropdown lists every configuration the environment's `configs.json` currently
-contains. The file is read at that moment rather than cached at startup, so a
-configuration added while the server is running shows up without a restart.
+The dropdown lists every configuration the environment's `configs.json` currently contains. The file is read at that moment rather than cached at startup, so a configuration added while the server is running shows up without a restart.
 
 ### Default Behavior
 

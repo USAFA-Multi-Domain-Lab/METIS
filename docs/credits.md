@@ -33,7 +33,7 @@ Working collaboratively, Jordan and Jacob transformed the MDL's vision into a fu
 
 ### Assets
 
-Primary background imagery provided by **MidJourney** - https://www.midjourney.com/home
+Primary background imagery provided by [**MidJourney**](https://www.midjourney.com/home)
 
 ---
 
