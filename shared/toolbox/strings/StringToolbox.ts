@@ -16,8 +16,7 @@ export class StringToolbox {
    */
   public static limit(toLimit: string, maxCharacters: number) {
     if (toLimit.length > maxCharacters) {
-      // todo: substr is deprecated and slice() is the recommended replacement.
-      toLimit = toLimit.substr(0, maxCharacters - 3)
+      toLimit = toLimit.slice(0, Math.max(0, maxCharacters - 3))
       toLimit += '...'
     }
     return toLimit
