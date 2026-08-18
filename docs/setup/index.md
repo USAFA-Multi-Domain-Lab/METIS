@@ -98,7 +98,7 @@ docker compose ps
 
 NAME                 IMAGE              COMMAND                  SERVICE      CREATED          STATUS                    PORTS
 metis-mongodb-1      mongo:8.0.4        "docker-entrypoint.s…"   mongodb      10 minutes ago   Up 10 minutes (healthy)   27017/tcp
-metis-web-server-1   metis-web-server   "docker-entrypoint.s…"   web-server   10 minutes ago   Up 10 minutes             0.0.0.0:8084->8084/tcp
+metis-web-server-1   metis-web-server   "docker-entrypoint.s…"   web-server   10 minutes ago   Up 10 minutes             0.0.0.0:8083->8083/tcp
 ```
 
 To manage the Docker containers, you can use the following commands:
@@ -119,6 +119,69 @@ Password: temppass
 ```
 
 You can now begin using METIS!
+
+> **Note:** METIS is served over plain HTTP at this point. To serve it over HTTPS instead, continue with [Docker HTTPS Setup](#docker-https-setup-optional) below.
+
+---
+
+### **Docker HTTPS Setup (Optional)**
+
+This section continues from the Docker setup above and applies only to Docker deployments. By default, those serve plain HTTP. HTTPS is provided by an optional `caddy` service, a reverse proxy that terminates TLS in front of the METIS web server. METIS itself continues to speak HTTP on the internal Docker network, so no certificates are configured in the application.
+
+**Step 1:** Choose how this deployment will obtain its certificate.
+
+| `SSL_MODE`         | Use when                                                                        |
+| ------------------ | ------------------------------------------------------------------------------- |
+| `staging`          | Bringing up a new site for the first time. See the note on rate limits below.   |
+| `acme` _(default)_ | The domain resolves publicly and port 80 or 443 is reachable from the internet. |
+| `internal`         | There is no public DNS, and a root certificate can be distributed to clients.   |
+| `file`             | Your organization issues certificates from its own PKI.                         |
+
+**Step 2:** Add the HTTPS settings to the `.env` file created in Step 3:
+
+```env
+COMPOSE_PROFILES=tls
+BIND_ADDRESS=127.0.0.1
+DOMAIN='metis.example.com'
+SSL_MODE='staging'
+TRUST_PROXY=true
+```
+
+`COMPOSE_PROFILES=tls` is what starts the `caddy` service; without it, nothing in this section takes effect. `BIND_ADDRESS=127.0.0.1` restricts the METIS web server to the loopback interface so that it is reachable only through the proxy. `TRUST_PROXY=true` lets METIS recognize proxied requests as encrypted, so that session cookies are marked secure.
+
+> **Note:** `TRUST_PROXY` does not mean trusting proxies in general. METIS trusts exactly one hop, the proxy it is directly connected to, and disregards forwarding details claimed by anything beyond it. Set it only where a proxy really is in front of the server. On a deployment reached directly, the machine connecting is the client itself, and enabling this would let it claim an encrypted connection and an address of its choosing.
+
+If you are supplying your own certificates, also set the directory holding them. The files must be named `server.crt` and `server.key`:
+
+```env
+SSL_MODE='file'
+SSL_DIR='/etc/metis/tls'
+```
+
+> **Note:** If including a custom `PORT` in `.env`, it cannot be set to `80` or `443` when the `tls` profile is active, as both collide with the ports the proxy publishes and the containers will fail to start. `PORT` must also be set in `.env` rather than exported in your shell, otherwise the published port and the port METIS actually listens on will disagree.
+
+**Step 3:** Ensure ports 80 and 443 are available on the host and permitted through its firewall, then start the services with the same command as before:
+
+```bash
+docker compose up --build -d
+```
+
+**Step 4:** Confirm the proxy started and obtained a certificate:
+
+```bash
+docker compose ps          # a caddy container is now listed alongside the others
+docker compose logs caddy  # look for "certificate obtained successfully"
+```
+
+METIS is now served over HTTPS at your configured domain. Requests over HTTP are redirected automatically.
+
+> **Note:** Automatic certificates require the domain in `DOMAIN` to resolve publicly to this host, port 80 or 443 to be reachable from the internet, and outbound access to Let's Encrypt. Deployments with no inbound path from the internet should use `internal` or `file` instead.
+
+> **Note:** Let's Encrypt allows only five failed validations per hostname per hour. A wrong DNS record or a closed firewall port can exhaust that allowance while you are still diagnosing the problem. Deploy with `SSL_MODE='staging'` first, which validates identically but has no practical rate limit, then switch to `acme` once the logs confirm a certificate was obtained. Certificates issued by `staging` are not trusted by browsers, so a certificate warning at this stage is expected and indicates success.
+
+> **Note:** With `SSL_MODE='internal'`, clients will show a certificate warning until they trust Caddy's root certificate. Copy it out with `docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./root.crt`.
+
+> **Note:** With `SSL_MODE='file'`, replacing the certificate files does not take effect until Caddy re-reads them. Run `docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile` after installing a renewed certificate.
 
 ---
 
@@ -187,6 +250,8 @@ After completing setup, you can verify your installation with this checklist:
 - [ ] MongoDB authentication is enabled and working
 - [ ] Server starts automatically on system boot
 - [ ] Environment variables are properly secured
+- [ ] If HTTPS is enabled, the site loads over `https://` and HTTP requests redirect to it
+- [ ] If HTTPS is enabled, a session can be launched or joined (confirms WebSocket connections pass through the proxy)
 
 ## 🔧 Common Issues
 
@@ -201,6 +266,18 @@ After completing setup, you can verify your installation with this checklist:
 - **Can't create first user** → Verify database permissions and connection
 - **Session timeouts** → Check session configuration in environment variables
 - **Permission errors** → Verify file system permissions for METIS directories
+
+### HTTPS and Certificates
+
+These apply to Docker deployments running the `tls` profile. Check `docker compose logs caddy` first — certificate failures are reported there explicitly.
+
+- **Containers won't start, "address already in use"** → Something else on the host holds port 80 or 443. On Windows this is usually IIS or another service on HTTP.sys. Alternatively, `PORT` is set to `80` or `443`, which collides with the proxy's own ports
+- **Site still serves plain HTTP** → `COMPOSE_PROFILES=tls` is missing from `.env`, so the proxy was never started. Confirm with `docker compose ps`
+- **Certificate was never issued** → The domain in `DOMAIN` must resolve publicly to this host, and port 80 or 443 must be reachable from the internet. Deployments with no inbound path should use `SSL_MODE='internal'` or `'file'`
+- **Certificate requests are being refused** → Let's Encrypt rate limits took effect after repeated failures. Switch to `SSL_MODE='staging'` while diagnosing, then back to `acme`
+- **"no such file or directory" for `server.crt`** → `SSL_MODE='file'` is set but `SSL_DIR` does not point at a directory containing `server.crt` and `server.key`
+- **Certificate warning in the browser** → Expected with `SSL_MODE='staging'` and with `'internal'` until clients trust Caddy's root certificate
+- **Renewed certificate not being served** → With `SSL_MODE='file'`, run `docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile`
 
 ## Related Documentation
 

@@ -204,7 +204,7 @@ export default function SessionMemberList({
       case 'ban':
         return member.status === 'banned'
       // Unban is only available for banned members.
-      case 'up':
+      case 'unban':
         return member.status !== 'banned'
       default:
         return false
@@ -222,7 +222,7 @@ export default function SessionMemberList({
         return 'Kick'
       case 'ban':
         return 'Ban'
-      case 'up':
+      case 'unban':
         return 'Unban'
       default:
         return ''
@@ -282,7 +282,7 @@ export default function SessionMemberList({
           `Failed to ban "${member.username}".`,
         )
         break
-      case 'up':
+      case 'unban':
         runMemberAction(
           member,
           `Are you sure you want to lift the ban on "${member.username}"?`,
@@ -311,7 +311,7 @@ export default function SessionMemberList({
         isCellSelectable={isCellSelectable}
         getAdditionalItemClasses={getAdditionalItemClasses}
         sortItems={sortMembers}
-        itemButtonIcons={['kick', 'ban', 'up']}
+        itemButtonIcons={['kick', 'ban', 'unban']}
         getItemButtonHidden={getItemButtonHidden}
         getItemButtonLabel={getItemButtonLabel}
         onItemButtonClick={onItemButtonClick}
