@@ -5,8 +5,8 @@ import { ServerMission } from '@server/missions/ServerMission'
 import { Effect } from '@shared/missions/effects/Effect'
 import { MissionFile } from '@shared/missions/files/MissionFile'
 import { Mission, type TMissionSaveJson } from '@shared/missions/Mission'
+import { HtmlSanitizer } from '@shared/toolbox/html/HtmlSanitizer'
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
-import DOMPurify from 'isomorphic-dompurify'
 import type { ProjectionType, QueryOptions } from 'mongoose'
 import mongoose, { model, Schema } from 'mongoose'
 import {
@@ -201,41 +201,7 @@ const validate_mission_files_alias = (value: unknown) => {
  */
 const sanitizeHtml = (html: string): string => {
   try {
-    // todo: evaluate any security vulnerabilities
-    // todo: for the addition of "span" and "style."
-    let sanitizedHTML = DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: [
-        'a',
-        'br',
-        'p',
-        'strong',
-        'b',
-        'em',
-        'i',
-        'u',
-        'ul',
-        'ol',
-        'li',
-        'code',
-        'pre',
-        'hr',
-        'blockquote',
-        'h1',
-        'h2',
-        'h3',
-        'h4',
-        'h5',
-        'h6',
-        's',
-        'del',
-        'strike',
-        'span',
-      ],
-      ALLOWED_ATTR: ['href', 'rel', 'target', 'class', 'style'],
-      FORBID_TAGS: ['script', 'iframe'],
-    })
-
-    return sanitizedHTML
+    return HtmlSanitizer.sanitize(html)
   } catch (error: any) {
     databaseLogger.error('Error sanitizing HTML.\n', error)
     throw new Error('Error sanitizing HTML.')

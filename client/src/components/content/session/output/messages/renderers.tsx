@@ -1,5 +1,6 @@
 import type { ClientMission } from '@client/missions/ClientMission'
 import { useEventListener } from '@client/toolbox/hooks'
+import { HtmlSanitizer } from '@shared/toolbox/html/HtmlSanitizer'
 import type { TSingleTypeMapped } from '@shared/toolbox/objects/ObjectToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useEffect, useState } from 'react'
@@ -31,6 +32,23 @@ function defaultTo<T extends Object>(
   } else {
     return `${parent[valueKey]}`
   }
+}
+
+/**
+ * The tags whose value is written in the rich text editor and is therefore
+ * HTML. Every other tag stands for a plain value, such as a name or a number,
+ * and is placed in the message as text so a value containing something like
+ * "<b>" is shown the way it was written instead of changing how the message
+ * reads.
+ */
+const richTextTags: TOutputTag[] = ['action-description']
+
+/**
+ * Whether the value rendered for a tag is HTML rather than a plain value.
+ * @param tag The tag being rendered.
+ */
+function holdsRichText(tag: string): boolean {
+  return richTextTags.some((richTextTag) => richTextTag === tag)
 }
 
 /**
@@ -107,7 +125,11 @@ export function useOutputRenderer(): TOutputRendererResults {
       const elms = doc.querySelectorAll(tag)
 
       for (const oldElm of elms) {
-        oldElm.innerHTML = tagRenders[index]
+        if (holdsRichText(tag)) {
+          oldElm.innerHTML = tagRenders[index]
+        } else {
+          oldElm.textContent = tagRenders[index]
+        }
         oldElm.replaceWith(...oldElm.childNodes)
       }
 
@@ -122,11 +144,10 @@ export function useOutputRenderer(): TOutputRendererResults {
       }
     })
 
-    // Set the key to a random string and the
-    // rendered message to the resulting HTML
-    // of the body.
+    // Set the key to a random string and the rendered message to the
+    // resulting HTML of the body.
     setKey(StringToolbox.generateRandomId())
-    setRenderedMessage(doc.body.innerHTML)
+    setRenderedMessage(HtmlSanitizer.sanitize(doc.body.innerHTML))
   }
 
   /**
@@ -151,21 +172,17 @@ export function useOutputRenderer(): TOutputRendererResults {
 
   // Re-render the tags when there is a countdown
   // event.
-  useEventListener(
-    listenerTarget,
-    'execution-tick',
-    () => {
-      // Re-render the 'time-remaining' tag.
-      renderTags(['time-remaining'])
-      // Re-inject the tags into the message.
-      injectTags()
-      // If the source execution has completed,
-      // stop listening for countdown events.
-      if (sourceExecution?.timeRemaining === 0) {
-        setListenerTarget(null)
-      }
-    },
-  )
+  useEventListener(listenerTarget, 'execution-tick', () => {
+    // Re-render the 'time-remaining' tag.
+    renderTags(['time-remaining'])
+    // Re-inject the tags into the message.
+    injectTags()
+    // If the source execution has completed,
+    // stop listening for countdown events.
+    if (sourceExecution?.timeRemaining === 0) {
+      setListenerTarget(null)
+    }
+  })
 
   return { key, renderedMessage }
 }
