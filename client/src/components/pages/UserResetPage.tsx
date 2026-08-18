@@ -4,9 +4,11 @@ import {
   useEventListener,
   useMountHandler,
   usePostInitEffect,
+  useRequireLogin,
 } from '@client/toolbox/hooks'
+import { KEYBOARD_SHORTCUTS } from '@client/toolbox/keyboard'
 import { ClientUser } from '@client/users/ClientUser'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import type { TPage_P } from '.'
 import { DefaultPageLayout } from '.'
 import { DetailLocked } from '../content/form/DetailLocked'
@@ -26,7 +28,6 @@ export default function UserResetPage(): TReactElement | null {
 
   const globalContext = useGlobalContext()
   const { notify, navigateTo, finishLoading } = globalContext.actions
-  const [login] = globalContext.login
   const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
   const [userEmptyStringArray, setUserEmptyStringArray] = useState<string[]>([])
   const [password1ErrorMessage, setPassword1ErrorMessage] = useState<string>()
@@ -39,13 +40,7 @@ export default function UserResetPage(): TReactElement | null {
 
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
-  // Require login for page.
-  if (login === null) {
-    return null
-  }
-
-  // Grab the user currently logged in.
-  const { user } = login
+  const { user } = useRequireLogin()
 
   /* -- COMPUTED -- */
 
@@ -59,12 +54,12 @@ export default function UserResetPage(): TReactElement | null {
   /**
    * Boolean to determine if there are any fields with empty strings.
    */
-  const isEmptyString: boolean = compute(() => userEmptyStringArray.length > 0)
+  const isEmptyString = compute<boolean>(() => userEmptyStringArray.length > 0)
 
   /**
    * Whether the save button is disabled.
    */
-  const saveDisabled: TButtonTextDisabled = compute(() =>
+  const saveDisabled = compute<TButtonTextDisabled>(() =>
     !areUnsavedChanges || isEmptyString || !user.canSave ? 'full' : 'none',
   )
 
@@ -138,13 +133,14 @@ export default function UserResetPage(): TReactElement | null {
     }
   }, [password2])
 
-  // Add an event listener to listen for cmd+s/ctrl+s
-  // key presses to save the changes.
+  // Save the new password when the save shortcut is pressed. The keystroke
+  // is always taken over, so the browser's own save dialog stays away even
+  // when there is nothing to save.
   useEventListener(document, 'keydown', (event: KeyboardEvent) => {
-    if (event.key === 's' && (event.ctrlKey || event.metaKey)) {
-      event.preventDefault()
-      save()
-    }
+    if (!KEYBOARD_SHORTCUTS.save.matches(event)) return
+
+    event.preventDefault()
+    if (areUnsavedChanges) save()
   })
 
   /* -- FUNCTIONS -- */
@@ -174,6 +170,16 @@ export default function UserResetPage(): TReactElement | null {
   }
 
   /**
+   * This is called when the password form is submitted, which happens
+   * when the save button is clicked and when enter is pressed
+   * while a field has focus.
+   */
+  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>): void => {
+    event.preventDefault()
+    save()
+  }
+
+  /**
    * This is called to remove a field from the userEmptyStringArray.
    */
   const removeUserEmptyString = (field: string) => {
@@ -189,35 +195,38 @@ export default function UserResetPage(): TReactElement | null {
   return (
     <div className='UserResetPage Page'>
       <DefaultPageLayout navigation={navigation}>
-        <div className='ResetUserEntry'>
-          <DetailLocked label='Username' value={user.username} />
-          <DetailString
-            fieldType='required'
-            label='New Password'
-            value={password1}
-            setValue={setPassword1}
-            errorMessage={password1ErrorMessage}
-            inputType='password'
-            placeholder='Enter a new password here...'
-          />
-          <DetailString
-            fieldType='required'
-            label='Confirm New Password'
-            value={password2}
-            setValue={setPassword2}
-            errorMessage={password2ErrorMessage}
-            inputType='password'
-            placeholder='Confirm your new password here...'
-          />
-        </div>
+        <form className='Form' onSubmit={handleSubmit} autoComplete='off'>
+          <div className='ResetUserEntry'>
+            <DetailLocked label='Username' value={user.username} />
+            <DetailString
+              fieldType='required'
+              label='New Password'
+              value={password1}
+              setValue={setPassword1}
+              errorMessage={password1ErrorMessage}
+              inputType='password'
+              placeholder='Enter a new password here...'
+            />
+            <DetailString
+              fieldType='required'
+              label='Confirm New Password'
+              value={password2}
+              setValue={setPassword2}
+              errorMessage={password2ErrorMessage}
+              inputType='password'
+              placeholder='Confirm your new password here...'
+            />
+          </div>
 
-        <div className='Buttons'>
-          <ButtonText
-            text={'Save'}
-            disabled={saveDisabled}
-            onClick={() => save()}
-          />
-        </div>
+          <div className='Buttons'>
+            <ButtonText
+              type='submit'
+              text={'Save'}
+              disabled={saveDisabled}
+              onClick={() => {}}
+            />
+          </div>
+        </form>
       </DefaultPageLayout>
     </div>
   )

@@ -9,6 +9,7 @@ import {
   useMountHandler,
   useRequireLogin,
 } from '@client/toolbox/hooks'
+import { KEYBOARD_SHORTCUTS } from '@client/toolbox/keyboard'
 import { ClientUser } from '@client/users/ClientUser'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { AxiosError } from 'axios'
@@ -21,7 +22,6 @@ import { HomeButton, ProfileButton } from '../content/general-layout/Navigation'
 import type { TButtonTextDisabled } from '../content/user-controls/buttons/ButtonText'
 import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
-import If from '../content/util/If'
 import './UserPage.scss'
 
 /**
@@ -139,18 +139,14 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
     [areUnsavedChanges],
   )
 
-  // Add an event listener to listen for cmd+s/ctrl+s
-  // key presses to save the user.
+  // Save the user when the save shortcut is pressed. The keystroke is
+  // always taken over, so the browser's own save dialog stays away even
+  // when there is nothing to save.
   useEventListener(document, 'keydown', (event: KeyboardEvent) => {
-    let modKey = event.ctrlKey || event.metaKey
-    let correctKeystroke = modKey && !event.shiftKey && event.key === 's'
+    if (!KEYBOARD_SHORTCUTS.save.matches(event)) return
 
-    if (correctKeystroke && areUnsavedChanges) {
-      event.preventDefault()
-      save()
-    } else if (correctKeystroke && !areUnsavedChanges) {
-      event.preventDefault()
-    }
+    event.preventDefault()
+    if (areUnsavedChanges) save()
   })
 
   /* -- COMPUTED -- */
@@ -166,19 +162,19 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
    * Determines if the user form has any fields
    * with empty strings.
    */
-  const isEmptyString: boolean = compute(() => userEmptyStringArray.length > 0)
+  const isEmptyString = compute<boolean>(() => userEmptyStringArray.length > 0)
 
   /**
    * Whether a username that cannot be used is currently entered.
    */
-  const hasUsernameError: boolean = compute(() =>
+  const hasUsernameError = compute<boolean>(() =>
     StringToolbox.isFilled(usernameError),
   )
 
   /**
    * Whether the save button is disabled.
    */
-  const saveDisabled: TButtonTextDisabled = compute(() =>
+  const saveDisabled = compute<TButtonTextDisabled>(() =>
     !areUnsavedChanges || isEmptyString || hasUsernameError || !user.canSave
       ? 'full'
       : 'none',
@@ -242,6 +238,16 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
   }
 
   /**
+   * This is called when the user form is submitted, which happens
+   * when the save button is clicked and when enter is pressed
+   * while a field has focus.
+   */
+  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>): void => {
+    event.preventDefault()
+    save()
+  }
+
+  /**
    * Ensures any unsaved changes are addressed before
    * any further action is taken.
    * @resolves If the user either saves or discards the changes.
@@ -265,7 +271,7 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
   const enforceSavePrompt = async (): Promise<void> => {
     return new Promise<void>(async (resolve, reject) => {
       // If the user does not have write permissions
-      // and there are no unsaved changes, resolve immediately.
+      // and there are unsaved changes, resolve immediately.
       if (!isAuthorized('users_write_students') && areUnsavedChanges) {
         return resolve()
       }
@@ -293,11 +299,6 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
     })
   }
 
-  /**
-   * This is called when a change is made that would require saving.
-   */
-  const handleChange = (): void => setAreUnsavedChanges(true)
-
   /* -- RENDER -- */
 
   /**
@@ -309,29 +310,32 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
     state,
   }
 
+  if (!mountHandled || !isAuthorized('users_read_students')) {
+    return null
+  }
+
   return (
-    <If condition={mountHandled && isAuthorized('users_read_students')}>
-      <Provider value={contextValue}>
-        <div className='UserPage Page' ref={root}>
-          <DefaultPageLayout navigation={navigation}>
-            <div className='Form'>
-              <UserEntry
-                user={user}
-                handleChange={handleChange}
-                key={userEntryKey}
+    <Provider value={contextValue}>
+      <div className='UserPage Page' ref={root}>
+        <DefaultPageLayout navigation={navigation}>
+          <form className='Form' onSubmit={handleSubmit} autoComplete='off'>
+            <UserEntry
+              user={user}
+              handleChange={() => setAreUnsavedChanges(true)}
+              key={userEntryKey}
+            />
+            <div className='Buttons'>
+              <ButtonText
+                type='submit'
+                text={'Save'}
+                disabled={saveDisabled}
+                onClick={() => {}}
               />
-              <div className='Buttons'>
-                <ButtonText
-                  text={'Save'}
-                  disabled={saveDisabled}
-                  onClick={() => save()}
-                />
-              </div>
             </div>
-          </DefaultPageLayout>
-        </div>
-      </Provider>
-    </If>
+          </form>
+        </DefaultPageLayout>
+      </div>
+    </Provider>
   )
 }
 
@@ -341,13 +345,15 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
  * Props for the UserPage component.
  */
 export interface TUserPage_P extends TPage_P {
-  // If this is null, then a new user is being created.
+  /**
+   * The ID of the user to display.
+   * @note If this is null, then a new user is being created.
+   */
   userId: string | null
 }
 
 /**
- * The state for `UserPage`, provided
- * in the context.
+ * The state for `UserPage`, provided in the context.
  */
 export type TUserPage_S = {
   /**

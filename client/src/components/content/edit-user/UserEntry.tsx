@@ -65,25 +65,25 @@ export default function UserEntry({
    * format of the username takes priority over the result of the
    * availability check.
    */
-  const usernameErrorDisplayed: string = compute(
+  const usernameErrorDisplayed = compute<string>(
     () => usernameErrorMessage || usernameError,
   )
   /**
    * The label for the password field.
    */
-  const passwordLabel: string = compute(() =>
+  const passwordLabel = compute<string>(() =>
     user.needsPasswordReset ? 'Temporary Password' : 'Password',
   )
   /**
    * The label for the confirm password field.
    */
-  const confirmPasswordLabel: string = compute(() =>
+  const confirmPasswordLabel = compute<string>(() =>
     user.needsPasswordReset ? 'Confirm Temporary Password' : 'Confirm Password',
   )
   /**
    * List of accesses to select from.
    */
-  const listOfAccesses: UserAccess[] = compute(() => {
+  const listOfAccesses = compute<UserAccess[]>(() => {
     // Default list of accesses to select from.
     let accesses: UserAccess[] = []
 
@@ -323,11 +323,7 @@ export default function UserEntry({
   /* -- RENDER -- */
 
   return (
-    <form
-      className='UserEntry'
-      onSubmit={(event) => event.preventDefault()}
-      autoComplete='off'
-    >
+    <div className='UserEntry'>
       <DetailString
         fieldType='required'
         label='Username'
@@ -401,7 +397,7 @@ export default function UserEntry({
         value={needsPasswordReset}
         setValue={setNeedsPasswordReset}
       />
-    </form>
+    </div>
   )
 }
 
