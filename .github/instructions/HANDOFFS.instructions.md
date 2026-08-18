@@ -7,8 +7,10 @@
 A **code handoff** is a single Markdown document written for a coworker who will review a feature you have developed. It tells the reviewer what changed, what to verify by hand, what to cover with tests, and — once the review is underway — records what was found and what was done about it.
 
 1. **The author writes it.** Summary, manual test checklist, automatic test checklist, and coverage specifics. Every checkbox starts unchecked and the Findings section starts empty.
-2. **The reviewer works through it.** Boxes get checked as the work is done, findings are added as they are discovered, and results are recorded.
-3. **Findings get resolved in place.** Whoever fixes a finding checks its box and appends a reply beneath it.
+2. **The reviewer works through it.** Manual tests, automatic tests, and the review itself — boxes get checked as the tests pass and findings are added as they are discovered.
+3. **The author resolves the findings.** Resolution happens in place: the box is checked and a reply appended beneath it. Tests the review left failing come back too — their boxes are checked once the fix makes them pass.
+
+Handoffs live in `handoffs/{feature-name}.md`, kebab-case. The directory is gitignored, so writing there never touches a commit.
 
 The document is edited continuously, not written once at the end. Its state at any moment is the state of the review.
 
@@ -21,7 +23,10 @@ Every file link and line number in it — in findings, in coverage specifics, an
 ```markdown
 # {Feature Name} — Code Handoff
 
-**Status:** {Awaiting review | In review | Complete} — manual {n}/{n}, automatic {n}/{n} written, {n} findings open
+**Status:** {Awaiting review | In review | Resolving findings | Complete} — {n}/{n} manual tests pass, {n}/{n} automatic tests pass, {n}/{n} findings resolved
+
+**Author**: `{Author Name}` \
+**Reviewer**: `{Reviewer Name}`
 
 ## Summary of Changes and Coverage
 
@@ -56,8 +61,7 @@ Every file link and line number in it — in findings, in coverage specifics, an
 
 - [x] [OtherFile.ts:118](/path/to/OtherFile.ts) — **The claim.** Supporting detail.
 
-  > **{Reviewer Name}** _{MM:DD:YYYY:HH:MM}_ What was changed, and why — especially if the fix
-  > differs from what the finding proposed.
+  > **{Author Name}** _{MM:DD:YYYY:HH:MM}_ What was changed, and why.
 
 ### Advisory
 
@@ -73,23 +77,38 @@ Every file link and line number in it — in findings, in coverage specifics, an
 
 ## Section Guidelines
 
-### Title and Status
+### Title, Status, and Participants
 
 The title names the feature concisely, followed by `— Code Handoff`.
 
-The status line is one line, kept current as work proceeds. `Awaiting review` before anyone picks it up, `In review` while work is in progress, `Complete` when every box is checked and every finding is resolved.
+The status line is one line, kept current as work proceeds. `Awaiting review` before anyone picks it up, `In review` while the reviewer is working, `Resolving findings` once the review is handed back and the author is addressing it, `Complete` when every box in the document is checked — manual tests, automatic tests, and findings alike. The author leaves the findings count off; the reviewer adds it when the review begins.
+
+Beneath it, `**Author**` names whoever wrote the feature and this document, and `**Reviewer**` names whoever reviews and tests it against the document's claims — each taken from that person's `git config user.name`. The author writes the author line alone; the reviewer line is added when the review begins. The trailing backslash on the author line is a hard line break — without it the two render as one line.
 
 ### Summary of Changes and Coverage
 
 Two paragraphs: what the change is and why it was made, then a brief walkthrough of how the system works and its biggest players, with the main classes and entry points linked by name.
 
+### Notes
+
+A note records anything that happened beneath a checkbox — a test that failed, a test that passed once a fix landed, a finding that was resolved. One form throughout the document:
+
+```markdown
+> **Jordan Stokes** _07:29:2026:11:27_ What happened, in a sentence.
+```
+
+The name is whoever wrote the note, from their `git config user.name`; the timestamp comes from `date "+%m:%d:%Y:%H:%M"`. Indent two spaces to stay inside the list item, prefix every wrapped line with `>`, and separate paragraphs with a bare `>`.
+
+Notes accumulate. A later note goes beneath the ones already there rather than replacing them — the sequence is the record.
+
 ### Manual Tests
 
-A checklist of behaviors verified by hand in a running instance. A checked box means the behavior passed. A failure stays unchecked with a one-line note indented beneath it, linking to the finding it confirms:
+A checklist of behaviors verified by hand in a running instance. A checked box means the behavior passed. A failure stays unchecked with a note beneath it, linking to the finding it confirms:
 
 ```markdown
 - [ ] Update an outdated effect whose data cannot be migrated cleanly and confirm the update reports failure.
-  - Reported success instead, and the issue stayed in the list — see High #1.
+
+  > **Jordan Stokes** _07:29:2026:11:27_ Reported success instead, and the issue stayed in the list — see High #1.
 ```
 
 When no manual testing is required, the section is a single sentence saying so and why, in place of the list.
@@ -98,11 +117,12 @@ When no manual testing is required, the section is a single sentence saying so a
 
 A checklist of test cases, grouped under a `###` heading named for the class or component, with the target test file path directly beneath it. The suite is green when the handoff is written.
 
-A checked box means the test is written **and passing**. A test written but failing stays unchecked with a one-line note beneath it, the same as a failed manual item:
+A checked box means the test is written **and passing**. A test written but failing stays unchecked with a note beneath it, the same as a failed manual item:
 
 ```markdown
 - [ ] A script producing schema-violating output causes `migrate` to throw.
-  - Written, fails today — the cursor advances before validation runs. See High #2.
+
+  > **Jordan Stokes** _07:29:2026:11:27_ Written, fails today — the cursor advances before validation runs. See High #2.
 ```
 
 A test that fails because it exposes a real product defect makes that defect a **finding**, not a coverage gap. Additional coverage a reviewer writes is added to the checklist, checked.
@@ -113,15 +133,8 @@ A test that fails because it exposes a real product defect makes that defect a *
 - Findings are grouped under `### Critical`, `### High`, `### Medium`, `### Low`, and `### Advisory`, omitting empty groups, and ordered by severity then practical impact.
 - Every finding is a checkbox. Unchecked means open; checked means resolved, declined, or determined to be a false flag.
 - Each finding leads with its file path and line as a Markdown link, then a **bold one-sentence claim**, then the supporting detail. Every workspace file path is a link, including those inside the detail.
-- `Advisory` holds non-defects and stays out of the tally's severity counts.
-- Findings are resolved **in place**: the box is checked and a reply appended beneath it.
-
-  ```markdown
-  > **Jordan Stokes** _07:29:2026:11:27_ Fixed. The getter now returns the array directly.
-  ```
-
-  Declines and false flags are checked off like any other resolution, marked **Declined** or **False flag** in the reply.
-
+- `Advisory` holds non-defects.
+- Findings are resolved **in place**: the box is checked and a note appended beneath it. Declines and false flags are checked off like any other resolution, marked **Declined** or **False flag** in the note.
 - Resolved findings stay where they are. They are not moved to a separate section or deleted — the list is the record.
 
 ### Coverage Specifics
