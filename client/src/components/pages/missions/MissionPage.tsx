@@ -33,6 +33,7 @@ import {
   useMountHandler,
   useRequireLogin,
 } from '@client/toolbox/hooks'
+import { KEYBOARD_SHORTCUTS } from '@client/toolbox/keyboard'
 import type {
   TEffectTrigger,
   TEffectType,
@@ -441,18 +442,14 @@ export default function MissionPage(
     [areUnsavedChanges],
   )
 
-  // Add an event listener to listen for cmd+s/ctrl+s
-  // key presses to save the mission.
+  // Save the mission when the save shortcut is pressed. The keystroke is
+  // always taken over, so the browser's own save dialog stays away even
+  // when there is nothing to save.
   useEventListener(document, 'keydown', (event: KeyboardEvent) => {
-    let modKey = event.ctrlKey || event.metaKey
-    let correctKeystroke = modKey && !event.shiftKey && event.key === 's'
+    if (!KEYBOARD_SHORTCUTS.save.matches(event)) return
 
-    if (correctKeystroke && areUnsavedChanges) {
-      event.preventDefault()
-      save()
-    } else if (correctKeystroke && !areUnsavedChanges) {
-      event.preventDefault()
-    }
+    event.preventDefault()
+    if (areUnsavedChanges) save()
   })
 
   // Add event listener to watch for when a new

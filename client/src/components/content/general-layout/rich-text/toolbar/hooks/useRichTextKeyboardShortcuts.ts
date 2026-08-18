@@ -1,3 +1,8 @@
+import type { TKeyboardShortcut } from '@client/toolbox/keyboard'
+import {
+  KEYBOARD_SHORTCUTS,
+  UNMODIFIED_KEYSTROKES,
+} from '@client/toolbox/keyboard'
 import type { Editor } from '@tiptap/react'
 import { cycleFontColor } from '../helpers/font-color'
 import { cycleHeadingLevel } from '../helpers/heading'
@@ -8,15 +13,31 @@ import { useRichTextLinkPrompt } from './useRichTextLinkPrompt'
 import type { TRichTextToolbarControls } from './useRichTextToolbar'
 
 /**
- * The formats a shortcut can step through, keyed by the letter pressed
- * alongside Cmd/Ctrl+Shift.
+ * The formats a shortcut can step through, each paired with the shortcut
+ * that steps it.
  */
-const FORMAT_CYCLE_SHORTCUTS: Record<string, TFormatCycleShortcut> = {
-  c: { picker: 'color', cycle: cycleFontColor },
-  h: { picker: 'heading', cycle: cycleHeadingLevel },
-  a: { picker: 'align', cycle: cycleTextAlign },
-  p: { picker: 'line-spacing', cycle: cycleLineSpacing },
-}
+const FORMAT_CYCLE_SHORTCUTS: TFormatCycleShortcut[] = [
+  {
+    shortcut: KEYBOARD_SHORTCUTS.cycleRichTextFontColor,
+    picker: 'color',
+    cycle: cycleFontColor,
+  },
+  {
+    shortcut: KEYBOARD_SHORTCUTS.cycleRichTextHeadingLevel,
+    picker: 'heading',
+    cycle: cycleHeadingLevel,
+  },
+  {
+    shortcut: KEYBOARD_SHORTCUTS.cycleRichTextAlignment,
+    picker: 'align',
+    cycle: cycleTextAlign,
+  },
+  {
+    shortcut: KEYBOARD_SHORTCUTS.cycleRichTextLineSpacing,
+    picker: 'line-spacing',
+    cycle: cycleLineSpacing,
+  },
+]
 
 /**
  * Every keyboard shortcut the editor and its toolbar answer to.
@@ -29,60 +50,42 @@ export function useRichTextKeyboardShortcuts({
   const toggleLink = useRichTextLinkPrompt()
 
   return (event: KeyboardEvent) => {
-    const modified = event.metaKey || event.ctrlKey
-    // Windows reports the shifted character for a letter key while macOS
-    // reports the unshifted one, so letters are compared in lower case.
-    const pressedLetter = event.key.toLowerCase()
-
     // Escape — puts away an open picker, then the toolbar itself.
-    if (event.key === 'Escape') {
+    if (UNMODIFIED_KEYSTROKES.escape.matches(event)) {
       event.preventDefault()
       toolbar.dismiss()
     }
 
     // Cmd/Ctrl+K — toggle link.
-    if (modified && !event.shiftKey && pressedLetter === 'k') {
+    if (KEYBOARD_SHORTCUTS.toggleRichTextLink.matches(event)) {
       event.preventDefault()
       toggleLink(editor)
     }
 
     // Cmd+Opt+0 / Ctrl+Alt+0 — clear all formatting.
-    if (modified && event.altKey && pressedZero(event)) {
+    if (KEYBOARD_SHORTCUTS.clearRichTextFormatting.matches(event)) {
       event.preventDefault()
       editor.commands.unsetAllMarks()
       editor.commands.clearNodes()
     }
 
     // Cmd/Ctrl+Shift+M — show/hide the toolbar at the cursor's location.
-    if (modified && event.shiftKey && pressedLetter === 'm') {
+    if (KEYBOARD_SHORTCUTS.pinRichTextToolbar.matches(event)) {
       event.preventDefault()
       toolbar.togglePinned()
     }
 
     // Cmd/Ctrl+Shift +C / +H / +A / +P - step a format forward one option.
-    const formatShortcut = FORMAT_CYCLE_SHORTCUTS[pressedLetter]
-    if (modified && event.shiftKey && formatShortcut) {
+    let formatShortcut = FORMAT_CYCLE_SHORTCUTS.find(({ shortcut }) =>
+      shortcut.matches(event),
+    )
+    if (formatShortcut) {
       event.preventDefault()
-      const { picker, cycle } = formatShortcut
-      toolbar.showPicker(picker)
-      cycle(editor)
+      toolbar.showPicker(formatShortcut.picker)
+      formatShortcut.cycle(editor)
     }
   }
 }
-
-/**
- * Whether the key pressed was a zero.
- * @param event The key that was pressed.
- * @returns `True` when the key was a zero.
- * @note The zero key is matched both by its position on the keyboard and by every
- * character it can produce, because holding a modifier can turn it into a
- * different character and the number pad reports itself as a separate key.
- */
-const pressedZero = (event: KeyboardEvent): boolean =>
-  event.code === 'Digit0' ||
-  event.code === 'Numpad0' ||
-  event.key === '0' ||
-  event.key === ')'
 
 /* -- TYPES -- */
 
@@ -104,6 +107,10 @@ export type TRichTextKeyboardShortcuts_P = {
  * A format the keyboard can step through one option at a time.
  */
 type TFormatCycleShortcut = {
+  /**
+   * The keystroke that steps the format forward.
+   */
+  shortcut: TKeyboardShortcut
   /**
    * The picker that opens when the shortcut runs, so the user can see which
    * option was applied.
