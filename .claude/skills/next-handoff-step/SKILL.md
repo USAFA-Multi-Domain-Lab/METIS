@@ -19,7 +19,7 @@ One pass, no cycle.
 
 ## Phase 1 — Locate the handoff
 
-If the user has a handoff open in the IDE, use it. Otherwise list `handoffs/` and ask which — do not guess between two candidates.
+If the user has a handoff open in the IDE, use it. Otherwise search the version directories under `handoffs/`, highest semantic version first — the handoff in play is nearly always in the newest — and ask which; do not guess between two candidates.
 
 ## Phase 2 — Read the state off the document
 

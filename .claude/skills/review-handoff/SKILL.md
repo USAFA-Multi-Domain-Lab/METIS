@@ -11,7 +11,7 @@ Read `.github/instructions/HANDOFFS.instructions.md` before writing anything. It
 
 ## Phase 1 — Locate and scope
 
-If the user has a handoff open in the IDE, use it. Otherwise list handoffs and ask which — do not guess between two candidates.
+If the user has a handoff open in the IDE, use it. Otherwise search the version directories under `handoffs/`, highest semantic version first — the handoff in play is nearly always in the newest — and ask which; do not guess between two candidates.
 
 Read the whole document first, then add the reviewer line beneath the author line, naming the user from `git config user.name`, and update the status if the guide's condition for its current value no longer holds. Findings may only land on **what Coverage Specifics lists** — read whatever you need to understand it:
 
@@ -26,17 +26,17 @@ The failure modes catalogued in `resolve-findings` are exactly what this skill e
 So for every candidate finding, before it goes in the document:
 
 - Read the cited code and what it calls into. Confirm the described behavior actually follows.
-- Check style claims against `AGENTS.md` and `docs/devs/style-guide.md`. Do not cite a rule without confirming it is written down. The style guide has no rule against casting, and `let` is the house default over `const` — both have produced false findings before.
+- Check style claims against `AGENTS.md` and `docs/devs/style-guide.md`. Do not cite a rule without confirming it is written down.
 - Check the git history before calling something a regression. A parameter added and removed within the same release cycle can never appear in stored data.
 - Separate "this is wrong" from "this is currently harmless but structurally guaranteed to break." Both are worth recording; they are not the same severity, and the finding should say which it is.
-- If a finding depends on an assumption, say whether the assumption is guaranteed anywhere or merely happens to hold today.
+- If the premise for a finding relies on an assumption, verify the assumption. A finding that depends on a false assumption is a waste of time at best and misleading at worst.
 - Work out what closing it would take, but keep it out of the document. A fix you cannot picture usually means a finding you have not understood.
 
 If a claim does not survive this, drop it. Do not pad the list.
 
 ## Phase 3 — Write the findings
 
-Follow the guide's format, and assign severity from its tier table. What matters most in practice:
+Follow the guide's format, and assign severity from its tier definitions. What matters most in practice:
 
 - Lead with the **bold one-sentence claim**. A reader scanning only the bold lines should understand the review. Write the claim, then the evidence — never the reverse.
 - Cite `file:line` as a Markdown link for every path mentioned, including paths inside the supporting detail.
