@@ -111,7 +111,7 @@ The checkbox rules are the guide's; the ones that get misapplied:
 
 - Checked means written **and passing**. Nothing else.
 - A test written but failing stays **unchecked**, with a note beneath it in the guide's form saying it was written, that it fails, and why. It does not get checked with a caveat.
-- If it fails because it exposes a real defect, that defect belongs in **Findings**, at the severity `review-handoff`'s tier table warrants. Do not describe it as a coverage gap — the coverage exists and the implementation is what failed. Record the defect and its evidence, never how to resolve it; `resolve-findings` derives the options, and anything written here anchors it to your framing. Both directions of the reference: the finding's detail ends with `automatic test {n}`, and the note on the test ends with the pointer to the finding.
+- If it fails because it exposes a real defect, that defect belongs in **Findings**, at the severity the guide's tier table warrants. Write both directions of the reference: the finding's detail ends with `automatic test {n}`, and the note on the test ends with the pointer to the finding.
 - Additional coverage you chose to write goes in the checklist as a new checked item, in the group it belongs to.
 
 Then the tally line and the status line's automatic count. Run output goes to the reviewer in Phase 6, not into the document.

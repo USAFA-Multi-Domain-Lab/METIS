@@ -7,7 +7,7 @@ description: Review the files a handoff lists in Coverage Specifics and populate
 
 Perform the code review a handoff asks for and record what you find. This skill **writes findings and nothing else** — it never fixes code.
 
-Read `.github/instructions/HANDOFFS.instructions.md` before writing anything. It is the authority on the Findings format; this skill covers procedure and severity judgment only.
+Read `.github/instructions/HANDOFFS.instructions.md` before writing anything. It is the authority on the Findings format and the severity tiers; this skill covers procedure only.
 
 ## Phase 1 — Locate and scope
 
@@ -34,31 +34,17 @@ So for every candidate finding, before it goes in the document:
 
 If a claim does not survive this, drop it. Do not pad the list.
 
-## Phase 3 — Assign severity
+## Phase 3 — Write the findings
 
-| Tier         | What belongs                                                                                                                                                                                   |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Critical** | Corrupts or destroys production data now, or opens a security hole an unprivileged user can reach today. Rare — do not inflate into it.                                                        |
-| **High**     | Wrong behavior that reaches users or data on a normal path: silent behavior inversion, a request that never responds, a crash on real input.                                                   |
-| **Medium**   | A real defect on a narrower path, or a latent one the code structurally guarantees: authorization gaps, a migration that cannot be re-run, a payload computed for one member and sent to many. |
-| **Low**      | Doc drift, dead code, unused imports, always-true conditions, naming and style-guide deviations, diagnosability costs.                                                                         |
-| **Advisory** | Not a defect. Observations, latent hazards, things that surprised you. Excluded from the real tally so it stays meaningful.                                                                    |
-
-Order within a tier by practical impact, not by file order.
-
-## Phase 4 — Write the findings
-
-Follow the guide's format. What matters most in practice:
+Follow the guide's format, and assign severity from its tier table. What matters most in practice:
 
 - Lead with the **bold one-sentence claim**. A reader scanning only the bold lines should understand the review. Write the claim, then the evidence — never the reverse.
 - Cite `file:line` as a Markdown link for every path mentioned, including paths inside the supporting detail.
-- Record the defect and its evidence, never how to resolve it — not a fix, not a direction, not a hint at one. `resolve-findings` derives the options, and anything written here anchors it to your framing.
-- A test that fails because it exposes a real defect is a **finding**, not a coverage gap. The coverage exists; the implementation is what failed.
 - Pre-existing tests broken by the feature are not findings — the handoff should have arrived green. If it did not, say so to the user rather than absorbing it into the review.
 
 Then update the tally line and the status line to match, adding the findings count the author left off.
 
-## Phase 5 — Run the static checks
+## Phase 4 — Run the static checks
 
 These back the findings — a type or lint error in reviewed code is a finding, and a clean run is what lets you say the rest of the review is about behavior rather than compilation.
 
@@ -73,7 +59,7 @@ Prettier is not a project gate in this repo — several files fail `--check` at 
 
 Report what actually ran and name anything that did not rather than implying it passed.
 
-## Phase 6 — Stop
+## Phase 5 — Stop
 
 Report concisely: how many findings at each severity, and the one or two that actually matter.
 

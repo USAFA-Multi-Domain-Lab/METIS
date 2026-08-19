@@ -77,7 +77,7 @@ Never fix it. Never adjust the test to match the behavior.
 
 Both directions of the reference, then the counts.
 
-**A new finding** takes the guide's format, at the severity the tier table in `review-handoff` warrants. Record the defect and its evidence, never how to resolve it — `resolve-findings` derives the options, and anything written here anchors it to your framing. The detail ends with the back-reference to the test.
+**A new finding** takes the guide's format, at the severity its tier table warrants. The detail ends with the back-reference to the test.
 
 **An existing finding** keeps its claim and its severity untouched, and the back-reference is appended to its detail.
 

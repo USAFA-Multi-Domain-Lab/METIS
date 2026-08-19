@@ -146,9 +146,19 @@ A test that fails because it exposes a real product defect makes that defect a *
 - Findings are grouped under `### Critical`, `### High`, `### Medium`, `### Low`, and `### Advisory`, omitting empty groups, and ordered by severity then practical impact.
 - Every finding is a checkbox. Unchecked means open; checked means resolved, declined, or determined to be a false flag.
 - Each finding leads with its file path and line as a Markdown link, then a **bold one-sentence claim**, then the supporting detail. Every workspace file path is a link, including those inside the detail.
-- `Advisory` holds non-defects.
+- A finding records the defect and its evidence, never how to resolve it — not a fix, not a direction, not a hint at one. The author derives the options when resolving, and anything written here anchors them to the reviewer's framing.
 - Findings are resolved **in place**: the box is checked and a note appended beneath it. Declines and false flags are checked off like any other resolution, marked **Declined** or **False flag** in the note.
 - Resolved findings stay where they are. They are not moved to a separate section or deleted — the list is the record.
+
+Severity is what the defect does, not how it was found:
+
+| Tier         | What belongs                                                                                                                                                                                   |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Critical** | Corrupts or destroys production data now, or opens a security hole an unprivileged user can reach today. Rare — do not inflate into it.                                                        |
+| **High**     | Wrong behavior that reaches users or data on a normal path: silent behavior inversion, a request that never responds, a crash on real input.                                                   |
+| **Medium**   | A real defect on a narrower path, or a latent one the code structurally guarantees: authorization gaps, a migration that cannot be re-run, a payload computed for one member and sent to many. |
+| **Low**      | Doc drift, dead code, unused imports, always-true conditions, naming and style-guide deviations, diagnosability costs.                                                                         |
+| **Advisory** | Not a defect. Observations, latent hazards, things that surprised you. Excluded from the real tally so it stays meaningful.                                                                    |
 
 ### Coverage Specifics
 
