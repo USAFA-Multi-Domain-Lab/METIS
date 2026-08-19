@@ -128,7 +128,9 @@ Report the hash, then **go back to Phase 2 and take the next group** without wai
 
 The cycle ends when no group has an unchecked case, or whenever the reviewer stops it.
 
-Update the status if the guide's condition for its current value no longer holds. Then report the session: which cases were written, which were verified by mutation, what failed and why, and any finding you added.
+Update the status if the guide's condition for its current value no longer holds.
+
+Report the session: which cases were written, which were verified by mutation, what failed and why, and any finding you added.
 
 Name the suites that actually ran. Unit coverage here is thin, so a green `test:unit` does not mean what it would elsewhere — do not let it imply broad safety.
 

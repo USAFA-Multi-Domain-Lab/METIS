@@ -61,9 +61,7 @@ Never writes a checkbox, a finding, a note, or any other prose. Each of those is
 
 Corrections run in both directions: a status ahead of the document is corrected as readily as one behind it.
 
-Claiming the reviewer line is the one write that changes ownership rather than restating what the document already implies, and it is what takes a document out of `Awaiting review` — so the status moves to `In review` in the same edit. Say both happened when reporting the state.
-
-Report each correction in one line. An accurate document gets no edit and no comment.
+Claiming the reviewer line is the one write that changes ownership rather than restating what the document already implies, and it is what takes a document out of `Awaiting review` — so the status moves to `In review` in the same edit. Say the reviewer line was claimed.
 
 ## Phase 5 — Answer for the asker
 

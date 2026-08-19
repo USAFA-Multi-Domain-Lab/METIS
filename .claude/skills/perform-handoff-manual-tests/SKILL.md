@@ -93,4 +93,6 @@ Then **go back to Phase 2 and take the next test** without waiting to be asked.
 
 The cycle ends when no test is unchecked, or whenever the reviewer stops it — which they may do at any gate.
 
-Update the status if the guide's condition for its current value no longer holds. Then report the session: how many passed, what failed and the findings it produced, and anything deferred without being run.
+Update the status if the guide's condition for its current value no longer holds.
+
+Report the session: how many passed, what failed and the findings it produced, and anything deferred without being run.

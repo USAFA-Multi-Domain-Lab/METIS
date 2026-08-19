@@ -103,4 +103,6 @@ Report the hash, then **go back to Phase 2 and take the next finding** without w
 
 The cycle ends when no findings are open, or whenever the author stops it — which they may do at any gate.
 
-Update the status if the guide's condition for its current value no longer holds. Then report the session: what was fixed, what was declined, what turned out to be a false flag, and anything still open.
+Update the status if the guide's condition for its current value no longer holds.
+
+Report the session: what was fixed, what was declined, what turned out to be a false flag, and anything still open.
