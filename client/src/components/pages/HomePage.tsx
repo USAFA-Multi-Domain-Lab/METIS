@@ -59,7 +59,7 @@ export default function HomePage(): TReactElement | null {
   const [fileReferences, setFileReferences] = useState<ClientFileReference[]>(
     [],
   )
-  const navButtonEngine = useButtonSvgEngine({
+  const navigationButtonEngine = useButtonSvgEngine({
     elements: [ProfileButton()],
   })
 
@@ -382,7 +382,7 @@ export default function HomePage(): TReactElement | null {
    * Config for the navigation on this page.
    */
   const navigation = compute<TNavigation_P>(() => {
-    return { buttonEngine: navButtonEngine, logoLinksHome: false }
+    return { buttonEngine: navigationButtonEngine, logoLinksHome: false }
   })
 
   /* -- RENDER -- */

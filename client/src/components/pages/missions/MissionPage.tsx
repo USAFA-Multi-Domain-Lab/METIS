@@ -16,6 +16,7 @@ import {
   useGlobalContext,
   useNavigationMiddleware,
 } from '@client/context/global'
+import { LocalContextProvider } from '@client/context/local'
 import { ClientFileReference } from '@client/files/ClientFileReference'
 import type { TMetisClientComponents } from '@client/index'
 import { ClientMissionAction } from '@client/missions/actions/ClientMissionAction'
@@ -46,8 +47,7 @@ import { s } from '@shared/toolbox/strings/StringToolbox'
 import { useEffect, useRef, useState } from 'react'
 import type { TPage_P } from '..'
 import { DefaultPageLayout } from '..'
-import type { TMissionPageContextData } from './context'
-import { MissionPageContext } from './context'
+import { missionPageContext } from './context'
 import ActionEntry from './entries/implementations/ActionEntry'
 import EffectEntry from './entries/implementations/EffectEntry'
 import ForceEntry from './entries/implementations/ForceEntry'
@@ -89,9 +89,6 @@ const CREATE_EFFECT_VIEW_TITLE = 'Create Effect'
 export default function MissionPage(
   props: TMissionPage_P,
 ): TReactElement | null {
-  const Provider =
-    MissionPageContext.Provider as React.Provider<TMissionPageContextData>
-
   /* -- STATE -- */
 
   const globalContext = useGlobalContext()
@@ -134,7 +131,7 @@ export default function MissionPage(
   // with a fresh form, even if it is reactivated while still mounted.
   const [effectCreatorKey, setEffectCreatorKey] = useState<number>(0)
   const root = useRef<HTMLDivElement>(null)
-  const navButtonEngine = useButtonSvgEngine({
+  const navigationButtonEngine = useButtonSvgEngine({
     elements: [
       {
         key: 'save',
@@ -308,7 +305,7 @@ export default function MissionPage(
    * Config for the navigation on this page.
    */
   const navigation = compute<TNavigation_P>(() => {
-    return { buttonEngine: navButtonEngine }
+    return { buttonEngine: navigationButtonEngine }
   })
 
   /**
@@ -401,7 +398,7 @@ export default function MissionPage(
   // Enable/disable the save button based on
   // whether there are unsaved changes or not.
   useEffect(() => {
-    navButtonEngine.setDisabled('save', !areUnsavedChanges)
+    navigationButtonEngine.setDisabled('save', !areUnsavedChanges)
   }, [areUnsavedChanges])
 
   // Handle selection changes.
@@ -534,38 +531,35 @@ export default function MissionPage(
   const enforceSavePrompt = async (
     options: TSavePromptOptions = {},
   ): Promise<void> => {
-    return new Promise<void>(async (resolve, reject) => {
-      const { includeDiscardOption = true } = options
+    const { includeDiscardOption = true } = options
 
-      // If there are unsaved changes, prompt the user.
-      if (isAuthorized('missions_write') && areUnsavedChanges) {
-        let options: Array<'Cancel' | 'Save' | 'Discard'> = ['Cancel', 'Save']
-        let message: string =
-          'You have unsaved changes which must be saved to proceed.'
+    // A user who cannot write has nothing to save, so there is
+    // nothing to address.
+    if (!isAuthorized('missions_write')) return
+    if (!areUnsavedChanges) return
 
-        if (includeDiscardOption) {
-          options.push('Discard')
-          message =
-            'You have unsaved changes. What do you want to do with them?'
-        }
+    let choices: Array<'Cancel' | 'Save' | 'Discard'> = ['Cancel', 'Save']
+    let message: string =
+      'You have unsaved changes which must be saved to proceed.'
 
-        const { choice } = await prompt(message, options)
+    if (includeDiscardOption) {
+      choices.push('Discard')
+      message = 'You have unsaved changes. What do you want to do with them?'
+    }
 
-        // If the user opted to save, then save
-        // the mission.
-        if (choice === 'Save') {
-          beginLoading('Saving...')
-          await save()
-          finishLoading()
-        }
+    const { choice } = await prompt(message, choices)
 
-        // Abort if the user cancels.
-        if (choice === 'Cancel') return
-      }
+    // Cancelling calls off whatever the prompt stood in the way of, so
+    // this is left unsettled and the caller never carries on.
+    if (choice === 'Cancel') return new Promise<void>(() => {})
 
-      // Resolve after all checks are made.
-      resolve()
-    })
+    // If the user opted to save, then save
+    // the mission.
+    if (choice === 'Save') {
+      beginLoading('Saving...')
+      await save()
+      finishLoading()
+    }
   }
 
   /**
@@ -755,23 +749,17 @@ export default function MissionPage(
     }
   }
 
-  /**
-   * The value to provide to the context.
-   */
-  const contextValue: TMissionPageContextData = {
-    root,
-    ...props,
-    state,
-    viewMode,
-    onChange,
-    activateEffectCreator,
-  }
-
   // Don't render if the mount hasn't yet been handled.
   if (!mountHandled) return null
 
   return (
-    <Provider value={contextValue}>
+    <LocalContextProvider
+      context={missionPageContext}
+      defaultedProps={props}
+      computed={{ viewMode, onChange, activateEffectCreator }}
+      state={state}
+      elements={{}}
+    >
       <div className={rootClassName} ref={root}>
         <DefaultPageLayout navigation={navigation}>
           <PanelLayout initialSizes={['fill', panel2DefaultSize]}>
@@ -841,7 +829,7 @@ export default function MissionPage(
           </PanelLayout>
         </DefaultPageLayout>
       </div>
-    </Provider>
+    </LocalContextProvider>
   )
 }
 
@@ -850,12 +838,42 @@ export default function MissionPage(
 /**
  * Props for {@link MissionPage}.
  */
-export interface TMissionPage_P extends TPage_P {
+export type TMissionPage_P = TPage_P & {
   /**
    * The ID of the mission to be edited. If null,
    * a new mission is being created.
    */
   missionId: string | null
+}
+
+/**
+ * Computed values the mission page shares with its subcomponents.
+ */
+export type TMissionPage_C = {
+  /**
+   * The current viewing mode of the mission page.
+   */
+  viewMode: 'edit' | 'preview'
+  /**
+   * Callback for when a change has been made on the
+   * page that would require saving.
+   * @param components The components that have been changed.
+   */
+  onChange: (
+    ...components: TNonEmptyArray<MissionComponent<TMetisClientComponents>>
+  ) => void
+  /**
+   * Allows the creation of a custom effect by opening
+   * the effect creator as a temporary view in the
+   * secondary panel, allowing the user to create an
+   * effect from scratch.
+   * @param host The host for which to create the effect.
+   * @param trigger The trigger for the new effect.
+   */
+  activateEffectCreator: <TType extends TEffectType>(
+    host: TClientEffectHost<TType>,
+    trigger: TEffectTrigger,
+  ) => void
 }
 
 /**

@@ -20,7 +20,7 @@ export default function DocPage({ source }: TDocPage_P): TReactElement | null {
   const globalContext = useGlobalContext()
   const { beginLoading, finishLoading, handleError } = globalContext.actions
   const [doc, setDoc] = useState<string>('')
-  const navButtonEngine = useButtonSvgEngine({
+  const navigationButtonEngine = useButtonSvgEngine({
     elements: [HomeButton(), ProfileButton()],
   })
 
@@ -57,7 +57,7 @@ export default function DocPage({ source }: TDocPage_P): TReactElement | null {
    * Config for the navigation on this page.
    */
   const navigation = compute<TNavigation_P>(() => {
-    return { buttonEngine: navButtonEngine }
+    return { buttonEngine: navigationButtonEngine }
   })
 
   /* -- RENDER -- */

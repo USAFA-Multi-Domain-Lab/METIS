@@ -54,7 +54,7 @@ export default function LaunchPage({
       },
     ],
   })
-  const navButtonEngine = useButtonSvgEngine({
+  const navigationButtonEngine = useButtonSvgEngine({
     elements: [
       {
         key: 'cancel',
@@ -227,7 +227,7 @@ export default function LaunchPage({
    * Config for the navigation on this page.
    */
   const navigation = compute<TNavigation_P>(() => {
-    return { buttonEngine: navButtonEngine }
+    return { buttonEngine: navigationButtonEngine }
   })
 
   /* -- RENDER -- */
