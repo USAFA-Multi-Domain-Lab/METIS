@@ -15,7 +15,7 @@ Phase 1 runs once. **Phases 2 through 8 are a cycle** — the last phase returns
 
 ## Phase 1 — Locate the handoff and take stock
 
-If the user has a handoff open in the IDE, use it. Otherwise list `handoffs/` and ask which — do not guess between two candidates.
+If the user has a handoff open in the IDE, use it. Otherwise search the version directories under `handoffs/`, highest semantic version first — the handoff in play is nearly always in the newest — and ask which; do not guess between two candidates.
 
 Read the whole document, then report what is unresolved at each severity so the author knows the size of the session before it starts.
 

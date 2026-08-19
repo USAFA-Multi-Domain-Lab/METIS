@@ -17,7 +17,7 @@ Phase 1 runs once. **Phases 2 through 5 are a cycle** — the last returns to th
 
 ## Phase 1 — Locate the handoff and take stock
 
-If the user has a handoff open in the IDE, use it. Otherwise list `handoffs/` and ask which — do not guess between two candidates.
+If the user has a handoff open in the IDE, use it. Otherwise search the version directories under `handoffs/`, highest semantic version first — the handoff in play is nearly always in the newest — and ask which; do not guess between two candidates.
 
 Find the Manual Tests section by its heading text, at whatever level it carries and whatever trails it. If the section is a sentence saying no manual testing is required rather than a list, say so and stop.
 
@@ -77,7 +77,7 @@ Never fix it. Never adjust the test to match the behavior.
 
 Both directions of the reference, then the counts.
 
-**A new finding** takes the guide's format, at the severity its tier table warrants. The detail ends with the back-reference to the test.
+**A new finding** takes the guide's format, at the severity its tier definitions warrant. The detail ends with the back-reference to the test.
 
 **An existing finding** keeps its claim and its severity untouched, and the back-reference is appended to its detail.
 

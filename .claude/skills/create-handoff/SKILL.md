@@ -9,33 +9,43 @@ Write the initial handoff for a feature the user has built. This produces the **
 
 Read `.github/instructions/HANDOFFS.instructions.md` before writing anything. It is the authority on structure and section rules; this skill is procedure only and deliberately does not restate the format. If the two ever disagree, the guide wins.
 
-## Phase 1 — Establish scope
+## Phase 1 — Determine the version
+
+The handoff goes in `handoffs/{version}/`, the release the work ships in. Read `version` from `package.json` and compare it against the newest `# version-{n}` heading in `docs/changelog.md`:
+
+- **`package.json` is ahead of the changelog** — that is the version. The release is open and this work belongs to it.
+- **The changelog already has an entry for that version** — the bump has not happened yet, so the number is either stale or the user has begun writing the changelog early. Ask the user which version this handoff is for; do not assume the next one.
+
+Create the directory if it does not exist. This phase comes first because it bounds the next one: the release's tag is where the history search starts, and its directory holds the sibling handoffs.
+
+## Phase 2 — Establish scope
 
 This is the hard part and the one worth spending time on. A handoff that lists the wrong files wastes the reviewer's entire pass.
 
-The feature may be recent, or months old and already merged. Start wide, then narrow:
+Releases are tagged `v{version}` (assuming the tags have been pulled down from GitHub), so the previous release's tag is the earliest commit this version's work can start from:
 
 ```bash
+git describe --tags --abbrev=0   # the previous release, e.g. v2.5.1
 git status --short
-git log --oneline -30
-git diff --stat main...HEAD
+git log --oneline v{previous}..HEAD
+git diff --stat v{previous}...HEAD
 ```
 
-If the work predates the current branch, find it by path or by message:
+The feature may be the branch you are on, or merged in weeks ago. Narrow by path or by message:
 
 ```bash
-git log --oneline --all -- <path/to/suspected/file>
-git log --oneline --all --grep '<feature keyword>'
+git log --oneline --all ^v{previous} -- <path/to/suspected/file>
+git log --oneline --all ^v{previous} --grep '<feature keyword>'
 ```
 
 Rules:
 
-- **Do not guess between two candidate scopes.** If the recent history holds more than one plausible feature, list what you found and ask which. Guessing wrong costs the reviewer more than the question costs the user.
-- A feature is rarely one commit. Follow it back until the earliest commit that belongs to it, then confirm the range with the user if it is not obvious.
-- Check `ls handoffs/` for sibling handoffs covering adjacent work. Overlap is normal in this repo — one release's slices frequently touch the same files, and the reviewer needs to know which part is theirs. Cross-reference them in the Summary and scope the file entries accordingly.
+- **Do not guess between two candidate scopes.** If the release's history holds more than one plausible feature, list what you found and ask which. Guessing wrong costs the reviewer more than the question costs the user.
+- A feature is rarely one commit. Follow it back to the earliest commit that belongs to it — never past the previous release's tag — then confirm the range with the user if it is not obvious.
+- Read the handoffs already in `handoffs/{version}/` for sibling work. Overlap is normal in this repo — one release's slices frequently touch the same files, and the reviewer needs to know which part is theirs. Cross-reference them in the Summary and scope the file entries accordingly. Earlier versions' directories hold shipped work and are not siblings.
 - Exclude files the feature did not change, however relevant they seem. Coverage Specifics is a changed-file inventory, not a reading list.
 
-## Phase 2 — Understand the mechanism
+## Phase 3 — Understand the mechanism
 
 Read the code, not just the diff. The Summary requires a walkthrough of how the system works and its biggest players, and you cannot write that from `git diff --stat`.
 
@@ -47,7 +57,7 @@ Work out, concretely:
 
 This phase also produces the one-sentence-per-file descriptions in Coverage Specifics. Generic descriptions like "was updated" mean this phase was skipped.
 
-## Phase 3 — Check the preconditions
+## Phase 4 — Check the preconditions
 
 The handoff assumes a green suite. Before writing:
 
@@ -62,18 +72,20 @@ If the feature broke or made stale any pre-existing test, **stop and tell the us
 
 Report anything that did not run rather than implying it passed.
 
-## Phase 4 — Write it
+## Phase 5 — Write it
 
 Follow the guide's format exactly.
 
+**Do not hard-wrap the prose.** Every paragraph and every bullet is a single line, however long it runs — the IDE soft-wraps it to the window. Breaking prose at a fixed column makes the document harder to read and forces a whole paragraph to reflow on every later edit.
+
 ### The Summary
 
-Two paragraphs, and the framing of the first depends on the kind of change:
+The first paragraph has a maximum of four sentences and 100 words. It should provide a concise summary of the feature or refactor, without run-on sentences. The framing for this summary depends on the kind of change:
 
 - A **new feature** states its **purpose**. What could a user not do before? What is it for? A reviewer who does not know why it exists cannot judge whether the implementation serves it.
-- A **refactor or overhaul** states **why the change was necessary**. What did the previous design cost — bugs it invited, work it made expensive, limits it imposed — and what forced the rework now? A list of what moved is not a justification; the diff already carries that. The reasoning is the part only the user has, so ask for it if Phase 2 did not turn it up.
+- A **refactor or overhaul** states **why the change was necessary**. What did the previous design cost — bugs it invited, work it made expensive, limits it imposed — and what forced the rework now?
 
-Two to four sentences, concrete enough that a reviewer can tell from it alone whether a given file is in scope. Cross-reference the sibling handoffs found in Phase 1 so findings are not reported against someone else's slice.
+Keep explanation general and high-level. Avoid implementation details. Do not include links.
 
 The second paragraph is the walkthrough: the mechanism and its biggest players, with the main classes, methods, and entry points linked by name, tracing what happens on a typical operation. The audience is a coworker who has not seen this code — they should finish it understanding the basic shape of the system and knowing which file to open first. Orientation, not completeness: a few sentences and a handful of links. Detail that runs longer belongs in Coverage Specifics.
 
@@ -100,7 +112,7 @@ Reserved for **critical functionality**: security boundaries, corruption or loss
 
 ### The Coverage Specifics
 
-Only files this feature changed — including supporting work the feature required, not just the files that are recognizably the feature. Ordered from most foundational (shared models, server logic) to most surface-level (client components). Each gets one specific sentence on its role — "was updated" means Phase 2 was skipped.
+Only files this feature changed — including supporting work the feature required, not just the files that are recognizably the feature. Ordered from most foundational (shared models, server logic) to most surface-level (client components). Each gets one specific sentence on its role — "was updated" means Phase 3 was skipped.
 
 ### The rest
 
@@ -109,7 +121,7 @@ Only files this feature changed — including supporting work the feature requir
 - Include the `## Findings` heading with nothing under it. No tally — the reviewer adds one.
 - Every checkbox starts unchecked.
 
-## Phase 5 — Stop
+## Phase 6 — Stop
 
 Report concisely: where the document was written, the scope you settled on, and anything you were unsure about.
 

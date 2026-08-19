@@ -10,7 +10,7 @@ A **code handoff** is a single Markdown document written for a coworker who will
 2. **The reviewer works through it.** Manual tests, automatic tests, and the review itself — boxes get checked as the tests pass and findings are added as they are discovered.
 3. **The author resolves the findings.** Resolution happens in place: the box is checked and a reply appended beneath it. Tests the review left failing come back too — their boxes are checked once the fix makes them pass.
 
-Handoffs live in `handoffs/{feature-name}.md`, kebab-case. The directory is gitignored, so writing there never touches a commit.
+Handoffs live in `handoffs/{version}/{feature-name}.md`, kebab-case, where `{version}` is the release the work ships in — `handoffs/2.5.2/member-unban.md`. The directory is gitignored, so writing there never touches a commit.
 
 The document is edited continuously, not written once at the end. Its state at any moment is the state of the review.
 
@@ -30,7 +30,7 @@ Every file link and line number in it — in findings, in coverage specifics, an
 
 ## Summary of Changes and Coverage
 
-{Two to four sentences on what this change is. **New feature** — the purpose it serves: what a user could not do before, and what it is for. **Refactor or overhaul** — why the change was necessary: what the previous design cost and what forced the rework. Name sibling handoffs that cover adjacent work so the reviewer knows what is deliberately out of scope.}
+{Up to four sentences and 100 words on what this change is. **New feature** — the purpose it serves: what a user could not do before, and what it is for. **Refactor or overhaul** — why the change was necessary: what the previous design cost and what forced the rework.}
 
 {A brief walkthrough of how the system works and the biggest players in it, linking the main classes and entry points by name. Trace what happens on a typical operation — where it enters, what carries it, where it lands. Orientation only.}
 
@@ -70,7 +70,7 @@ Every file link and line number in it — in findings, in coverage specifics, an
 ## Coverage Specifics
 
 - [shared/missions/effects/Effect.ts](/shared/missions/effects/Effect.ts) — What this file is and the role it plays in the feature.
-- [client/src/sessions/SessionClient.ts](/client/src/sessions/SessionClient.ts) — Scoped here to the batched update handlers. (The realm architecture is covered by [handoffs/other-feature.md](/handoffs/other-feature.md).)
+- [client/src/sessions/SessionClient.ts](/client/src/sessions/SessionClient.ts) — Scoped here to the batched update handlers. (The realm architecture is covered by [handoffs/2.5.2/other-feature.md](/handoffs/2.5.2/other-feature.md).)
 ```
 
 ---
@@ -152,13 +152,25 @@ A test that fails because it exposes a real product defect makes that defect a *
 
 Severity is what the defect does, not how it was found:
 
-| Tier         | What belongs                                                                                                                                                                                   |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Critical** | Corrupts or destroys production data now, or opens a security hole an unprivileged user can reach today. Rare — do not inflate into it.                                                        |
-| **High**     | Wrong behavior that reaches users or data on a normal path: silent behavior inversion, a request that never responds, a crash on real input.                                                   |
-| **Medium**   | A real defect on a narrower path, or a latent one the code structurally guarantees: authorization gaps, a migration that cannot be re-run, a payload computed for one member and sent to many. |
-| **Low**      | Doc drift, dead code, unused imports, always-true conditions, naming and style-guide deviations, diagnosability costs.                                                                         |
-| **Advisory** | Not a defect. Observations, latent hazards, things that surprised you. Excluded from the real tally so it stays meaningful.                                                                    |
+#### Critical
+
+The system is unusable or its core function is broken: production data is corrupted or destroyed, the server crashes, or an unprivileged user reaches something they should never see. A finding here stops everything else — the fix ships before the feature does. The tier is rare, and inflating into it is exactly what costs it its meaning. If the damage is bounded or the path to it is narrow, the finding belongs lower.
+
+#### High
+
+Wrong behavior a user hits on a normal path. The system still runs, which is what separates this from Critical, but the feature does not do what the handoff claims: a silent behavior inversion, a request that never responds, a crash on ordinary input. These take priority over everything below them. Urgency here is about the damage that reaches users, not about how hard the fix looks.
+
+#### Medium
+
+A real defect on a narrower path, or one the code structurally guarantees will surface even though nothing has hit it yet — an authorization gap, a migration that cannot be re-run, a payload computed for one member and sent to many. The ordinary case still works, so the feature is usable, but the defect is real and someone will eventually reach it. These are resolved in the normal course of the handoff rather than deferred to a later release.
+
+#### Low
+
+Minor problems that do not significantly impact the user's experience: presentation defects, slight performance issues, or minor inconveniences. The cost falls on whoever reads or debugs the code next, not on the user. They are worth recording and usually cheap to close, but they can sometimes wait for a later release if a deadline is pressing. Style guide violations can also be recorded here. Group related style-guide violations together for convenience.
+
+#### Advisory
+
+Not a defect at all. This is where observations go — a latent hazard the current design happens to avoid, an assumption that holds today by coincidence, something that surprised you while reading. Nothing here obligates the author to change anything; the box is checked once it has been considered. Do not use the tier as a parking spot for claims you were not willing to verify — those get dropped rather than recorded.
 
 ### Coverage Specifics
 
@@ -166,4 +178,4 @@ The changed-file inventory: what the reviewer reads, and what each file contribu
 
 Links are absolute. Display text is the workspace-relative path; the link target is the same path prefixed with `/` (e.g. `[shared/missions/nodes/NodeAlert.ts](/shared/missions/nodes/NodeAlert.ts)`). Relative paths (`../`) and bare workspace-relative targets are not used.
 
-When only part of a file is in scope, the entry says so and points at the handoff covering the rest: _"Scoped here to `migrateEffect`. (Argument members are covered by [handoffs/target-argument-system.md](/handoffs/target-argument-system.md).)"_
+When only part of a file is in scope, the entry says so and points at the handoff covering the rest: _"Scoped here to `migrateEffect`. (Argument members are covered by [handoffs/2.5.2/target-argument-system.md](/handoffs/2.5.2/target-argument-system.md).)"_

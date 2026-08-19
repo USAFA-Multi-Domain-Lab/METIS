@@ -19,7 +19,7 @@ Phase 1 runs once. **Phases 2 through 8 are a cycle** — the last returns to th
 
 ## Phase 1 — Locate the handoff and take stock
 
-If the user has a handoff open in the IDE, use it. Otherwise list `handoffs/` and ask which — do not guess between two candidates.
+If the user has a handoff open in the IDE, use it. Otherwise search the version directories under `handoffs/`, highest semantic version first — the handoff in play is nearly always in the newest — and ask which; do not guess between two candidates.
 
 Find the Automatic Tests section by its heading. If it is a sentence saying no automatic testing is required rather than a list of groups, say so and stop.
 
@@ -111,7 +111,7 @@ The checkbox rules are the guide's; the ones that get misapplied:
 
 - Checked means written **and passing**. Nothing else.
 - A test written but failing stays **unchecked**, with a note beneath it in the guide's form saying it was written, that it fails, and why. It does not get checked with a caveat.
-- If it fails because it exposes a real defect, that defect belongs in **Findings**, at the severity the guide's tier table warrants. Write both directions of the reference: the finding's detail ends with `automatic test {n}`, and the note on the test ends with the pointer to the finding.
+- If it fails because it exposes a real defect, that defect belongs in **Findings**, at the severity the guide's tier definitions warrant. Write both directions of the reference: the finding's detail ends with `automatic test {n}`, and the note on the test ends with the pointer to the finding.
 - Additional coverage you chose to write goes in the checklist as a new checked item, in the group it belongs to.
 
 Then the tally line and the status line's automatic count. Run output goes to the reviewer in Phase 6, not into the document.
