@@ -13,7 +13,7 @@ Read `.github/instructions/HANDOFFS.instructions.md` before writing anything. It
 
 If the user has a handoff open in the IDE, use it. Otherwise list handoffs and ask which — do not guess between two candidates.
 
-Read the whole document first, then add the reviewer line beneath the author line, naming the user from `git config user.name`, and set the status to `In review`. Findings may only land on **what Coverage Specifics lists** — read whatever you need to understand it:
+Read the whole document first, then add the reviewer line beneath the author line, naming the user from `git config user.name`, and update the status if the guide's condition for its current value no longer holds. Findings may only land on **what Coverage Specifics lists** — read whatever you need to understand it:
 
 - A scoped entry means only that part is yours. `Scoped here to migrateEffect` means the rest of the file belongs to another handoff, and a finding against it will be rejected as out of scope.
 - Sibling handoffs named in the Summary are someone else's pass. Do not report their findings.
@@ -77,7 +77,7 @@ Report what actually ran and name anything that did not rather than implying it 
 
 Report concisely: how many findings at each severity, and the one or two that actually matter.
 
-Set the status to `Resolving findings` — unless the Automatic Tests section is still yours to write, which leaves it `In review`.
+Update the status if the guide's condition for its current value no longer holds.
 
 Then stop. **Do not fix anything.** A defect found while reviewing is a task for the author, not the reviewer.
 

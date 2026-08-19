@@ -68,7 +68,7 @@ Update the handoff. The checkbox rules are the guide's; the ones that get misapp
 
 The checklist is the whole record. A checked box says written and passing; a failure carries its explanation in the note beneath it. Run output goes to the user in Phase 6, not into the document.
 
-Set the status to `Resolving findings` when this finishes the reviewer's side, or leave it `In review` if the code review is still outstanding.
+Update the status if the guide's condition for its current value no longer holds.
 
 ## Phase 6 — Stop
 

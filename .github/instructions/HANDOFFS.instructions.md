@@ -81,7 +81,16 @@ Every file link and line number in it — in findings, in coverage specifics, an
 
 The title names the feature concisely, followed by `— Code Handoff`.
 
-The status line is one line, kept current as work proceeds. `Awaiting review` before anyone picks it up, `In review` while the reviewer is working, `Resolving findings` once the review is handed back and the author is addressing it, `Complete` when every box in the document is checked — manual tests, automatic tests, and findings alike. The author leaves the findings count off; the reviewer adds it when the review begins.
+The status line is one line, kept current as work proceeds. It has four values, each with a condition that must hold:
+
+- **`Awaiting review`** — written and not yet picked up. No reviewer line, every box unchecked, Findings empty.
+- **`In review`** — the reviewer has it. Holds until every manual test and every automatic test has been **addressed** — checked off as passing, or left unchecked with a note saying why — and every finding the review turned up is written down. Neither a failing test nor an open finding keeps it here; an unaddressed item does. A section the document declares unnecessary counts as addressed.
+- **`Resolving findings`** — everything the reviewer owns is addressed and the document is back with the author. Whatever is still open is the author's to close.
+- **`Complete`** — every box in the document is checked, manual tests, automatic tests, and findings alike.
+
+Whoever edits the document checks whether its status still holds and corrects it if it does not.
+
+The author leaves the findings count off; the reviewer adds it when the review begins.
 
 Beneath it, `**Author**` names whoever wrote the feature and this document, and `**Reviewer**` names whoever reviews and tests it against the document's claims — each taken from that person's `git config user.name`. The author writes the author line alone; the reviewer line is added when the review begins. The trailing backslash on the author line is a hard line break — without it the two render as one line.
 
@@ -100,6 +109,10 @@ A note records anything that happened beneath a checkbox — a test that failed,
 The name is whoever wrote the note, from their `git config user.name`; the timestamp comes from `date "+%m:%d:%Y:%H:%M"`. Indent two spaces to stay inside the list item, prefix every wrapped line with `>`, and separate paragraphs with a bare `>`.
 
 Notes accumulate. A later note goes beneath the ones already there rather than replacing them — the sequence is the record.
+
+### Cross-References
+
+A note pointing at a finding cites it `{Severity} #{n}`, counting from the top of that severity group. A finding pointing back at what surfaced it cites `manual test {n}` or `automatic test {n}`, counting from the top of that checklist. Neither number is written into the document; both are read off it.
 
 ### Manual Tests
 

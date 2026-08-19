@@ -103,4 +103,4 @@ Report the hash, then **go back to Phase 2 and take the next finding** without w
 
 The cycle ends when no findings are open, or whenever the author stops it — which they may do at any gate.
 
-Set the status to `Complete` if every box in the document is now checked. Then report the session: what was fixed, what was declined, what turned out to be a false flag, and anything still open.
+Update the status if the guide's condition for its current value no longer holds. Then report the session: what was fixed, what was declined, what turned out to be a false flag, and anything still open.
