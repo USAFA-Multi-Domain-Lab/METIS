@@ -1,4 +1,5 @@
 import { compute } from '@client/toolbox'
+import { UNMODIFIED_KEYSTROKES } from '@client/toolbox/keyboard'
 import { ChatMessage } from '@shared/sessions/chat/ChatMessage'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import type { Editor } from '@tiptap/react'
@@ -87,18 +88,12 @@ export default function MessengerComposer(): TReactElement {
   /**
    * Handles keydown events on the composer in the capture phase.
    */
-  const onComposerKeyDown = (e: React.KeyboardEvent) => {
-    if (
-      e.key === 'Enter' &&
-      !e.shiftKey &&
-      !e.ctrlKey &&
-      !e.metaKey &&
-      !e.altKey
-    ) {
-      e.preventDefault()
-      e.stopPropagation()
-      onSend()
-    }
+  const onComposerKeyDown = (event: React.KeyboardEvent) => {
+    if (!UNMODIFIED_KEYSTROKES.enter.matches(event)) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    onSend()
   }
 
   /* -- RENDER -- */
@@ -112,13 +107,11 @@ export default function MessengerComposer(): TReactElement {
           ref={composerScrollRef}
         >
           <RichText
-            options={{
-              editable: !!activeChannelId,
-              placeholder: activeChannelId ? 'Send a message...' : '',
-              editorRef,
-              onUpdate: ({ editor }) => setCharCount(editor.getText().length),
-              bubbleMenuAnchor: composerScrollRef,
-            }}
+            type={activeChannelId ? 'editor' : 'viewer'}
+            placeholder={activeChannelId ? 'Send a message...' : ''}
+            editorRef={editorRef}
+            onUpdate={({ editor }) => setCharCount(editor.getText().length)}
+            toolbarAnchor={composerScrollRef}
           />
         </div>
         <div className='ComposerToolbar'>

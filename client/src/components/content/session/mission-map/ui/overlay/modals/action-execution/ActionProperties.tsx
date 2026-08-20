@@ -78,9 +78,7 @@ export default function ActionProperties({
       <PropertyBadges>
         {showDescription && (
           <div className={descriptionClasses.value}>
-            <RichText
-              options={{ content: action.description, editable: false }}
-            />
+            <RichText content={action.description} type='viewer' />
           </div>
         )}
         <PropertyBadge

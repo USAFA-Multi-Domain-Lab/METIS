@@ -20,9 +20,19 @@ jest.mock(
   '@client/components/content/general-layout/rich-text/RichText',
   () => ({
     __esModule: true,
-    default: ({ options }: { options?: any }) => {
-      const { className, content, onUpdate, onFocus, onBlur } = options ?? {}
-
+    default: ({
+      className,
+      content,
+      onUpdate,
+      onFocus,
+      onBlur,
+    }: {
+      className?: string
+      content?: string
+      onUpdate?: (props: any) => void
+      onFocus?: (props: any) => void
+      onBlur?: (props: any) => void
+    }) => {
       const buildEditor = (value: string) => ({
         getHTML: () => value,
         commands: { setContent: jest.fn() },

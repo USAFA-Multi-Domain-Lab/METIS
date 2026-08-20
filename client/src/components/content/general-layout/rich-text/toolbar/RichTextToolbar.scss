@@ -1,0 +1,28 @@
+@use '@client/assets/styles/config.scss' as *;
+
+.RichTextToolbar {
+  background-color: $color-primary;
+  border: 1px solid rgba($color-primary-light, 0.65);
+  box-shadow: 0 0.35em 1em rgba($color-primary-dark, 0.55);
+  border-radius: 0.4em;
+  padding-bottom: 0.5em;
+  z-index: $z-index-rich-text-editor;
+
+  .Tools {
+    padding: 0.5em 0.5em 0.25em !important;
+
+    .ButtonSvgPanel {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      flex-flow: row wrap;
+
+      .SvgPanelElement {
+        &.Selected {
+          filter: invert(68%) sepia(94%) saturate(322%) hue-rotate(117deg)
+            brightness(200%) contrast(98%);
+        }
+      }
+    }
+  }
+}

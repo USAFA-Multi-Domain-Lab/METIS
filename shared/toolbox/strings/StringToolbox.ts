@@ -1,5 +1,3 @@
-import { v4 as generateHash } from 'uuid'
-
 /**
  * Utility functions for working with strings.
  */
@@ -18,7 +16,7 @@ export class StringToolbox {
    */
   public static limit(toLimit: string, maxCharacters: number) {
     if (toLimit.length > maxCharacters) {
-      toLimit = toLimit.substr(0, maxCharacters - 3)
+      toLimit = toLimit.slice(0, Math.max(0, maxCharacters - 3))
       toLimit += '...'
     }
     return toLimit
@@ -29,7 +27,7 @@ export class StringToolbox {
    * @returns The random hash.
    */
   public static generateRandomId(): string {
-    return generateHash()
+    return crypto.randomUUID()
   }
 
   /**

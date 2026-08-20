@@ -7,7 +7,7 @@
 
 // Import the necessary modules.
 const mongoose = require('mongoose')
-const generateHash = require('uuid').v4
+const generateHash = () => crypto.randomUUID()
 
 let dbName = 'metis'
 

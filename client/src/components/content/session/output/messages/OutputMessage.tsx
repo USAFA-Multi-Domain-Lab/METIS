@@ -25,10 +25,7 @@ export default function OutputMessage() {
 
   return (
     <span className={rootClasses.value}>
-      <RichText
-        key={key}
-        options={{ content: renderedMessage, editable: false }}
-      />
+      <RichText key={key} content={renderedMessage} type='viewer' />
       {output.type === 'execution-initiation' && output.sourceAction && (
         <ExecutionMessageDynamicContent />
       )}

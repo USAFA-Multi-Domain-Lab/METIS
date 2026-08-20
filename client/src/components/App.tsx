@@ -19,7 +19,7 @@ import {
   tooltipsOffsetY,
 } from './content/communication/Tooltip'
 import { DevOptions } from './content/debug/DevOptions'
-import Markdown, { MarkdownTheme } from './content/general-layout/Markdown'
+import RichText from './content/general-layout/rich-text/RichText'
 import ButtonMenu from './content/user-controls/buttons/ButtonMenu'
 import type { TButtonText_P } from './content/user-controls/buttons/ButtonText'
 import { PAGE_REGISTRY } from './pages'
@@ -68,6 +68,7 @@ export default function (props: {}): TReactElement | null {
     connectToServer,
     navigateAfterLogin,
     notify,
+    logout,
   } = globalContext.actions
 
   /* -- FUNCTIONS -- */
@@ -243,19 +244,26 @@ export default function (props: {}): TReactElement | null {
   }, [login === null])
 
   // Logs the user out if the server emits a logout event.
-  useEventListener(
-    server,
-    'logout-user-update',
-    async () => {
-      navigateTo('AuthPage', {}, { bypassMiddleware: true })
-      notify(
-        'You have been logged out due to a change to your account. If you believe this is an error, please contact your system administrator. Otherwise, please log back in.',
-        {
-          duration: null,
-        },
-      )
-    },
-  )
+  useEventListener(server, 'logout-user-update', async () => {
+    await logout()
+    notify(
+      'You have been logged out due to a change to your account. If you believe this is an error, please contact your system administrator. Otherwise, please log back in.',
+      {
+        duration: null,
+      },
+    )
+  })
+
+  // Logs the user out if their account was deleted.
+  useEventListener(server, 'logout-user-delete', async () => {
+    await logout()
+    notify(
+      'You have been logged out because your account was deleted. If you believe this is an error, please contact your system administrator.',
+      {
+        duration: null,
+      },
+    )
+  })
 
   /* -- COMPUTED -- */
 
@@ -307,9 +315,10 @@ export default function (props: {}): TReactElement | null {
       <div className={rootClasses.value} key={'App'} ref={app}>
         {buttonMenuJsx}
         <div className='Tooltips' ref={tooltips}>
-          <Markdown
-            markdown={tooltipDescription}
-            theme={MarkdownTheme.ThemeSecondary}
+          <RichText
+            content={tooltipDescription}
+            type='viewer'
+            format='markdown'
           />
         </div>
         <Notifications />

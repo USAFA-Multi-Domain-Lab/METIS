@@ -4,7 +4,7 @@ import { useEventListener, useListComponent } from '@client/toolbox/hooks'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useState } from 'react'
 import { Notification } from '../../../notifications/Notification'
-import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
+import RichText from '../general-layout/rich-text/RichText'
 import { ButtonText } from '../user-controls/buttons/ButtonText'
 import If from '../util/If'
 import './NotificationBubble.scss'
@@ -73,9 +73,10 @@ export default function NotificationBubble({
   return (
     <div className={rootClasses.value} style={rootStyle}>
       <div className='Message'>
-        <Markdown
-          theme={MarkdownTheme.ThemeSecondary}
-          markdown={notification.message}
+        <RichText
+          content={notification.message}
+          type='viewer'
+          format='markdown'
         />
       </div>
       <div

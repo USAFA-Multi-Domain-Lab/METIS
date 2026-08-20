@@ -14,7 +14,7 @@
 //     → resourceCosts ([{ _id, resourceId, baseAmount, hidden }])
 //       where resourceId references the same _id.
 
-const generateHash = require('uuid').v4
+const generateHash = () => crypto.randomUUID()
 
 let dbName = 'metis'
 

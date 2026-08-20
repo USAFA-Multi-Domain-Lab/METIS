@@ -128,16 +128,14 @@ export function DetailLargeString({
         </a>
       </DetailTitleRow>
       <RichText
-        options={{
-          content: stateValue,
-          className: fieldClasses.value,
-          placeholder,
-          editorRef,
-          onUpdate,
-          onFocus: () => setFocused(true),
-          onBlur,
-          editable: !disabled,
-        }}
+        content={stateValue}
+        className={fieldClasses.value}
+        placeholder={placeholder}
+        editorRef={editorRef}
+        onUpdate={onUpdate}
+        onFocus={() => setFocused(true)}
+        onBlur={onBlur}
+        type={disabled ? 'viewer' : 'editor'}
       />
       <div className={fieldErrorClasses.value}>{activeErrorMessage}</div>
     </div>

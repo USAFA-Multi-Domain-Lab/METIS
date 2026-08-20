@@ -34,4 +34,3 @@ Never use the word "linter" when changes are made. If a change has been made, it
 - [Migration guide](.github/instructions/MIGRATIONS.instructions.md) — Database builds, import builds, checklist
 - [Handoff guide](.github/instructions/HANDOFFS.instructions.md) — Format, sections, and output location for code handoff documents
 - [Documentation guide](.github/instructions/DOCUMENTATION.instructions.md) — Structure, naming, linking, and index registration
-- [Mission file guide](.github/instructions/MISSION-FILE.instructions.md) — Use when creating or editing a raw mission JSON/zip file for import; covers the `.metis.zip` format, prototype and structure requirements, required schema fields, and common import errors

@@ -56,12 +56,8 @@
         max-height: 300px;
         width: -moz-fit-content;
         width: fit-content;
-        padding: 10px 30px 25px;
+        padding: 15px 30px;
         background-color: rgba($color-accent-dark, 1);
-
-        .Markdown p {
-          white-space: pre-wrap;
-        }
       }
 
       .text-field {

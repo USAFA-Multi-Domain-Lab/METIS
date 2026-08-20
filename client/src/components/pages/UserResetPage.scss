@@ -27,14 +27,21 @@
     padding: 2em 2em;
     background: $color-primary;
 
-    .ResetUserEntry {
-      @include form-container;
-
+    .Form {
+      display: grid;
+      place-items: center;
+      align-items: center;
       width: 100%;
-    }
 
-    .Buttons {
-      margin: 1.5em 0 0;
+      .ResetUserEntry {
+        @include form-container;
+
+        width: 100%;
+      }
+
+      .Buttons {
+        margin: 1.5em 0 0;
+      }
     }
   }
 }

@@ -51,12 +51,7 @@ export default function MessengerMessage({
         <span className='Timestamp'>[{message.timestampFormatted}]</span>
       </div>
       <div className='Body'>
-        <RichText
-          options={{
-            content: message.message,
-            editable: false,
-          }}
-        />
+        <RichText content={message.message} type='viewer' />
       </div>
     </div>
   )

@@ -117,26 +117,6 @@
 }
 
 /**
- * Applies the shared heading scale to the h1 through h6 elements inside the
- * current selector. Sizes and line heights come from the configuration so
- * headings match wherever they are rendered. Only the space around them is
- * left to the caller, because a documentation page and a form field need
- * different amounts of room.
- * @param {length} $margin-top - The space above each heading.
- * @param {length} $margin-bottom - The space below each heading.
- */
-@mixin heading-styling($margin-top: 20px, $margin-bottom: 24px) {
-  @each $level, $size in $heading-sizes {
-    h#{$level} {
-      display: block;
-      margin: $margin-top auto $margin-bottom;
-      font-size: $size;
-      line-height: $size * $heading-line-height-ratio;
-    }
-  }
-}
-
-/**
  * Strips the appearance a browser gives a button element so it can be styled
  * from scratch. Use this on any button that should not look like a standard
  * form button. Overflow stays visible so indicators drawn outside the button's

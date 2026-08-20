@@ -2,50 +2,19 @@ import Tooltip from '@client/components/content/communication/Tooltip'
 import { compute, getOs } from '@client/toolbox'
 import { getIconPath } from '@client/toolbox/icons'
 import { ClassList } from '@shared/toolbox/html/ClassList'
-import { useRichTextContext } from '../RichText'
+import { useRichTextContext } from '../../RichText'
+import { ALIGN_OPTIONS } from '../helpers/text-align'
+import { useRichTextToolbarContext } from '../RichTextToolbar'
 import './RichTextAlignPicker.scss'
 
 /**
- * The alignment options for the {@link RichTextAlignPicker} component.
- */
-export const ALIGN_OPTIONS: TAlignOption[] = [
-  {
-    value: 'left',
-    icon: 'align-left',
-    label: 'Align Left',
-    mac: '`cmd+shift+l`',
-    windows: '`ctrl+shift+l`',
-  },
-  {
-    value: 'center',
-    icon: 'align-center',
-    label: 'Align Center',
-    mac: '`cmd+shift+e`',
-    windows: '`ctrl+shift+e`',
-  },
-  {
-    value: 'right',
-    icon: 'align-right',
-    label: 'Align Right',
-    mac: '`cmd+shift+r`',
-    windows: '`ctrl+shift+r`',
-  },
-  {
-    value: 'justify',
-    icon: 'align-justify',
-    label: 'Justify',
-    mac: '`cmd+shift+j`',
-    windows: '`ctrl+shift+j`',
-  },
-]
-
-/**
- * Alignment picker panel for the {@link RichText} bubble toolbar.
+ * Alignment picker panel for the RichText toolbar.
  * Renders left, center, right, and justify alignment options.
  */
 export default function RichTextAlignPicker(): TReactElement | null {
-  const { editor, state } = useRichTextContext()
-  const [isAlignPickerOpen, setIsAlignPickerOpen] = state.isAlignPickerOpen
+  const { editor } = useRichTextContext()
+  const { state } = useRichTextToolbarContext()
+  const [activePicker, setActivePicker] = state.activePicker
   const [containerWidth] = state.containerWidth
 
   /* -- FUNCTIONS -- */
@@ -73,7 +42,7 @@ export default function RichTextAlignPicker(): TReactElement | null {
 
   /* -- RENDER -- */
 
-  if (!isAlignPickerOpen) return null
+  if (activePicker !== 'align') return null
 
   return (
     <div className='AlignPicker' style={style}>
@@ -84,7 +53,7 @@ export default function RichTextAlignPicker(): TReactElement | null {
           className={generateClassName(value)}
           onClick={() => {
             editor.commands.toggleTextAlign(value)
-            setIsAlignPickerOpen(false)
+            setActivePicker(null)
           }}
         >
           <img src={getIconPath(icon)} alt={label} />
@@ -95,32 +64,4 @@ export default function RichTextAlignPicker(): TReactElement | null {
       ))}
     </div>
   )
-}
-
-/* -- TYPES --*/
-
-/**
- * The alignment option type for the {@link RichTextAlignPicker} component.
- */
-type TAlignOption = {
-  /**
-   * The alignment value.
-   */
-  value: string
-  /**
-   * The icon for the alignment option.
-   */
-  icon: TMetisIcon
-  /**
-   * The label for the alignment option.
-   */
-  label: string
-  /**
-   * The keyboard shortcut for macOS.
-   */
-  mac: string
-  /**
-   * The keyboard shortcut for Windows.
-   */
-  windows: string
 }

@@ -2,7 +2,7 @@ import { ClassList } from '@shared/toolbox/html/ClassList'
 import React from 'react'
 import type { ESortByMethod } from '../general-layout/ListOld'
 import ListOld from '../general-layout/ListOld'
-import Markdown, { MarkdownTheme } from '../general-layout/Markdown'
+import RichText from '../general-layout/rich-text/RichText'
 import { ButtonText } from '../user-controls/buttons/ButtonText'
 import './Prompt.scss'
 
@@ -83,7 +83,7 @@ export default class Prompt<
     if (!!message) {
       return (
         <div className='message'>
-          <Markdown theme={MarkdownTheme.ThemeSecondary} markdown={message} />
+          <RichText content={message} type='viewer' format='markdown' />
         </div>
       )
     } else {

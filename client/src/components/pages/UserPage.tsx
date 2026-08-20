@@ -2,6 +2,7 @@ import {
   useGlobalContext,
   useNavigationMiddleware,
 } from '@client/context/global'
+import { LocalContext, LocalContextProvider } from '@client/context/local'
 import { compute } from '@client/toolbox'
 import {
   useBeforeunload,
@@ -9,10 +10,11 @@ import {
   useMountHandler,
   useRequireLogin,
 } from '@client/toolbox/hooks'
+import { UNMODIFIED_KEYSTROKES } from '@client/toolbox/keyboard'
 import { ClientUser } from '@client/users/ClientUser'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { AxiosError } from 'axios'
-import React, { useContext, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import type { TPage_P } from '.'
 import { DefaultPageLayout } from '.'
 import UserEntry from '../content/edit-user/UserEntry'
@@ -21,7 +23,6 @@ import { HomeButton, ProfileButton } from '../content/general-layout/Navigation'
 import type { TButtonTextDisabled } from '../content/user-controls/buttons/ButtonText'
 import { ButtonText } from '../content/user-controls/buttons/ButtonText'
 import { useButtonSvgEngine } from '../content/user-controls/buttons/panels/hooks'
-import If from '../content/util/If'
 import './UserPage.scss'
 
 /**
@@ -41,29 +42,18 @@ export const USERNAME_ARCHIVED_ERROR_MESSAGE: string =
  * Context for the user page, which will help distribute
  * user page properties to its children.
  */
-const UserPageContext = React.createContext<TUserPageContextData | null>(null)
+const userPageContext = new LocalContext<TUserPage_P, {}, TUserPage_S, {}>()
 
 /**
  * Hook used by UserPage-related components to access
  * the user-page context.
  */
-export const useUserPageContext = () => {
-  const context = useContext(UserPageContext) as TUserPageContextData | null
-  if (!context) {
-    throw new Error(
-      'useUserPageContext must be used within an user-page provider',
-    )
-  }
-  return context
-}
+export const useUserPageContext = userPageContext.getHook()
 
 /**
  * Renders a page for managing users.
  */
 export default function UserPage(props: TUserPage_P): TReactElement | null {
-  const Provider =
-    UserPageContext.Provider as React.Provider<TUserPageContextData>
-
   /* -- GLOBAL CONTEXT -- */
   const globalContext = useGlobalContext()
   const {
@@ -76,12 +66,15 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
   } = globalContext.actions
   const { isAuthorized } = useRequireLogin()
 
-  /* -- STATE -- */
+  /* -- REFS -- */
 
   const root = useRef<HTMLDivElement>(null)
+  const form = useRef<HTMLFormElement>(null)
+
+  /* -- STATE -- */
+
   const state: TUserPage_S = {
     existsInDatabase: useState<boolean>(props.userId !== null),
-    userEmptyStringArray: useState<string[]>([]),
     usernameError: useState<string>(''),
     updatePassword: useState<boolean>(false),
     areUnsavedChanges: useState<boolean>(false),
@@ -91,13 +84,11 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
     ClientUser.createNew({ passwordIsRequired: true }),
   )
   const [areUnsavedChanges, setAreUnsavedChanges] = state.areUnsavedChanges
-  const [userEmptyStringArray] = state.userEmptyStringArray
   const [updatePassword] = state.updatePassword
   const [usernameError, setUsernameError] = state.usernameError
-  const [userEntryKey, setUserEntryKey] = useState<string>(
-    StringToolbox.generateRandomId(),
-  )
-  const navButtonEngine = useButtonSvgEngine({
+  const [savePromptOpen, setSavePromptOpen] = useState<boolean>(false)
+
+  const navigationButtonEngine = useButtonSvgEngine({
     elements: [
       HomeButton(),
       ProfileButton({ middleware: async () => await enforceSavePrompt() }),
@@ -108,11 +99,13 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
 
   // componentDidMount
   const [mountHandled] = useMountHandler(async (done) => {
+    let { userId } = props
+
     // Handle the editing of an existing user.
-    if (existsInDatabase && isAuthorized('users_read_students')) {
+    if (userId !== null && isAuthorized('users_read_students')) {
       try {
         beginLoading('Loading user...')
-        setUser(await ClientUser.$fetchOne(props.userId!))
+        setUser(await ClientUser.$fetchOne(userId))
       } catch {
         handleError('Failed to load user.')
       }
@@ -139,18 +132,16 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
     [areUnsavedChanges],
   )
 
-  // Add an event listener to listen for cmd+s/ctrl+s
-  // key presses to save the user.
+  // Save the user when enter is pressed away from the form. Enter inside
+  // the form submits it without any help, and the save prompt sits above
+  // the page rather than inside it, so its keystrokes belong to it.
   useEventListener(document, 'keydown', (event: KeyboardEvent) => {
-    let modKey = event.ctrlKey || event.metaKey
-    let correctKeystroke = modKey && !event.shiftKey && event.key === 's'
+    if (!UNMODIFIED_KEYSTROKES.enter.matches(event)) return
+    if (savePromptOpen) return
+    if (form.current?.contains(event.target as Node)) return
 
-    if (correctKeystroke && areUnsavedChanges) {
-      event.preventDefault()
-      save()
-    } else if (correctKeystroke && !areUnsavedChanges) {
-      event.preventDefault()
-    }
+    event.preventDefault()
+    form.current?.requestSubmit()
   })
 
   /* -- COMPUTED -- */
@@ -159,29 +150,21 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
    * Config for the navigation on this page.
    */
   const navigation = compute<TNavigation_P>(() => {
-    return { buttonEngine: navButtonEngine }
+    return { buttonEngine: navigationButtonEngine }
   })
-
-  /**
-   * Determines if the user form has any fields
-   * with empty strings.
-   */
-  const isEmptyString: boolean = compute(() => userEmptyStringArray.length > 0)
 
   /**
    * Whether a username that cannot be used is currently entered.
    */
-  const hasUsernameError: boolean = compute(() =>
+  const hasUsernameError = compute<boolean>(() =>
     StringToolbox.isFilled(usernameError),
   )
 
   /**
    * Whether the save button is disabled.
    */
-  const saveDisabled: TButtonTextDisabled = compute(() =>
-    !areUnsavedChanges || isEmptyString || hasUsernameError || !user.canSave
-      ? 'full'
-      : 'none',
+  const saveDisabled = compute<TButtonTextDisabled>(() =>
+    !areUnsavedChanges || hasUsernameError || !user.canSave ? 'full' : 'none',
   )
 
   /* -- FUNCTIONS -- */
@@ -219,7 +202,7 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
         notify('User successfully saved.')
         finishLoading()
         setExistsInDatabase(true)
-        navigateTo('HomePage', {})
+        navigateTo('HomePage', {}, { bypassMiddleware: true })
       } catch (error) {
         handleSaveError(error)
       }
@@ -231,14 +214,23 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
             passwordIsRequired: updatePassword,
           }),
         )
-        // Reset the user entry key to force re-render.
-        setUserEntryKey(StringToolbox.generateRandomId())
         notify('User successfully saved.')
         finishLoading()
+        navigateTo('HomePage', {}, { bypassMiddleware: true })
       } catch (error) {
         handleSaveError(error)
       }
     }
+  }
+
+  /**
+   * This is called when the user form is submitted, which happens
+   * when the save button is clicked and when enter is pressed
+   * while a field has focus.
+   */
+  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>): void => {
+    event.preventDefault()
+    save()
   }
 
   /**
@@ -263,75 +255,68 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
    * ```
    */
   const enforceSavePrompt = async (): Promise<void> => {
-    return new Promise<void>(async (resolve, reject) => {
-      // If the user does not have write permissions
-      // and there are no unsaved changes, resolve immediately.
-      if (!isAuthorized('users_write_students') && areUnsavedChanges) {
-        return resolve()
-      }
+    // A user who cannot write has nothing to save, so there is
+    // nothing to address.
+    if (!isAuthorized('users_write_students')) return
+    if (!areUnsavedChanges) return
 
-      // If there are unsaved changes, prompt the user.
-      if (areUnsavedChanges) {
-        const { choice } = await prompt(
-          'You have unsaved changes. What do you want to do with them?',
-          ['Cancel', 'Save', 'Discard'],
-        )
+    setSavePromptOpen(true)
+    const { choice } = await prompt(
+      'You have unsaved changes. What do you want to do with them?',
+      ['Cancel', 'Save', 'Discard'],
+    )
+    setSavePromptOpen(false)
 
-        // If the user opted to save, then save
-        // the mission.
-        if (choice === 'Save') {
-          beginLoading('Saving...')
-          await save()
-          finishLoading()
-        }
+    // Cancelling calls off whatever the prompt stood in the way of, so
+    // this is left unsettled and the caller never carries on.
+    if (choice === 'Cancel') return new Promise<void>(() => {})
 
-        // Then, unless the user cancelled, resolve.
-        if (choice !== 'Cancel') resolve()
-      } else {
-        resolve()
-      }
-    })
+    // If the user opted to save, then save the user.
+    if (choice === 'Save') {
+      beginLoading('Saving...')
+      await save()
+      finishLoading()
+    }
   }
-
-  /**
-   * This is called when a change is made that would require saving.
-   */
-  const handleChange = (): void => setAreUnsavedChanges(true)
 
   /* -- RENDER -- */
 
-  /**
-   * The value to provide to the context.
-   */
-  const contextValue: TUserPageContextData = {
-    root,
-    ...props,
-    state,
+  if (!mountHandled || !isAuthorized('users_read_students')) {
+    return null
   }
 
   return (
-    <If condition={mountHandled && isAuthorized('users_read_students')}>
-      <Provider value={contextValue}>
-        <div className='UserPage Page' ref={root}>
-          <DefaultPageLayout navigation={navigation}>
-            <div className='Form'>
-              <UserEntry
-                user={user}
-                handleChange={handleChange}
-                key={userEntryKey}
+    <LocalContextProvider
+      context={userPageContext}
+      defaultedProps={props}
+      computed={{}}
+      state={state}
+      elements={{}}
+    >
+      <div className='UserPage Page' ref={root}>
+        <DefaultPageLayout navigation={navigation}>
+          <form
+            className='Form'
+            onSubmit={handleSubmit}
+            autoComplete='off'
+            ref={form}
+          >
+            <UserEntry
+              user={user}
+              handleChange={() => setAreUnsavedChanges(true)}
+            />
+            <div className='Buttons'>
+              <ButtonText
+                type='submit'
+                text={'Save'}
+                disabled={saveDisabled}
+                onClick={() => {}}
               />
-              <div className='Buttons'>
-                <ButtonText
-                  text={'Save'}
-                  disabled={saveDisabled}
-                  onClick={() => save()}
-                />
-              </div>
             </div>
-          </DefaultPageLayout>
-        </div>
-      </Provider>
-    </If>
+          </form>
+        </DefaultPageLayout>
+      </div>
+    </LocalContextProvider>
   )
 }
 
@@ -340,24 +325,22 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
 /**
  * Props for the UserPage component.
  */
-export interface TUserPage_P extends TPage_P {
-  // If this is null, then a new user is being created.
+export type TUserPage_P = TPage_P & {
+  /**
+   * The ID of the user to display.
+   * @note If this is null, then a new user is being created.
+   */
   userId: string | null
 }
 
 /**
- * The state for `UserPage`, provided
- * in the context.
+ * The state for `UserPage`, provided in the context.
  */
 export type TUserPage_S = {
   /**
    * Whether the user exists in the database.
    */
   existsInDatabase: TReactState<boolean>
-  /**
-   * An array of fields with empty strings.
-   */
-  userEmptyStringArray: TReactState<string[]>
   /**
    * The message explaining why the entered username cannot be used,
    * or an empty string when the username is usable. Set by the
@@ -373,19 +356,3 @@ export type TUserPage_S = {
    */
   areUnsavedChanges: TReactState<boolean>
 }
-
-/**
- * The user-page context data provided to all children
- * of `UserPage`.
- */
-export type TUserPageContextData = {
-  /**
-   * The ref for the root element of the user page.
-   */
-  root: React.RefObject<HTMLDivElement | null>
-} & Required<TUserPage_P> & {
-    /**
-     * The state for the user page.
-     */
-    state: TUserPage_S
-  }

@@ -7,6 +7,7 @@ import type { ClientSessionMember } from '@client/sessions/ClientSessionMember'
 import type { SessionClient } from '@client/sessions/SessionClient'
 import { compute } from '@client/toolbox'
 import { usePostInitEffect } from '@client/toolbox/hooks'
+import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import { useEffect, useState } from 'react'
 
 /**
@@ -169,7 +170,11 @@ export default function SessionMemberForceCell({
             <>
               <span style={{ color: value.color }}>{value.name}</span>
               <Tooltip
-                description={`*${value.name}*\n\t\n**Click to assign to force**`}
+                description={
+                  `*${value.name}*` +
+                  `${RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK}` +
+                  `**Click to assign to force**`
+                }
               />
             </>
           )

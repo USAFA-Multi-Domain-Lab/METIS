@@ -4,6 +4,14 @@ const globalTeardown = fileURLToPath(
   new URL('./global-teardown.cjs', import.meta.url),
 )
 
+// The tests run as CommonJS, but several dependencies are published only as
+// ESM and cannot be loaded that way. Jest leaves everything under
+// `node_modules` untransformed by default, so each of those packages is named
+// here to let it through the transform and be converted along with the source.
+const transformIgnorePatterns = [
+  'node_modules/(?!(.*/)?(marked|@tiptap|lowlight|devlop|fault|highlight\\.js)/)',
+]
+
 /** @type {import("jest").Config} **/
 export default {
   verbose: true,
@@ -60,6 +68,7 @@ export default {
           },
         ],
       },
+      transformIgnorePatterns,
     },
     {
       displayName: 'integration:metis:rest',
@@ -112,6 +121,7 @@ export default {
           },
         ],
       },
+      transformIgnorePatterns,
     },
     {
       displayName: 'integration:metis:socket',
@@ -164,6 +174,7 @@ export default {
           },
         ],
       },
+      transformIgnorePatterns,
     },
     {
       displayName: 'integration:target-environment',
@@ -217,6 +228,7 @@ export default {
           },
         ],
       },
+      transformIgnorePatterns,
     },
     {
       displayName: 'unit:server',
@@ -264,6 +276,7 @@ export default {
           },
         ],
       },
+      transformIgnorePatterns,
     },
     {
       displayName: 'unit:shared',
@@ -311,6 +324,7 @@ export default {
           },
         ],
       },
+      transformIgnorePatterns,
     },
     {
       displayName: 'unit:client',
@@ -361,12 +375,7 @@ export default {
           },
         ],
       },
-      // `@tiptap/markdown` pulls in `marked`, which ships only as ESM. By
-      // default Jest skips transforming anything under `node_modules`, so these
-      // packages must be explicitly allowed through the transform.
-      transformIgnorePatterns: [
-        'node_modules/(?!(.*/)?(marked|@tiptap|lowlight|devlop|fault|highlight\\.js)/)',
-      ],
+      transformIgnorePatterns,
     },
     {
       displayName: 'unit:integration',
@@ -415,6 +424,7 @@ export default {
           },
         ],
       },
+      transformIgnorePatterns,
     },
   ],
 }

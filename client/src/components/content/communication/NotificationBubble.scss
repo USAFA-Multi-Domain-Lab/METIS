@@ -2,25 +2,23 @@
 @use '@client/assets/styles/util.scss' as *;
 
 .NotificationBubble {
+  position: relative;
   pointer-events: all;
   box-sizing: border-box;
   white-space: nowrap;
   margin: 0 auto 20px;
   border: 2px solid $color-primary-light;
-  border-radius: 16px;
+  border-radius: 1em;
   width: 450px;
-  padding: 12px 25px 16px;
+  padding: 12px 25px;
   background-color: rgba($color-accent-dark, 0.95);
   color: $color-primary-light;
-  line-height: 1.5em;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 0.9375em;
   opacity: 1;
 
   .Message {
-    display: inline-block;
     white-space: normal;
-    width: 370px;
+    padding-right: 10px;
   }
 
   .Dismiss {
@@ -28,14 +26,12 @@
     cursor: pointer;
     -webkit-user-select: none;
     user-select: none;
-    display: inline-block;
     transform: scale(1.15, 1);
-    position: relative;
-    top: -2px;
-    width: 10px;
-    vertical-align: top;
-    padding: 0 20px 0 20px;
-    font-size: 24px;
+    position: absolute;
+    top: 6px;
+    right: 12px;
+    line-height: 1;
+    font-size: 1.5em;
     font-weight: 100;
     text-align: center;
   }
