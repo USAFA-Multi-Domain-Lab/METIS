@@ -61,7 +61,7 @@ Never writes a checkbox, a finding, a note, or any other prose. Each of those is
 
 Corrections run in both directions: a status ahead of the document is corrected as readily as one behind it.
 
-Claiming the reviewer line is the one write that changes ownership rather than restating what the document already implies, and it is what takes a document out of `Awaiting review` — so the status moves to `In review` in the same edit. Say the reviewer line was claimed.
+Claiming the reviewer line is the one write that changes ownership rather than restating what the document already implies, and it is what takes a document out of `Awaiting review` — so the status moves to `In review` in the same edit.
 
 ## Phase 5 — Answer for the asker
 
@@ -79,8 +79,12 @@ The author's `Awaiting review` answer stays vague: hand it to the reviewer, whoe
 Which pass the reviewer is pointed at, when more than one is outstanding:
 
 1. **A checklist already in progress wins** — some items addressed, some not. Resuming is cheaper than starting cold: the setup is done, the app is likely still running, and partial progress is the best evidence of what the reviewer meant to do next. Only the two checklists can be in progress, `review-handoff`'s pass over Coverage Specifics being no checklist. If both are, manual first.
-2. Otherwise `review-handoff`, where Phase 2 found no sign its pass has run — and a populated Findings section is not that sign. It comes first when it comes at all, since the findings it produces are what the checklists cross-reference.
+2. Otherwise `review-handoff`, where Phase 2 found no sign its pass has run — and a populated Findings section is not that sign. Recommend it ahead of an untouched checklist.
 3. Otherwise the untouched checklist, manual before automatic.
+
+The order is a preference, not a constraint — a checklist run first is equally valid, and findings its failures produce are recorded the same way. Name the step without arguing for it.
+
+Where none of the three has been started — neither checklist addressed, no sign of the read — say in one sentence to read the Summary of Changes and Coverage first if they have not, and to begin `review-handoff` otherwise.
 
 Then name the sibling skill that does it, offer to start it, and **stop**.
 

@@ -88,7 +88,7 @@ The status line is one line, kept current as work proceeds. It has four values, 
 - **`Resolving findings`** — everything the reviewer owns is addressed and the document is back with the author. Whatever is still open is the author's to close.
 - **`Complete`** — every box in the document is checked, manual tests, automatic tests, and findings alike.
 
-Whoever edits the document checks whether its status still holds and corrects it if it does not. That upkeep — the status line and the findings tally alike — is silent: never report a correction, and never remark that one was unnecessary.
+Whoever edits the document checks whether its status still holds and corrects it if it does not. That upkeep — the status line, the findings tally, and the reviewer line alike — is silent: never report an edit to them, and never remark that none was needed.
 
 The author leaves the findings count off; the reviewer adds it when the review begins.
 
