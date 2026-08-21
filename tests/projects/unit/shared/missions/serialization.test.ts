@@ -33,7 +33,6 @@ describe('Mission resource serialization', () => {
       _id: `mission_${TestToolbox.generateRandomId()}`,
       name: payload.name,
       versionNumber: payload.versionNumber,
-      seed: payload.seed,
       createdAt: '2024-01-01T00:00:00.000Z',
       updatedAt: '2024-01-01T00:00:00.000Z',
       launchedAt: null,
