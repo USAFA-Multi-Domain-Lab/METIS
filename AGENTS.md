@@ -24,6 +24,8 @@ Never use the word "linter" when changes are made. If a change has been made, it
 
 - **Implementations & Editing Files** NEVER edit files or proceed with an implementation without express approval. If a prompt uses language that strongly suggests that an edit is warranted, then proceed. However, if a user is simply asking for an opinion or suggesting a new direction, do not assume they are requesting an implementation right away.
 
+- **Tests & Target Environments** `metis` is the only target environment kept in the project, so it is the only one a test may reference by ID. Every other environment, such as `mace` or `metis-test-env`, is installed on a developer's machine and left out of the repository, meaning a test that names one cannot pass on a fresh clone. When a test needs an environment the `metis` environment cannot provide, build one in the test with the helpers in `tests/helpers/projects/unit/target-environments/`.
+
 ## Instructions Covering Specific Topics
 
 - [MissionComponent guide](.github/instructions/MISSION-COMPONENT.instructions.md) — Use when creating or managing components of a mission, such as a mission, a node, force, resource, etc. Covers implementation of this abstract class and how it is used throughout the codebase.
