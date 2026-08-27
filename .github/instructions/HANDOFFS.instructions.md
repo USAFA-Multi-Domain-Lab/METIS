@@ -36,17 +36,17 @@ Every file link and line number in it — in findings, in coverage specifics, an
 
 ## Manual Tests
 
-- [ ] A discrete, verifiable behavior.
-- [ ] Another behavior.
+- [ ] **1 —** A discrete, verifiable behavior.
+- [ ] **2 —** Another behavior.
 
 ## Automatic Tests
 
-### `ClassName.methodName`
+### 1. `ClassName.methodName`
 
 `tests/projects/unit/shared/path/ClassName.test.ts`
 
-- [ ] A specific test case.
-- [ ] Another test case.
+- [ ] **a —** A specific test case.
+- [ ] **b —** Another test case.
 
 ## Findings
 
@@ -54,18 +54,18 @@ Every file link and line number in it — in findings, in coverage specifics, an
 
 ### High
 
-- [ ] [File.ts:41](/path/to/File.ts) — **The claim, in one bold sentence.** Supporting detail: what
+- [ ] **1 —** [File.ts:41](/path/to/File.ts) — **The claim, in one bold sentence.** Supporting detail: what
       the code does, why it is wrong, and what closing it would take.
 
 ### Medium
 
-- [x] [OtherFile.ts:118](/path/to/OtherFile.ts) — **The claim.** Supporting detail.
+- [x] **1 —** [OtherFile.ts:118](/path/to/OtherFile.ts) — **The claim.** Supporting detail.
 
   > **{Author Name}** _{MM:DD:YYYY:HH:MM}_ What was changed, and why.
 
 ### Advisory
 
-- [ ] [ThirdFile.ts:9](/path/to/ThirdFile.ts) — Not a defect, but worth knowing.
+- [ ] **1 —** [ThirdFile.ts:9](/path/to/ThirdFile.ts) — Not a defect, but worth knowing.
 
 ## Coverage Specifics
 
@@ -112,14 +112,16 @@ Notes accumulate. A later note goes beneath the ones already there rather than r
 
 ### Cross-References
 
-A note pointing at a finding cites it `{Severity} #{n}`, counting from the top of that severity group. A finding pointing back at what surfaced it cites `manual test {n}` or `automatic test {n}`, counting from the top of that checklist. Neither number is written into the document; both are read off it.
+A note pointing at a finding cites it `{Severity} #{n}`. A finding pointing back at what surfaced it cites `manual test {n}` or `automatic test {n}{letter}`, the group's number and the case's letter together.
+
+Every ordinal is written into the document. Each is assigned when the item is added and is never renumbered, so a reference stays valid for as long as the document exists — new items append to the end of their list, their group, or their severity tier.
 
 ### Manual Tests
 
 A checklist of behaviors verified by hand in a running instance. A checked box means the behavior passed. A failure stays unchecked with a note beneath it, linking to the finding it confirms:
 
 ```markdown
-- [ ] Update an outdated effect whose data cannot be migrated cleanly and confirm the update reports failure.
+- [ ] **7 —** Update an outdated effect whose data cannot be migrated cleanly and confirm the update reports failure.
 
   > **Jordan Stokes** _07:29:2026:11:27_ Reported success instead, and the issue stayed in the list — see High #1.
 ```
@@ -128,12 +130,12 @@ When no manual testing is required, the section is a single sentence saying so a
 
 ### Automatic Tests
 
-A checklist of test cases, grouped under a `###` heading named for the class or component, with the target test file path directly beneath it. The suite is green when the handoff is written.
+A checklist of test cases, grouped under a numbered `###` heading named for the class or component, with the target test file path directly beneath it. Cases are lettered within their group, running `a` through `z` and then `aa`, `ab`, and so on. The suite is green when the handoff is written.
 
 A checked box means the test is written **and passing**. A test written but failing stays unchecked with a note beneath it, the same as a failed manual item:
 
 ```markdown
-- [ ] A script producing schema-violating output causes `migrate` to throw.
+- [ ] **c —** A script producing schema-violating output causes `migrate` to throw.
 
   > **Jordan Stokes** _07:29:2026:11:27_ Written, fails today — the cursor advances before validation runs. See High #2.
 ```
@@ -143,8 +145,8 @@ A test that fails because it exposes a real product defect makes that defect a *
 ### Findings
 
 - The section opens with a one-line tally: `**Critical 0 · High 2 · Medium 1 · Low 3 · Advisory 2**`, omitting tiers with no entries.
-- Findings are grouped under `### Critical`, `### High`, `### Medium`, `### Low`, and `### Advisory`, omitting empty groups, and ordered by severity then practical impact.
-- Every finding is a checkbox. Unchecked means open; checked means resolved, declined, or determined to be a false flag.
+- Findings are grouped under `### Critical`, `### High`, `### Medium`, `### Low`, and `### Advisory`, omitting empty groups. The review's opening batch is ordered by severity then practical impact; anything found later appends to the end of its tier.
+- Every finding is a checkbox, numbered from 1 within its severity group. Unchecked means open; checked means resolved, declined, or determined to be a false flag.
 - Each finding leads with its file path and line as a Markdown link, then a **bold one-sentence claim**, then the supporting detail. Every workspace file path is a link, including those inside the detail.
 - A finding records the defect and its evidence, never how to resolve it — not a fix, not a direction, not a hint at one. The author derives the options when resolving, and anything written here anchors them to the reviewer's framing.
 - Findings are resolved **in place**: the box is checked and a note appended beneath it. Declines and false flags are checked off like any other resolution, marked **Declined** or **False flag** in the note.

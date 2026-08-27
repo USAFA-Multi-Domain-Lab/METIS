@@ -119,7 +119,7 @@ Only files this feature changed — including supporting work the feature requir
 - Status line starts `Awaiting review`, with the manual and automatic counts filled in and no findings count — the reviewer adds that when the review begins.
 - The author line names the user, from `git config user.name`. Write no reviewer line — the reviewer adds their own when the review begins.
 - Include the `## Findings` heading with nothing under it. No tally — the reviewer adds one.
-- Every checkbox starts unchecked.
+- Every checkbox starts unchecked, and carries the ordinal the guide gives it: manual tests numbered from 1, automatic test groups numbered in their headings with their cases lettered from `a`.
 
 ## Phase 6 — Stop
 

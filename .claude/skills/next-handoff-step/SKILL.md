@@ -30,7 +30,7 @@ If the user has a handoff open in the IDE, use it. Otherwise search the version 
 The four states and their conditions are the guide's. Two get misread:
 
 - A test is **addressed** when it is checked, or unchecked with a note saying why. A bare unchecked box is unaddressed, and an unaddressed item is what holds a document in review — a failing test or an open finding does not.
-- **A finding's provenance, not the tally line, is what says whether `review-handoff`'s pass has run.** Findings arrive from three places, and both checklists maintain the tally, so neither a tally nor a populated Findings section proves anyone read Coverage Specifics. The back-reference distinguishes them: a finding surfaced by a checklist cites `manual test {n}` or `automatic test {n}`, so one citing neither came from the read.
+- **A finding's provenance, not the tally line, is what says whether `review-handoff`'s pass has run.** Findings arrive from three places, and both checklists maintain the tally, so neither a tally nor a populated Findings section proves anyone read Coverage Specifics. The back-reference distinguishes them: a finding surfaced by a checklist cites `manual test {n}` or `automatic test {n}{letter}`, so one citing neither came from the read.
 
 That inference runs one way only. A finding without a back-reference proves the pass ran; the absence of one proves nothing, since a pass that finds nothing leaves no trace. Where both checklists are complete and every finding traces back to one, whether anyone read Coverage Specifics cannot be known from the document — ask.
 

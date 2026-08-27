@@ -23,7 +23,7 @@ If the user has a handoff open in the IDE, use it. Otherwise search the version 
 
 Find the Automatic Tests section by its heading. If it is a sentence saying no automatic testing is required rather than a list of groups, say so and stop.
 
-Number the `###` groups by position, from 1. Number the cases from the top of the whole checklist, spanning groups — that ordinal is what a finding's back-reference cites.
+Each `###` heading carries its group number and each case its letter within that group, so a case is `2b` or `3f` — that is what a finding's back-reference cites. Read both off the document rather than counting positions, and where they are missing, number and letter the section as the guide requires before going on.
 
 **Confirm every group's target path actually runs, here, before any of them is written.** Jest runs a fixed set of explicitly-rooted projects. A test outside every root is silently never executed — it does not fail, it does not appear in any count, and the checkbox gets ticked for coverage that does not exist.
 
@@ -113,8 +113,8 @@ The checkbox rules are the guide's; the ones that get misapplied:
 - Checked means written **and passing**. Nothing else.
 - A test written but failing stays **unchecked**, with a note beneath it in the guide's form saying it was written, that it fails, and why. It does not get checked with a caveat.
 - What a test exposes belongs in **Findings**, at the severity the guide's tier definitions warrant, whether the test failed or passed.
-- A finding citing a test is written on both sides, whether or not that test failed: the finding's detail ends with `automatic test {n}`, and a note on the test points back to the finding.
-- Additional coverage you chose to write goes in the checklist as a new checked item, in the group it belongs to.
+- A finding citing a test is written on both sides, whether or not that test failed: the finding's detail ends with `automatic test {n}{letter}`, and a note on the test points back to the finding.
+- Additional coverage you chose to write goes in the checklist as a new checked item, appended to the end of the group it belongs to and taking the next letter in that group.
 
 Then the tally line and the status line's automatic count. Run output goes to the reviewer in Phase 6, not into the document.
 
