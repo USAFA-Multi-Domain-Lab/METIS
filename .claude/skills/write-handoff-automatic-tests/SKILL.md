@@ -66,6 +66,7 @@ Change what the agreed approach requires and nothing else:
 - Do not change implementation to make a test pass. If the implementation is wrong, that is a **finding** — see Phase 7.
 - Do not change what an existing passing test asserts, unless the reviewer asks or it is a refactor onto a shared helper — which must still fail under Phase 5's mutation.
 - Do not fix adjacent things you notice while reading. Mention them.
+- Shared test setup and helpers are yours to change where the group cannot run without it. Report it at Phase 6.
 
 `ts-jest` type-checks as it runs, so a type error in a test file fails the run outright. Type errors here are test failures, not warnings.
 
