@@ -1,15 +1,6 @@
-import type * as TRenderers from '@client/components/content/session/output/messages/renderers'
+import { useOutputRenderer } from '@client/components/content/session/output/messages/renderers'
 import type { ClientOutput } from '@client/missions/forces/ClientOutput'
 import { renderHook } from '@testing-library/react'
-import { TextDecoder, TextEncoder } from 'node:util'
-
-// The sanitizer pulls in jsdom through isomorphic-dompurify, which reaches for
-// TextEncoder while it loads. Jest's jsdom environment leaves both encoders
-// undefined, so they are supplied before the hook is required.
-Object.assign(globalThis, { TextDecoder, TextEncoder })
-
-const { useOutputRenderer } =
-  require('@client/components/content/session/output/messages/renderers') as typeof TRenderers
 
 // The hook takes its output from the surrounding provider and re-renders on
 // countdown ticks. Neither is what these cases are about, so the output is
