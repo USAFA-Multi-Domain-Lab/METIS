@@ -61,9 +61,9 @@ Report what actually ran and name anything that did not rather than implying it 
 
 ## Phase 5 — Stop
 
-Update the status if the guide's condition for its current value no longer holds.
-
 Report concisely: how many findings at each severity, and the one or two that actually matter.
+
+Close by invoking `next-handoff-step`, which names what comes next.
 
 Then stop. **Do not fix anything.** A defect found while reviewing is a task for the author, not the reviewer.
 

@@ -12,10 +12,12 @@ Read `.github/instructions/HANDOFFS.instructions.md` first. It is the authority 
 Three lines it holds throughout:
 
 - **It reads the document, not the codebase.** No test runs, no `tsc`, no tracing code to check a claim. State is a document question, and keeping it one is what makes this cheap enough to ask casually.
-- **It never performs the next step.** It names it, offers to start it, and stops.
+- **It never performs the next step.** It names it, offers to start it where a skill does it, and stops.
 - **It never invents source data.** See Phase 4.
 
 One pass, no cycle.
+
+**Invoked at the close of a sibling skill**, skip Phases 1 and 3 — the caller names the document and supplies the role, `create-handoff` and `resolve-findings` running as the author and the other three as the reviewer. Phases 2, 4, and 5 run as written, deriving the state from the document as always.
 
 ## Phase 1 — Locate the handoff
 
@@ -72,7 +74,7 @@ One next step, keyed on the state **as Phase 4 left it** rather than the status 
 | **Awaiting review**    | Nothing yours — hand it to the reviewer.                           | Start. Recommend `review-handoff`.     |
 | **In review**          | Wait. Name what the reviewer still owes.                           | The first outstanding pass, per below. |
 | **Resolving findings** | `resolve-findings` — name the first open finding and its severity. | Nothing yours; the author has it.      |
-| **Complete**           | Nothing.                                                           | Nothing.                               |
+| **Complete**           | Say the document is complete.                                      | Say the document is complete.          |
 
 The author's `Awaiting review` answer stays vague: hand it to the reviewer, whoever that is. Do not remark on the absent reviewer line — who reviews it is not this skill's business.
 
@@ -86,6 +88,6 @@ The order is a preference, not a constraint — a checklist run first is equally
 
 Where none of the three has been started — neither checklist addressed, no sign of the read — say in one sentence to read the Summary of Changes and Coverage first if they have not, and to begin `review-handoff` otherwise.
 
-Then name the sibling skill that does it, offer to start it, and **stop**.
+Give the next step in one line, whatever it is — a pass to run, a document to hand to the other participant, a handoff that is finished. Where that step is a skill the asker can run, name it and offer to start it. Then **stop**.
 
 Keep the whole answer to a few lines. The value is knowing the one thing to do next, and a wall of state defeats it.

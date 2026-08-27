@@ -125,4 +125,6 @@ Only files this feature changed — including supporting work the feature requir
 
 Report concisely: where the document was written, the scope you settled on, and anything you were unsure about.
 
+Close by invoking `next-handoff-step`, which names what comes next.
+
 Then stop. Do not review your own handoff, do not populate Findings, and do not write the tests it asks for. Those are separate passes with separate skills, and a reviewer reading findings the author wrote learns nothing about whether the code survives another pair of eyes.
