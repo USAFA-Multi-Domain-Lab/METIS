@@ -1,3 +1,4 @@
+import { targetEnvLogger } from '@server/logging'
 import type { ServerSessionRealm } from '@server/sessions/ServerSessionRealm'
 import { TargetEnvSchema } from '@server/target-environments/schema/TargetEnvSchema'
 import { ServerFileToolbox } from '@server/toolbox/files/ServerFileToolbox'
@@ -351,6 +352,18 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
       console.warn(
         `No target folder found at "${targetFolderPath}". Skipping target environment...`,
       )
+      return
+    }
+    // If the code does not type check, abort. The code would otherwise
+    // load anyway, since the server runs through a transpiler that
+    // strips types without checking them.
+    let typeErrors = TargetEnvSandboxing.getTypeErrors(path.basename(directory))
+    if (typeErrors) {
+      let errorMessage =
+        `Type errors found in "${path.basename(directory)}":\n${typeErrors}` +
+        `Skipping target environment...`
+      targetEnvLogger.error(errorMessage)
+      console.error(errorMessage)
       return
     }
 

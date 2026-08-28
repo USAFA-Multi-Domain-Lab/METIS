@@ -8,6 +8,7 @@ import Module from 'node:module'
 import path from 'node:path'
 import * as tsconfigPaths from 'tsconfig-paths'
 import type { RegisterParams } from 'tsconfig-paths/lib/register'
+import ts from 'typescript'
 import { z as zod } from 'zod'
 import { TargetEnvSchema } from './schema/TargetEnvSchema'
 import { TargetSchema } from './schema/TargetSchema'
@@ -229,6 +230,15 @@ export abstract class TargetEnvSandboxing {
   public static readonly TSCONFIG = require(TargetEnvSandboxing.TSCONFIG_PATH)
 
   /**
+   * The type errors found during the last type check, keyed by the
+   * ID of the target environment the file they were found in belongs to.
+   */
+  private static typeCheckDiagnosticRegistry = new Map<
+    string,
+    ts.Diagnostic[]
+  >()
+
+  /**
    * Arguments used for tsconfig-paths registration
    * during target-environment module loading.
    */
@@ -256,6 +266,136 @@ export abstract class TargetEnvSandboxing {
         ...tsconfig.compilerOptions.paths,
       },
     }
+  }
+
+  /**
+   * Type checks every file covered by the target-environment tsconfig,
+   * recording the errors found against the target environment that owns
+   * the file each one came from.
+   * @note Errors that belong to no target environment are logged instead.
+   * @throws If the target-environment tsconfig cannot be read or parsed.
+   */
+  private static typeCheckEnvironments(): void {
+    // Read the tsconfig. This parses the file's text and nothing else:
+    // "extends" is not followed and "include" is not expanded yet.
+    let configFile = ts.readConfigFile(
+      TargetEnvSandboxing.TSCONFIG_PATH,
+      ts.sys.readFile,
+    )
+
+    // The tsconfig ships with METIS and no target environment can affect
+    // it, so a problem with it is a problem with the installation. Crash
+    // rather than carry on, which would leave every environment unchecked.
+    if (configFile.error) {
+      throw new Error(
+        `Failed to read "${TargetEnvSandboxing.TSCONFIG_PATH}".\n` +
+          TargetEnvSandboxing.formatDiagnostics([configFile.error]),
+      )
+    }
+
+    // Turn that text into a real compile job, doing what running
+    // "tsc -p" on the file would do: follow "extends" into the base
+    // config, expand "include" into an actual list of files, and resolve
+    // "baseUrl" and "paths". Produces the root files and the options.
+    let parsedConfig = ts.parseJsonConfigFileContent(
+      configFile.config,
+      ts.sys,
+      path.dirname(TargetEnvSandboxing.TSCONFIG_PATH),
+      undefined,
+      TargetEnvSandboxing.TSCONFIG_PATH,
+    )
+
+    // Unlike the read above, this catches a broken "extends" path, an
+    // invalid compiler option, or an "include" that matches no files.
+    // Those are installation problems too, so they crash as well.
+    if (parsedConfig.errors.length) {
+      throw new Error(
+        `Failed to parse "${TargetEnvSandboxing.TSCONFIG_PATH}".\n` +
+          TargetEnvSandboxing.formatDiagnostics(parsedConfig.errors),
+      )
+    }
+
+    // Build the program from those roots, which also pulls in everything
+    // they import, then check the whole of it in one pass. Target
+    // environments reach into shared/ and server/, so the graph covers
+    // far more than the environment folders themselves.
+    let program = ts.createProgram(parsedConfig.fileNames, parsedConfig.options)
+    let diagnostics = ts.getPreEmitDiagnostics(program)
+
+    // Errors that cannot be blamed on any one target environment.
+    let unownedDiagnostics: ts.Diagnostic[] = []
+
+    // Sort every error into the environment whose folder holds the file
+    // it was reported against.
+    for (let diagnostic of diagnostics) {
+      // Only errors stop an environment from loading. Warnings and
+      // suggestions are left alone.
+      if (diagnostic.category !== ts.DiagnosticCategory.Error) continue
+
+      // An error can land on a file that belongs to no environment, such
+      // as one in shared/ or the target-env globals file, and an error
+      // about the compiler options themselves names no file at all.
+      let environmentId = diagnostic.file
+        ? TargetEnvSandboxing.resolveTargetEnvironmentId(
+            diagnostic.file.fileName,
+          )
+        : null
+
+      if (environmentId === null) {
+        unownedDiagnostics.push(diagnostic)
+        continue
+      }
+
+      // Add the error to that environment's list, which the scan reads
+      // back through getTypeErrors as it loads each environment.
+      let environmentDiagnostics =
+        TargetEnvSandboxing.typeCheckDiagnosticRegistry.get(environmentId)
+
+      if (environmentDiagnostics) {
+        environmentDiagnostics.push(diagnostic)
+      } else {
+        TargetEnvSandboxing.typeCheckDiagnosticRegistry.set(environmentId, [
+          diagnostic,
+        ])
+      }
+    }
+
+    // There is no environment to skip over these, so they are only
+    // reported.
+    if (unownedDiagnostics.length) {
+      targetEnvLogger.warn(
+        `Type errors were found outside of any target environment:\n` +
+          TargetEnvSandboxing.formatDiagnostics(unownedDiagnostics),
+      )
+    }
+  }
+
+  /**
+   * @param targetEnvironmentId The ID of the target environment to report on.
+   * @returns The type errors found in the target environment, formatted for
+   * display, or null if it has none.
+   */
+  public static getTypeErrors(targetEnvironmentId: string): string | null {
+    let diagnostics =
+      TargetEnvSandboxing.typeCheckDiagnosticRegistry.get(targetEnvironmentId)
+
+    if (!diagnostics || !diagnostics.length) return null
+
+    return TargetEnvSandboxing.formatDiagnostics(diagnostics)
+  }
+
+  /**
+   * @param diagnostics The diagnostics to format.
+   * @returns The diagnostics rendered as displayable text.
+   */
+  private static formatDiagnostics(
+    diagnostics: readonly ts.Diagnostic[],
+  ): string {
+    return ts.formatDiagnostics(diagnostics, {
+      getCanonicalFileName: (fileName) => fileName,
+      getCurrentDirectory: ts.sys.getCurrentDirectory,
+      getNewLine: () => ts.sys.newLine,
+    })
   }
 
   /**
@@ -295,23 +435,18 @@ export abstract class TargetEnvSandboxing {
       // Find the name of the folder directly under
       // the target-environments root which contains
       // the parent module.
-      let rootDir = ''
-      let targetEnvId = ''
-      {
-        let currentDir = path.dirname(parent.filename)
-        while (true) {
-          let parentDir = path.dirname(currentDir)
-          if (
-            parentDir === TargetEnvSandboxing.TARGET_ENV_ROOT ||
-            parentDir === currentDir
-          ) {
-            rootDir = currentDir
-            targetEnvId = path.basename(rootDir)
-            break
-          }
-          currentDir = parentDir
-        }
+      let targetEnvironmentId = TargetEnvSandboxing.resolveTargetEnvironmentId(
+        parent.filename,
+      )
+
+      if (targetEnvironmentId === null) {
+        return next()
       }
+
+      let rootDir = path.join(
+        TargetEnvSandboxing.TARGET_ENV_ROOT,
+        targetEnvironmentId,
+      )
 
       // Allow Node.js built-in modules (they don't resolve to file paths)
       if (
@@ -322,7 +457,10 @@ export abstract class TargetEnvSandboxing {
       }
       // Resolve if the request is a non-relative import
       // inside the target environment.
-      if (request === targetEnvId || request.startsWith(`${targetEnvId}/`)) {
+      if (
+        request === targetEnvironmentId ||
+        request.startsWith(`${targetEnvironmentId}/`)
+      ) {
         return next()
       }
 
@@ -417,6 +555,7 @@ export abstract class TargetEnvSandboxing {
    */
   public static initialize() {
     TargetEnvSandboxing.determineTsConfigPaths()
+    TargetEnvSandboxing.typeCheckEnvironments()
     TargetEnvSandboxing.loadGlobals()
     TargetEnvSandboxing.addImportMiddleware()
     TargetEnvSandboxing.overrideTimingFunctions()
@@ -434,6 +573,29 @@ export abstract class TargetEnvSandboxing {
     if (TargetEnvSandboxing.isPathInside(child, parent)) {
       throw new Error(message)
     }
+  }
+
+  /**
+   * Determines which target environment owns a given file.
+   * @param filePath The path to the file.
+   * @returns The ID of the target environment containing the file, or null
+   * if the file sits outside every target environment.
+   */
+  private static resolveTargetEnvironmentId(filePath: string): string | null {
+    if (
+      !TargetEnvSandboxing.isPathInside(
+        filePath,
+        TargetEnvSandboxing.TARGET_ENV_ROOT,
+      )
+    ) {
+      return null
+    }
+
+    let segments = path
+      .relative(TargetEnvSandboxing.TARGET_ENV_ROOT, filePath)
+      .split(path.sep)
+
+    return segments.length > 1 ? segments[0] : null
   }
 
   /**
