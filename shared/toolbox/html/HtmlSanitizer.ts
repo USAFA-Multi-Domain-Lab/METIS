@@ -60,8 +60,11 @@ export class HtmlSanitizer {
    * attributes removed.
    */
   public static sanitize(html: string): string {
-    // todo: evaluate any security vulnerabilities
-    // todo: for the addition of "span" and "style."
+    // ! A "style" attribute passes through as written, so markup from an
+    // ! imported mission file can load a remote image or lift a span out of its
+    // ! box and over the page. The editor itself only ever writes color, line
+    // ! height, and alignment. Narrowing this needs a CSS filter of our own,
+    // ! which DOMPurify does not provide.
     return DOMPurify.sanitize(html, {
       ALLOWED_TAGS: HtmlSanitizer.ALLOWED_ELEMENTS,
       ALLOWED_ATTR: HtmlSanitizer.ALLOWED_ATTRIBUTES,
