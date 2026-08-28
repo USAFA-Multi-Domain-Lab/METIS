@@ -296,7 +296,14 @@ const sanitizeArgumentValues = (argumentEntries: unknown): unknown => {
 
     if (!holdsHtml) return entry
 
-    return { ...entry, value: sanitizeHtml(entry.value) }
+    // Copying a mission hands this setter Mongoose subdocuments rather than
+    // plain objects, and spreading one of those copies Mongoose's own
+    // bookkeeping instead of the argument's fields. Reading the fields off it
+    // first means what goes back is the argument on its own.
+    const argument =
+      entry instanceof mongoose.Document ? entry.toObject() : entry
+
+    return { ...argument, value: sanitizeHtml(argument.value) }
   })
 }
 
