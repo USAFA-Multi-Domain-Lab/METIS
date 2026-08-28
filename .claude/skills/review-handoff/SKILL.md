@@ -41,6 +41,7 @@ Follow the guide's format, and assign severity from its tier definitions. What m
 - Lead with the **bold one-sentence claim**. A reader scanning only the bold lines should understand the review. Write the claim, then the evidence — never the reverse.
 - Cite `file:line` as a Markdown link for every path mentioned, including paths inside the supporting detail.
 - Pre-existing tests broken by the feature are not findings — the handoff should have arrived green. If it did not, say so to the user rather than absorbing it into the review.
+- Number each finding from 1 within its severity group as you write it. That number is what every later reference cites, so it is never reassigned.
 
 Then update the tally line and the status line to match, adding the findings count the author left off.
 
@@ -63,7 +64,7 @@ Report what actually ran and name anything that did not rather than implying it 
 
 Report concisely: how many findings at each severity, and the one or two that actually matter.
 
-Update the status if the guide's condition for its current value no longer holds.
+Close by invoking `next-handoff-step`, which names what comes next.
 
 Then stop. **Do not fix anything.** A defect found while reviewing is a task for the author, not the reviewer.
 

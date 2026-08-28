@@ -1,5 +1,5 @@
 {
-  "typescript.preferences.importModuleSpecifier": "shortest",
+  "js/ts.preferences.importModuleSpecifier": "shortest",
   "eslint.enable": true,
   "eslint.useFlatConfig": true,
   "eslint.validate": [
@@ -14,12 +14,13 @@
     "source.fixAll.eslint": "explicit"
   },
   "editor.formatOnSave": true,
-  "typescript.preferences.preferTypeOnlyAutoImports": false,
-  "typescript.tsdk": "node_modules/typescript/lib",
+  "js/ts.preferences.preferTypeOnlyAutoImports": false,
   "eslint.workingDirectories": [
     {
       "mode": "auto"
     }
   ],
-  "testing.automaticallyOpenTestResults": "neverOpen"
+  "testing.automaticallyOpenTestResults": "neverOpen",
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true
 }

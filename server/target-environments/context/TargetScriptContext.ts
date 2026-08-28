@@ -814,9 +814,7 @@ export interface TTargetScriptExposedContext<
   /**
    * Sends the message to the output panel within a session.
    * @param message The output's message.
-   * @param options Additional options for sending the output.
-   * @note By default, this will send output to the force to which
-   * the effect belongs, unless configured otherwise.
+   * @param to The force, forces, or mission to send the output to.
    */
   sendOutput: TargetScriptContext<TType>['sendOutput']
   /**

@@ -4,7 +4,6 @@ import { TargetSchema as TargetSchema_source } from '@metis/schema/TargetSchema'
 import type * as TargetEnvTypes from '@metis/schema/types'
 import { MetisServer } from '@server/MetisServer'
 import type * as ServerContextTypes from '@server/target-environments/context/TargetEnvContext'
-import type * as MetisComponentTypes from '../../shared/MetisComponent'
 
 // Assignment of global values:
 Object.defineProperty(globalThis, 'METIS_VERSION', {
@@ -65,16 +64,6 @@ declare global {
   export type TTargetEnvExposedPool = ServerContextTypes.TTargetEnvExposedPool
   export type TTargetEnvExposedResource =
     ServerContextTypes.TTargetEnvExposedResource
-
-  // These types aren't globally accessible, but they are
-  // needed contextually in order to resolve other types
-  // in the integration folder:
-
-  type TCreateJsonType<
-    T extends MetisComponentTypes.MetisComponent,
-    TDirect extends keyof T,
-    TIndirect extends { [k in keyof T]?: any } = {},
-  > = MetisComponentTypes.TCreateJsonType<T, TDirect, TIndirect>
 }
 
 export {}

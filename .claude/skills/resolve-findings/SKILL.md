@@ -23,7 +23,7 @@ Find the severity headings by their text, at whatever level they carry. The find
 
 ## Phase 2 — Take the next finding
 
-Severity order — Critical, High, Medium, Low, Advisory — taking the first `- [ ]` in the highest tier that still has one. Say which finding is in hand and how many remain.
+Severity order — Critical, High, Medium, Low, Advisory — taking the first `- [ ]` in the highest tier that still has one. Say which finding is in hand, by its `{Severity} #{n}`, and how many remain.
 
 ## Phase 3 — Verify the claim
 
@@ -103,4 +103,6 @@ Report the hash, then **go back to Phase 2 and take the next finding** without w
 
 The cycle ends when no findings are open, or whenever the author stops it — which they may do at any gate.
 
-Update the status if the guide's condition for its current value no longer holds. Then report the session: what was fixed, what was declined, what turned out to be a false flag, and anything still open.
+Report the session: what was fixed, what was declined, what turned out to be a false flag, and anything still open.
+
+Close by invoking `next-handoff-step`, which names what comes next.

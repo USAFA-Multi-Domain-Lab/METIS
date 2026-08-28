@@ -21,7 +21,7 @@ If the user has a handoff open in the IDE, use it. Otherwise search the version 
 
 Find the Manual Tests section by its heading text, at whatever level it carries and whatever trails it. If the section is a sentence saying no manual testing is required rather than a list, say so and stop.
 
-Number every item by position, from 1, counting checked and unchecked alike. That ordinal is the test's identity for the rest of the session.
+Each item carries its own number. That ordinal is the test's identity for the rest of the session — read it off the document rather than counting positions, and where an item has none, number the list as the guide requires before going on.
 
 Report the count and nothing else — how many tests, how many still unchecked. Do not list them.
 
@@ -93,4 +93,6 @@ Then **go back to Phase 2 and take the next test** without waiting to be asked.
 
 The cycle ends when no test is unchecked, or whenever the reviewer stops it — which they may do at any gate.
 
-Update the status if the guide's condition for its current value no longer holds. Then report the session: how many passed, what failed and the findings it produced, and anything deferred without being run.
+Report the session: how many passed, what failed and the findings it produced, and anything deferred without being run.
+
+Close by invoking `next-handoff-step`, which names what comes next.
