@@ -360,7 +360,8 @@ export class ServerTargetEnvironment extends TargetEnvironment<TMetisServerCompo
     let typeErrors = TargetEnvSandboxing.getTypeErrors(path.basename(directory))
     if (typeErrors) {
       let errorMessage =
-        `Type errors found in "${path.basename(directory)}":\n${typeErrors}` +
+        `Type errors found in "${path.basename(directory)}":\n\n` +
+        `${typeErrors}\n` +
         `Skipping target environment...`
       targetEnvLogger.error(errorMessage)
       console.error(errorMessage)

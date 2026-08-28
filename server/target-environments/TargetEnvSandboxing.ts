@@ -288,7 +288,7 @@ export abstract class TargetEnvSandboxing {
     // rather than carry on, which would leave every environment unchecked.
     if (configFile.error) {
       throw new Error(
-        `Failed to read "${TargetEnvSandboxing.TSCONFIG_PATH}".\n` +
+        `Failed to read "${TargetEnvSandboxing.TSCONFIG_PATH}".\n\n` +
           TargetEnvSandboxing.formatDiagnostics([configFile.error]),
       )
     }
@@ -310,7 +310,7 @@ export abstract class TargetEnvSandboxing {
     // Those are installation problems too, so they crash as well.
     if (parsedConfig.errors.length) {
       throw new Error(
-        `Failed to parse "${TargetEnvSandboxing.TSCONFIG_PATH}".\n` +
+        `Failed to parse "${TargetEnvSandboxing.TSCONFIG_PATH}".\n\n` +
           TargetEnvSandboxing.formatDiagnostics(parsedConfig.errors),
       )
     }
@@ -364,7 +364,7 @@ export abstract class TargetEnvSandboxing {
     // reported.
     if (unownedDiagnostics.length) {
       targetEnvLogger.warn(
-        `Type errors were found outside of any target environment:\n` +
+        `Type errors were found outside of any target environment:\n\n` +
           TargetEnvSandboxing.formatDiagnostics(unownedDiagnostics),
       )
     }
@@ -386,16 +386,24 @@ export abstract class TargetEnvSandboxing {
 
   /**
    * @param diagnostics The diagnostics to format.
-   * @returns The diagnostics rendered as displayable text.
+   * @returns The diagnostics rendered as displayable text, one per
+   * paragraph.
    */
   private static formatDiagnostics(
     diagnostics: readonly ts.Diagnostic[],
   ): string {
-    return ts.formatDiagnostics(diagnostics, {
+    let host: ts.FormatDiagnosticsHost = {
       getCanonicalFileName: (fileName) => fileName,
       getCurrentDirectory: ts.sys.getCurrentDirectory,
       getNewLine: () => ts.sys.newLine,
-    })
+    }
+
+    // Format one at a time and separate them with a blank line. Handing
+    // the whole set over at once runs them together into a block that is
+    // hard to read, especially where a diagnostic spans several lines.
+    return diagnostics
+      .map((diagnostic) => ts.formatDiagnostics([diagnostic], host))
+      .join(ts.sys.newLine)
   }
 
   /**
