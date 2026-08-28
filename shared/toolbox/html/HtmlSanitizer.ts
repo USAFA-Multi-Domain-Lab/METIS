@@ -54,13 +54,6 @@ export class HtmlSanitizer {
   ]
 
   /**
-   * The elements that are removed along with everything inside them. They are
-   * already absent from the allowed elements, and naming them here means the
-   * text they carry is thrown away instead of being displayed on its own.
-   */
-  public static readonly FORBIDDEN_ELEMENTS: string[] = ['script', 'iframe']
-
-  /**
    * Sanitizes HTML so it is safe to display.
    * @param html The HTML to sanitize.
    * @returns The same HTML with everything outside the allowed elements and
@@ -72,7 +65,6 @@ export class HtmlSanitizer {
     return DOMPurify.sanitize(html, {
       ALLOWED_TAGS: HtmlSanitizer.ALLOWED_ELEMENTS,
       ALLOWED_ATTR: HtmlSanitizer.ALLOWED_ATTRIBUTES,
-      FORBID_TAGS: HtmlSanitizer.FORBIDDEN_ELEMENTS,
     })
   }
 }

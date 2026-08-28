@@ -55,7 +55,6 @@ const SANITIZE_OPTIONS = {
     'span',
   ],
   ALLOWED_ATTR: ['href', 'rel', 'target', 'class', 'style', 'start', 'type'],
-  FORBID_TAGS: ['script', 'iframe'],
 }
 
 // The target and parameter pairs whose argument holds rich text regardless of
