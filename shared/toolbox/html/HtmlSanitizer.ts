@@ -49,6 +49,8 @@ export class HtmlSanitizer {
     'target',
     'class',
     'style',
+    'start',
+    'type',
   ]
 
   /**

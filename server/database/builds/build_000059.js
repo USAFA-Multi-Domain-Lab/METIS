@@ -24,10 +24,8 @@
 
 const DOMPurify = require('isomorphic-dompurify')
 
-// A copy of the allow-list used by sanitizeHtml in
-// server/database/models/missions.ts as of this build. A migration records the
-// rules that were in force when it ran, so later changes to that function are
-// deliberately not carried back into this file.
+// The same allow-list as shared/toolbox/html/HtmlSanitizer.ts, so stored
+// values are cleaned the way they are on save.
 const SANITIZE_OPTIONS = {
   ALLOWED_TAGS: [
     'a',
@@ -56,7 +54,7 @@ const SANITIZE_OPTIONS = {
     'strike',
     'span',
   ],
-  ALLOWED_ATTR: ['href', 'rel', 'target', 'class', 'style'],
+  ALLOWED_ATTR: ['href', 'rel', 'target', 'class', 'style', 'start', 'type'],
   FORBID_TAGS: ['script', 'iframe'],
 }
 
