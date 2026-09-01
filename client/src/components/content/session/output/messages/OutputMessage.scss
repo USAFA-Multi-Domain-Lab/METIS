@@ -1,15 +1,19 @@
 @use '@client/assets/styles/config.scss' as *;
 
 .OutputMessage {
-  .RichText {
-    display: inline;
+  display: block;
 
-    div {
-      display: inline;
+  .RichText .Viewer {
+    // A message that has content other than a paragraph breaks to a new line.
+    // The "::before" ensures that the margin for the message still works as intended.
+    &:has(> :first-child:not(p))::before {
+      content: '';
+      display: block;
+      clear: left;
     }
 
-    .Viewer p:first-of-type {
-      display: inline;
+    > p:first-child {
+      margin-top: 0;
     }
   }
 

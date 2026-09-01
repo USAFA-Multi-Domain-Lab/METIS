@@ -1,6 +1,7 @@
 @use '@client/assets/styles/config.scss' as *;
 
 .Output {
+  display: flow-root;
   padding: 15px 0 0;
   font-size: 0.75em;
   line-height: 1rem;
