@@ -57,6 +57,29 @@ const SANITIZE_OPTIONS = {
   ALLOWED_ATTR: ['href', 'rel', 'target', 'class', 'style', 'start', 'type'],
 }
 
+// The same style properties HtmlSanitizer keeps. A property belongs here only
+// when it can neither name a resource nor move an element.
+const ALLOWED_STYLE_PROPERTIES = ['color', 'line-height', 'text-align']
+
+// DOMPurify has no option for limiting a "style" attribute to particular
+// properties, so this trims one after DOMPurify has cleaned the element. A
+// build runs in its own process, so it registers this for itself.
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  if (typeof node.getAttribute !== 'function' || !node.style) return
+  if (!node.getAttribute('style')) return
+
+  const disallowed = Array.from(node.style).filter(
+    (property) => !ALLOWED_STYLE_PROPERTIES.includes(property),
+  )
+
+  // Changing the attribute reformats everything left in it, so one with
+  // nothing to lose is left exactly as it was written.
+  if (disallowed.length === 0) return
+
+  for (const property of disallowed) node.style.removeProperty(property)
+  if (!node.getAttribute('style')) node.removeAttribute('style')
+})
+
 // The target and parameter pairs whose argument holds rich text regardless of
 // the type recorded on the argument itself.
 const RICH_TEXT_PARAMETERS = [

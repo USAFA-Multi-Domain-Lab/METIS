@@ -54,20 +54,53 @@ export class HtmlSanitizer {
   ]
 
   /**
+   * The style properties that are kept. Every other declaration is dropped
+   * from a "style" attribute.
+   *
+   * A property belongs here only when it can neither name a resource nor move
+   * an element. One that takes a "url()", such as "background" or
+   * "list-style-image", would let an imported mission file pull from another
+   * site when the message is displayed, and one that affects position or
+   * stacking, such as "position" or "z-index", would let it cover the page.
+   */
+  public static readonly ALLOWED_STYLE_PROPERTIES: string[] = [
+    'color',
+    'line-height',
+    'text-align',
+  ]
+
+  /**
    * Sanitizes HTML so it is safe to display.
    * @param html The HTML to sanitize.
    * @returns The same HTML with everything outside the allowed elements and
    * attributes removed.
    */
   public static sanitize(html: string): string {
-    // ! A "style" attribute passes through as written, so markup from an
-    // ! imported mission file can load a remote image or lift a span out of its
-    // ! box and over the page. The editor itself only ever writes color, line
-    // ! height, and alignment. Narrowing this needs a CSS filter of our own,
-    // ! which DOMPurify does not provide.
     return DOMPurify.sanitize(html, {
       ALLOWED_TAGS: HtmlSanitizer.ALLOWED_ELEMENTS,
       ALLOWED_ATTR: HtmlSanitizer.ALLOWED_ATTRIBUTES,
     })
   }
 }
+
+// DOMPurify has no option for limiting a "style" attribute to particular
+// properties, so this trims one after DOMPurify has cleaned the element.
+// DOMPurify holds its hooks itself rather than taking them per call, so
+// registering here covers every sanitize made in this process.
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  const element = node as HTMLElement
+
+  if (typeof element.getAttribute !== 'function' || !element.style) return
+  if (!element.getAttribute('style')) return
+
+  const disallowed = Array.from(element.style).filter(
+    (property) => !HtmlSanitizer.ALLOWED_STYLE_PROPERTIES.includes(property),
+  )
+
+  // Changing the attribute reformats everything left in it, so one with
+  // nothing to lose is left exactly as it was written.
+  if (disallowed.length === 0) return
+
+  for (const property of disallowed) element.style.removeProperty(property)
+  if (!element.getAttribute('style')) element.removeAttribute('style')
+})
