@@ -9,6 +9,13 @@
         align-items: center;
         font-size: 0.75rem;
         line-height: 2em;
+
+        .ListItemCellText {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
       }
     }
   }
