@@ -24,7 +24,7 @@ If the user has a handoff open in the IDE, use it. Otherwise search the version 
 - **A finding citing `the fix for {Severity} #{n}` means a pass has already run.** Scope narrows to the fixes for the findings that pass produced, plus anything resolved after them. The rest have been read.
 - **A decline or a false flag has no commit** and nothing to read.
 
-Show the commits and **confirm the set before reading anything**. A wrong range is the one failure that wastes the whole pass.
+Present the relevant commits and then proceed to phase 2 without confirming.
 
 ## Phase 2 — Read the fixes as a set
 
