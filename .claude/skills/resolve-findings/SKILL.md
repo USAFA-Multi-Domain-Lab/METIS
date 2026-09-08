@@ -23,7 +23,7 @@ Find the severity headings by their text, at whatever level they carry. The find
 
 ## Phase 2 — Take the next finding
 
-Severity order — Critical, High, Medium, Low, Advisory — taking the first `- [ ]` in the highest tier that still has one. Say which finding is in hand, by its `{Severity} #{n}`, and how many remain.
+Severity order — Critical, High, Medium, Low, Advisory — taking the first `- [ ]` in the highest tier that still has one. Say which finding is in hand — its `{Severity} #{n}`, its claim, and how many remain.
 
 ## Phase 3 — Verify the claim
 
