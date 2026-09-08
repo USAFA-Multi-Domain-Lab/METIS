@@ -63,6 +63,8 @@ Lives in `integration/`. Developers define target environments (external systems
 
 Lives in `shared/` and `server/`. At startup, METIS scans the integration folder and builds a registry of all available target environments and their targets. This registry is shared between client and server. The scan type checks the integration folder first and skips any target environment whose code has type errors, logging them to `server/logs/target-env-error.log`.
 
+Every environment is checked in one program, which shares a single global scope, so a target environment must not declare globally scoped variables: a name it adds collides with the same name in `integration/target-env/global.ts` or in another environment, and both sides are reported as errors.
+
 **Key Benefit**: Automatic discovery means no manual registration required.
 
 ### Execution Layer
