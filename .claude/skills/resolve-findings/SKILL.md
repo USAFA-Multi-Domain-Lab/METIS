@@ -23,7 +23,7 @@ Find the severity headings by their text, at whatever level they carry. The find
 
 ## Phase 2 — Take the next finding
 
-Severity order — Critical, High, Medium, Low, Advisory — taking the first `- [ ]` in the highest tier that still has one. Say which finding is in hand — its `{Severity} #{n}`, its claim, and how many remain.
+Severity order — Critical, High, Medium, Low, Advisory — taking the first `- [ ]` in the highest tier that still has one. Say which finding is in hand, by its `{Severity} #{n}`, and how many remain.
 
 ## Phase 3 — Verify the claim
 
@@ -39,6 +39,8 @@ State the verdict plainly: confirmed, partly, or does not hold. If it depends on
 **A claim that fails verification is never marked off on your own judgment.** It goes to Phase 4 with `false flag` as the recommended option and waits — the author may be seeing something the verification missed.
 
 ## Phase 4 — Present options, then stop
+
+Open with the finding's claim, then Phase 3's verdict, then the options, so the author reads the three together rather than across the investigation that produced them.
 
 One or more options — as many as genuinely exist, and no more. A finding with a single sensible fix gets one; padding the list to look thorough wastes the author's time. Each gets a name and a one-line consequence, recommendation first with one sentence of why.
 
