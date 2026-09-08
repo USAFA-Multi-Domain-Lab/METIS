@@ -274,8 +274,14 @@ export abstract class TargetEnvSandboxing {
    * the file each one came from.
    * @note Errors that belong to no target environment are logged instead.
    * @throws If the target-environment tsconfig cannot be read or parsed.
+   * @note Clears {@link typeCheckDiagnosticRegistry} before running, so
+   * any errors left over from a previous run are discarded.
    */
   private static typeCheckEnvironments(): void {
+    // The registry holds the results of this check alone, so anything a
+    // previous one left behind goes before it is filled.
+    TargetEnvSandboxing.typeCheckDiagnosticRegistry.clear()
+
     // Read the tsconfig. This parses the file's text and nothing else:
     // "extends" is not followed and "include" is not expanded yet.
     let configFile = ts.readConfigFile(
