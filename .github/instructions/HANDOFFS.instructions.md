@@ -8,7 +8,7 @@ A **code handoff** is a single Markdown document written for a coworker who will
 
 1. **The author writes it.** Summary, manual test checklist, automatic test checklist, and coverage specifics. Every checkbox starts unchecked and the Findings section starts empty.
 2. **The reviewer works through it.** Manual tests, automatic tests, and the review itself — boxes get checked as the tests pass and findings are added as they are discovered.
-3. **The author resolves the findings.** Resolution happens in place: the box is checked and a reply appended beneath it. Tests the review left failing come back too — their boxes are checked once the fix makes them pass.
+3. **The author resolves the findings.** Resolution happens in place: the box is checked and a reply appended beneath it. Tests the review left failing come back too — their boxes are checked once the fix makes them pass. Once nothing is open, the fixes themselves may take one last pass before the document is marked complete.
 
 Handoffs live in `handoffs/{version}/{feature-name}.md`, kebab-case, where `{version}` is the release the work ships in — `handoffs/2.5.2/member-unban.md`. The directory is gitignored, so writing there never touches a commit.
 
@@ -61,7 +61,7 @@ Every file link and line number in it — in findings, in coverage specifics, an
 
 - [x] **1 —** [OtherFile.ts:118](/path/to/OtherFile.ts) — **The claim.** Supporting detail.
 
-  > **{Author Name}** _{MM:DD:YYYY:HH:MM}_ What was changed, and why.
+  > **{Author Name}** _{MM:DD:YYYY:HH:MM}_ What was changed, and why. `{hash}`
 
 ### Advisory
 
@@ -108,11 +108,15 @@ A note records anything that happened beneath a checkbox — a test that failed,
 
 The name is whoever wrote the note, from their `git config user.name`; the timestamp comes from `date "+%m:%d:%Y:%H:%M"`. Indent two spaces to stay inside the list item, prefix every wrapped line with `>`, and separate paragraphs with a bare `>`.
 
-Notes accumulate. A later note goes beneath the ones already there rather than replacing them — the sequence is the record.
+Notes accumulate. A later note goes beneath the ones already there rather than replacing them — the sequence is the record. A note is never revised once written, so anything that develops afterward gets its own note.
+
+A note recording a committed fix ends with that commit's short hash, in backticks. Nothing else in the document says which commit closed which finding.
 
 ### Cross-References
 
 A note pointing at a finding cites it `{Severity} #{n}`. A finding pointing back at what surfaced it cites `manual test {n}` or `automatic test {n}{letter}`, the group's number and the case's letter together.
+
+A finding a fix introduced cites `the fix for {Severity} #{n}`, and a note beneath that resolved finding points forward to it. The resolved box stays checked — the note records what the fix caused, not that it came undone.
 
 Every ordinal is written into the document. Each is assigned when the item is added and is never renumbered, so a reference stays valid for as long as the document exists — new items append to the end of their list, their group, or their severity tier.
 

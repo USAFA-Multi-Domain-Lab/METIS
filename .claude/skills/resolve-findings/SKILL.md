@@ -1,6 +1,6 @@
 ---
 name: resolve-findings
-description: Work through a handoff's open findings as the author — verify each claim, offer fixes, apply the chosen one, then resolve and commit it before moving to the next. Use when the user asks to "resolve the findings", "fix what the review found", or work through a handoff's Findings section.
+description: Work through a handoff's open findings as the author — verify each claim, offer fixes, apply the chosen one, then commit it and resolve it in the document before moving to the next. Use when the user asks to "resolve the findings", "fix what the review found", or work through a handoff's Findings section.
 ---
 
 # Resolve Findings
@@ -77,27 +77,30 @@ They read and stage it themselves. Expect follow-up — they often edit the fix,
 
 Once they sign off, re-run the Phase 5 checks if the fix changed while they were reviewing it. Those results are stale otherwise, and everything after this point — checking the box, checking a test that now passes, committing — rests on them.
 
-When the chosen option requires no code change — a decline, a confirmed false flag — Phases 5 and 6 are skipped, and Phase 8 has nothing to commit.
+When the chosen option requires no code change — a decline, a confirmed false flag — Phases 5 and 6 are skipped, and Phase 7 has nothing to commit.
 
-## Phase 7 — Resolve in the document
+## Phase 7 — Commit
 
-Flip `- [ ]` to `- [x]` and append a note beneath any already there, in the form the guide defines. Keep it brief and say what was actually done — the fix, a **Decline**, or a **False flag** — including anywhere it departed from the option the author chose.
+Confirm the tree is on the feature branch the work belongs to. Run `git status --short` and commit what the author staged; if they staged a subset, respect that.
+
+One commit per finding. The handoff is gitignored, so Phase 8's annotation is never part of it.
+
+Report the short hash. The commit comes before the annotation because the note carries the hash, and a note is written once.
+
+## Phase 8 — Resolve in the document, then return to Phase 2
+
+Flip `- [ ]` to `- [x]` and append a note beneath any already there, in the form the guide defines. Keep it brief and say what was actually done — the fix, a **Decline**, or a **False flag** — including anywhere it departed from the option the author chose. A note for a fix ends with Phase 7's short hash. A decline and a false flag have no commit and carry none.
 
 `[x]` means **resolved**, which covers a decline and a false flag as much as a fix.
 
 What this phase may and may not touch:
 
 - **Never alter the reviewer's finding text** — not its wording, not its severity, not its stale line numbers.
+- **Never revise a note once it is written**, this one included. Anything that develops later gets its own note beneath it.
 - **Do** maintain the tally line and the status line's `{n}/{n} findings resolved`.
 - **Do** revisit any manual or automatic test box the review left unchecked against this finding. Re-run it, and check it if the fix makes it pass. Add a note beneath any other notes saying how the fix made it pass.
 
-## Phase 8 — Commit, then return to Phase 2
-
-Confirm the tree is on the feature branch the work belongs to. Run `git status --short` and commit what the author staged; if they staged a subset, respect that.
-
-One commit per finding. The handoff is gitignored, so Phase 7's annotation is never part of it.
-
-Report the hash, then **go back to Phase 2 and take the next finding** without waiting to be asked.
+Then **go back to Phase 2 and take the next finding** without waiting to be asked.
 
 ## Closing out
 

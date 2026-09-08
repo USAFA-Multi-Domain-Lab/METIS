@@ -17,7 +17,7 @@ Three lines it holds throughout:
 
 One pass, no cycle.
 
-**Invoked at the close of a sibling skill**, skip Phases 1 and 3 — the caller names the document and supplies the role, `create-handoff` and `resolve-findings` running as the author and the other three as the reviewer. Phases 2, 4, and 5 run as written, deriving the state from the document as always.
+**Invoked at the close of a sibling skill**, skip Phases 1 and 3 — the caller names the document and supplies the role, `create-handoff`, `resolve-findings`, and `verify-finding-fixes` running as the author and the other three as the reviewer. Phases 2, 4, and 5 run as written, deriving the state from the document as always.
 
 ## Phase 1 — Locate the handoff
 
@@ -65,6 +65,8 @@ Corrections run in both directions: a status ahead of the document is corrected 
 
 Claiming the reviewer line is the one write that changes ownership rather than restating what the document already implies, and it is what takes a document out of `Awaiting review` — so the status moves to `In review` in the same edit.
 
+`Complete` is the one value offered before it is written, and only the author is offered it. Where every box is checked and the status has not reached `Complete` yet, ask whether to take a last pass over the fixes first — `verify-finding-fixes` reads them as a set and records anything they introduced. Declined, write `Complete`. Accepted, write nothing; the pass closes the document out itself. Asked by anyone else, leave the status where it is and say the pass is the author's to take or decline. The offer stands every time the transition is pending, including where a pass has already run — the fixes that closed its own findings are a round of their own.
+
 ## Phase 5 — Answer for the asker
 
 One next step, keyed on the state **as Phase 4 left it** rather than the status line as found.
@@ -75,6 +77,8 @@ One next step, keyed on the state **as Phase 4 left it** rather than the status 
 | **In review**          | Wait. Name what the reviewer still owes.                           | The first outstanding pass, per below. |
 | **Resolving findings** | `resolve-findings` — name the first open finding and its severity. | Nothing yours; the author has it.      |
 | **Complete**           | Say the document is complete.                                      | Say the document is complete.          |
+
+Where Phase 4's offer was accepted, the next step is `verify-finding-fixes` — start it. Where it was declined, the answer is the `Complete` row.
 
 The author's `Awaiting review` answer stays vague: hand it to the reviewer, whoever that is. Do not remark on the absent reviewer line — who reviews it is not this skill's business.
 
