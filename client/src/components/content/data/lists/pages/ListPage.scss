@@ -9,6 +9,14 @@ $item-height: $item-non-padded-height + $item-cell-padding-vertical * 2;
 $last-item-padding-bottom: 0.5em;
 
 .ListPage {
+  display: grid;
+  // Lay the column labels and the rows out in a single column that is as
+  // wide as the widest row, or as wide as the visible area when that is
+  // wider. Rows carrying no content of their own, such as blanks and the
+  // "none available" message, then reach the end of the horizontal
+  // scroll instead of stopping where the visible area ends.
+  grid-template-columns: minmax(min-content, 1fr);
+  align-content: start;
   width: 100%;
   padding: 0.5em 0 0em;
   overflow-x: auto;
@@ -16,11 +24,6 @@ $last-item-padding-bottom: 0.5em;
 
   .ListItems {
     box-sizing: border-box;
-    // Grow to the widest row so that content-less rows (blanks, the
-    // "no items" message, stripes) span the full horizontal scroll
-    // width rather than collapsing to the viewport width.
-    width: fit-content;
-    min-width: 100%;
 
     > :nth-child(odd) {
       background-color: rgba($color-secondary, 0.35);

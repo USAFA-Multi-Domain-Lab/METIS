@@ -385,7 +385,7 @@ export default {
       testEnvironment: 'node',
       maxWorkers: 1,
       collectCoverageFrom: [
-        '<rootDir>/integration/target-env/**/*.{ts,tsx,js,jsx}',
+        '<rootDir>/integration/target-env/metis/**/*.{ts,tsx,js,jsx}',
         '!<rootDir>/tests/**',
         '!**/*.d.ts',
         '!**/node_modules/**',

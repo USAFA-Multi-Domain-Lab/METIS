@@ -6,6 +6,7 @@ import {
 import type { Editor } from '@tiptap/react'
 import { cycleFontColor } from '../helpers/font-color'
 import { cycleHeadingLevel } from '../helpers/heading'
+import { canOpenLinkPrompt } from '../helpers/link'
 import { cycleLineSpacing } from '../helpers/line-spacing'
 import { cycleTextAlign } from '../helpers/text-align'
 import type { TRichTextPickerKey } from '../RichTextToolbar'
@@ -59,7 +60,9 @@ export function useRichTextKeyboardShortcuts({
     // Cmd/Ctrl+K — toggle link.
     if (KEYBOARD_SHORTCUTS.toggleRichTextLink.matches(event)) {
       event.preventDefault()
-      toggleLink(editor)
+      if (canOpenLinkPrompt(editor)) {
+        toggleLink(editor)
+      }
     }
 
     // Cmd+Opt+0 / Ctrl+Alt+0 — clear all formatting.

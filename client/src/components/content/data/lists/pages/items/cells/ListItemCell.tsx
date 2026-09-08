@@ -51,6 +51,15 @@ export default function ListItemCell<TItem extends MetisComponent>({
   })
 
   /**
+   * Whether the cell holds plain text. Text is wrapped so it can be
+   * truncated with an ellipsis; other content (such as a dropdown)
+   * renders as-is so it is not clipped.
+   */
+  const holdsText = compute<boolean>(
+    () => typeof children === 'string' || typeof children === 'number',
+  )
+
+  /**
    * The tooltip description for the item.
    */
   const tooltipDescription = compute<string>(() => {
@@ -103,7 +112,12 @@ export default function ListItemCell<TItem extends MetisComponent>({
   // Render the item cell.
   return (
     <div className={rootClass} onClick={onClick}>
-      {selectable && <Tooltip description={tooltipDescription} />} {children}
+      {selectable && <Tooltip description={tooltipDescription} />}{' '}
+      {holdsText ? (
+        <span className='ListItemCellText'>{children}</span>
+      ) : (
+        children
+      )}
     </div>
   )
 }

@@ -1,7 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from '@jest/globals'
-import { Effect } from '@shared/missions/effects/Effect'
-import { Mission } from '@shared/missions/Mission'
-import { MissionPrototype } from '@shared/missions/nodes/MissionPrototype'
+import { beforeEach, describe, expect, test } from '@jest/globals'
 import {
   TargetArgument,
   type TTargetArgumentJson,
@@ -12,18 +9,18 @@ import {
 } from '@shared/target-environments/parameters/BooleanTargetParameter'
 import { DropdownTargetParameter } from '@shared/target-environments/parameters/DropdownTargetParameter'
 import type { TLargeStringTargetParameter } from '@shared/target-environments/parameters/LargeStringTargetParameter'
-import type { TMissionComponentSerializedSelection } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
-import type { TMissionComponentTargetParameter } from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
+import type {
+  TMissionComponentSerializedSelection,
+  TMissionComponentTargetParameter,
+} from '@shared/target-environments/parameters/mission-component/MissionComponentTargetParameter'
 import type { TNumberTargetParameter } from '@shared/target-environments/parameters/NumberTargetParameter'
 import type { TStringTargetParameter } from '@shared/target-environments/parameters/StringTargetParameter'
-import { TargetEnvironment } from '@shared/target-environments/TargetEnvironment'
-import { TargetEnvRegistry } from '@shared/target-environments/TargetEnvRegistry'
-import { Target } from '@shared/target-environments/targets/Target'
+import type { Target } from '@shared/target-environments/targets/Target'
 import { TargetDependency } from '@shared/target-environments/targets/TargetDependency'
-import { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
-import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
-
-let activeRegistry: TargetEnvRegistry
+import { TestEffect } from 'tests/helpers/projects/unit/missions/effects/TestEffect.helpers'
+import { TestMission } from 'tests/helpers/projects/unit/missions/TestMission.helpers'
+import { TestTarget } from 'tests/helpers/projects/unit/target-environments/targets/TestTarget.helpers'
+import { TestTargetEnvironment } from 'tests/helpers/projects/unit/target-environments/TestTargetEnvironment.helpers'
 
 /**
  * Issue checkers are evaluated on a microtask queued by the
@@ -76,15 +73,11 @@ function buildEffect(args: TTargetArgumentJson[]): TestEffect {
   })
 }
 
+beforeEach(() => {
+  TestTargetEnvironment.createRegistry()
+})
+
 describe('TargetArgument issues', () => {
-  beforeEach(() => {
-    activeRegistry = new TargetEnvRegistry()
-  })
-
-  afterEach(() => {
-    activeRegistry.clear()
-  })
-
   test('suppresses the issue on an argument whose dependencies are unmet, even when its value is invalid', async () => {
     // `choice` only applies when `toggle` is on. Its value is invalid, but the
     // unmet dependency means the argument is inactive and reports no issue.
@@ -331,14 +324,6 @@ describe('TargetArgument issues', () => {
 })
 
 describe('TargetArgument serialization', () => {
-  beforeEach(() => {
-    activeRegistry = new TargetEnvRegistry()
-  })
-
-  afterEach(() => {
-    activeRegistry.clear()
-  })
-
   test('re-serializes an argument of each primitive type to identical JSON', () => {
     // Each argument carries a concrete value, so default application is a no-op
     // and the only thing under test is the serialize → load → serialize path.
@@ -491,14 +476,6 @@ describe('TargetArgument serialization', () => {
 })
 
 describe('TargetArgument dependency resolution', () => {
-  beforeEach(() => {
-    activeRegistry = new TargetEnvRegistry()
-  })
-
-  afterEach(() => {
-    activeRegistry.clear()
-  })
-
   test('treats a dependency cycle as unmet instead of recursing infinitely', () => {
     // `alpha` depends on `beta`, which depends back on `alpha`.
     let alphaParameter = BooleanTargetParameter.fromJson({
@@ -529,14 +506,6 @@ describe('TargetArgument dependency resolution', () => {
 })
 
 describe('TargetArgument default application', () => {
-  beforeEach(() => {
-    activeRegistry = new TargetEnvRegistry()
-  })
-
-  afterEach(() => {
-    activeRegistry.clear()
-  })
-
   test('applies a required default only to an unset value and leaves every other case untouched', () => {
     let countParameter: TNumberTargetParameter = {
       _id: 'count',
@@ -585,207 +554,3 @@ describe('TargetArgument default application', () => {
     ).toBe('')
   })
 })
-
-/* -- TEST DOUBLES -- */
-
-/**
- * Minimal test `TargetArgument` that hydrates from JSON the same way the
- * server/client implementations do.
- */
-class TestTargetArgument extends TargetArgument {
-  public static fromJson(
-    json: TTargetArgumentJson,
-    effect: Effect,
-  ): TestTargetArgument {
-    let parameter = effect.target?.getParameterById(json.parameterId)
-
-    if (json.type === 'unknown' && parameter) {
-      json = { ...json, type: parameter.type } as TTargetArgumentJson
-    }
-
-    TestTargetArgument.applyDefault(json, parameter)
-
-    let context = TestTargetArgument.buildContext(json, effect.normalize())
-    return new TestTargetArgument(
-      effect.normalize(),
-      json._id,
-      json.parameterId,
-      context,
-    )
-  }
-
-  public toTargetEnvContext(): TAnyObject {
-    return {}
-  }
-}
-
-/**
- * Minimal test `TargetEnvironment` that holds targets in-memory.
- */
-class TestTargetEnvironment extends TargetEnvironment {
-  public constructor(
-    _id: TargetEnvironment['_id'],
-    name: TargetEnvironment['name'],
-    description: TargetEnvironment['description'],
-    version: TargetEnvironment['version'],
-    targets: TestTarget[] = [],
-  ) {
-    super(_id, name, description, version, targets)
-
-    this.register()
-  }
-
-  public register(): this {
-    activeRegistry.register(this)
-    return this
-  }
-}
-
-/**
- * Minimal test `Target` with an explicit migration-version list.
- */
-class TestTarget extends Target {
-  private _migrationVersions: Target['migrationVersions']
-
-  public get migrationVersions(): Target['migrationVersions'] {
-    return this._migrationVersions
-  }
-
-  public constructor(
-    _id: Target['_id'],
-    name: Target['name'],
-    description: Target['description'],
-    parameters: Target['parameters'],
-    environment: Target['environment'],
-    migrationVersions: Target['migrationVersions'],
-  ) {
-    super(_id, name, description, parameters, environment)
-
-    this._migrationVersions = migrationVersions
-  }
-}
-
-/**
- * Minimal test `Effect` that hydrates its arguments via {@link TestTargetArgument}.
- */
-class TestEffect extends Effect {
-  public constructor(
-    mission: TestMission,
-    data: {
-      _id: Effect['_id']
-      name: Effect['name']
-      targetId: Effect['targetId']
-      environmentId: Effect['environmentId']
-      targetEnvironmentVersion: Effect['targetEnvironmentVersion']
-      arguments: TTargetArgumentJson[]
-    },
-  ) {
-    let context: Effect['context'] = {
-      type: 'sessionTriggeredEffect',
-      trigger: 'session-start',
-      get sourceAction() {
-        return null
-      },
-      get sourceNode() {
-        return null
-      },
-      get sourceForce() {
-        return null
-      },
-      sourceMission: mission,
-      get host() {
-        return mission
-      },
-    } as unknown as Effect['context']
-
-    super(
-      data._id,
-      data.name,
-      data.targetId,
-      data.environmentId,
-      data.targetEnvironmentVersion,
-      0,
-      'Test effect description',
-      context,
-      data.arguments,
-      'local-key-1',
-    )
-  }
-
-  protected parseArguments(
-    data: TTargetArgumentJson[],
-  ): JsonSerializableArray<TestTargetArgument> {
-    return JsonSerializableArray.fromJson(data, (datum: TTargetArgumentJson) =>
-      TestTargetArgument.fromJson(datum, this),
-    )
-  }
-
-  protected determineTarget(
-    targetId: string,
-    environmentId: string,
-  ): TestTarget | null {
-    if (!activeRegistry) return null
-
-    if (environmentId === Effect.LEGACY_INFER_ENV_ID) {
-      return (activeRegistry.inferTarget(targetId) as TestTarget | null) ?? null
-    }
-
-    let environment = activeRegistry.get(environmentId)
-    if (!environment) return null
-
-    return (environment.getTarget(targetId) as TestTarget | null) ?? null
-  }
-}
-
-/**
- * Minimal test `MissionPrototype` implementation.
- */
-class TestMissionPrototype extends MissionPrototype {
-  // Intentionally empty.
-}
-
-/**
- * Minimal test `Mission` that wires up the issue registry via its superclass.
- */
-class TestMission extends Mission {
-  public constructor() {
-    super(
-      'mission-1',
-      'Mission 1',
-      1,
-      null,
-      null,
-      null,
-      null,
-      null,
-      {},
-      [],
-      [],
-      [],
-      [],
-      [],
-    )
-  }
-
-  protected initializeRoot(): TestMissionPrototype {
-    return new TestMissionPrototype(this, { _id: 'ROOT' })
-  }
-
-  protected importPrototype(data?: any, options?: any): any {
-    let prototype = new TestMissionPrototype(this, data, options)
-    this.prototypes.push(prototype)
-    return prototype
-  }
-
-  protected importResources(_data: any[]): void {}
-
-  protected importForces(_data: any[]): void {}
-
-  protected importFiles(_data: any[]): void {}
-
-  protected importEffects(_data: any[]): void {}
-
-  public createEffect(_target: any, _trigger: any): any {
-    throw new Error('Not implemented in unit tests.')
-  }
-}

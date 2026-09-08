@@ -1,5 +1,14 @@
 @use '@client/assets/styles/config.scss' as *;
 
 .OutputInfo {
+  float: left;
+  margin-right: 0.5em;
+  // Set by the output message if it has text that renders inline
+  // with the output info and that text has a custom line height
+  // set. This ensures the output info and the output message are
+  // aligned vertically.
+  line-height: var(--output-first-line, $rich-text-line-height);
+  // Ensures the output message content wraps correctly.
+  height: 1lh;
   color: $color-accent;
 }

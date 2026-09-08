@@ -3,7 +3,6 @@
 .RichText {
   .Editor,
   .Viewer {
-    $line-height: 1.4em;
     $code-background: $color-primary-dark;
 
     &:focus-visible {
@@ -11,7 +10,7 @@
     }
 
     p {
-      line-height: $line-height;
+      line-height: $rich-text-line-height;
       margin-top: 0.5em;
       margin-bottom: 0.5em;
 
@@ -61,7 +60,7 @@
 
     code,
     pre {
-      line-height: $line-height;
+      line-height: $rich-text-line-height;
       border-radius: 0.4em;
       color: $color-accent;
       font-family:
@@ -136,7 +135,8 @@
 
     blockquote {
       border-left: 3px solid $color-accent-light;
-      margin: 1.5rem 0;
+      margin-left: 0;
+      margin-right: 0;
       padding-left: 1rem;
     }
 

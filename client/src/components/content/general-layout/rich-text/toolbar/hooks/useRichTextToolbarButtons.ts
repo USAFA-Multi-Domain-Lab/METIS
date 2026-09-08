@@ -4,6 +4,7 @@ import type { Editor } from '@tiptap/react'
 import type { ButtonSvgEngine } from '../../../../user-controls/buttons/panels/engines'
 import { useButtonSvgEngine } from '../../../../user-controls/buttons/panels/hooks'
 import { isFontColorActive } from '../helpers/font-color'
+import { canOpenLinkPrompt } from '../helpers/link'
 import { isLineSpacingActive } from '../helpers/line-spacing'
 import { isTextAlignActive } from '../helpers/text-align'
 import { useRichTextLinkPrompt } from './useRichTextLinkPrompt'
@@ -126,6 +127,8 @@ const isButtonDisabled = (editor: Editor, button: TMetisIcon): boolean => {
       return !editor.can().undo()
     case 'redo':
       return !editor.can().redo()
+    case 'link':
+      return !canOpenLinkPrompt(editor)
     default:
       return false
   }
