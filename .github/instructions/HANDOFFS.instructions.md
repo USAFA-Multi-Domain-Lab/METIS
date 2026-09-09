@@ -118,7 +118,7 @@ A note pointing at a finding cites it `{Severity} #{n}`. A finding pointing back
 
 A finding a fix introduced cites `the fix for {Severity} #{n}`, and a note beneath that resolved finding points forward to it. The resolved box stays checked — the note records what the fix caused, not that it came undone.
 
-Every ordinal is written into the document. Each is assigned when the item is added and is never renumbered, so a reference stays valid for as long as the document exists — new items append to the end of their list, their group, or their severity tier.
+Every ordinal is written into the document. Each is assigned when the item is added and is never renumbered, so a reference stays valid for as long as the document exists — new items append to the end of their list, their group, or their severity tier. The one exception is a finding withdrawn before the document reaches `Resolving findings`, which the Findings section covers.
 
 ### Manual Tests
 
@@ -154,7 +154,8 @@ A test that fails because it exposes a real product defect makes that defect a *
 - Each finding leads with its file path and line as a Markdown link, then a **bold one-sentence claim**, then the supporting detail. Every workspace file path is a link, including those inside the detail.
 - A finding records the defect and its evidence, never how to resolve it — not a fix, not a direction, not a hint at one. The author derives the options when resolving, and anything written here anchors them to the reviewer's framing.
 - Findings are resolved **in place**: the box is checked and a note appended beneath it. Declines and false flags are checked off like any other resolution, marked **Declined** or **False flag** in the note.
-- Resolved findings stay where they are. They are not moved to a separate section or deleted — the list is the record.
+- A finding cannot be resolved while the document is still `In review`. One the reviewer withdraws before then is deleted, or rewritten to the claim that holds, and its tier renumbered — as far as the author is concerned it never existed.
+- Once the document reaches `Resolving findings`, findings stay where they are. They are not moved to a separate section or deleted — the list is the record.
 
 Severity is what the defect does, not how it was found:
 

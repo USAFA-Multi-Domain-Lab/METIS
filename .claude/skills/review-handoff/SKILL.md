@@ -41,7 +41,7 @@ Follow the guide's format, and assign severity from its tier definitions. What m
 - Lead with the **bold one-sentence claim**. A reader scanning only the bold lines should understand the review. Write the claim, then the evidence — never the reverse.
 - Cite `file:line` as a Markdown link for every path mentioned, including paths inside the supporting detail.
 - Pre-existing tests broken by the feature are not findings — the handoff should have arrived green. If it did not, say so to the user rather than absorbing it into the review.
-- Number each finding from 1 within its severity group as you write it. That number is what every later reference cites, so it is never reassigned.
+- Number each finding from 1 within its severity group as you write it. That number is what every later reference cites, so it is never reassigned once the document reaches `Resolving findings`. Withdraw a finding before then and its tier is renumbered.
 
 Then update the tally line and the status line to match, adding the findings count the author left off.
 
