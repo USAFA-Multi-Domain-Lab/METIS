@@ -28,6 +28,7 @@ So for every candidate finding, before it goes in the document:
 - Read the cited code and what it calls into. Confirm the described behavior actually follows.
 - Check style claims against `AGENTS.md` and `docs/devs/style-guide.md`. Do not cite a rule without confirming it is written down.
 - Check the git history before calling something a regression. A parameter added and removed within the same release cycle can never appear in stored data.
+- Migration scripts are expected to evolve during the development cycle, and changes that do not affect the latest released schema are not considered findings.
 - Separate "this is wrong" from "this is currently harmless but structurally guaranteed to break." Both are worth recording; they are not the same severity, and the finding should say which it is.
 - If the premise for a finding relies on an assumption, verify the assumption. A finding that depends on a false assumption is a waste of time at best and misleading at worst.
 - Work out what closing it would take, but keep it out of the document. A fix you cannot picture usually means a finding you have not understood.
