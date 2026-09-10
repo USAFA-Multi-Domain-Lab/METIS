@@ -1,5 +1,6 @@
 import Tooltip from '@client/components/content/communication/Tooltip'
-import { compute, getOs } from '@client/toolbox'
+import { compute } from '@client/toolbox'
+import { writeKeystrokeLabel } from '@client/toolbox/keyboard'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import type { Level } from '@tiptap/extension-heading'
@@ -30,6 +31,25 @@ export default function RichTextHeadingPicker(): TReactElement | null {
       editor.isActive('heading', { level }),
     ).value
 
+  /**
+   * Writes the description for a heading button's tooltip.
+   * @param level The heading level.
+   * @returns The tooltip description.
+   */
+  const writeTooltipDescription = (level: Level) => {
+    const shortcut: string = writeKeystrokeLabel({
+      keys: String(level),
+      usesModifier: true,
+      usesAlt: true,
+    })
+
+    return (
+      `**Heading ${level}**` +
+      `${RichTextToolbox.MARKDOWN_LINE_BREAK}` +
+      `\`${shortcut}\``
+    )
+  }
+
   /* -- COMPUTED -- */
 
   /**
@@ -58,9 +78,7 @@ export default function RichTextHeadingPicker(): TReactElement | null {
           }}
         >
           H{level}
-          <Tooltip
-            description={`**Heading ${level}**${RichTextToolbox.MARKDOWN_LINE_BREAK}${getOs() === 'windows' ? `\`ctrl+alt+${level}\`` : `\`cmd+opt+${level}\``}`}
-          />
+          <Tooltip description={writeTooltipDescription(level)} />
         </button>
       ))}
     </div>

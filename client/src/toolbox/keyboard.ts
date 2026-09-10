@@ -155,7 +155,7 @@ function buildShortcut({
  * @param keystroke The keys and modifiers to write out.
  * @returns The keystroke as the user would read it.
  */
-function writeKeystrokeLabel({
+export function writeKeystrokeLabel({
   keys,
   usesModifier = false,
   usesShift = false,
@@ -249,7 +249,7 @@ type TKeyboardShortcutDefinition = {
 /**
  * The parts of a shortcut's definition that its keystroke is written out from.
  */
-type TKeystrokeLabelDefinition = Pick<
+export type TKeystrokeLabelDefinition = Pick<
   TKeyboardShortcutDefinition,
   'keys' | 'usesModifier' | 'usesShift' | 'usesAlt'
 >

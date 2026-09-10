@@ -1,3 +1,4 @@
+import { writeKeystrokeLabel } from '@client/toolbox/keyboard'
 import type { Editor } from '@tiptap/react'
 
 /**
@@ -8,29 +9,41 @@ export const ALIGN_OPTIONS: TAlignOption[] = [
     value: 'left',
     icon: 'align-left',
     label: 'Align Left',
-    mac: '`cmd+shift+l`',
-    windows: '`ctrl+shift+l`',
+    keystrokeLabel: writeKeystrokeLabel({
+      keys: 'l',
+      usesModifier: true,
+      usesShift: true,
+    }),
   },
   {
     value: 'center',
     icon: 'align-center',
     label: 'Align Center',
-    mac: '`cmd+shift+e`',
-    windows: '`ctrl+shift+e`',
+    keystrokeLabel: writeKeystrokeLabel({
+      keys: 'e',
+      usesModifier: true,
+      usesShift: true,
+    }),
   },
   {
     value: 'right',
     icon: 'align-right',
     label: 'Align Right',
-    mac: '`cmd+shift+r`',
-    windows: '`ctrl+shift+r`',
+    keystrokeLabel: writeKeystrokeLabel({
+      keys: 'r',
+      usesModifier: true,
+      usesShift: true,
+    }),
   },
   {
     value: 'justify',
     icon: 'align-justify',
     label: 'Justify',
-    mac: '`cmd+shift+j`',
-    windows: '`ctrl+shift+j`',
+    keystrokeLabel: writeKeystrokeLabel({
+      keys: 'j',
+      usesModifier: true,
+      usesShift: true,
+    }),
   },
 ]
 
@@ -79,11 +92,8 @@ export type TAlignOption = {
    */
   label: string
   /**
-   * The keyboard shortcut for macOS.
+   * The keystroke that applies the alignment.
+   * @note Tiptap's text alignment extension is what answers to the keystroke.
    */
-  mac: string
-  /**
-   * The keyboard shortcut for Windows.
-   */
-  windows: string
+  keystrokeLabel: string
 }
