@@ -1,3 +1,4 @@
+import { KEYBOARD_SHORTCUTS } from '@client/toolbox/keyboard'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Link from '@tiptap/extension-link'
 import { TaskItem, TaskList } from '@tiptap/extension-list'
@@ -11,6 +12,13 @@ import StarterKit from '@tiptap/starter-kit'
 import { all, createLowlight } from 'lowlight'
 import MetisParagraph from './paragraph'
 import MetisSpan from './span'
+
+/**
+ * Shown on the empty line the cursor is on once an editor has text. An empty
+ * line has nothing to select, and the toolbar otherwise only appears if text
+ * has been selected.
+ */
+const TOOLBAR_SHORTCUT_HINT: string = `Press ${KEYBOARD_SHORTCUTS.pinRichTextToolbar.keystrokeLabel} for formatting options`
 
 /**
  * The extensions shared by everything that displays rich text.
@@ -90,7 +98,10 @@ export function createEditorExtensions(
 
   return [
     ...createSharedExtensions({ keepTrailingLine: true, listClassName }),
-    Placeholder.configure({ placeholder }),
+    Placeholder.configure({
+      placeholder: ({ editor }) =>
+        editor.isEmpty ? placeholder : TOOLBAR_SHORTCUT_HINT,
+    }),
   ]
 }
 

@@ -14,7 +14,8 @@
       margin-top: 0.5em;
       margin-bottom: 0.5em;
 
-      &.is-editor-empty::before {
+      &.is-editor-empty::before,
+      &.is-empty:is(.ProseMirror-focused > *)::before {
         color: $color-faded;
         content: attr(data-placeholder);
         float: left;
