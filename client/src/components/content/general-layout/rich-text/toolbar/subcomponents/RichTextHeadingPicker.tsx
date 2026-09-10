@@ -1,6 +1,7 @@
 import Tooltip from '@client/components/content/communication/Tooltip'
 import { compute, getOs } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
+import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import type { Level } from '@tiptap/extension-heading'
 import { useRichTextContext } from '../../RichText'
 import { HEADING_LEVELS } from '../helpers/heading'
@@ -58,7 +59,7 @@ export default function RichTextHeadingPicker(): TReactElement | null {
         >
           H{level}
           <Tooltip
-            description={`**Heading ${level}**\n${getOs() === 'windows' ? `\`ctrl+alt+${level}\`` : `\`cmd+opt+${level}\``}`}
+            description={`**Heading ${level}**${RichTextToolbox.MARKDOWN_LINE_BREAK}${getOs() === 'windows' ? `\`ctrl+alt+${level}\`` : `\`cmd+opt+${level}\``}`}
           />
         </button>
       ))}
