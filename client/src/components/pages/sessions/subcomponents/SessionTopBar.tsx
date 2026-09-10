@@ -53,21 +53,13 @@ export default function SessionTopBar({}: TSessionTopBar_P): TReactElement | nul
 
   let titleTooltipDescription = compute<string>(() => {
     return (
-      `###### Session:` +
-      `${RichTextToolbox.MARKDOWN_LINE_BREAK}` +
-      `${session.name}` +
+      `**Session:** *${session.name}*` +
       `${RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK}` +
-      `###### Realm:` +
-      `${RichTextToolbox.MARKDOWN_LINE_BREAK}` +
-      `${session.subscribedRealm.name}` +
+      `**Realm:** *${session.subscribedRealm.name}*` +
       `${RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK}` +
-      `###### Session ID:` +
-      `${RichTextToolbox.MARKDOWN_LINE_BREAK}` +
-      `${session._id}` +
+      `**Session ID:** *${session._id}*` +
       `${RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK}` +
-      `###### Mission:` +
-      `${RichTextToolbox.MARKDOWN_LINE_BREAK}` +
-      `${session.subscribedMission.name}`
+      `**Mission:** *${session.subscribedMission.name}*`
     )
   })
 
