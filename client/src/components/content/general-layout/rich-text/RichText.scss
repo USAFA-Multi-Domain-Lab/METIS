@@ -161,9 +161,9 @@
   }
 
   // While text is being written, an empty line is kept after a block such as
-  // a list or a code block so the cursor has somewhere to go, and that line
-  // gets saved along with the text. Someone reading has no cursor to move,
-  // so the line is hidden. An empty paragraph is drawn with a line break
+  // a code block or a blockquote so the cursor has somewhere to go, and that
+  // line gets saved along with the text. Someone reading has no cursor to
+  // move, so the line is hidden. An empty paragraph is drawn with a line break
   // inside it, which is why matching on ":empty" alone is not enough.
   .Viewer > p:last-child:empty,
   .Viewer > p:last-child:has(> br.ProseMirror-trailingBreak:only-child) {

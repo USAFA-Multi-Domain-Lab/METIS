@@ -28,8 +28,11 @@ function createSharedExtensions(options: TSharedExtensionOptions): Extensions {
       // always a way to move the cursor out of certain HTML elements,
       // like block elements. Headings are excluded because they need no
       // escape route, and adding a line after one causes the heading
-      // controls to malfunction.
-      trailingNode: keepTrailingLine ? { notAfter: ['heading'] } : false,
+      // controls to malfunction. Lists need no escape route either
+      // since there are other ways of escaping a list item.
+      trailingNode: keepTrailingLine
+        ? { notAfter: ['heading', 'bulletList', 'orderedList'] }
+        : false,
       listItem: {
         HTMLAttributes: {
           class: listClassName,
