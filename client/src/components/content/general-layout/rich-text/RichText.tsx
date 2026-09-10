@@ -208,8 +208,9 @@ export type TRichText_P = {
    */
   content?: string
   /**
-   * Whether the text is read or written. A `'viewer'` builds none of the
-   * writing tools, so it costs no more than the text it shows.
+   * Whether the text is read or written. A `'viewer'` skips the toolbar, its
+   * keyboard shortcuts, the placeholder, and the trailing empty line, but still
+   * builds a Tiptap editor.
    */
   type: TRichTextType
   /**

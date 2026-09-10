@@ -21,6 +21,13 @@ import MetisSpan from './span'
 const TOOLBAR_SHORTCUT_HINT: string = `Press ${KEYBOARD_SHORTCUTS.pinRichTextToolbar.keystrokeLabel} for formatting options`
 
 /**
+ * Colors the code inside code blocks. It is built once and shared by every
+ * piece of rich text, because building it registers every language it knows,
+ * which is too slow to repeat each time rich text renders.
+ */
+const CODE_BLOCK_HIGHLIGHTER = createLowlight(all)
+
+/**
  * The extensions shared by everything that displays rich text.
  * @param options How the shared extensions should be configured.
  */
@@ -64,7 +71,7 @@ function createSharedExtensions(options: TSharedExtensionOptions): Extensions {
     MetisParagraph,
     MetisSpan,
     CodeBlockLowlight.configure({
-      lowlight: createLowlight(all),
+      lowlight: CODE_BLOCK_HIGHLIGHTER,
       defaultLanguage: 'plaintext',
     }),
     TextAlign.configure({
