@@ -11,13 +11,18 @@ import { useOutputRenderer } from './renderers'
  * has a custom line height.
  * @param message The rendered message to read.
  * @returns The line height, or null when there is nothing to match.
- * @note All other elements within the output message are ignored.
+ * @note All other elements within the output message are ignored, and so is a
+ * paragraph that is centered, right-aligned, or justified, since it starts
+ * below the output info instead of beside it.
  */
 const readFirstLineHeight = (message: string): string | null => {
   const parsed = new DOMParser().parseFromString(message, 'text/html')
   const paragraph = parsed.body.firstElementChild
 
   if (!(paragraph instanceof HTMLParagraphElement)) return null
+  if (['center', 'right', 'justify'].includes(paragraph.style.textAlign)) {
+    return null
+  }
   if (paragraph.style.lineHeight) return paragraph.style.lineHeight
 
   for (const element of paragraph.querySelectorAll<HTMLElement>('[style]')) {

@@ -4,9 +4,14 @@
   display: block;
 
   .RichText .Viewer {
-    // A message that has content other than a paragraph breaks to a new line.
+    // A message breaks to a new line when it opens with anything other than a
+    // paragraph, or with a paragraph that is centered, right-aligned, or
+    // justified, so that alignment is measured across the full width.
     // The "::before" ensures that the margin for the message still works as intended.
-    &:has(> :first-child:not(p))::before {
+    &:has(> :first-child:not(p))::before,
+    &:has(
+        > p:first-child[style*='text-align']:not([style*='text-align: left'])
+      )::before {
       content: '';
       display: block;
       clear: left;
@@ -14,6 +19,13 @@
 
     > p:first-child {
       margin-top: 0;
+
+      // A centered, right-aligned, or justified paragraph starts below the
+      // output info, so it keeps the space above it that a list or a
+      // blockquote has.
+      &[style*='text-align']:not([style*='text-align: left']) {
+        margin-top: 1.25em;
+      }
     }
   }
 
