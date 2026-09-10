@@ -108,7 +108,7 @@ A note records anything that happened beneath a checkbox — a test that failed,
 
 The name is whoever wrote the note, from their `git config user.name`; the timestamp comes from `date "+%m:%d:%Y:%H:%M"`. Indent two spaces to stay inside the list item, prefix every wrapped line with `>`, and separate paragraphs with a bare `>`.
 
-Notes accumulate. A later note goes beneath the ones already there rather than replacing them — the sequence is the record. A note is never revised once written, so anything that develops afterward gets its own note.
+Notes accumulate. A later note goes beneath the ones already there rather than replacing them — the sequence is the record. A note is never revised once written unless explicitly requested, so anything that develops afterward gets its own note.
 
 A note recording a committed fix ends with that commit's short hash, in backticks. Nothing else in the document says which commit closed which finding.
 
@@ -144,7 +144,7 @@ A checked box means the test is written **and passing**. A test written but fail
   > **Jordan Stokes** _07:29:2026:11:27_ Written, fails today — the cursor advances before validation runs. See High #2.
 ```
 
-A test that fails because it exposes a real product defect makes that defect a **finding**, not a coverage gap. Additional coverage a reviewer writes is added to the checklist, checked.
+A test that fails because it exposes a real product defect makes that defect a **finding**, not a coverage gap. Additional coverage a reviewer writes is added to the checklist under the same rules as the cases already there, with a note saying the review added it and what it covers that the group did not.
 
 ### Findings
 

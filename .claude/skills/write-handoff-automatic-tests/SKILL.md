@@ -116,7 +116,7 @@ The checkbox rules are the guide's; the ones that get misapplied:
 - A test written but failing stays **unchecked**, with a note beneath it in the guide's form saying it was written, that it fails, and why. It does not get checked with a caveat.
 - What a test exposes belongs in **Findings**, at the severity the guide's tier definitions warrant, whether the test failed or passed.
 - A finding citing a test is written on both sides, whether or not that test failed: the finding's detail ends with `automatic test {n}{letter}`, and a note on the test points back to the finding.
-- Additional coverage you chose to write goes in the checklist as a new checked item, appended to the end of the group it belongs to and taking the next letter in that group.
+- Additional coverage you chose to write is appended to the end of the group it belongs to, taking the next letter in that group, with a note saying the review added it. Its box answers to the rules above like any other case.
 
 Then the tally line and the status line's automatic count. Run output goes to the reviewer in Phase 6, not into the document.
 
