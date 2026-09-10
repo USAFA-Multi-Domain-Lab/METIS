@@ -25,7 +25,7 @@ const TOOLBAR_SHORTCUT_HINT: string = `Press ${KEYBOARD_SHORTCUTS.pinRichTextToo
  * @param options How the shared extensions should be configured.
  */
 function createSharedExtensions(options: TSharedExtensionOptions): Extensions {
-  const { keepTrailingLine, listClassName } = options
+  const { keepTrailingLine } = options
 
   return [
     StarterKit.configure({
@@ -41,11 +41,6 @@ function createSharedExtensions(options: TSharedExtensionOptions): Extensions {
       trailingNode: keepTrailingLine
         ? { notAfter: ['heading', 'bulletList', 'orderedList'] }
         : false,
-      listItem: {
-        HTMLAttributes: {
-          class: listClassName,
-        },
-      },
     }),
     Link.configure({
       markdownLinks: true,
@@ -94,10 +89,10 @@ function createSharedExtensions(options: TSharedExtensionOptions): Extensions {
 export function createEditorExtensions(
   options: TEditorExtensionOptions,
 ): Extensions {
-  const { placeholder, listClassName } = options
+  const { placeholder } = options
 
   return [
-    ...createSharedExtensions({ keepTrailingLine: true, listClassName }),
+    ...createSharedExtensions({ keepTrailingLine: true }),
     Placeholder.configure({
       placeholder: ({ editor }) =>
         editor.isEmpty ? placeholder : TOOLBAR_SHORTCUT_HINT,
@@ -107,15 +102,10 @@ export function createEditorExtensions(
 
 /**
  * The extensions for the rich text viewer.
- * @param options How the viewer extensions should be configured.
  */
-export function createViewerExtensions(
-  options: TViewerExtensionOptions = {},
-): Extensions {
-  const { listClassName } = options
-
+export function createViewerExtensions(): Extensions {
   return [
-    ...createSharedExtensions({ keepTrailingLine: false, listClassName }),
+    ...createSharedExtensions({ keepTrailingLine: false }),
     // These 3 extensions below are not currently utilized anywhere in the
     // app. They are here for future-proofing and will especially be useful
     // when we render all of the documentation files via the UI.
@@ -137,10 +127,6 @@ type TSharedExtensionOptions = {
    * @note Only useful where there is a cursor.
    */
   keepTrailingLine: boolean
-  /**
-   * The class name applied to list items.
-   */
-  listClassName?: string
 }
 
 /**
@@ -151,18 +137,4 @@ type TEditorExtensionOptions = {
    * The text shown while the editor is empty.
    */
   placeholder: string
-  /**
-   * The class name applied to list items.
-   */
-  listClassName?: string
-}
-
-/**
- * What {@link createViewerExtensions} needs to build a viewer's extensions.
- */
-type TViewerExtensionOptions = {
-  /**
-   * The class name applied to list items.
-   */
-  listClassName?: string
 }

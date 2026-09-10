@@ -41,13 +41,13 @@ export default function RichText(props: TRichText_P): TReactElement | null {
     type,
     format = 'html',
     placeholder = 'Enter text here...',
-    listClassName,
     className,
     editorRef,
     onUpdate,
     onFocus,
     onBlur,
     toolbarAnchor,
+    deps = undefined,
   } = props
 
   /* -- COMPUTED -- */
@@ -95,15 +95,10 @@ export default function RichText(props: TRichText_P): TReactElement | null {
         },
       },
       extensions: isEditor
-        ? createEditorExtensions({ placeholder, listClassName })
-        : createViewerExtensions({ listClassName }),
+        ? createEditorExtensions({ placeholder })
+        : createViewerExtensions(),
     },
-    // The property is read straight from the props here rather than from the
-    // defaulted value. The editor is rebuilt whenever what it is given here
-    // changes, and it compares by identity, so an empty array created fresh on
-    // each render would rebuild the editor every time and throw away the undo
-    // history and the cursor position along with it.
-    [props.deps],
+    [type, ...(deps ?? [])],
   )
 
   // Keeps the editor showing the content it was handed. Tiptap reads its
@@ -229,10 +224,6 @@ export type TRichText_P = {
    * @default 'Enter text here...'
    */
   placeholder?: string
-  /**
-   * The class name for the list items in the editor.
-   */
-  listClassName?: string
   /**
    * The class name for the root element.
    */
