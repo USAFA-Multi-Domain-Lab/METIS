@@ -108,7 +108,7 @@ A note records anything that happened beneath a checkbox — a test that failed,
 
 The name is whoever wrote the note, from their `git config user.name`; the timestamp comes from `date "+%m:%d:%Y:%H:%M"`. Indent two spaces to stay inside the list item, prefix every wrapped line with `>`, and separate paragraphs with a bare `>`.
 
-Notes accumulate. A later note goes beneath the ones already there rather than replacing them — the sequence is the record. A note is never revised once written, so anything that develops afterward gets its own note.
+Notes accumulate. A later note goes beneath the ones already there rather than replacing them — the sequence is the record. A note is never revised once written unless explicitly requested, so anything that develops afterward gets its own note.
 
 A note recording a committed fix ends with that commit's short hash, in backticks. Nothing else in the document says which commit closed which finding.
 
@@ -144,7 +144,7 @@ A checked box means the test is written **and passing**. A test written but fail
   > **Jordan Stokes** _07:29:2026:11:27_ Written, fails today — the cursor advances before validation runs. See High #2.
 ```
 
-A test that fails because it exposes a real product defect makes that defect a **finding**, not a coverage gap. Additional coverage a reviewer writes is added to the checklist, checked.
+A test that fails because it exposes a real product defect makes that defect a **finding**, not a coverage gap. Additional coverage a reviewer writes is added to the checklist under the same rules as the cases already there, with a note saying the review added it and what it covers that the group did not.
 
 ### Findings
 
@@ -153,6 +153,7 @@ A test that fails because it exposes a real product defect makes that defect a *
 - Every finding is a checkbox, numbered from 1 within its severity group. Unchecked means open; checked means resolved, declined, or determined to be a false flag.
 - Each finding leads with its file path and line as a Markdown link, then a **bold one-sentence claim**, then the supporting detail. Every workspace file path is a link, including those inside the detail.
 - A finding records the defect and its evidence, never how to resolve it — not a fix, not a direction, not a hint at one. The author derives the options when resolving, and anything written here anchors them to the reviewer's framing.
+- A defect that cannot reach a released deployment is not a finding, at any severity. Work in development is expected to churn: a reversal or a breaking change made mid-cycle, a migration edited before it has shipped, or state that exists only on a developer or test machine is not reported.
 - Findings are resolved **in place**: the box is checked and a note appended beneath it. Declines and false flags are checked off like any other resolution, marked **Declined** or **False flag** in the note.
 - A finding cannot be resolved while the document is still `In review`. One the reviewer withdraws before then is deleted, or rewritten to the claim that holds, and its tier renumbered — as far as the author is concerned it never existed.
 - Once the document reaches `Resolving findings`, findings stay where they are. They are not moved to a separate section or deleted — the list is the record.

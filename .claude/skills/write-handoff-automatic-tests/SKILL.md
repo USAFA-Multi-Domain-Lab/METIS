@@ -41,13 +41,15 @@ Add the reviewer line if the review has not already done so, naming the user fro
 
 ## Phase 2 — Take the next group
 
-The first group in document order holding an unchecked case; a group whose cases are all checked is passed over. Give the count, the group's heading, its test file, and its unchecked cases verbatim.
+The first group in document order holding an unchecked case; a group whose cases are all checked is passed over.
 
-Then read two or three existing suites nearest the code under test. This repo has established patterns that are cheaper to follow than to rediscover.
+Read two or three existing suites nearest the code under test. This repo has established patterns that are cheaper to follow than to rediscover.
 
-## Phase 3 — Propose the approach, then stop
+Nothing reaches the reviewer here. Phase 3 does the writing.
 
-A few lines, not a design document:
+## Phase 3 — Hand over the group and the approach, then stop
+
+One message: the count, the group's heading, its test file, and its unchecked cases verbatim, then the approach — a few lines, not a design document:
 
 - Where the tests go, and why, if that is not where the handoff asks for them.
 - The shape — one suite, or a shared helper consumed by two — and what each case stubs or fixtures.
@@ -114,7 +116,7 @@ The checkbox rules are the guide's; the ones that get misapplied:
 - A test written but failing stays **unchecked**, with a note beneath it in the guide's form saying it was written, that it fails, and why. It does not get checked with a caveat.
 - What a test exposes belongs in **Findings**, at the severity the guide's tier definitions warrant, whether the test failed or passed.
 - A finding citing a test is written on both sides, whether or not that test failed: the finding's detail ends with `automatic test {n}{letter}`, and a note on the test points back to the finding.
-- Additional coverage you chose to write goes in the checklist as a new checked item, appended to the end of the group it belongs to and taking the next letter in that group.
+- Additional coverage you chose to write is appended to the end of the group it belongs to, taking the next letter in that group, with a note saying the review added it. Its box answers to the rules above like any other case.
 
 Then the tally line and the status line's automatic count. Run output goes to the reviewer in Phase 6, not into the document.
 

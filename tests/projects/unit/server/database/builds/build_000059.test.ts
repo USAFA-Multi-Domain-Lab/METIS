@@ -24,6 +24,17 @@ const HANDLER_SANITIZED = '<p>Alert</p>'
 // A value the editor could have written, which must come back untouched.
 const CLEAN_VALUE = '<h3>Heading</h3><p><strong>Bold</strong></p>'
 
+// A stored style attribute mixing a declaration that names a remote resource
+// with the three the editor writes, and what the migration should leave.
+const DIRTY_STYLED_VALUE =
+  '<p style="color: red; background: url(https://example.test/x.png); text-align: center">Briefing</p>'
+const DIRTY_STYLED_SANITIZED =
+  '<p style="color: red; text-align: center;">Briefing</p>'
+
+// A stored style attribute the editor could have written on its own.
+const CLEAN_STYLE_VALUE =
+  '<p style="color: #52b1ff; line-height: 2; text-align: center">Briefing</p>'
+
 describe('build_000059 database migration', () => {
   beforeEach(() => {
     jest.resetModules()
@@ -228,6 +239,43 @@ describe('build_000059 database migration', () => {
     expect(output).not.toContain('<script')
     expect(output).not.toContain('alert(')
     expect(output).not.toContain(SCRIPT_VALUE)
+  })
+
+  test('rewrites a stored style attribute naming a remote resource and keeps the rest', () => {
+    let { missionUpdateOne } = runBuild([
+      createMission({
+        effects: [
+          createEffect({
+            arguments: [createArgument({ value: DIRTY_STYLED_VALUE })],
+          }),
+        ],
+      }),
+    ])
+
+    expect(missionUpdateOne).toHaveBeenCalledTimes(1)
+
+    let [, payload] = missionUpdateOne.mock.calls[0]
+    expect(payload.$set.effects[0].arguments[0].value).toBe(
+      DIRTY_STYLED_SANITIZED,
+    )
+    expect(payload.$set.effects[0].arguments[0].value).not.toContain(
+      'example.test',
+    )
+  })
+
+  test('leaves a stored style attribute of only allowed properties alone', () => {
+    let { missionUpdateOne, missions } = runBuild([
+      createMission({
+        effects: [
+          createEffect({
+            arguments: [createArgument({ value: CLEAN_STYLE_VALUE })],
+          }),
+        ],
+      }),
+    ])
+
+    expect(missions[0].effects[0].arguments[0].value).toBe(CLEAN_STYLE_VALUE)
+    expect(missionUpdateOne).not.toHaveBeenCalled()
   })
 })
 
