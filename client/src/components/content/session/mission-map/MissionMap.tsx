@@ -13,7 +13,6 @@ import {
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { Vector1D } from '@shared/toolbox/numbers/vectors/Vector1D'
 import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
-import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { ButtonSvgEngine } from '../../user-controls/buttons/panels/engines'
 import {
@@ -624,9 +623,7 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
       icon: 'zoom-in',
       onClick: onClickZoomIn,
       description:
-        `Zoom in.` +
-        `${RichTextToolbox.MARKDOWN_LINE_BREAK}` +
-        `*Scrolling on the map will also zoom in and out.*`,
+        `Zoom in.\n` + `*Scrolling on the map will also zoom in and out.*`,
       cursor: 'zoom-in',
     },
     {
@@ -635,9 +632,7 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
       icon: 'zoom-out',
       onClick: onClickZoomOut,
       description:
-        `Zoom out.` +
-        `${RichTextToolbox.MARKDOWN_LINE_BREAK}` +
-        `*Scrolling on the map will also zoom in and out.*`,
+        `Zoom out.\n` + `*Scrolling on the map will also zoom in and out.*`,
       cursor: 'zoom-out',
     },
     {
@@ -652,20 +647,13 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
       type: 'button',
       icon: 'question',
       description:
-        '##### Mission Map' +
-        RichTextToolbox.MARKDOWN_LINE_BREAK +
-        'This map is a layout of the nodes in the mission and their order of progression (left to right).' +
-        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
-        'The lines indicate how the nodes relate to one another and help display their order of progression.' +
-        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
-        'The children of a node are revealed when certain criteria are met (e.g. an action is successfully executed on a node).' +
-        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
-        '##### Controls:' +
-        RichTextToolbox.MARKDOWN_LINE_BREAK +
-        '`Click+Drag` *Pan.*' +
-        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
-        '`Scroll` *Zoom in/out.*' +
-        RichTextToolbox.MARKDOWN_LINE_BREAK,
+        '##### Mission Map\n\n' +
+        'This map is a layout of the nodes in the mission and their order of progression (left to right).\n\n' +
+        'The lines indicate how the nodes relate to one another and help display their order of progression.\n\n' +
+        'The children of a node are revealed when certain criteria are met (e.g. an action is successfully executed on a node).\n\n' +
+        '##### Controls:\n\n' +
+        '`Click+Drag` *Pan.*\n\n' +
+        '`Scroll` *Zoom in/out.*\n\n',
       cursor: 'help',
     },
   )

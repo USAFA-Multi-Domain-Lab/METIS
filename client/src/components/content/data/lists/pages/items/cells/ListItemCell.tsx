@@ -1,6 +1,5 @@
 import { compute } from '@client/toolbox'
 import type { MetisComponent } from '@shared/MetisComponent'
-import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import type { ReactNode } from 'react'
 import Tooltip from '../../../../../communication/Tooltip'
 import type { TListColumnType } from '../../../List'
@@ -73,10 +72,9 @@ export default function ListItemCell<TItem extends MetisComponent>({
       // are item buttons.
       if (itemButtonIcons.length) {
         if (description) {
-          description += RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK
+          description += '\n\n'
         }
-        description += `\`L-Click\` to select`
-        description += RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK
+        description += `\`L-Click\` to select\n\n`
         description += `\`R-Click\` for options`
       }
     }
@@ -85,7 +83,7 @@ export default function ListItemCell<TItem extends MetisComponent>({
     else {
       if (item.disabledReason) {
         if (description) {
-          description += RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK
+          description += '\n\n'
         }
         description += `*${item.disabledReason}*`
       }

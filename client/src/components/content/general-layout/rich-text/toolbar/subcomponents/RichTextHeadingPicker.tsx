@@ -2,7 +2,6 @@ import Tooltip from '@client/components/content/communication/Tooltip'
 import { compute } from '@client/toolbox'
 import { writeKeystrokeLabel } from '@client/toolbox/keyboard'
 import { ClassList } from '@shared/toolbox/html/ClassList'
-import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import type { Level } from '@tiptap/extension-heading'
 import { useRichTextContext } from '../../RichText'
 import { HEADING_LEVELS } from '../helpers/heading'
@@ -43,11 +42,7 @@ export default function RichTextHeadingPicker(): TReactElement | null {
       usesAlt: true,
     })
 
-    return (
-      `**Heading ${level}**` +
-      `${RichTextToolbox.MARKDOWN_LINE_BREAK}` +
-      `\`${shortcut}\``
-    )
+    return `**Heading ${level}**\n` + `\`${shortcut}\``
   }
 
   /* -- COMPUTED -- */

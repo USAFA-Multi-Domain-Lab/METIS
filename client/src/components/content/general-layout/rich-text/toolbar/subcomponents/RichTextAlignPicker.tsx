@@ -2,7 +2,6 @@ import Tooltip from '@client/components/content/communication/Tooltip'
 import { compute } from '@client/toolbox'
 import { getIconPath } from '@client/toolbox/icons'
 import { ClassList } from '@shared/toolbox/html/ClassList'
-import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import { useRichTextContext } from '../../RichText'
 import { ALIGN_OPTIONS } from '../helpers/text-align'
 import { useRichTextToolbarContext } from '../RichTextToolbar'
@@ -37,9 +36,7 @@ export default function RichTextAlignPicker(): TReactElement | null {
    * @returns The tooltip description.
    */
   const writeTooltipDescription = (label: string, keystrokeLabel: string) =>
-    `**${label}**` +
-    `${RichTextToolbox.MARKDOWN_LINE_BREAK}` +
-    `\`${keystrokeLabel}\``
+    `**${label}**\n` + `\`${keystrokeLabel}\``
 
   /* -- COMPUTED -- */
 

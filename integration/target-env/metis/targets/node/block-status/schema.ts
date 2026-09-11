@@ -1,5 +1,4 @@
 import { migrations } from './migrations'
-import { RichTextToolbox } from '@metis/toolbox/rich-text/RichTextToolbox'
 
 /**
  * A target available in the METIS target environment that enables a user
@@ -23,8 +22,7 @@ const BlockStatus = TargetSchema.create({
       validComponentTypes: ['mission', 'force', 'node'],
       tooltipDescription:
         'Select a group of components within the mission ' +
-        'to which this block status will be applied.' +
-        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
+        'to which this block status will be applied.\n\n' +
         '*Selecting a node will apply the block status to that node. ' +
         'Selecting a mission or force will apply the block status ' +
         'to all nodes within the selected item. ' +

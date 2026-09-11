@@ -4,7 +4,6 @@ import type { ClientMissionAction } from '@client/missions/actions/ClientMission
 import type { SessionClient } from '@client/sessions/SessionClient'
 import { compute } from '@client/toolbox'
 import { useEventListener } from '@client/toolbox/hooks'
-import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useState } from 'react'
 import './ExecOption.scss'
@@ -85,10 +84,9 @@ export default function ExecOption({ action, session, select }: TExecOption_P) {
     } else {
       return (
         `${descriptionTooltipPortion}` +
-        `Action cannot be executed due to the following reasons:` +
-        `${RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK}` +
+        `Action cannot be executed due to the following reasons:\n\n` +
         unreadyToExecuteReasons.map((reason) => `*- ${reason}*`).join('\n') +
-        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK
+        '\n\n'
       )
     }
   })

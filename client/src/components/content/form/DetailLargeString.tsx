@@ -2,7 +2,6 @@ import {
   KEYBOARD_SHORTCUTS,
   UNMODIFIED_KEYSTROKES,
 } from '@client/toolbox/keyboard'
-import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import type { Editor, EditorEvents } from '@tiptap/react'
 import { useRef, useState } from 'react'
 import type { TDetailWithInput_P } from '.'
@@ -18,18 +17,12 @@ import { useErrorMessages } from './hooks/useErrorMessages'
 const BLANK_ERROR_MESSAGE: string = 'At least one character is required here.'
 
 const TOOLBAR_HELP_DESCRIPTION: string =
-  '###### Rich Text' +
-  RichTextToolbox.MARKDOWN_LINE_BREAK +
-  'This field supports formatted text including markdown (e.g. headings, lists, italic, hyperlinks, code blocks, etc.).' +
-  RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
-  '***For a detailed list of supported formatting options and their keyboard shortcuts, click the help icon below.***' +
-  RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
-  '###### Toolbar Controls:' +
-  RichTextToolbox.MARKDOWN_LINE_BREAK +
-  `- \`${KEYBOARD_SHORTCUTS.pinRichTextToolbar.keystrokeLabel}\` *Pin/Unpin the toolbar.*` +
-  RichTextToolbox.MARKDOWN_LINE_BREAK +
-  `- \`${UNMODIFIED_KEYSTROKES.escape.keystrokeLabel}\` *Closes the toolbar and any submenus (e.g. font color).*` +
-  RichTextToolbox.MARKDOWN_LINE_BREAK
+  '###### Rich Text\n\n' +
+  'This field supports formatted text including markdown (e.g. headings, lists, italic, hyperlinks, code blocks, etc.).\n\n' +
+  '***For a detailed list of supported formatting options and their keyboard shortcuts, click the help icon below.***\n\n' +
+  '###### Toolbar Controls:\n\n' +
+  `\`${KEYBOARD_SHORTCUTS.pinRichTextToolbar.keystrokeLabel}\` *Pin/Unpin the toolbar.*\n\n` +
+  `\`${UNMODIFIED_KEYSTROKES.escape.keystrokeLabel}\` *Closes the toolbar and any submenus (e.g. font color).*\n\n`
 
 /**
  * This will render a detail for a form, with a label and a text field for

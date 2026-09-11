@@ -4,7 +4,6 @@ import { SessionClient } from '@client/sessions/SessionClient'
 import { compute } from '@client/toolbox'
 import { useMountHandler, useRequireLogin } from '@client/toolbox/hooks'
 import type { MissionComponentIssue } from '@shared/missions/MissionComponentIssue'
-import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import { useState } from 'react'
 import { DefaultPageLayout } from '..'
 import { ESortByMethod } from '../../content/general-layout/ListOld'
@@ -138,8 +137,7 @@ export default function LaunchPage({
         if (issues.length) {
           // Create a message for the user.
           let message =
-            `**Warning:** The mission for this session has issues due to unresolved conflicts. If you proceed, the session may not function as expected.` +
-            `${RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK}` +
+            `**Warning:** The mission for this session has issues due to unresolved conflicts. If you proceed, the session may not function as expected.\n\n\n\n` +
             `**What would you like to do?**`
           // Create a list of choices for the user.
           let choices: string[] = []

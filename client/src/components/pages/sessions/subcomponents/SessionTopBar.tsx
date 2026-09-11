@@ -4,7 +4,6 @@ import StatusBar from '@client/components/content/session/StatusBar'
 import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
 import { compute } from '@client/toolbox'
-import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import SessionPage from '../SessionPage'
 import { useSessionPageContext } from '../context'
 import ResourcePoolBadge from './badges/ResourcePoolBadge'
@@ -53,12 +52,9 @@ export default function SessionTopBar({}: TSessionTopBar_P): TReactElement | nul
 
   let titleTooltipDescription = compute<string>(() => {
     return (
-      `**Session:** *${session.name}*` +
-      `${RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK}` +
-      `**Realm:** *${session.subscribedRealm.name}*` +
-      `${RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK}` +
-      `**Session ID:** *${session._id}*` +
-      `${RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK}` +
+      `**Session:** *${session.name}*\n\n` +
+      `**Realm:** *${session.subscribedRealm.name}*\n\n` +
+      `**Session ID:** *${session._id}*\n\n` +
       `**Mission:** *${session.subscribedMission.name}*`
     )
   })

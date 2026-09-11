@@ -1,5 +1,4 @@
 import { migrations } from './migrations'
-import { RichTextToolbox } from '@metis/toolbox/rich-text/RichTextToolbox'
 
 /**
  * A target available in the METIS target environment that enables a user
@@ -36,10 +35,8 @@ const ResourceCostMod = TargetSchema.create({
       groupingId: 'main',
       default: 0,
       tooltipDescription:
-        `This allows you to positively or negatively affect the resource cost for the selected action(s). A positive value increases the resource cost, while a negative value decreases the resource cost.` +
-        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
-        `For example, entering 10 here will increase a resource cost of 100 to 110.` +
-        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
+        `This allows you to positively or negatively affect the resource cost for the selected action(s). A positive value increases the resource cost, while a negative value decreases the resource cost.\n\n` +
+        `For example, entering 10 here will increase a resource cost of 100 to 110.\n\n` +
         `*Note: If the result is less than 0, then the resource cost will be 0.*`,
     },
   ],

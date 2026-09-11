@@ -15,7 +15,6 @@ import type {
 } from '@shared/missions/effects/Effect'
 import { CallToolbox } from '@shared/toolbox/calls/CallToolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
-import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import { useEffect, useRef } from 'react'
 import type { TTimelineDragDropItem } from '../../EffectTimeline'
 import { useTimelineContext } from '../../context'
@@ -171,8 +170,7 @@ export function TimelineItem<TType extends TEffectType>({
    */
   const tooltipDescription = compute<string>(() => {
     let description: string = ''
-    description += `\`L-Click\` to select`
-    description += `${RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK}`
+    description += `\`L-Click\` to select\n\n`
     description += `\`R-Click\` for options`
     return description
   })
