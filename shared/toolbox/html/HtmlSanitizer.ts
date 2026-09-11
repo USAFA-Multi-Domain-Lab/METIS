@@ -84,23 +84,29 @@ export class HtmlSanitizer {
 }
 
 // DOMPurify has no option for limiting a "style" attribute to particular
-// properties, so this trims one after DOMPurify has cleaned the element.
-// DOMPurify holds its hooks itself rather than taking them per call, so
-// registering here covers every sanitize made in this process.
+// properties, so this rewrites one to hold only the allowed properties once
+// DOMPurify has cleaned the element. DOMPurify holds its hooks itself rather
+// than taking them per call, so registering here covers every sanitize made
+// in this process.
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   const element = node as HTMLElement
 
   if (typeof element.getAttribute !== 'function' || !element.style) return
   if (!element.getAttribute('style')) return
 
-  const disallowed = Array.from(element.style).filter(
-    (property) => !HtmlSanitizer.ALLOWED_STYLE_PROPERTIES.includes(property),
+  // Only the allowed values the CSS parser read are written back. A
+  // declaration the parser could not read never appears among them, so it
+  // cannot stay in the attribute.
+  let allowedDeclarations = HtmlSanitizer.ALLOWED_STYLE_PROPERTIES.map(
+    (property): [string, string] => [
+      property,
+      element.style.getPropertyValue(property),
+    ],
   )
 
-  // Changing the attribute reformats everything left in it, so one with
-  // nothing to lose is left exactly as it was written.
-  if (disallowed.length === 0) return
+  element.removeAttribute('style')
 
-  for (const property of disallowed) element.style.removeProperty(property)
-  if (!element.getAttribute('style')) element.removeAttribute('style')
+  for (let [property, value] of allowedDeclarations) {
+    if (value) element.style.setProperty(property, value)
+  }
 })

@@ -62,22 +62,26 @@ const SANITIZE_OPTIONS = {
 const ALLOWED_STYLE_PROPERTIES = ['color', 'line-height', 'text-align']
 
 // DOMPurify has no option for limiting a "style" attribute to particular
-// properties, so this trims one after DOMPurify has cleaned the element. A
-// build runs in its own process, so it registers this for itself.
+// properties, so this rewrites one to hold only the allowed properties once
+// DOMPurify has cleaned the element. A build runs in its own process, so it
+// registers this for itself.
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   if (typeof node.getAttribute !== 'function' || !node.style) return
   if (!node.getAttribute('style')) return
 
-  const disallowed = Array.from(node.style).filter(
-    (property) => !ALLOWED_STYLE_PROPERTIES.includes(property),
-  )
+  // Only the allowed values the CSS parser read are written back. A
+  // declaration the parser could not read never appears among them, so it
+  // cannot stay in the attribute.
+  let allowedDeclarations = ALLOWED_STYLE_PROPERTIES.map((property) => [
+    property,
+    node.style.getPropertyValue(property),
+  ])
 
-  // Changing the attribute reformats everything left in it, so one with
-  // nothing to lose is left exactly as it was written.
-  if (disallowed.length === 0) return
+  node.removeAttribute('style')
 
-  for (const property of disallowed) node.style.removeProperty(property)
-  if (!node.getAttribute('style')) node.removeAttribute('style')
+  for (let [property, value] of allowedDeclarations) {
+    if (value) node.style.setProperty(property, value)
+  }
 })
 
 // The target and parameter pairs whose argument holds rich text regardless of
