@@ -31,9 +31,10 @@ const DIRTY_STYLED_VALUE =
 const DIRTY_STYLED_SANITIZED =
   '<p style="color: red; text-align: center;">Briefing</p>'
 
-// A stored style attribute the editor could have written on its own.
+// A stored style attribute holding only the three properties the editor
+// writes, already in the notation the sanitizer writes them back in.
 const CLEAN_STYLE_VALUE =
-  '<p style="color: #52b1ff; line-height: 2; text-align: center">Briefing</p>'
+  '<p style="color: rgb(82, 177, 255); line-height: 2; text-align: center;">Briefing</p>'
 
 describe('build_000059 database migration', () => {
   beforeEach(() => {
