@@ -133,8 +133,9 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
   )
 
   // Save the user when enter is pressed away from the form. Enter inside
-  // the form submits it without any help, and the save prompt sits above
-  // the page rather than inside it, so its keystrokes belong to it.
+  // the form submits it without any help, and a press made while the save
+  // prompt is open is ignored, so it cannot save the form sitting behind
+  // the prompt.
   useEventListener(document, 'keydown', (event: KeyboardEvent) => {
     if (!UNMODIFIED_KEYSTROKES.enter.matches(event)) return
     if (savePromptOpen) return
