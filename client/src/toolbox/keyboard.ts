@@ -122,6 +122,9 @@ function buildShortcut({
   )
   let codesAccepted = ArrayToolbox.normalize(codes)
 
+  // Cmd is the modifier on macOS and Ctrl is the modifier everywhere else.
+  let isMacOs = getOs() === 'mac-os'
+
   return {
     label,
     keystrokeLabel: writeKeystrokeLabel({
@@ -131,8 +134,11 @@ function buildShortcut({
       usesAlt,
     }),
     matches: (keystroke: TKeystroke): boolean => {
-      // Cmd on macOS and Ctrl everywhere else act as the same modifier.
-      let modifierHeld = keystroke.ctrlKey || keystroke.metaKey
+      // Check to see which modifier key is being held, if any.
+      // The main modifier key for MacOs should be "Cmd" and "Ctrl"
+      // for all other supported systems.
+      let modifierHeld = isMacOs ? keystroke.metaKey : keystroke.ctrlKey
+      let otherModifierHeld = isMacOs ? keystroke.ctrlKey : keystroke.metaKey
 
       // Caps lock and the shift key both change the character a letter key
       // reports, and Windows and macOS disagree about which one, so keys are
@@ -150,6 +156,7 @@ function buildShortcut({
       return (
         keyMatches &&
         modifierHeld === usesModifier &&
+        !otherModifierHeld &&
         keystroke.shiftKey === usesShift &&
         keystroke.altKey === usesAlt
       )
