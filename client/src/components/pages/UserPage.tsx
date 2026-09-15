@@ -68,7 +68,6 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
 
   /* -- REFS -- */
 
-  const root = useRef<HTMLDivElement>(null)
   const form = useRef<HTMLFormElement>(null)
 
   /* -- STATE -- */
@@ -319,7 +318,7 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
       state={state}
       elements={{}}
     >
-      <div className='UserPage Page' ref={root}>
+      <div className='UserPage Page'>
         <DefaultPageLayout navigation={navigation}>
           <form
             className='Form'
