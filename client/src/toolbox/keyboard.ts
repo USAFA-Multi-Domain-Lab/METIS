@@ -91,6 +91,14 @@ export const UNMODIFIED_KEYSTROKES = {
    * The escape key, pressed on its own.
    */
   escape: buildShortcut({ label: 'Escape', keys: 'Escape' }),
+  /**
+   * The down arrow key, pressed on its own.
+   */
+  arrowDown: buildShortcut({ label: 'Arrow Down', keys: 'ArrowDown' }),
+  /**
+   * The up arrow key, pressed on its own.
+   */
+  arrowUp: buildShortcut({ label: 'Arrow Up', keys: 'ArrowUp' }),
 }
 
 /**
