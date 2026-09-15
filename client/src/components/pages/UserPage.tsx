@@ -129,7 +129,7 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
   // away with unsaved changes.
   useNavigationMiddleware(
     (to, next) => enforceSavePrompt().then(next),
-    [areUnsavedChanges],
+    [areUnsavedChanges, usernameError, user.canSave],
   )
 
   // Save the user when enter is pressed away from the form. Enter inside
@@ -171,9 +171,11 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
 
   /**
    * This is called to save any changes made.
+   * @resolves A boolean which is true if the user was saved, and false
+   * otherwise.
    */
-  const save = async (): Promise<void> => {
-    if (saveDisabled !== 'none') return
+  const save = async (): Promise<boolean> => {
+    if (saveDisabled !== 'none') return false
 
     /**
      * Reports a failed create or update to the user and returns the
@@ -203,8 +205,10 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
         finishLoading()
         setExistsInDatabase(true)
         navigateTo('HomePage', {}, { bypassMiddleware: true })
+        return true
       } catch (error) {
         handleSaveError(error)
+        return false
       }
     } else if (existsInDatabase && isAuthorized('users_write_students')) {
       try {
@@ -217,10 +221,14 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
         notify('User successfully saved.')
         finishLoading()
         navigateTo('HomePage', {}, { bypassMiddleware: true })
+        return true
       } catch (error) {
         handleSaveError(error)
+        return false
       }
     }
+
+    return false
   }
 
   /**
@@ -260,11 +268,20 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
     if (!isAuthorized('users_write_students')) return
     if (!areUnsavedChanges) return
 
+    // Offering a save that cannot happen would leave the changes gone
+    // without ever being saved, so the choice is only there when the
+    // form is ready for it.
+    let changesCanBeSaved: boolean = saveDisabled === 'none'
+    let choices: Array<'Cancel' | 'Save' | 'Discard'> = changesCanBeSaved
+      ? ['Cancel', 'Save', 'Discard']
+      : ['Cancel', 'Discard']
+    let message: string = changesCanBeSaved
+      ? 'You have unsaved changes. What do you want to do with them?'
+      : "You have unsaved changes that cannot be saved because there's at least one field that doesn't meet its requirements.\n\n" +
+        'Cancel to finish, or discard your changes and continue.'
+
     setSavePromptOpen(true)
-    const { choice } = await prompt(
-      'You have unsaved changes. What do you want to do with them?',
-      ['Cancel', 'Save', 'Discard'],
-    )
+    const { choice } = await prompt(message, choices)
     setSavePromptOpen(false)
 
     // Cancelling calls off whatever the prompt stood in the way of, so
@@ -274,8 +291,13 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
     // If the user opted to save, then save the user.
     if (choice === 'Save') {
       beginLoading('Saving...')
-      await save()
+      let saved = await save()
       finishLoading()
+
+      // The changes are still there when the save does not happen, so
+      // whatever the prompt stood in the way of is called off the same
+      // way cancelling calls it off.
+      if (!saved) return new Promise<void>(() => {})
     }
   }
 
