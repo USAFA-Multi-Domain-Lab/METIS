@@ -77,21 +77,22 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
     existsInDatabase: useState<boolean>(props.userId !== null),
     usernameError: useState<string>(''),
     updatePassword: useState<boolean>(false),
-    areUnsavedChanges: useState<boolean>(false),
+    areUnsubmittedChanges: useState<boolean>(false),
   }
   const [existsInDatabase, setExistsInDatabase] = state.existsInDatabase
   const [user, setUser] = useState<ClientUser>(
     ClientUser.createNew({ passwordIsRequired: true }),
   )
-  const [areUnsavedChanges, setAreUnsavedChanges] = state.areUnsavedChanges
+  const [areUnsubmittedChanges, setAreUnsubmittedChanges] =
+    state.areUnsubmittedChanges
   const [updatePassword] = state.updatePassword
   const [usernameError, setUsernameError] = state.usernameError
-  const [savePromptOpen, setSavePromptOpen] = useState<boolean>(false)
+  const [submitPromptOpen, setSubmitPromptOpen] = useState<boolean>(false)
 
   const navigationButtonEngine = useButtonSvgEngine({
     elements: [
       HomeButton(),
-      ProfileButton({ middleware: async () => await enforceSavePrompt() }),
+      ProfileButton({ middleware: async () => await enforceSubmitPrompt() }),
     ],
   })
 
@@ -118,27 +119,27 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
   })
 
   // Guards against refreshing or navigating away
-  // with unsaved changes.
+  // with changes that have not been submitted.
   useBeforeunload((event) => {
-    if (areUnsavedChanges) {
+    if (areUnsubmittedChanges) {
       event.preventDefault()
     }
   })
 
   // Navigation middleware to protect from navigating
-  // away with unsaved changes.
+  // away with changes that have not been submitted.
   useNavigationMiddleware(
-    (to, next) => enforceSavePrompt().then(next),
-    [areUnsavedChanges, usernameError, user.canSave],
+    (to, next) => enforceSubmitPrompt().then(next),
+    [areUnsubmittedChanges, usernameError, user.canSave],
   )
 
-  // Save the user when enter is pressed away from the form. Enter inside
-  // the form submits it without any help, and a press made while the save
-  // prompt is open is ignored, so it cannot save the form sitting behind
+  // Submit the form when enter is pressed away from it. Enter inside
+  // the form submits it without any help, and a press made while the submit
+  // prompt is open is ignored, so it cannot submit the form sitting behind
   // the prompt.
   useEventListener(document, 'keydown', (event: KeyboardEvent) => {
     if (!UNMODIFIED_KEYSTROKES.enter.matches(event)) return
-    if (savePromptOpen) return
+    if (submitPromptOpen) return
     if (form.current?.contains(event.target as Node)) return
 
     event.preventDefault()
@@ -162,53 +163,55 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
   )
 
   /**
-   * Whether the save button is disabled.
+   * Whether the submit button is disabled.
    */
-  const saveDisabled = compute<TButtonTextDisabled>(() =>
-    !areUnsavedChanges || hasUsernameError || !user.canSave ? 'full' : 'none',
+  const submitDisabled = compute<TButtonTextDisabled>(() =>
+    !areUnsubmittedChanges || hasUsernameError || !user.canSave
+      ? 'full'
+      : 'none',
   )
 
   /* -- FUNCTIONS -- */
 
   /**
-   * This is called to save any changes made.
-   * @resolves A boolean which is true if the user was saved, and false
+   * This is called to submit the form.
+   * @resolves A boolean which is true if the form was submitted, and false
    * otherwise.
    */
-  const save = async (): Promise<boolean> => {
-    if (saveDisabled !== 'none') return false
+  const submit = async (): Promise<boolean> => {
+    if (submitDisabled !== 'none') return false
 
     /**
      * Reports a failed create or update to the user and returns the
-     * form to its unsaved state so the changes can be retried.
+     * form to its unsubmitted state so the changes can be retried.
      */
-    const handleSaveError = (error: unknown) => {
+    const handleSubmitError = (error: unknown) => {
       // A username held by another user, whether that user is active or
       // archived, is reported as a conflict by the unique index.
       if (error instanceof AxiosError && error.response?.status === 409) {
         notify('This user already exists. Try using a different username.')
         setUsernameError(USERNAME_TAKEN_ERROR_MESSAGE)
       } else {
-        notify('User failed to save.')
+        notify('User failed to submit.')
       }
       finishLoading()
-      setAreUnsavedChanges(true)
+      setAreUnsubmittedChanges(true)
     }
 
-    setAreUnsavedChanges(false)
+    setAreUnsubmittedChanges(false)
     setUsernameError('')
 
     if (!existsInDatabase && isAuthorized('users_write_students')) {
       try {
         beginLoading('Creating user...')
         await ClientUser.$create(user)
-        notify('User successfully saved.')
+        notify('User successfully created.')
         finishLoading()
         setExistsInDatabase(true)
         navigateTo('HomePage', {}, { bypassMiddleware: true })
         return true
       } catch (error) {
-        handleSaveError(error)
+        handleSubmitError(error)
         return false
       }
     } else if (existsInDatabase && isAuthorized('users_write_students')) {
@@ -219,12 +222,12 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
             passwordIsRequired: updatePassword,
           }),
         )
-        notify('User successfully saved.')
+        notify('User successfully updated.')
         finishLoading()
         navigateTo('HomePage', {}, { bypassMiddleware: true })
         return true
       } catch (error) {
-        handleSaveError(error)
+        handleSubmitError(error)
         return false
       }
     }
@@ -234,71 +237,71 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
 
   /**
    * This is called when the user form is submitted, which happens
-   * when the save button is clicked and when enter is pressed
+   * when the submit button is clicked and when enter is pressed
    * while a field has focus.
    */
   const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>): void => {
     event.preventDefault()
-    save()
+    submit()
   }
 
   /**
-   * Ensures any unsaved changes are addressed before
+   * Ensures any unsubmitted changes are addressed before
    * any further action is taken.
-   * @resolves If the user either saves or discards the changes.
+   * @resolves If the user either submits or discards the changes.
    * If the user cancels, the promise will never resolve.
    * @example
    * ```typescript
-   * const saveSensitiveOperation = async () => {
-   *   // Enforce the save prompt, only allowing
+   * const submitSensitiveOperation = async () => {
+   *   // Enforce the submit prompt, only allowing
    *   // this function to perform its operation
-   *   // once any unsaved changes, if there any,
+   *   // once any unsubmitted changes, if there any,
    *   // are addressed.
-   *   await enforceSavePrompt()
+   *   await enforceSubmitPrompt()
    *
    *   // Then, perform the sensitive operation.
-   *   // If the user cancels the save prompt, this
+   *   // If the user cancels the submit prompt, this
    *   // code will never be reached.
    *   // ...
    * }
    * ```
    */
-  const enforceSavePrompt = async (): Promise<void> => {
-    // A user who cannot write has nothing to save, so there is
+  const enforceSubmitPrompt = async (): Promise<void> => {
+    // A user who cannot write has nothing to submit, so there is
     // nothing to address.
     if (!isAuthorized('users_write_students')) return
-    if (!areUnsavedChanges) return
+    if (!areUnsubmittedChanges) return
 
-    // Offering a save that cannot happen would leave the changes gone
-    // without ever being saved, so the choice is only there when the
-    // form is ready for it.
-    let changesCanBeSaved: boolean = saveDisabled === 'none'
-    let choices: Array<'Cancel' | 'Save' | 'Discard'> = changesCanBeSaved
-      ? ['Cancel', 'Save', 'Discard']
+    // Offering a submission that cannot happen would leave the changes
+    // gone without ever being submitted, so the choice is only there when
+    // the form is ready for it.
+    let changesCanBeSubmitted: boolean = submitDisabled === 'none'
+    let choices: Array<'Cancel' | 'Submit' | 'Discard'> = changesCanBeSubmitted
+      ? ['Cancel', 'Submit', 'Discard']
       : ['Cancel', 'Discard']
-    let message: string = changesCanBeSaved
-      ? 'You have unsaved changes. What do you want to do with them?'
-      : "You have unsaved changes that cannot be saved because there's at least one field that doesn't meet its requirements.\n\n" +
+    let message: string = changesCanBeSubmitted
+      ? 'You have unsubmitted changes. What do you want to do with them?'
+      : "You have changes that cannot be submitted because there's at least one field that doesn't meet its requirements.\n\n" +
         'Cancel to finish, or discard your changes and continue.'
 
-    setSavePromptOpen(true)
+    setSubmitPromptOpen(true)
     const { choice } = await prompt(message, choices)
-    setSavePromptOpen(false)
+    setSubmitPromptOpen(false)
 
     // Cancelling calls off whatever the prompt stood in the way of, so
     // this is left unsettled and the caller never carries on.
     if (choice === 'Cancel') return new Promise<void>(() => {})
 
-    // If the user opted to save, then save the user.
-    if (choice === 'Save') {
-      beginLoading('Saving...')
-      let saved = await save()
+    // If the user opted to submit, then submit the form.
+    if (choice === 'Submit') {
+      beginLoading('Submitting...')
+      let submitted = await submit()
       finishLoading()
 
-      // The changes are still there when the save does not happen, so
+      // The changes are still there when the submission does not happen, so
       // whatever the prompt stood in the way of is called off the same
       // way cancelling calls it off.
-      if (!saved) return new Promise<void>(() => {})
+      if (!submitted) return new Promise<void>(() => {})
     }
   }
 
@@ -326,13 +329,13 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
           >
             <UserEntry
               user={user}
-              handleChange={() => setAreUnsavedChanges(true)}
+              handleChange={() => setAreUnsubmittedChanges(true)}
             />
             <div className='Buttons'>
               <ButtonText
                 type='submit'
-                text={'Save'}
-                disabled={saveDisabled}
+                text={'Submit'}
+                disabled={submitDisabled}
                 onClick={() => {}}
               />
             </div>
@@ -343,7 +346,7 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
   )
 }
 
-/* ---------------------------- TYPES FOR USER PAGE ---------------------------- */
+/* ---------------------------- TYPES ---------------------------- */
 
 /**
  * Props for the UserPage component.
@@ -367,7 +370,7 @@ export type TUserPage_S = {
   /**
    * The message explaining why the entered username cannot be used,
    * or an empty string when the username is usable. Set by the
-   * availability check on the username field and by a rejected save.
+   * availability check on the username field and by a rejected submit.
    */
   usernameError: TReactState<string>
   /**
@@ -375,7 +378,7 @@ export type TUserPage_S = {
    */
   updatePassword: TReactState<boolean>
   /**
-   * Whether or not there are unsaved changes.
+   * Whether or not there are changes that have not been submitted.
    */
-  areUnsavedChanges: TReactState<boolean>
+  areUnsubmittedChanges: TReactState<boolean>
 }
