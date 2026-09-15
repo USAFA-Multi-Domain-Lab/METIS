@@ -102,8 +102,6 @@ function getLatestVersion(
     headers['Authorization'] = `token ${token}`
   }
 
-  console.log(apiPath)
-
   return new Promise((resolve, reject) => {
     const requestOptions = {
       hostname: 'api.github.com',
