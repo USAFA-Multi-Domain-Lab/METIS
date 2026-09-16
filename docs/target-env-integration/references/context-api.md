@@ -289,6 +289,8 @@ Sends a message to an output panel. `to` is required.
 - Passing a **force** sends to that force's output panel.
 - Passing the **mission** sends a global message that every force sees.
 
+The panel displays the message as rich text, so it can carry formatting such as emphasis, a list, a heading, or a link. It is cleaned before it is displayed, keeping only what the rich text editor itself writes, so anything outside that set is dropped on the way to the panel rather than reported as an error. See [Sanitization](../guides/parameter-and-argument-types.md#sanitization) for what survives.
+
 ```typescript
 script: async (context, { notify }) => {
   // To whichever force the effect's author selected
