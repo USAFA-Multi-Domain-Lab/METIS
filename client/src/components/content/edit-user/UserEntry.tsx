@@ -26,9 +26,10 @@ import './UserEntry.scss'
 export default function UserEntry({
   user,
   handleChange,
+  forceUpdate,
 }: TUserEntry_P): TReactElement | null {
   const { state } = useUserPageContext()
-  const { forceUpdate, notify } = useGlobalContext().actions
+  const { notify } = useGlobalContext().actions
   const { isAuthorized } = useRequireLogin()
 
   /* -- STATE -- */
@@ -47,6 +48,7 @@ export default function UserEntry({
   const username = useUserTextField({
     user,
     property: 'username',
+    forceUpdate,
     isValid: (user) => user.hasValidUsername,
     invalidMessage:
       'Usernames must be between 5 and 50 characters long and can only contain letters, numbers, and the following special characters: - _ .',
@@ -55,6 +57,7 @@ export default function UserEntry({
   const firstName = useUserTextField({
     user,
     property: 'firstName',
+    forceUpdate,
     isValid: (user) => user.hasValidFirstName,
     invalidMessage:
       'First names must be between 1 and 50 characters long and can only contain letters and the following special characters: -',
@@ -63,6 +66,7 @@ export default function UserEntry({
   const lastName = useUserTextField({
     user,
     property: 'lastName',
+    forceUpdate,
     isValid: (user) => user.hasValidLastName,
     invalidMessage:
       'Last names must be between 1 and 50 characters long and can only contain letters and the following special characters: -',
@@ -71,6 +75,7 @@ export default function UserEntry({
   const password = useUserTextField({
     user,
     property: 'password1',
+    forceUpdate,
     isValid: (user) => user.hasValidPassword1,
     invalidMessage: PASSWORD_FORMAT_MESSAGE,
     onChange: handleChange,
@@ -78,6 +83,7 @@ export default function UserEntry({
   const confirmPassword = useUserTextField({
     user,
     property: 'password2',
+    forceUpdate,
     isValid: (user) => user.hasValidPassword2,
     invalidMessage: PASSWORD_FORMAT_MESSAGE,
     onChange: handleChange,
@@ -324,4 +330,8 @@ export type TUserEntry_P = {
    * A function that will be called when a change has been made.
    */
   handleChange: () => void
+  /**
+   * Re-renders the user page.
+   */
+  forceUpdate: () => void
 }

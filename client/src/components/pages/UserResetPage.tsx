@@ -2,6 +2,7 @@ import { useGlobalContext } from '@client/context/global'
 import { compute } from '@client/toolbox'
 import {
   useEventListener,
+  useForcedUpdates,
   useMountHandler,
   useRequireLogin,
 } from '@client/toolbox/hooks'
@@ -46,12 +47,14 @@ export default function UserResetPage(): TReactElement | null {
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
   const { user } = useRequireLogin()
+  const forceUpdate = useForcedUpdates()
 
   /* -- HOOKS -- */
 
   const password = useUserTextField({
     user,
     property: 'password1',
+    forceUpdate,
     isValid: (user) => user.hasValidPassword1,
     invalidMessage: PASSWORD_FORMAT_MESSAGE,
     onChange: () => setAreUnsubmittedChanges(true),
@@ -59,6 +62,7 @@ export default function UserResetPage(): TReactElement | null {
   const confirmPassword = useUserTextField({
     user,
     property: 'password2',
+    forceUpdate,
     isValid: (user) => user.hasValidPassword2,
     invalidMessage: PASSWORD_FORMAT_MESSAGE,
     onChange: () => setAreUnsubmittedChanges(true),

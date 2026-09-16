@@ -7,6 +7,7 @@ import { compute } from '@client/toolbox'
 import {
   useBeforeunload,
   useEventListener,
+  useForcedUpdates,
   useMountHandler,
   useRequireLogin,
 } from '@client/toolbox/hooks'
@@ -65,6 +66,7 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
     navigateTo,
   } = globalContext.actions
   const { isAuthorized } = useRequireLogin()
+  const forceUpdate = useForcedUpdates()
 
   /* -- REFS -- */
 
@@ -329,6 +331,7 @@ export default function UserPage(props: TUserPage_P): TReactElement | null {
             <UserEntry
               user={user}
               handleChange={() => setAreUnsubmittedChanges(true)}
+              forceUpdate={forceUpdate}
             />
             <div className='Buttons'>
               <ButtonText
