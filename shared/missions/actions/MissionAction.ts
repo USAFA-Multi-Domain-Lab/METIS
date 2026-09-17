@@ -1,3 +1,4 @@
+import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
 import type { TJsonSerializable } from '@shared/toolbox/serialization/json'
 import type { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
@@ -127,26 +128,13 @@ export abstract class MissionAction<
   public baseProcessTime: number
 
   /**
-   * Computed operand applied to the process time, derived from all
-   * process-time modifiers on this action.
-   */
-  private get _processTimeOperand(): number {
-    return this.modifiers
-      .filter((modifier) => modifier.type === 'process-time')
-      .reduce((sum, modifier) => sum + modifier.amount, 0)
-  }
-
-  /**
    * The amount of time it takes to execute the action.
    */
   public get processTime(): number {
-    // Return the process time within the correct range.
-    // ***Note: This ensures the process time is never less than 0 or greater than 1 hour.
-    return Math.min(
-      Math.max(
-        this.baseProcessTime + this._processTimeOperand,
-        MissionAction.PROCESS_TIME_MIN,
-      ),
+    return MissionAction.applyModifiers(
+      this.baseProcessTime,
+      this.selectModifiers({ type: 'process-time' }),
+      MissionAction.PROCESS_TIME_MIN,
       MissionAction.PROCESS_TIME_MAX,
     )
   }
@@ -163,27 +151,13 @@ export abstract class MissionAction<
   public baseSuccessChance: number
 
   /**
-   * Computed operand applied to the success chance, derived from all
-   * success-chance modifiers on this action.
-   */
-  private get _successChanceOperand(): number {
-    return this.modifiers
-      .filter((modifier) => modifier.type === 'success-chance')
-      .reduce((sum, modifier) => sum + modifier.amount, 0)
-  }
-
-  /**
-   * The chance that the action will succeed after any
-   * modifiers are applied.
+   * The chance that the action will succeed.
    */
   public get successChance(): number {
-    // Return the success chance within the correct range.
-    // ***Note: This ensures the success chance is never less than 0 or greater than 1.
-    return Math.min(
-      Math.max(
-        this.baseSuccessChance + this._successChanceOperand,
-        MissionAction.SUCCESS_CHANCE_MIN,
-      ),
+    return MissionAction.applyModifiers(
+      this.baseSuccessChance,
+      this.selectModifiers({ type: 'success-chance' }),
+      MissionAction.SUCCESS_CHANCE_MIN,
       MissionAction.SUCCESS_CHANCE_MAX,
     )
   }
@@ -498,6 +472,34 @@ export abstract class MissionAction<
   }
 
   /**
+   * @param options Narrows down which of this action's modifiers are
+   * returned.
+   * @returns The modifiers that match the given options.
+   */
+  public selectModifiers(
+    options: TActionModifierSelectOptions,
+  ): TActionModifier[] {
+    let { type, resourceId, appliedOnOrBefore } = options
+
+    return this.modifiers.filter((modifier) => {
+      if (modifier.type !== type) return false
+
+      if (resourceId !== undefined && modifier.resourceId !== resourceId) {
+        return false
+      }
+
+      if (
+        appliedOnOrBefore !== undefined &&
+        modifier.appliedAt > appliedOnOrBefore
+      ) {
+        return false
+      }
+
+      return true
+    })
+  }
+
+  /**
    * @param resourceId The ID of the resource. Nullable values are permitted
    * for this parameter to allow for flexibility when ID may not be known.
    * @returns The resource cost associated with the given resource ID,
@@ -649,6 +651,34 @@ export abstract class MissionAction<
     // Convert the time to milliseconds.
     return hours + minutes + seconds + milliseconds
   }
+
+  /**
+   * Works out the value an action property holds once a set of modifiers
+   * has been applied to it.
+   * @param baseValue The value the modifiers are applied to.
+   * @param modifiers The modifiers to apply.
+   * @param minimum The lowest value the property may hold.
+   * @param maximum The highest value the property may hold.
+   * @returns The value left after every modifier has been applied.
+   * @note Each modifier is capped as it is applied, so a 50% success
+   * chance raised by +75% stops at 100%, and a later -20% brings it down
+   * to 80% rather than the 100% that adding every amount together first
+   * would give.
+   */
+  public static applyModifiers(
+    baseValue: number,
+    modifiers: TActionModifier[],
+    minimum: number,
+    maximum: number = Infinity,
+  ): number {
+    return [...modifiers]
+      .sort((first, second) => first.appliedAt - second.appliedAt)
+      .reduce(
+        (value, modifier) =>
+          NumberToolbox.clamp(value + modifier.amount, minimum, maximum),
+        NumberToolbox.clamp(baseValue, minimum, maximum),
+      )
+  }
 }
 
 /* -- TYPES -- */
@@ -735,6 +765,26 @@ export type TActionModifierType =
   | 'resource-cost'
   | 'process-time'
   | 'success-chance'
+
+/**
+ * Narrows down which of an action's modifiers {@link MissionAction.selectModifiers}
+ * returns.
+ */
+export type TActionModifierSelectOptions = {
+  /**
+   * Only return modifiers that target this property of the action.
+   */
+  type: TActionModifierType
+  /**
+   * Only return modifiers that target the cost of this resource.
+   */
+  resourceId?: string
+  /**
+   * Only return modifiers that were applied at or before this timestamp
+   * (ms since epoch).
+   */
+  appliedOnOrBefore?: number
+}
 
 /**
  * A single modifier applied to a {@link MissionAction} during a session.

@@ -7,12 +7,7 @@ import type {
   TOutcome,
   TOutcomeState,
 } from './ExecutionOutcome'
-import {
-  type TAction,
-  type TActionModifier,
-  type TActionModifierType,
-  MissionAction,
-} from './MissionAction'
+import { type TAction, MissionAction } from './MissionAction'
 
 /* -- CLASSES -- */
 
@@ -173,32 +168,35 @@ export abstract class ActionExecution<
   }
 
   /**
-   * The process time for this execution, computed from the action's
-   * base process time plus any process-time modifiers that were
-   * applied at or before this execution began.
+   * The process time for this execution, taken from the action's base
+   * process time with every process-time modifier applied at or before
+   * this execution began.
    */
   public get effectiveProcessTime(): number {
-    return Math.min(
-      Math.max(
-        this.action.baseProcessTime + this.getEffectiveOperand('process-time'),
-        MissionAction.PROCESS_TIME_MIN,
-      ),
+    return MissionAction.applyModifiers(
+      this.action.baseProcessTime,
+      this.action.selectModifiers({
+        type: 'process-time',
+        appliedOnOrBefore: this.start,
+      }),
+      MissionAction.PROCESS_TIME_MIN,
       MissionAction.PROCESS_TIME_MAX,
     )
   }
 
   /**
-   * The success chance for this execution, computed from the action's
-   * base success chance plus any success-chance modifiers that were
-   * applied at or before this execution began.
+   * The success chance for this execution, taken from the action's base
+   * success chance with every success-chance modifier applied at or
+   * before this execution began.
    */
   public get effectiveSuccessChance(): number {
-    return Math.min(
-      Math.max(
-        this.action.baseSuccessChance +
-          this.getEffectiveOperand('success-chance'),
-        MissionAction.SUCCESS_CHANCE_MIN,
-      ),
+    return MissionAction.applyModifiers(
+      this.action.baseSuccessChance,
+      this.action.selectModifiers({
+        type: 'success-chance',
+        appliedOnOrBefore: this.start,
+      }),
+      MissionAction.SUCCESS_CHANCE_MIN,
       MissionAction.SUCCESS_CHANCE_MAX,
     )
   }
@@ -242,23 +240,6 @@ export abstract class ActionExecution<
       end: this.end,
       outcome: this.outcome?.toJson() ?? null,
     }
-  }
-
-  /**
-   * @returns the sum of modifier amounts of the given type that were
-   * applied at or before this execution's start timestamp.
-   * @param type The modifier type to filter by.
-   */
-  private getEffectiveOperand(type: TActionModifierType): number {
-    return this.action.modifiers
-      .filter(
-        (modifier: TActionModifier) =>
-          modifier.type === type && modifier.appliedAt <= this.start,
-      )
-      .reduce(
-        (sum: number, modifier: TActionModifier) => sum + modifier.amount,
-        0,
-      )
   }
 
   /**

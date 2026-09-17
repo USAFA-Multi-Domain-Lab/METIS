@@ -18,6 +18,7 @@ import type {
 } from '@shared/missions/effects/Effect'
 import { Effect } from '@shared/missions/effects/Effect'
 import { JsonSerializableArray } from '@shared/toolbox/arrays/JsonSerializableArray'
+import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
 import { ClientEffect } from '../effects/ClientEffect'
 import type { ClientMissionNode } from '../nodes/ClientMissionNode'
 import { ClientActionCost } from './ClientActionCost'
@@ -324,8 +325,9 @@ export class ClientMissionAction
   ): string {
     // If the success chance is hidden, return `HIDDEN_VALUE`.
     if (successChanceHidden) return ClientMissionAction.HIDDEN_VALUE
-    // Convert the value to a percentage format.
-    return `${successChance * 100}%`
+    // Convert the value to a percentage format, rounding off the tiny
+    // remainders that arithmetic on fractions leaves behind.
+    return `${NumberToolbox.round(successChance * 100, 2)}%`
   }
 
   /**

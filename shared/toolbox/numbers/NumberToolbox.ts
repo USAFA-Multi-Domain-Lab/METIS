@@ -42,6 +42,32 @@ export class NumberToolbox {
   }
 
   /**
+   * @param value The number to hold within a range.
+   * @param minimum The lowest value that may be returned.
+   * @param maximum The highest value that may be returned.
+   * @returns The given value, raised to the minimum when it falls below
+   * the range and lowered to the maximum when it rises above it.
+   */
+  public static clamp(
+    value: number,
+    minimum: number,
+    maximum: number = Infinity,
+  ): number {
+    return Math.min(Math.max(value, minimum), maximum)
+  }
+
+  /**
+   * @param value The number to round.
+   * @param decimalPlaces The number of decimal places to keep.
+   * @returns The value rounded to the given number of decimal places.
+   * @note Rounding also clears the tiny remainders that arithmetic on
+   * fractions leaves behind, turning `30.000000000000004` into `30`.
+   */
+  public static round(value: number, decimalPlaces: number = 0): number {
+    return Number(value.toFixed(decimalPlaces))
+  }
+
+  /**
    * @param value The integer to format.
    * @returns A compact string representation of the integer, e.g. `1173` → `"1.1K"`, `-3234372` → `"-3.2M"`.
    */

@@ -5,11 +5,8 @@ import {
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { Mission, type TMission } from '../Mission'
 import { MissionComponent } from '../MissionComponent'
-import type {
-  TAction,
-  TActionJsonOptions,
-  TActionModifier,
-} from './MissionAction'
+import type { TAction, TActionJsonOptions } from './MissionAction'
+import { MissionAction } from './MissionAction'
 
 /**
  * Represents the resource cost applied to a single resource pool when
@@ -105,26 +102,17 @@ export abstract class ActionResourceCost<
   public hidden: boolean
 
   /**
-   * Computed operand applied to the base amount, derived from all resource-cost
-   * modifiers on the parent action matching this resource ID.
-   */
-  private get _operand(): number {
-    return this.action.modifiers
-      .filter(
-        (modifier) =>
-          modifier.type === 'resource-cost' &&
-          modifier.resourceId === this.resourceId,
-      )
-      .reduce((sum, modifier) => sum + modifier.amount, 0)
-  }
-
-  /**
-   * The effective amount after applying the session operand.
-   * This is the actual amount deducted from the pool when the action is executed.
+   * The amount left once every resource-cost modifier applied during the
+   * session is taken into account. This is the actual amount deducted
+   * from the pool when the action is executed.
    */
   public get amount(): number {
-    return Math.max(
-      this.baseAmount + this._operand,
+    return MissionAction.applyModifiers(
+      this.baseAmount,
+      this.action.selectModifiers({
+        type: 'resource-cost',
+        resourceId: this.resourceId,
+      }),
       ActionResourceCost.RESOURCE_COST_MIN,
     )
   }
@@ -201,29 +189,21 @@ export abstract class ActionResourceCost<
   /**
    * @param effectiveTime The time at which to evaluate the effective costs.
    * @returns Returns the effective resource cost for this resource at the
-   * specified time, computed from the base amount of this cost plus any
-   * resource-cost modifiers that were applied at or before this execution
-   * began.
+   * specified time, taken from the base amount of this cost with every
+   * resource-cost modifier applied at or before that time.
    */
   public getEffectiveAmount(effectiveTime: number | Date): number {
     // Normalize time to plain timestamp.
     effectiveTime =
       effectiveTime instanceof Date ? effectiveTime.getTime() : effectiveTime
 
-    const operand = this.action.modifiers
-      .filter(
-        (modifier: TActionModifier) =>
-          modifier.type === 'resource-cost' &&
-          modifier.resourceId === this.resourceId &&
-          modifier.appliedAt <= effectiveTime,
-      )
-      .reduce(
-        (sum: number, modifier: TActionModifier) => sum + modifier.amount,
-        0,
-      )
-
-    return Math.max(
-      this.baseAmount + operand,
+    return MissionAction.applyModifiers(
+      this.baseAmount,
+      this.action.selectModifiers({
+        type: 'resource-cost',
+        resourceId: this.resourceId,
+        appliedOnOrBefore: effectiveTime,
+      }),
       ActionResourceCost.RESOURCE_COST_MIN,
     )
   }
