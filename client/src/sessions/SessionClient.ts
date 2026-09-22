@@ -333,11 +333,13 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       (realm) => new SessionRealmBasic(realm),
     )
 
-    this._activeExecutions = []
     this._unreadChatMessageCount = new Map(
       Object.entries(unreadChatChannelMessages),
     )
     this._initialPendingSessionPanelAlerts = pendingSessionPanelAlerts
+
+    this._activeExecutions = []
+    this.resumeActiveExecutions()
 
     // Add listeners to detect events that are
     // emitted to the client.
@@ -659,6 +661,18 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
 
     // Handle request within node.
     node.handleRequestMade('request-send-output')
+  }
+
+  /**
+   * Picks up the executions already running when the server handed this
+   * session over and starts counting them down.
+   */
+  private resumeActiveExecutions(): void {
+    this._activeExecutions = this.subscribedMission.allNodes
+      .flatMap((node) => node.executions)
+      .filter((execution) => execution.timeRemaining > 0)
+
+    if (this._activeExecutions.length > 0) this.tickActiveExecutions()
   }
 
   /**

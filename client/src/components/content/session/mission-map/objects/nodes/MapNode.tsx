@@ -1,6 +1,7 @@
 import Tooltip from '@client/components/content/communication/Tooltip'
 import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
 import { useButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/hooks'
+import type { ClientActionExecution } from '@client/missions/actions/ClientActionExecution'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import { compute } from '@client/toolbox'
 import { useEventListener, useInlineStyling } from '@client/toolbox/hooks'
@@ -11,7 +12,7 @@ import type {
 } from '@shared/missions/nodes/MissionNode'
 import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { ClassList } from '@shared/toolbox/html/ClassList'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { TMapCompatibleNode, TMapNode_P, TNodeButton } from '.'
 import { useMapContext } from '../../MissionMap'
 import './MapNode.scss'
@@ -19,21 +20,13 @@ import './MapNode.scss'
 /* -- FUNCTIONS -- */
 
 /**
- * Calculates the initial progress (in milliseconds) for a node.
- * @param node The node in question.
- * @returns The initial progress.
+ * Calculates the progress bar's offset so that it stays in sync with the
+ * action execution on a node even if the node renders mid-execution.
+ * @param execution The execution the bar is showing.
+ * @returns How far into the execution the bar starts, in milliseconds.
  */
-function calculateInitialProgress(node: TMapCompatibleNode): number {
-  // If executing, calculate the initial progress
-  // by subtracting the start time from the current
-  // time.
-  if (node.executing) {
-    return Date.now() - node.latestExecution!.start
-  }
-  // Else, return 0.
-  else {
-    return 0
-  }
+function calculateProgressOffset(execution: ClientActionExecution): number {
+  return Math.max(0, Date.now() - execution.start)
 }
 
 /* -- COMPONENT -- */
@@ -60,13 +53,6 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
   )
   const [buttons, setButtons] = useState<TNodeButton[]>(node.buttons)
   const [pending, setPending] = useState<boolean>(node.pending)
-  /**
-   * The initial progress shown on the progress bar,
-   * helping account for latency.
-   */
-  const [initialProgress] = useState<number>(() =>
-    calculateInitialProgress(node),
-  )
   const [blockStatus, setBlockStatus] = useState<TNodeBlockStatus>(
     node.blockStatus,
   )
@@ -74,6 +60,21 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
   const [nextPendingAlert, setNextPendingAlert] = useState<NodeAlert | null>(
     node.nextPendingAlert,
   )
+
+  /* -- REFS -- */
+
+  /**
+   * Where the progress bar starts, kept per execution so a second action does
+   * not inherit the first one's offset.
+   * @note A ref, since recomputing it every render restarts the animation.
+   */
+  const progressOffset = useRef<TProgressOffset>({
+    executionId: null,
+    elapsed: 0,
+  })
+
+  /* -- HOOKS -- */
+
   const nodeButtonEngine = useButtonSvgEngine({
     elements: buttons,
     dependencies: [buttons],
@@ -297,11 +298,20 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
     // If the node is executing, animate
     // the progress bar.
     if (node.executing) {
-      let duration = node.latestExecution!.duration
+      let execution = node.latestExecution!
+
+      // Work the starting point out once per execution, so every render of the
+      // same execution keeps the progress bar animation in sync with the execution.
+      if (progressOffset.current.executionId !== execution._id) {
+        progressOffset.current = {
+          executionId: execution._id,
+          elapsed: calculateProgressOffset(execution),
+        }
+      }
 
       style.animation = 'loading-animation 750ms linear 0ms infinite'
       style.animation += ', '
-      style.animation += `progress-animation ${duration}ms linear -${initialProgress}ms 1 normal forwards`
+      style.animation += `progress-animation ${execution.duration}ms linear -${progressOffset.current.elapsed}ms 1 normal forwards`
     }
   })
 
@@ -451,4 +461,20 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
       {revealNodeButton}
     </div>
   )
+}
+
+/**
+ * Where a node's progress bar starts, and the execution it was worked out for.
+ */
+type TProgressOffset = {
+  /**
+   * The ID of the execution the offset belongs to, or null before the node has
+   * shown one.
+   */
+  executionId: string | null
+  /**
+   * How much of that execution had already run when its bar first appeared, in
+   * milliseconds.
+   */
+  elapsed: number
 }
