@@ -46,14 +46,14 @@ A script returns nothing. To report a result, send output or leave the value in 
 
 Two kinds of target-environment code receive a context, and they do not receive the same one.
 
-| Available in | Target scripts | Environment hooks |
-| ------------ | :------------: | :---------------: |
-| `session`, `config`, `mission` | ✓ | ✓ |
-| `localStore`, `realmStore`, `globalStore` | ✓ | ✓ |
-| `sleep()` | ✓ | ✓ |
-| `type`, `effect`, `triggeredBy` | ✓ | — |
-| `getArguments()` | ✓ | — |
-| `sendOutput()` and all mission-changing methods | ✓ | — |
+| Available in                                    | Target scripts | Environment hooks |
+| ----------------------------------------------- | :------------: | :---------------: |
+| `session`, `config`, `mission`                  |       ✓        |         ✓         |
+| `localStore`, `realmStore`, `globalStore`       |       ✓        |         ✓         |
+| `sleep()`                                       |       ✓        |         ✓         |
+| `type`, `effect`, `triggeredBy`                 |       ✓        |         —         |
+| `getArguments()`                                |       ✓        |         —         |
+| `sendOutput()` and all mission-changing methods |       ✓        |         —         |
 
 An `environment-setup` or `environment-teardown` hook cannot send output or modify the mission. It exists to acquire and release resources, and it can read configuration and use the data stores to hand something to the scripts that run later.
 
@@ -150,12 +150,12 @@ context.sendOutput('Broadcast to everyone', context.mission)
 
 Passing a broader component fans the operation out to everything beneath it. A single component or an array of them is accepted anywhere.
 
-| Passed | `blockNodes` affects | `modifySuccessChance` affects |
-| ------ | -------------------- | ----------------------------- |
-| an action | — | that action |
-| a node | that node | every action on it |
-| a force | every node in it | every action in it |
-| the mission | every node in it | every action in it |
+| Passed      | `blockNodes` affects | `modifySuccessChance` affects |
+| ----------- | -------------------- | ----------------------------- |
+| an action   | —                    | that action                   |
+| a node      | that node            | every action on it            |
+| a force     | every node in it     | every action in it            |
+| the mission | every node in it     | every action in it            |
 
 Which component types a method accepts is listed with each method below. A `mission-component` parameter should declare `validComponentTypes` that match, so the picker cannot offer a selection the script has no use for.
 
@@ -337,10 +337,10 @@ await context.sleep(5000)
 
 Three stores are available, differing only in how far their data reaches:
 
-| Store | Scope |
-| ----- | ----- |
-| `localStore` | one target environment within one realm |
-| `realmStore` | every target environment within one realm |
+| Store         | Scope                                                  |
+| ------------- | ------------------------------------------------------ |
+| `localStore`  | one target environment within one realm                |
+| `realmStore`  | every target environment within one realm              |
 | `globalStore` | every target environment in every realm of the session |
 
 Each exposes a single method:
@@ -424,16 +424,18 @@ modifyResourceCost(applyTo, resources, operand: number): void
 
 The operand may be positive or negative.
 
-| Method | Unit | Clamped to |
-| ------ | ---- | ---------- |
-| `modifySuccessChance` | percentage points | 0–100% |
-| `modifyProcessTime` | milliseconds | 0 – 3,600,000 (1 hour) |
-| `modifyResourceCost` | resource amount | minimum 0 |
+| Method                | Unit                         | Clamped to                 |
+| --------------------- | ---------------------------- | -------------------------- |
+| `modifySuccessChance` | decimal, where `0.25` is 25% | 0–100%                     |
+| `modifyProcessTime`   | milliseconds                 | 0 – 7,199,000 (1h 59m 59s) |
+| `modifyResourceCost`  | resource amount              | minimum 0                  |
+
+Each call is clamped as it lands, so any amount that would carry a value past its limit is discarded rather than held against later calls: raising a 50% success chance by `0.75` stops it at 100%, and a following `-0.2` brings it to 80%.
 
 ```typescript
 script: async (context, { applyTo, resources }) => {
   // Every action beneath whatever was selected
-  context.modifySuccessChance(applyTo, 25)
+  context.modifySuccessChance(applyTo, 0.25)
   context.modifyProcessTime(applyTo, -30000)
 
   // Resource costs need the resources whose cost to change
@@ -518,15 +520,15 @@ script: async (context, { applyTo }) => {
 
 ### Component Types
 
-| Type | `componentType` | Notable properties |
-| ---- | --------------- | ------------------ |
-| `TTargetEnvExposedMission` | `'mission'` | `forces`, `allNodes`, `allActions`, `allEffects`, `resources`, `files`, `effects` |
-| `TTargetEnvExposedForce` | `'force'` | `nodes`, `resourcePools`, `localKey`, `color`, `mission` |
-| `TTargetEnvExposedNode` | `'node'` | `actions`, `parent`, `children`, `siblings`, `opened`, `blocked`, `revealed`, `executing`, `force` |
-| `TTargetEnvExposedAction` | `'action'` | `successChance`, `processTime`, `resourceCosts`, `effects`, `type`, `executionCount`, `node` |
-| `TTargetEnvExposedPool` | `'resourcePool'` | `balance`, `initialBalance`, `allowNegative`, `excluded`, `resource`, `force` |
-| `TTargetEnvExposedResource` | `'resource'` | `icon`, `order`, `mission` |
-| `TTargetEnvExposedFile` | `'missionFile'` | `originalName`, `alias`, `extension`, `mimetype`, `size`, `initialAccess` |
+| Type                        | `componentType`  | Notable properties                                                                                 |
+| --------------------------- | ---------------- | -------------------------------------------------------------------------------------------------- |
+| `TTargetEnvExposedMission`  | `'mission'`      | `forces`, `allNodes`, `allActions`, `allEffects`, `resources`, `files`, `effects`                  |
+| `TTargetEnvExposedForce`    | `'force'`        | `nodes`, `resourcePools`, `localKey`, `color`, `mission`                                           |
+| `TTargetEnvExposedNode`     | `'node'`         | `actions`, `parent`, `children`, `siblings`, `opened`, `blocked`, `revealed`, `executing`, `force` |
+| `TTargetEnvExposedAction`   | `'action'`       | `successChance`, `processTime`, `resourceCosts`, `effects`, `type`, `executionCount`, `node`       |
+| `TTargetEnvExposedPool`     | `'resourcePool'` | `balance`, `initialBalance`, `allowNegative`, `excluded`, `resource`, `force`                      |
+| `TTargetEnvExposedResource` | `'resource'`     | `icon`, `order`, `mission`                                                                         |
+| `TTargetEnvExposedFile`     | `'missionFile'`  | `originalName`, `alias`, `extension`, `mimetype`, `size`, `initialAccess`                          |
 
 > **Note:** A file's `componentType` is `'missionFile'`, and that is also the name used in `validComponentTypes`.
 
@@ -543,7 +545,11 @@ interface TTargetEnvExposedMember {
 
 interface TTargetEnvExposedSessionConfig {
   readonly name?: string
-  readonly accessibility: 'public' | 'id-required' | 'invite-only' | 'owner-only'
+  readonly accessibility:
+    | 'public'
+    | 'id-required'
+    | 'invite-only'
+    | 'owner-only'
   readonly infiniteResources: boolean
   readonly targetEnvConfig: TTargetEnvConfig | null
 }
