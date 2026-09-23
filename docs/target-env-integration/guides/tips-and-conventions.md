@@ -133,6 +133,7 @@ export default OutputPanel
 - It sets each environment's ID from its folder name; each target's ID comes from the `_id` on its schema
 - It recursively descends subfolders of `targets/` and picks up any folder that has `schema.ts`
 - If a folder has `schema.ts` but the default export isn't the correct schema class, it's skipped with a warning
+- If an environment's code has type errors, or throws while it loads, that environment is skipped with an error
 
 ## Dependencies and Component Selection
 
@@ -147,6 +148,7 @@ export default OutputPanel
 - Putting `schema.ts` in a non-leaf folder makes that folder a target (ensure that's intended)
 - Renaming an environment folder changes its ID;
 - Renaming a target folder changes nothing — but changing its declared `_id` orphans existing effects **coordinate migrations for existing effects**
+- An error in any file under your environment folder skips the whole environment
 
 ## Do and Don't
 
@@ -161,6 +163,7 @@ Don't
 - Don't hand-register targets; discovery is automatic
 - Don't change a target's `_id` casually; it is the link between the target and every effect built from it
 - Don't create deep, brittle dependency chains if a simpler layout will do
+- Don't declare globals; every environment is type checked in one shared global scope, so a name you add collides with `integration/target-env/global.ts` or another environment
 
 ## Validation
 
