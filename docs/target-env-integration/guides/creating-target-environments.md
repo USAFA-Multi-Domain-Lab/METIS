@@ -223,6 +223,12 @@ No targets found in "ACME Cloud".  // Normal if no targets yet
 ```
 No valid schema found at "path/to/schema.ts". Skipping...
 No target folder found at "path/to/targets". Skipping...
+
+Type errors found in "acme-cloud":
+
+integration/target-env/acme-cloud/schema.ts(14,5): error TS2322: Type 'number' is not assignable to type 'string'.
+
+Skipping target environment...
 ```
 
 ### Test Your Targets
@@ -238,6 +244,7 @@ No target folder found at "path/to/targets". Skipping...
 | -------------------------- | ----------------------------------- | -------------------------------------------------- |
 | Environment not discovered | Missing `schema.ts` or wrong export | Ensure default export of `TargetEnvSchema`         |
 | Environment skipped        | Missing `targets/` folder           | Create empty `targets/` directory                  |
+| Environment skipped        | Type errors in its code             | Fix the errors named in the console                |
 | Target not showing         | Wrong filename or export            | Use exactly `schema.ts` with `TargetSchema` export |
 | API calls failing          | Missing configuration               | Check `configs.json` and session configuration     |
 
