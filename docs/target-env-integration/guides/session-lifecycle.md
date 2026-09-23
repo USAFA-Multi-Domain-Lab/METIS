@@ -218,10 +218,6 @@ context.modifySuccessChance(25)
 context.modifyResourcePool(50)
 context.grantFileAccess(fileId, forceKey)
 await context.sleep(5000)
-
-// Data stores also validate:
-const counter = context.localStore.use('count', 0)
-counter.value++ // Protected access
 ```
 
 ### Unprotected Operations
@@ -242,6 +238,8 @@ script: async (context) => {
   context.sendOutput(localVariable.toString(), context.mission)
 }
 ```
+
+Data stores are not protected either. A script still running after a reset can keep reading and writing its store, but each store belongs to one session instance, so the script only reaches the old instance's data, never the new instance's.
 
 ## OutdatedContextError
 
@@ -451,11 +449,11 @@ Use environment hooks for persistent operations:
 ```typescript
 import { WebSocketApi } from '@metis/api/WebSocketApi'
 
-let wsConnection: WebSocketApi | null = null
-
 // Set up during environment setup
 environment.on('environment-setup', async (context) => {
-  wsConnection = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
+  const wsConnection = WebSocketApi.fromConfig(
+    context.config.targetEnvConfig.data,
+  )
 
   // Event listener is tied to session instance
   wsConnection.addEventListener('message', (event) => {
@@ -463,15 +461,22 @@ environment.on('environment-setup', async (context) => {
     console.log(`Message: ${event.data}`)
   })
 
+  // Keep the connection in the store so each session has its own
+  context.localStore.use<WebSocketApi | null>('wsConnection', null).value =
+    wsConnection
+
   await wsConnection.connect()
 })
 
 // Clean up during teardown
 environment.on('environment-teardown', async (context) => {
-  if (wsConnection) {
-    wsConnection.disconnect()
-    wsConnection = null
-  }
+  const wsConnection = context.localStore.use<WebSocketApi | null>(
+    'wsConnection',
+    null,
+  )
+
+  await wsConnection.value?.disconnect()
+  wsConnection.value = null
 })
 ```
 
@@ -509,16 +514,21 @@ Stores use instance-aware keys internally:
 
 ```typescript
 // Local store key format:
-;`${sessionId}::${instanceId}::${environmentId}`// Global store key format:
-`${sessionId}::${instanceId}`
+`${sessionId}::${instanceId}::${realmId}::${environmentId}`
+// Realm store key format:
+`${sessionId}::${instanceId}::${realmId}::<global>`
+// Global store key format:
+`${sessionId}::${instanceId}::<global>::<global>`
 
 // Example keys:
-// Local:  "session-001::abc123::metis"
-// Global: "session-001::abc123"
+// Local:  "session-001::abc123::realm-01::metis"
+// Realm:  "session-001::abc123::realm-01::<global>"
+// Global: "session-001::abc123::<global>::<global>"
 
 // After reset (new instance):
-// Local:  "session-001::xyz789::metis"  ← Different key
-// Global: "session-001::xyz789"         ← Different key
+// Local:  "session-001::xyz789::realm-01::metis"     ← Different key
+// Realm:  "session-001::xyz789::realm-01::<global>"  ← Different key
+// Global: "session-001::xyz789::<global>::<global>"  ← Different key
 ```
 
 ### Store Cleanup
@@ -529,7 +539,7 @@ Stores are automatically cleaned up on session reset:
 // Before reset
 const data = context.localStore.use('cache', { items: [] })
 data.value.items.push('item1')
-// Store key: session-001::abc123::metis
+// Store key: session-001::abc123::realm-01::metis
 
 // Session resets...
 // - Teardown runs
@@ -539,7 +549,7 @@ data.value.items.push('item1')
 
 // After reset
 const data = context.localStore.use('cache', { items: [] })
-// Store key: session-001::xyz789::metis
+// Store key: session-001::xyz789::realm-01::metis
 // data.value.items = [] (fresh default value)
 ```
 
@@ -595,11 +605,19 @@ script: async (context) => {
 ```typescript
 // ✅ Connection lifecycle matches session instance
 environment.on('environment-setup', async (context) => {
-  connection = await createConnection()
+  const connection = context.localStore.use<Connection | null>(
+    'connection',
+    null,
+  )
+  connection.value = await createConnection()
 })
 
 environment.on('environment-teardown', async (context) => {
-  await connection.close()
+  const connection = context.localStore.use<Connection | null>(
+    'connection',
+    null,
+  )
+  await connection.value?.close()
 })
 
 // ❌ Connection in target script (no lifecycle management)
@@ -614,26 +632,34 @@ script: async (context) => {
 ```typescript
 // ✅ Idempotent setup (can run multiple times safely)
 environment.on('environment-setup', async (context) => {
-  if (connection && connection.isConnected) {
-    await connection.close()
+  const connection = context.localStore.use<Connection | null>(
+    'connection',
+    null,
+  )
+  if (connection.value && connection.value.isConnected) {
+    await connection.value.close()
   }
-  connection = await createConnection()
+  connection.value = await createConnection()
 })
 
 // ❌ Not idempotent (fails if called twice)
 environment.on('environment-setup', async (context) => {
-  connection = await createConnection() // What if already exists?
+  const connection = context.localStore.use<Connection | null>(
+    'connection',
+    null,
+  )
+  connection.value = await createConnection() // What if already exists?
 })
 ```
 
 ### DON'T: Store Instance-Specific Data in Module Scope
 
 ```typescript
-// ❌ Module-scope variable survives resets
+// ❌ Module-scope variable is shared by every session and survives resets
 let messageCount = 0
 
 script: async (context) => {
-  messageCount++ // Wrong instance's count!
+  messageCount++ // Counts every session's messages, across every reset!
   context.sendOutput(`Messages: ${messageCount}`, context.mission)
 }
 
@@ -730,27 +756,34 @@ script: async (context) => {
 **Problem:** WebSocket connection should survive individual effect executions but reset with session.
 
 ```typescript
-let wsConnection: WebSocketApi | null = null
-
 // Connection lifecycle matches session instance
 environment.on('environment-setup', async (context) => {
   // Context is from NEW instance after reset
-  wsConnection = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
+  const wsConnection = WebSocketApi.fromConfig(
+    context.config.targetEnvConfig.data,
+  )
 
   wsConnection.addEventListener('message', (event) => {
     // ✅ This context is from setup, validated automatically
     console.log(`WebSocket: ${event.data}`)
   })
 
+  // Keep the connection in the store so each session has its own
+  context.localStore.use<WebSocketApi | null>('wsConnection', null).value =
+    wsConnection
+
   await wsConnection.connect()
 })
 
 environment.on('environment-teardown', async (context) => {
   // Runs before instance ID changes
-  if (wsConnection) {
-    wsConnection.disconnect()
-    wsConnection = null
-  }
+  const wsConnection = context.localStore.use<WebSocketApi | null>(
+    'wsConnection',
+    null,
+  )
+
+  await wsConnection.value?.disconnect()
+  wsConnection.value = null
 })
 
 // Individual effects just use the connection
@@ -769,6 +802,11 @@ export default TargetSchema.create({
     },
   ],
   script: async (context, { payload }) => {
+    const wsConnection = context.localStore.use<WebSocketApi | null>(
+      'wsConnection',
+      null,
+    ).value
+
     if (!wsConnection?.isConnected) {
       throw new Error('WebSocket not connected')
     }
@@ -835,8 +873,6 @@ script: async (context, { endpoints }) => {
 ```typescript
 import { createPool, type Pool } from 'generic-db-library'
 
-let connectionPool: Pool | null = null
-
 environment.on('environment-setup', async (context) => {
   if (!context.config.targetEnvConfig) {
     throw new Error('No database configuration selected.')
@@ -845,7 +881,11 @@ environment.on('environment-setup', async (context) => {
   const dbConfig = context.config.targetEnvConfig.data
 
   // Create connection pool
-  connectionPool = await createPool({
+  const connectionPool = context.localStore.use<Pool | null>(
+    'connectionPool',
+    null,
+  )
+  connectionPool.value = await createPool({
     host: dbConfig.host,
     port: dbConfig.port,
     database: dbConfig.database,
@@ -856,10 +896,15 @@ environment.on('environment-setup', async (context) => {
 })
 
 environment.on('environment-teardown', async (context) => {
-  if (connectionPool) {
+  const connectionPool = context.localStore.use<Pool | null>(
+    'connectionPool',
+    null,
+  )
+
+  if (connectionPool.value) {
     // Close all connections before instance changes
-    await connectionPool.close()
-    connectionPool = null
+    await connectionPool.value.close()
+    connectionPool.value = null
     console.log('✅ Database pool closed')
   }
 })
@@ -880,6 +925,11 @@ export default TargetSchema.create({
     },
   ],
   script: async (context, { query }) => {
+    const connectionPool = context.localStore.use<Pool | null>(
+      'connectionPool',
+      null,
+    ).value
+
     if (!connectionPool) {
       throw new Error('Database pool not initialized')
     }
@@ -899,7 +949,7 @@ export default TargetSchema.create({
 - Shared across all effects efficiently
 - Automatically cleaned up on reset
 
-> **Note:** The module-level `connectionPool` above only holds up in a session with a single realm. Setup and teardown hooks run **once per realm**, so in a standalone session each participant's setup overwrites the variable and the first teardown closes the pool for everyone. Keep the pool in `context.localStore` instead, and declare [`multiRealmSupport`](../references/schemas.md#environment-properties) on the environment.
+> **Note:** The pool lives in `context.localStore` rather than a module-level variable. Every session runs in the same server process, so a module-level variable is shared by all of them: a second session's setup replaces the first session's pool, and the first teardown closes it for everyone. The local store is also separate for each realm, which an environment needs before it can declare [`multiRealmSupport`](../references/schemas.md#environment-properties).
 
 ## Troubleshooting
 
@@ -933,7 +983,9 @@ await context.sleep(5000)
 ```typescript
 // Recreate listeners in environment-setup hook
 environment.on('environment-setup', async (context) => {
-  connection = await createConnection()
+  const connection = await createConnection()
+  context.localStore.use<Connection | null>('connection', null).value =
+    connection
 
   // New listener for new instance
   connection.on('data', (data) => {
@@ -985,16 +1037,23 @@ Connections created in target scripts don't automatically clean up.
 
 ```typescript
 // ✅ Use environment hooks for connection lifecycle
-let connection = null
-
 environment.on('environment-setup', async (context) => {
-  connection = await createConnection()
+  const connection = context.localStore.use<Connection | null>(
+    'connection',
+    null,
+  )
+  connection.value = await createConnection()
 })
 
 environment.on('environment-teardown', async (context) => {
-  if (connection) {
-    await connection.close()
-    connection = null
+  const connection = context.localStore.use<Connection | null>(
+    'connection',
+    null,
+  )
+
+  if (connection.value) {
+    await connection.value.close()
+    connection.value = null
   }
 })
 ```
@@ -1002,19 +1061,19 @@ environment.on('environment-teardown', async (context) => {
 ### Issue: Module-Scope Variables Have Wrong Values
 
 **Symptom:**
-Variables declared outside functions have values from previous instance.
+Variables declared outside functions have values from a previous instance or from another session.
 
 **Cause:**
-Module-scope variables survive session resets (they're not reset).
+Every session runs in the same server process, so a module-scope variable is shared by every session using the environment. It also survives session resets.
 
 **Solution:**
 
 ```typescript
-// ❌ Module scope survives resets
+// ❌ Module scope is shared by every session and survives resets
 let count = 0
 
 script: async (context) => {
-  count++ // May be from previous instance!
+  count++ // May be from another session or a previous instance!
 }
 
 // ✅ Use data stores (instance-scoped)
@@ -1022,13 +1081,6 @@ script: async (context) => {
   const counter = context.localStore.use('count', 0)
   counter.value++
 }
-
-// ✅ Or reset in environment-setup
-let count = 0
-
-environment.on('environment-setup', async (context) => {
-  count = 0 // Reset for new instance
-})
 ```
 
 ### Issue: Cannot Use setTimeout
