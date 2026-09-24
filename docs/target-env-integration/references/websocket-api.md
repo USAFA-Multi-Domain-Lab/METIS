@@ -211,6 +211,7 @@ The WebSocket API automatically constructs connection URLs:
 | `{ protocol: 'ws', host: 'localhost', port: 8080 }` | `ws://localhost:8080`       |
 | `{ protocol: 'wss', host: 'api.example.com' }`      | `wss://api.example.com:443` |
 | `{ host: 'example.com:9000' }`                      | `ws://example.com:9000`     |
+| `{ host: 'example.com/feed' }`                      | `ws://example.com:80/feed`  |
 | `{ port: 3000 }`                                    | `ws://localhost:3000`       |
 | `{}` (empty)                                        | `ws://localhost:80`         |
 

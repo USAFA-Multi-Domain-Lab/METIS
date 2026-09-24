@@ -69,7 +69,7 @@ These are the properties `RestApi` reads out of `data`. Everything else in `data
 | Property             | Type                  | Default  | Effect                                                        |
 | -------------------- | --------------------- | -------- | ------------------------------------------------------------- |
 | `protocol`           | `'http'` \| `'https'` | `'http'` | Scheme of the base URL, and which default port applies         |
-| `host`               | `string`              | `localhost` | Domain or IP. May include a port                            |
+| `host`               | `string`              | `localhost` | Domain or IP. May include a port and a path                 |
 | `port`               | `number` \| numeric `string` | `80`, or `443` when `protocol` is `https` | Port of the base URL      |
 | `rejectUnauthorized` | `boolean`             | `true`   | When `false`, accepts invalid TLS certificates                 |
 
@@ -87,6 +87,7 @@ The resulting base URL is available as `api.baseUrl`, and axios applies it to ev
 | `protocol: 'http'`, `host: 'api.test.com'`  | `http://api.test.com:80`     |
 | `host: 'api.test.com'`, `port: 8080`        | `http://api.test.com:8080`   |
 | `host: 'api.test.com:9000'`, `port: 8080`   | `http://api.test.com:9000` — a port in `host` wins |
+| `host: 'api.test.com/v1'`                   | `http://api.test.com:80/v1` — the port goes before a path in `host` |
 | `port: 3000` with no `host`                 | `http://localhost:3000`      |
 | Neither `host` nor `port`                   | `http://localhost:80`        |
 
