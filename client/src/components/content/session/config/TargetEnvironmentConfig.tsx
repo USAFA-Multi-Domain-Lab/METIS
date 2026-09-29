@@ -209,37 +209,45 @@ export default function TargetEnvironmentConfig({
 
   /* -- RENDER -- */
 
-  return (
-    <>
-      {mission.targetEnvironments.length > 0 && (
-        <div className='TargetEnvironmentConfig'>
-          <div className='EnvTitle'>Target Environments</div>
-          <div className='EnvDescription'>
-            Enable or disable effects for each target environment. When enabled,
-            select which configuration to use.
-          </div>
-          <div className='EnvActions'>
-            <button
-              type='button'
-              className='ActionButton'
-              disabled={disabled || allTargetEnvsExplicitlyEnabled}
-              onClick={enableAll}
-            >
-              Enable All
-            </button>
-            <button
-              type='button'
-              className='ActionButton'
-              disabled={disabled || allTargetEnvsExplicitlyDisabled}
-              onClick={disableAll}
-            >
-              Disable All
-            </button>
-          </div>
-          {envConfigContent}
+  if (mission.targetEnvironments.length === 0) {
+    return (
+      <div className='TargetEnvironmentConfig'>
+        <div className='EnvTitle'>Target Environments</div>
+        <div className='EnvDescription'>
+          Nothing to configure. Mission does not rely on any target
+          environments.
         </div>
-      )}
-    </>
+      </div>
+    )
+  }
+
+  return (
+    <div className='TargetEnvironmentConfig'>
+      <div className='EnvTitle'>Target Environments</div>
+      <div className='EnvDescription'>
+        Enable or disable effects for each target environment. When enabled,
+        select which configuration to use.
+      </div>
+      <div className='EnvActions'>
+        <button
+          type='button'
+          className='ActionButton'
+          disabled={disabled || allTargetEnvsExplicitlyEnabled}
+          onClick={enableAll}
+        >
+          Enable All
+        </button>
+        <button
+          type='button'
+          className='ActionButton'
+          disabled={disabled || allTargetEnvsExplicitlyDisabled}
+          onClick={disableAll}
+        >
+          Disable All
+        </button>
+      </div>
+      {envConfigContent}
+    </div>
   )
 }
 
