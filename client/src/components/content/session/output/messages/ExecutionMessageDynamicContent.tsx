@@ -78,6 +78,12 @@ export default function ExecutionMessageDynamicContent({}: TExecutionInitiationM
           value={null}
           description={'Repeatable'}
         />
+        <PropertyBadge
+          active={sourceAction.type === 'until-success'}
+          icon={'until-success'}
+          value={null}
+          description={'Until Success'}
+        />
       </PropertyBadges>
     </div>
   )

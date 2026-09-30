@@ -1338,6 +1338,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       }),
     )
     let executionLimitReached = action.executionLimitReached
+    let untilSuccess = action.type === 'until-success'
 
     // Handle case when there are not enough resources.
     // Build a message which specifies which resources
@@ -1364,7 +1365,9 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     if (!nodeReady) {
       reasons.push('Node is not ready to execute.')
     }
-    if (executionLimitReached) {
+    if (executionLimitReached && untilSuccess) {
+      reasons.push('This action has already succeeded.')
+    } else if (executionLimitReached) {
       reasons.push('Execution limit for this action has been reached.')
     }
 

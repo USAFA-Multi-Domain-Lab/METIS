@@ -122,6 +122,7 @@ declare global {
     | 'underline'
     | 'undo'
     | 'unlink'
+    | 'until-success'
     | 'up'
     | 'update'
     | 'upload'
