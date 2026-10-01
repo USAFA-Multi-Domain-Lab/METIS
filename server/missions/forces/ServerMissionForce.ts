@@ -7,6 +7,7 @@ import type {
 import { MissionForce } from '@shared/missions/forces/MissionForce'
 import type { TResourcePoolJson } from '@shared/missions/forces/ResourcePool'
 import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
+import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { ServerMissionNode } from '../nodes/ServerMissionNode'
 import type { ServerMission } from '../ServerMission'
@@ -133,10 +134,16 @@ export class ServerMissionForce extends MissionForce<TMetisServerComponents> {
   /**
    * Validates the nodes of the force.
    * @param nodes The nodes to validate.
-   * @returns True if the nodes are valid, false otherwise.
+   * @throws A validation error if the nodes are invalid.
    */
   public static validateNodes(nodes: TMissionForceSaveJson['nodes']): void {
     let nodeKeys: TMissionNodeJson['localKey'][] = []
+
+    if (!ArrayToolbox.isArrayOf(nodes, 'object')) {
+      throw generateValidationError(
+        'The nodes of the force must be an array of objects.',
+      )
+    }
 
     // Make sure the nodes are not empty.
     if (nodes.length < this.NODE_DATA_MIN_LENGTH) {
@@ -146,9 +153,12 @@ export class ServerMissionForce extends MissionForce<TMetisServerComponents> {
     }
 
     for (let node of nodes) {
-      // If the node is executable, it must have at least one action.
+      // If the node is executable, it must have at least one action. A
+      // value that isn't an array is left to Mongoose, which reports it
+      // on its own path.
       if (
         node.executable &&
+        Array.isArray(node.actions) &&
         node.actions.length < ServerMissionNode.ACTIONS_MIN_LENGTH
       ) {
         throw generateValidationError(

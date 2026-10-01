@@ -596,7 +596,7 @@ export const missionSchema = new MissionSchema(
       ],
     },
     effects: {
-      required: false,
+      required: true,
       validate: ServerMission.createEffectsValidator([
         'session-setup',
         'session-start',
