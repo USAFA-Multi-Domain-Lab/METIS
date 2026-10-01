@@ -1,5 +1,6 @@
 import { expressLogger } from '@server/logging'
 import type { Response } from 'express-serve-static-core'
+import mongoose from 'mongoose'
 import { MetisDatabase } from '../../../database/MetisDatabase'
 import { StatusError } from './StatusError'
 
@@ -50,6 +51,7 @@ export abstract class ApiResponse {
     // If the error was a validation error, return a 400.
     if (
       error.name === MetisDatabase.ERROR_BAD_DATA ||
+      error instanceof mongoose.Error.StrictModeError ||
       error.message.includes('validation failed')
     ) {
       return response.sendStatus(400)
