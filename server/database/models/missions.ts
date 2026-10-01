@@ -644,10 +644,9 @@ export const missionSchema = new MissionSchema(
 // })
 
 // Called before a save is made to the database.
-missionSchema.pre<TMissionDoc>('save', function (next) {
+missionSchema.pre<TMissionDoc>('save', async function () {
   let mission: TMissionSaveJson = this.toJSON()
-  ServerMission.validate(mission, next)
-  return next()
+  ServerMission.validate(mission)
 })
 
 // Called before a find or update is made to the database.

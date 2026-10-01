@@ -9,7 +9,6 @@ import {
   ObjectToolbox,
   type TAnyObject,
 } from '@shared/toolbox/objects/ObjectToolbox'
-import type { CallbackWithoutResultAndOptionalError } from 'mongoose'
 import mongoose from 'mongoose'
 import type {
   TEffectJson,
@@ -723,12 +722,9 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   /**
    * Validates the mission data.
    * @param missionJson The mission data to validate.
-   * @param next The callback to call with the results.
+   * @throws A validation error for the first check that fails.
    */
-  public static validate(
-    missionJson: TMissionSaveJson,
-    next: CallbackWithoutResultAndOptionalError,
-  ): void {
+  public static validate(missionJson: TMissionSaveJson): void {
     // Get the initial structure.
     let initStructure: TMissionSaveJson['structure'] = missionJson.structure
     // Array to store the structure keys.
@@ -739,27 +735,27 @@ export class ServerMission extends Mission<TMetisServerComponents> {
     // Check for duplicate _id's.
     results = this.idCheckerAlgorithm(missionJson)
     // Check for error.
-    if (results.error) return next(results.error)
+    if (results.error) throw results.error
 
     // Validate node structure.
     results = this.validateStructure(initStructure)
     // Check for error.
-    if (results.error) return next(results.error)
+    if (results.error) throw results.error
     // Check for structure keys.
     if (results.structureKeys) structureKeys = results.structureKeys
 
     results = this.validateResources(missionJson)
-    if (results.error) return next(results.error)
+    if (results.error) throw results.error
 
     // Validate the mission forces.
     results = this.validateMissionForces(missionJson, structureKeys)
     // Check for error.
-    if (results.error) return next(results.error)
+    if (results.error) throw results.error
 
     // Validate the mission files.
     results = this.validateMissionFiles(missionJson.files)
     // Check for error.
-    if (results.error) return next(results.error)
+    if (results.error) throw results.error
 
     // Log any issues found in the mission
     // to the database logger.
