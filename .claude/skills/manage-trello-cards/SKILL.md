@@ -13,7 +13,7 @@ Every card has a title and a description.
 
 Titles are title case and read like the title of a book or an article — concise and clear about the card's main idea.
 
-Descriptions open with a paragraph of no more than 60 words giving the problem and the solution or direction to go. Anything further — paragraphs, lists, links — follows it only when it adds context or clarity. The limit governs the leading paragraphs you write; never shorten an existing one to meet it. If a user expands the leading paragraph, respect their decision.
+Descriptions open with a paragraph of no more than 60 words giving the problem and the solution or direction to go. Anything further — paragraphs, lists, links — follows it only when it adds context or clarity. The limit governs the leading paragraphs you write; never shorten an existing one to meet it. If a user expands the leading paragraph, respect their decision. Descriptions should always be written as if they haven't yet been implemented, unless the user chooses otherwise.
 
 ## Checklists
 
