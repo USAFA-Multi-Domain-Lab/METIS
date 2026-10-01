@@ -50,6 +50,11 @@ export class Notification
   private eventManager: EventManager<TNotificationEventMethods>
 
   /**
+   * Whether the expiration timer has been started.
+   */
+  private expirationTimerStarted: boolean
+
+  /**
    * @see {@link TNotification}
    */
   private constructor(
@@ -68,6 +73,7 @@ export class Notification
     this._id = StringToolbox.generateRandomId()
     this.createdAt = Date.now()
     this._status = 'active'
+    this.expirationTimerStarted = false
 
     // Initialize event manager.
     this.eventManager = new EventManager(this)
@@ -89,11 +95,14 @@ export class Notification
   public removeEventListener
 
   /**
-   * Starts the expiration timer for the notification.
+   * Starts the expiration timer for the notification. Only the first call
+   * starts a timer, so it is safe to call whenever the notification might
+   * not have one yet.
    */
   public startExpirationTimer(): void {
     // Only start the timer for notifications that have a duration and are active
-    if (this.duration && this.active) {
+    if (this.duration && this.active && !this.expirationTimerStarted) {
+      this.expirationTimerStarted = true
       setTimeout(() => {
         // Mark the notification as expiring.
         this._status = 'expiring'

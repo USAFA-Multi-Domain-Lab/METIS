@@ -146,19 +146,6 @@ const initializeActions = (
   const setPromptData = initialState.promptData[1]
   const setConnectionStatusMessage = initialState.connectionStatusMessage[1]
 
-  /* -- CALLBACKS -- */
-
-  /**
-   * Handles when loading has been completed.
-   */
-  const onLoadCompletion = () => {
-    const { notifications } = refs.current
-
-    for (let notification of notifications) {
-      notification.startExpirationTimer()
-    }
-  }
-
   /* -- ACTION DEFINITION -- */
 
   initialState.actions = {
@@ -190,13 +177,7 @@ const initializeActions = (
         // make the page transition feel more
         // smooth.
         setTimeout(() => {
-          const { loading, loadingMinTimeReached } = refs.current
-
           setPageSwitchMinTimeReached(true)
-
-          if (!loading && loadingMinTimeReached) {
-            onLoadCompletion()
-          }
         }, PAGE_SWITCH_MIN_TIME)
       }
 
@@ -248,34 +229,14 @@ const initializeActions = (
       setLoadingButtons(buttons)
 
       setTimeout(() => {
-        const { loading, pageSwitchMinTimeReached } = refs.current
-
         // The minimum time has been reached
         // for displaying the loading page.
         setLoadingMinTimeReached(true)
-
-        // If the loading page is no longer
-        // loading and the page switch min time
-        // has been reached, then call the
-        // completion handler.
-        if (!loading && pageSwitchMinTimeReached) {
-          onLoadCompletion()
-        }
       }, LOADING_MIN_TIME)
     },
     finishLoading: () => {
-      const { loadingMinTimeReached, pageSwitchMinTimeReached } = refs.current
-
       setLoading(false)
       setLoadingProgress(100)
-
-      // If min times have been reached, then
-      // call the completion handler. Else,
-      // wait until the min times have been
-      // reached to call the completion handler.
-      if (loadingMinTimeReached && pageSwitchMinTimeReached) {
-        onLoadCompletion()
-      }
     },
     loadLoginInfo: async (): Promise<TLogin<ClientUser>> => {
       const { handleError } = initialState.actions
@@ -671,20 +632,23 @@ const useGlobalContextDefinition = (): TGlobalContext => {
         // Skip actions.
         if (key === 'actions') return
 
-        // Define previous and updated values.
-        let previousValue: TGlobalContextValue = refs.current[key]
-        let updatedValue: TGlobalContextValue
-
-        // If the argument is a function, call it
-        // to determine the new value, otherwise
-        // use the argument as the new value.
-        if (typeof arg1 === 'function') {
-          updatedValue = arg1(previousValue)
-        } else {
-          updatedValue = arg1
-        }
-
+        // The updated value is built from the latest state rather than
+        // the refs, so updates made before the next render build on one
+        // another instead of overwriting each other.
         setState((previousState) => {
+          // Define previous and updated values.
+          let previousValue: TGlobalContextValue = previousState[key][0]
+          let updatedValue: TGlobalContextValue
+
+          // If the argument is a function, call it
+          // to determine the new value, otherwise
+          // use the argument as the new value.
+          if (typeof arg1 === 'function') {
+            updatedValue = arg1(previousValue)
+          } else {
+            updatedValue = arg1
+          }
+
           return {
             ...previousState,
             [key]: [updatedValue, callback],
@@ -716,8 +680,34 @@ const useGlobalContextDefinition = (): TGlobalContext => {
   // called.
   useInitRenderHandler(() => initializeActions(state, refs))
 
+  useNotificationExpiration(state)
+
   // Return the current state of the context.
   return state
+}
+
+/**
+ * Starts the expiration timers of the notifications once the loading page
+ * is no longer displayed, including notifications added while it was.
+ * Timers that have already started are left running.
+ * @param state The global context state, whose loading status and
+ * notifications are watched.
+ */
+const useNotificationExpiration = (state: TGlobalContext): void => {
+  let [loading] = state.loading
+  let [loadingMinTimeReached] = state.loadingMinTimeReached
+  let [pageSwitchMinTimeReached] = state.pageSwitchMinTimeReached
+  let [notifications] = state.notifications
+
+  useEffect(() => {
+    let onLoadingPage =
+      loading || !loadingMinTimeReached || !pageSwitchMinTimeReached
+    if (onLoadingPage) return
+
+    for (let notification of notifications) {
+      notification.startExpirationTimer()
+    }
+  }, [loading, loadingMinTimeReached, pageSwitchMinTimeReached, notifications])
 }
 
 /**
