@@ -120,19 +120,20 @@ function getBadge(container: HTMLElement, icon: string): HTMLElement | null {
 }
 
 describe('ActionProperties', () => {
-  /* -- RENDERS ALL FIVE BADGES -- */
+  /* -- RENDERS ALL SIX BADGES -- */
 
-  test('renders all five property badges for a standard action', () => {
+  test('renders all six property badges for a standard action', () => {
     let action = createMockAction()
     let { container } = render(<ActionProperties action={action} />)
     let badges = container.querySelectorAll('[data-testid="property-badge"]')
 
-    expect(badges).toHaveLength(5)
+    expect(badges).toHaveLength(6)
     expect(getBadge(container, 'percent')).not.toBeNull()
     expect(getBadge(container, 'timer')).not.toBeNull()
     expect(getBadge(container, 'coins')).not.toBeNull()
     expect(getBadge(container, 'door')).not.toBeNull()
     expect(getBadge(container, 'repeat')).not.toBeNull()
+    expect(getBadge(container, 'until-success')).not.toBeNull()
   })
 
   /* -- CHEAT STRIKETHROUGHS -- */
