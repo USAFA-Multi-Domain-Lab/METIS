@@ -1,7 +1,6 @@
 import PropertyBadge from '@client/components/content/general-layout/property-badges/PropertyBadge'
 import type { ResourcePool } from '@shared/missions/forces/ResourcePool'
 import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
-import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import { useSessionPageContext } from '../../context'
 
 // ! No styles
@@ -27,7 +26,7 @@ export default function ResourcePoolBadge({
   // Follow the balance with the resource's
   // description, if it has one.
   if (pool.description) {
-    description += RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK + pool.description
+    description += `\n${pool.description}`
   }
   // Update value to infinity symbol if resources
   // are configured to be infinite.
