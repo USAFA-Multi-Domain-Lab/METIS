@@ -219,7 +219,7 @@ export abstract class ActionExecution<
     start: number,
     end: number,
   ) {
-    super(_id, '', false)
+    super(_id, '')
 
     this.action = action
     this.realmId = realmId

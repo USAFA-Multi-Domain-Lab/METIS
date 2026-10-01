@@ -555,6 +555,12 @@ export const missionSchema = new MissionSchema(
             required: true,
             maxlength: Mission.MAX_RESOURCE_NAME_LENGTH,
           },
+          description: {
+            type: String,
+            required: false,
+            default: '',
+            set: sanitizeHtml,
+          },
           icon: {
             type: String,
             required: true,

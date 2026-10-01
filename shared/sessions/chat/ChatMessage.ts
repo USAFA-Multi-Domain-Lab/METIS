@@ -72,7 +72,7 @@ export abstract class ChatMessage<
    * @param data The JSON data from which to construct the message.
    */
   public constructor(channel: ChatChannel<T>, data: TChatMessageJson) {
-    super(data._id, data.senderUsername, false)
+    super(data._id, data.senderUsername)
 
     this.channel = channel
     this.channelId = data.channelId

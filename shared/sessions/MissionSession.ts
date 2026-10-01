@@ -299,7 +299,7 @@ export abstract class MissionSession<
     environmentTaskData: TEnvironmentTaskJson[],
     chatChannelData: TChatChannelJson[],
   ) {
-    super(_id, name, false)
+    super(_id, name)
 
     this.ownerId = ownerId
     this.ownerUsername = ownerUsername

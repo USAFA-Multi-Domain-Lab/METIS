@@ -249,7 +249,7 @@ export abstract class Mission<
     fileData: TMissionFileJson[],
     effectData: TEffectSessionTriggeredJson[],
   ) {
-    super(_id, name, false)
+    super(_id, name)
 
     this.versionNumber = versionNumber
     this.createdAt = createdAt

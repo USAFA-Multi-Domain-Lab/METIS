@@ -54,7 +54,7 @@ export abstract class SessionRealm<
     session: TSession<T>,
     mission: TMission<T>,
   ) {
-    super(_id, name, false)
+    super(_id, name)
     this.session = session
     this.mission = mission
     this.initialize()

@@ -70,12 +70,14 @@ export function createMissionPayload(
       {
         _id: fixtureIds.fuelResourceId,
         name: 'Fuel',
+        description: '',
         icon: 'resources/drops',
         order: FUEL_RESOURCE_POOL_DEFAULT_PROPERTIES.ORDER,
       },
       {
         _id: fixtureIds.intelResourceId,
         name: 'Intel',
+        description: '',
         icon: 'resources/microchip',
         order: INTEL_RESOURCE_POOL_DEFAULT_PROPERTIES.ORDER,
       },

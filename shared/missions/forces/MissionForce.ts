@@ -207,7 +207,6 @@ export abstract class MissionForce<
     super(
       data._id ?? MissionForce.DEFAULT_PROPERTIES._id,
       data.name ?? MissionForce.DEFAULT_PROPERTIES.name,
-      false,
     )
 
     // Set properties.

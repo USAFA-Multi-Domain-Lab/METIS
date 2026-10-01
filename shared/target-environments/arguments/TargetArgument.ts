@@ -251,7 +251,7 @@ export abstract class TargetArgument<
     parameterId: string,
     context: TTargetArgumentContext<T>,
   ) {
-    super(_id, '', false)
+    super(_id, '')
     this.parameterId = parameterId
     this.context = context
     this.effect = effect.normalize()

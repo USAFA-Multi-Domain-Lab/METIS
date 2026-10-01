@@ -222,7 +222,7 @@ export abstract class MissionPrototype<
     data: Partial<TMissionPrototypeJson> = MissionPrototype.DEFAULT_PROPERTIES,
     options: TMissionPrototypeOptions<TPrototype<T>> = {},
   ) {
-    super(data._id ?? MissionPrototype.DEFAULT_PROPERTIES._id, '', false)
+    super(data._id ?? MissionPrototype.DEFAULT_PROPERTIES._id, '')
 
     // Set properties from data.
     this._mission = mission

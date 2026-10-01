@@ -77,7 +77,7 @@ export abstract class FileReference<
     createdByUsername: string,
     deleted: boolean,
   ) {
-    super(_id, name, deleted)
+    super(_id, name, '', deleted)
 
     this.name = name
     this.path = path

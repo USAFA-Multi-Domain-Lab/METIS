@@ -52,7 +52,7 @@ export abstract class ChatChannel<
     session: TSession<T>,
     messages: ChatMessage<T>[] = [],
   ) {
-    super(_id, name, false)
+    super(_id, name)
 
     this.forceIds = forceIds
     this.session = session

@@ -13,7 +13,7 @@ export class SessionRealmBasic
   public memberCount: number
 
   public constructor(data: TSessionRealmBasicJson) {
-    super(data._id, data.name, false)
+    super(data._id, data.name)
 
     // Parse the data.
     this.memberCount = data.memberCount

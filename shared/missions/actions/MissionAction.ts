@@ -96,11 +96,6 @@ export abstract class MissionAction<
   }
 
   /**
-   * The description of the action.
-   */
-  public description: string
-
-  /**
    * Categorizes an action, defining how it will behave in the mission.
    */
   public type: TActionType
@@ -383,12 +378,10 @@ export abstract class MissionAction<
     super(
       data._id ?? MissionAction.DEFAULT_PROPERTIES._id,
       data.name ?? MissionAction.DEFAULT_PROPERTIES.name,
-      false,
+      data.description ?? MissionAction.DEFAULT_PROPERTIES.description,
     )
 
     this.node = node
-    this.description =
-      data.description ?? MissionAction.DEFAULT_PROPERTIES.description
     this.type = data.type ?? MissionAction.DEFAULT_PROPERTIES.type
     this.baseProcessTime =
       data.baseProcessTime ?? MissionAction.DEFAULT_PROPERTIES.baseProcessTime

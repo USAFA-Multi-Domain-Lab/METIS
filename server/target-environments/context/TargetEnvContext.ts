@@ -467,7 +467,7 @@ export interface TTargetEnvExposedMission extends Readonly<
 export interface TTargetEnvExposedResource extends Readonly<
   TCreateJsonType<
     ServerMissionResource,
-    '_id' | 'name' | 'icon' | 'order',
+    '_id' | 'name' | 'description' | 'icon' | 'order',
     {
       /**
        * Can be used to determine the type of the component in the

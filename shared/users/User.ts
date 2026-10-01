@@ -87,7 +87,7 @@ export abstract class User<
      */
     public createdByUsername: string | null,
   ) {
-    super(_id, '', false)
+    super(_id, '')
   }
 
   /**

@@ -74,6 +74,7 @@ export abstract class MissionResource<
    * @param mission The mission that owns this resource definition.
    * @param _id The unique identifier for this resource.
    * @param name The display name for this resource.
+   * @param description Explains the resource to session members.
    * @param icon The icon to display for this resource.
    * @param order The rendering order for this resource.
    */
@@ -81,10 +82,11 @@ export abstract class MissionResource<
     mission: TMission<T>,
     _id: string,
     name: string,
+    description: string,
     icon: TMetisIcon,
     order: number,
   ) {
-    super(_id, name, false)
+    super(_id, name, description)
     this.mission = mission
     this.icon = icon
     this.order = order
@@ -92,7 +94,7 @@ export abstract class MissionResource<
 
   // Implemented
   public serialize(): TMissionResourceJson {
-    return serializeJson(this, ['_id', 'name', 'icon', 'order'])
+    return serializeJson(this, ['_id', 'name', 'description', 'icon', 'order'])
   }
 
   /**
@@ -142,6 +144,7 @@ export abstract class MissionResource<
     return {
       _id: StringToolbox.generateRandomId(),
       name: 'Resources',
+      description: '',
       icon: 'resources/coins',
       order: 1,
     }
@@ -162,6 +165,10 @@ export type TMissionResourceJson = {
    * @see {@link MissionResource.name}
    */
   name: string
+  /**
+   * @see {@link MissionResource.description}
+   */
+  description: string
   /**
    * @see {@link MissionResource.icon}
    */

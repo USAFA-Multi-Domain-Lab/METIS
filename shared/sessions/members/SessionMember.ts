@@ -241,7 +241,7 @@ export abstract class SessionMember<
     session: TSession<T>,
     subscribedRealmId: string,
   ) {
-    super(_id, '', false)
+    super(_id, '')
 
     this.user = user
     this.assignment = assignment

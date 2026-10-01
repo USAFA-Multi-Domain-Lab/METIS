@@ -18,6 +18,7 @@ export class ServerMissionResource extends MissionResource<TMetisServerComponent
       componentType: 'resource',
       _id: self._id,
       name: self.name,
+      description: self.description,
       icon: self.icon,
       order: self.order,
       get mission() {
@@ -59,6 +60,7 @@ export class ServerMissionResource extends MissionResource<TMetisServerComponent
               mission,
               datum._id,
               datum.name,
+              datum.description,
               datum.icon,
               datum.order,
             ),
@@ -69,6 +71,7 @@ export class ServerMissionResource extends MissionResource<TMetisServerComponent
       mission,
       data._id,
       data.name,
+      data.description,
       data.icon,
       data.order,
     )

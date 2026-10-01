@@ -149,7 +149,7 @@ export class SessionBasic
   }
 
   public constructor(data: TSessionBasicJson) {
-    super(data._id, data.name, false)
+    super(data._id, data.name)
 
     // Parse the data.
     this.missionId = data.missionId

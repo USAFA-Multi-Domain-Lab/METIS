@@ -172,7 +172,7 @@ export abstract class ActionResourceCost<
     baseAmount: number,
     hidden: boolean,
   ) {
-    super(_id, '', false)
+    super(_id, '')
     this.action = action
     this.resource = resource
     this.baseAmount = baseAmount
