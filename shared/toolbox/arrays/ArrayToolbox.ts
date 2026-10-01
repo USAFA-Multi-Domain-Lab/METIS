@@ -133,6 +133,38 @@ export class ArrayToolbox {
   public static isNotEmpty<T>(values: T[]): values is TNonEmptyArray<T> {
     return values.length > 0
   }
+
+  /**
+   * Checks whether a value is an array whose items are all of the given
+   * type, as `typeof` reports it. Useful for checking data that arrives
+   * untyped, such as JSON or the values Mongoose passes to a validator.
+   * @param value The value to check.
+   * @param type The type every item must have, such as `'object'`.
+   * @param options Options for the check.
+   * @returns Whether the value is an array of the given type.
+   * @example
+   * ArrayToolbox.isArrayOf([{}, null], 'object') // false
+   * ArrayToolbox.isArrayOf([{}, null], 'object', { acceptNull: true }) // true
+   */
+  public static isArrayOf(
+    value: unknown,
+    type: TTypeofName,
+    options: TArrayOfOptions = {},
+  ): boolean {
+    let { acceptNull = false } = options
+
+    if (!Array.isArray(value)) return false
+
+    for (let item of value) {
+      if (item === null) {
+        if (acceptNull) continue
+        return false
+      }
+      if (typeof item !== type) return false
+    }
+
+    return true
+  }
 }
 
 /* -- TYPES -- */
@@ -145,6 +177,30 @@ export type TMethodKeys<T> = {
  * An array with at least one index.
  */
 export type TNonEmptyArray<T> = [T, ...T[]]
+
+/**
+ * A type name that `typeof` can return.
+ */
+export type TTypeofName =
+  | 'string'
+  | 'number'
+  | 'bigint'
+  | 'boolean'
+  | 'symbol'
+  | 'undefined'
+  | 'object'
+  | 'function'
+
+/**
+ * Options for {@link ArrayToolbox.isArrayOf}.
+ */
+export type TArrayOfOptions = {
+  /**
+   * Whether `null` items are accepted alongside items of the given type.
+   * @default false
+   */
+  acceptNull?: boolean
+}
 
 /**
  * A type which represents either a single value
