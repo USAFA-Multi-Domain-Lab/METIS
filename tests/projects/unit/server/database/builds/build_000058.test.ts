@@ -1,12 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  jest,
-  test,
-} from '@jest/globals'
-import path from 'path'
+import { describe, expect, test } from '@jest/globals'
 import {
   assertMigratedArguments,
   assertNoUnresolvedReport,
@@ -15,24 +7,9 @@ import {
   createPreMigrationMission,
 } from 'tests/helpers/projects/unit/migrations/build_000058.helpers'
 import type { TPreMigrationMission } from 'tests/helpers/projects/unit/migrations/build_000058.helpers'
-
-const BUILD_FILE_PATH = path.resolve(
-  process.cwd(),
-  'server/database/builds/build_000058.js',
-)
-const mongoshGlobals = global as typeof globalThis & Partial<TMongoshGlobals>
+import { runDatabaseBuild } from 'tests/helpers/projects/unit/migrations/database-build.helpers'
 
 describe('build_000058 database migration', () => {
-  beforeEach(() => {
-    jest.resetModules()
-  })
-
-  afterEach(() => {
-    Reflect.deleteProperty(mongoshGlobals, 'db')
-    Reflect.deleteProperty(mongoshGlobals, 'print')
-    Reflect.deleteProperty(mongoshGlobals, 'use')
-  })
-
   test('migrates effect args and reports unresolved references', () => {
     let { missionUpdateOne, infosUpdateOne, printLines } = runBuild(
       createPreMigrationMission(),
@@ -68,63 +45,9 @@ describe('build_000058 database migration', () => {
 })
 
 function runBuild(mission: TPreMigrationMission) {
-  // Clone the mission before the build mutates it in place.
-  let cursorMission = structuredClone(mission)
-  let missionUpdateOne = jest.fn<TMissionUpdateOne>()
-  let infosUpdateOne = jest.fn<TInfosUpdateOne>()
-  let printLines: string[] = []
-
-  mongoshGlobals.use = jest.fn()
-  mongoshGlobals.print = jest.fn((line?: unknown) => {
-    printLines.push(String(line))
-  })
-  mongoshGlobals.db = {
-    missions: {
-      find: jest.fn(() => createCursor([cursorMission])),
-      updateOne: missionUpdateOne,
-    },
-    infos: {
-      updateOne: infosUpdateOne,
-    },
-  }
-
-  // This build runs on require, so set the mongosh globals first.
-  jest.isolateModules(() => {
-    require(BUILD_FILE_PATH)
-  })
-
-  return { missionUpdateOne, infosUpdateOne, printLines }
+  return runDatabaseBuild<TPreMigrationMission, TMissionUpdate>(58, [mission])
 }
 
-function createCursor<T>(items: T[]) {
-  let index = 0
-
-  return {
-    hasNext: () => index < items.length,
-    next: () => items[index++],
-  }
-}
-
-type TMissionUpdateOne = (
-  filter: { _id: string },
-  payload: { $set: Pick<TPreMigrationMission, 'forces' | 'effects'> },
-) => void
-
-type TInfosUpdateOne = (
-  filter: Record<string, never>,
-  payload: { $set: { schemaBuildNumber: number } },
-) => void
-
-interface TMongoshGlobals {
-  use: ReturnType<typeof jest.fn>
-  print: ReturnType<typeof jest.fn>
-  db: {
-    missions: {
-      find: ReturnType<typeof jest.fn>
-      updateOne: ReturnType<typeof jest.fn>
-    }
-    infos: {
-      updateOne: ReturnType<typeof jest.fn>
-    }
-  }
+type TMissionUpdate = {
+  $set: Pick<TPreMigrationMission, 'forces' | 'effects'>
 }
