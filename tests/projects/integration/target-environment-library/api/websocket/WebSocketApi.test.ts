@@ -512,3 +512,65 @@ describe('WebSocketApi', () => {
     ).toThrow('Invalid WebSocket API configuration')
   })
 })
+
+describe('WebSocketApi URL building', () => {
+  test('fromConfig() falls back to localhost on the default port when no host is given', () => {
+    expect(WebSocketApi.fromConfig({}).url).toBe('ws://localhost:80')
+    expect(WebSocketApi.fromConfig({ protocol: 'wss' }).url).toBe(
+      'wss://localhost:443',
+    )
+    expect(WebSocketApi.fromConfig({ port: 3000 }).url).toBe(
+      'ws://localhost:3000',
+    )
+  })
+
+  test('A host without a port gets the port property or the default port', () => {
+    expect(WebSocketApi.fromConfig({ host: 'example.com' }).url).toBe(
+      'ws://example.com:80',
+    )
+    expect(
+      WebSocketApi.fromConfig({ protocol: 'wss', host: 'example.com' }).url,
+    ).toBe('wss://example.com:443')
+    expect(
+      WebSocketApi.fromConfig({ host: 'example.com', port: 9000 }).url,
+    ).toBe('ws://example.com:9000')
+  })
+
+  test('A port included in the host takes precedence over the port property', () => {
+    expect(WebSocketApi.fromConfig({ host: 'example.com:9000' }).url).toBe(
+      'ws://example.com:9000',
+    )
+    expect(
+      WebSocketApi.fromConfig({ host: 'example.com:9000', port: 1234 }).url,
+    ).toBe('ws://example.com:9000')
+  })
+
+  test('The port is placed before a path included in the host', () => {
+    expect(WebSocketApi.fromConfig({ host: 'example.com/feed' }).url).toBe(
+      'ws://example.com:80/feed',
+    )
+    expect(
+      WebSocketApi.fromConfig({ protocol: 'wss', host: 'example.com/feed' })
+        .url,
+    ).toBe('wss://example.com:443/feed')
+    expect(
+      WebSocketApi.fromConfig({ host: 'example.com/feed', port: 9000 }).url,
+    ).toBe('ws://example.com:9000/feed')
+    expect(WebSocketApi.fromConfig({ host: 'example.com:9000/feed' }).url).toBe(
+      'ws://example.com:9000/feed',
+    )
+  })
+
+  test('A colon and number inside the path is not mistaken for a port', () => {
+    expect(WebSocketApi.fromConfig({ host: 'example.com/feed:1234' }).url).toBe(
+      'ws://example.com:80/feed:1234',
+    )
+  })
+
+  test('Bracketed IPv6 addresses get a port only when they lack one', () => {
+    expect(WebSocketApi.fromConfig({ host: '[::1]' }).url).toBe('ws://[::1]:80')
+    expect(WebSocketApi.fromConfig({ host: '[::1]:9000/feed' }).url).toBe(
+      'ws://[::1]:9000/feed',
+    )
+  })
+})

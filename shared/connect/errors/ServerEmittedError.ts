@@ -204,6 +204,8 @@ export class ServerEmittedError extends WsEmittedError {
     [ServerEmittedError.CODE_UNAUTHENTICATED]:
       'You must be logged in to METIS to connect.',
     [ServerEmittedError.CODE_SESSION_NOT_FOUND]: 'Session not found.',
+    [ServerEmittedError.CODE_MEMBER_NOT_FOUND]:
+      'The session member could not be found.',
     [ServerEmittedError.CODE_ALREADY_IN_SESSION]:
       'You are already in this session.',
     [ServerEmittedError.CODE_SESSION_UNAUTHORIZED_JOIN]:
