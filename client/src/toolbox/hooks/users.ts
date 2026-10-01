@@ -1,4 +1,3 @@
-import { useGlobalContext } from '@client/context/global'
 import type { ClientUser } from '@client/users/ClientUser'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useState } from 'react'
@@ -33,11 +32,11 @@ export const PASSWORDS_MUST_MATCH_MESSAGE: string = 'Passwords must match.'
 export function useUserTextField({
   user,
   property,
+  forceUpdate,
   isValid = () => true,
   invalidMessage = '',
   onChange = () => {},
 }: TUserTextField_P): TUserTextField {
-  const { forceUpdate } = useGlobalContext().actions
   const [value, setValue] = useState<string>(user[property] ?? '')
   const [errorMessage, setErrorMessage] = useState<string>('')
 
@@ -90,6 +89,10 @@ export type TUserTextField_P = {
    * The property of the user that the field edits.
    */
   property: TUserTextProperty
+  /**
+   * Re-renders whatever shows the form.
+   */
+  forceUpdate: () => void
   /**
    * Whether the value now held by the user is acceptable.
    * @default () => true

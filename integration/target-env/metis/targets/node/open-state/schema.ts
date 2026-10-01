@@ -1,5 +1,4 @@
 import { migrations } from './migrations'
-import { RichTextToolbox } from '@metis/toolbox/rich-text/RichTextToolbox'
 
 /**
  * The ID of the `openState` argument.
@@ -55,8 +54,7 @@ const NodeOpenState = TargetSchema.create({
       validComponentTypes: ['mission', 'force', 'node'],
       tooltipDescription:
         'Select a group of components within the mission ' +
-        'to which this open state will be applied.' +
-        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
+        'to which this open state will be applied.\n\n' +
         '*Selecting a node will apply the open state to that node. ' +
         'Selecting a mission or force will apply the open state ' +
         'to all nodes within the selected item. ' +

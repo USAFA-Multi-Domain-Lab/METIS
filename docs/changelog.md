@@ -1,5 +1,15 @@
 # changelog
 
+# version-2.5.2 | 9-23-2026
+
+- Rich text now looks the same everywhere it appears, whether it is being edited or only displayed.
+- Keyboard shortcuts now work while caps lock is on, and no longer trigger when extra modifier keys are held.
+- An issue was fixed where effects on an action's success chance, process time, or resource cost could be ignored once the value had reached its limit.
+- Rich text in large-string effect arguments is now sanitized before it is saved, including values saved before this update.
+- An issue was fixed where ordered lists were renumbered from 1 after they were saved.
+- Target environments are now type checked when METIS starts, and any with type errors are not loaded.
+- Various bug fixes and design improvements throughout the application.
+
 # version-2.5.1 | 8-13-2026
 
 - An optional reverse proxy has been added for serving METIS over HTTPS. It runs alongside the application in Docker under the `tls` profile, so deployments that do not need it are unaffected. Certificates can be obtained automatically from Let's Encrypt, issued by a local certificate authority for internal use, or supplied by the deployment. A staging mode is also available for validating a setup without exhausting Let's Encrypt's rate limits.

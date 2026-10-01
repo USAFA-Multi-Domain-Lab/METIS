@@ -7,21 +7,35 @@
     pointer-events: unset !important;
   }
 
-  .TitleRow .TitleColumnOne .Shortcuts {
-    .ButtonSvg {
-      margin: 0;
-    }
-  }
-
   .Field {
     padding: 0;
+    display: flex;
+    flex-direction: column;
 
     .Toolbar {
       padding: 1em 1em 0;
     }
 
-    .Editor {
-      padding: 0.5em 1.5em;
+    .FieldScroll {
+      min-width: 0;
+      max-height: 20em;
+      overflow-y: auto;
+
+      .Editor {
+        padding: 1.5em;
+      }
+    }
+
+    .FieldFooter {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      padding: 0.25em 0.5em;
+      border-top: 1px solid rgba($color-primary-light, 0.08);
+
+      .ButtonSvg {
+        margin: 0;
+      }
     }
   }
 }

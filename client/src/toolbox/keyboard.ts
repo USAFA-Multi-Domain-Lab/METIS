@@ -1,3 +1,4 @@
+import { getOs } from '@client/toolbox'
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 
 /**
@@ -90,12 +91,21 @@ export const UNMODIFIED_KEYSTROKES = {
    * The escape key, pressed on its own.
    */
   escape: buildShortcut({ label: 'Escape', keys: 'Escape' }),
+  /**
+   * The down arrow key, pressed on its own.
+   */
+  arrowDown: buildShortcut({ label: 'Arrow Down', keys: 'ArrowDown' }),
+  /**
+   * The up arrow key, pressed on its own.
+   */
+  arrowUp: buildShortcut({ label: 'Arrow Up', keys: 'ArrowUp' }),
 }
 
 /**
  * Builds a shortcut from the keystroke that triggers it.
  * @param definition The keystroke the shortcut answers to.
- * @returns The shortcut, which can recognize itself in a keyboard event.
+ * @returns The shortcut, which can recognize itself in a keyboard event and
+ * carries its keystroke written out for the user's operating system.
  */
 function buildShortcut({
   label,
@@ -112,11 +122,23 @@ function buildShortcut({
   )
   let codesAccepted = ArrayToolbox.normalize(codes)
 
+  // Cmd is the modifier on macOS and Ctrl is the modifier everywhere else.
+  let isMacOs = getOs() === 'mac-os'
+
   return {
     label,
+    keystrokeLabel: writeKeystrokeLabel({
+      keys,
+      usesModifier,
+      usesShift,
+      usesAlt,
+    }),
     matches: (keystroke: TKeystroke): boolean => {
-      // Cmd on macOS and Ctrl everywhere else act as the same modifier.
-      let modifierHeld = keystroke.ctrlKey || keystroke.metaKey
+      // Check to see which modifier key is being held, if any.
+      // The main modifier key for MacOs should be "Cmd" and "Ctrl"
+      // for all other supported systems.
+      let modifierHeld = isMacOs ? keystroke.metaKey : keystroke.ctrlKey
+      let otherModifierHeld = isMacOs ? keystroke.ctrlKey : keystroke.metaKey
 
       // Caps lock and the shift key both change the character a letter key
       // reports, and Windows and macOS disagree about which one, so keys are
@@ -134,11 +156,41 @@ function buildShortcut({
       return (
         keyMatches &&
         modifierHeld === usesModifier &&
+        !otherModifierHeld &&
         keystroke.shiftKey === usesShift &&
         keystroke.altKey === usesAlt
       )
     },
   }
+}
+
+/**
+ * Writes a keystroke out the way it is labeled on the user's keyboard, such as
+ * `Cmd+Shift+M` on macOS and `Ctrl+Shift+M` everywhere else.
+ * @param keystroke The keys and modifiers to write out.
+ * @returns The keystroke as the user would read it.
+ */
+export function writeKeystrokeLabel({
+  keys,
+  usesModifier = false,
+  usesShift = false,
+  usesAlt = false,
+}: TKeystrokeLabelDefinition): string {
+  // Only macOS names its modifiers Cmd and Opt. Every other system, and one
+  // that could not be recognized, uses Ctrl and Alt.
+  let isMacOs = getOs() === 'mac-os'
+  let parts: string[] = []
+
+  if (usesModifier) parts.push(isMacOs ? 'Cmd' : 'Ctrl')
+  if (usesAlt) parts.push(isMacOs ? 'Opt' : 'Alt')
+  if (usesShift) parts.push('Shift')
+
+  // A single character is written in upper case, the way it is printed on the
+  // key. A named key such as Enter keeps its name.
+  let [key] = ArrayToolbox.normalize(keys)
+  parts.push(key.length === 1 ? key.toUpperCase() : key)
+
+  return parts.join('+')
 }
 
 /* -- TYPES -- */
@@ -161,6 +213,12 @@ export type TKeyboardShortcut = {
    * The name of the shortcut, written the way it would be shown to a user.
    */
   label: string
+  /**
+   * The keystroke, written the way it is labeled on the user's keyboard, such
+   * as `Cmd+Shift+M` on macOS and `Ctrl+Shift+M` everywhere else. It is worked
+   * out once, when the shortcut is built.
+   */
+  keystrokeLabel: string
   /**
    * Whether the given keystroke is this shortcut.
    */
@@ -202,3 +260,11 @@ type TKeyboardShortcutDefinition = {
    */
   usesAlt?: boolean
 }
+
+/**
+ * The parts of a shortcut's definition that its keystroke is written out from.
+ */
+export type TKeystrokeLabelDefinition = Pick<
+  TKeyboardShortcutDefinition,
+  'keys' | 'usesModifier' | 'usesShift' | 'usesAlt'
+>

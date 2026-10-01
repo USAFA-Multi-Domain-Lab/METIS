@@ -10,7 +10,6 @@ import { ClientMissionPrototype } from '@client/missions/nodes/ClientMissionProt
 import { PrototypeTranslation } from '@client/missions/transformations/PrototypeTranslation'
 import { compute } from '@client/toolbox'
 import { useEventListener, useRequireLogin } from '@client/toolbox/hooks'
-import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import { useState } from 'react'
 import { useMissionPageContext } from '../context'
 import useForceItemButtonCallbacks from '../hooks/mission-components/forces'
@@ -83,11 +82,7 @@ export default function MissionPageMap(): TReactElement {
 
       const tabDescription = compute<string>(() => {
         if (viewMode === 'preview') return 'Select force'
-        return (
-          `Select force` +
-          `${RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK}` +
-          `\`R-Click\` for more options`
-        )
+        return `Select force\n\n` + `\`R-Click\` for more options`
       })
 
       const tab: TTabBarTab = {

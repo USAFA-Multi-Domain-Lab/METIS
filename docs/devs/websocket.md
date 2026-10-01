@@ -137,6 +137,7 @@ Every event METIS defines, grouped as above.
 | `action-resource-cost-updated`  | An action's resource cost was modified                                |
 | `send-output`                   | Output was sent to the panel                                          |
 | `logout-user-update`            | The signed-in account changed and the client must sign in again       |
+| `logout-user-delete`            | The signed-in account was deleted and the client must sign in again   |
 
 ### Client Notifications
 

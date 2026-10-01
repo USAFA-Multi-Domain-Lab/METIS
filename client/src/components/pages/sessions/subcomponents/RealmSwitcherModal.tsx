@@ -2,6 +2,7 @@ import PropertyBadge from '@client/components/content/general-layout/property-ba
 import { useGlobalContext } from '@client/context/global'
 import type { SessionRealmBasic } from '@client/sessions/SessionRealmBasic'
 import { useEventListener } from '@client/toolbox/hooks'
+import { UNMODIFIED_KEYSTROKES } from '@client/toolbox/keyboard'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useEffect, useRef, useState } from 'react'
 import { useSessionPageContext } from '../context'
@@ -92,27 +93,22 @@ export default function RealmSwitcherModal({}: TRealmSwitcherModal_P): TReactEle
   useEventListener(document, ['keydown'], (event: KeyboardEvent) => {
     if (!opened || switching) return
 
-    switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault()
-        setHighlightedIndex((index) =>
-          Math.min(index + 1, filteredRealms.length - 1),
-        )
-        break
-      case 'ArrowUp':
-        event.preventDefault()
-        setHighlightedIndex((index) => Math.max(index - 1, 0))
-        break
-      case 'Enter':
-        event.preventDefault()
-        if (filteredRealms[highlightedIndex]) {
-          switchToRealm(filteredRealms[highlightedIndex])
-        }
-        break
-      case 'Escape':
-        event.preventDefault()
-        close()
-        break
+    if (UNMODIFIED_KEYSTROKES.arrowDown.matches(event)) {
+      event.preventDefault()
+      setHighlightedIndex((index) =>
+        Math.min(index + 1, filteredRealms.length - 1),
+      )
+    } else if (UNMODIFIED_KEYSTROKES.arrowUp.matches(event)) {
+      event.preventDefault()
+      setHighlightedIndex((index) => Math.max(index - 1, 0))
+    } else if (UNMODIFIED_KEYSTROKES.enter.matches(event)) {
+      event.preventDefault()
+      if (filteredRealms[highlightedIndex]) {
+        switchToRealm(filteredRealms[highlightedIndex])
+      }
+    } else if (UNMODIFIED_KEYSTROKES.escape.matches(event)) {
+      event.preventDefault()
+      close()
     }
   })
 

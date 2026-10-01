@@ -1,3 +1,4 @@
+import { KEYBOARD_SHORTCUTS } from '@client/toolbox/keyboard'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Link from '@tiptap/extension-link'
 import { TaskItem, TaskList } from '@tiptap/extension-list'
@@ -13,11 +14,25 @@ import MetisParagraph from './paragraph'
 import MetisSpan from './span'
 
 /**
+ * Shown on the empty line the cursor is on once an editor has text. An empty
+ * line has nothing to select, and the toolbar otherwise only appears if text
+ * has been selected.
+ */
+const TOOLBAR_SHORTCUT_HINT: string = `Press ${KEYBOARD_SHORTCUTS.pinRichTextToolbar.keystrokeLabel} for formatting options`
+
+/**
+ * Colors the code inside code blocks. It is built once and shared by every
+ * piece of rich text, because building it registers every language it knows,
+ * which is too slow to repeat each time rich text renders.
+ */
+const CODE_BLOCK_HIGHLIGHTER = createLowlight(all)
+
+/**
  * The extensions shared by everything that displays rich text.
  * @param options How the shared extensions should be configured.
  */
 function createSharedExtensions(options: TSharedExtensionOptions): Extensions {
-  const { keepTrailingLine, listClassName } = options
+  const { keepTrailingLine } = options
 
   return [
     StarterKit.configure({
@@ -28,13 +43,11 @@ function createSharedExtensions(options: TSharedExtensionOptions): Extensions {
       // always a way to move the cursor out of certain HTML elements,
       // like block elements. Headings are excluded because they need no
       // escape route, and adding a line after one causes the heading
-      // controls to malfunction.
-      trailingNode: keepTrailingLine ? { notAfter: ['heading'] } : false,
-      listItem: {
-        HTMLAttributes: {
-          class: listClassName,
-        },
-      },
+      // controls to malfunction. Lists need no escape route either
+      // since there are other ways of escaping a list item.
+      trailingNode: keepTrailingLine
+        ? { notAfter: ['heading', 'bulletList', 'orderedList'] }
+        : false,
     }),
     Link.configure({
       markdownLinks: true,
@@ -58,7 +71,7 @@ function createSharedExtensions(options: TSharedExtensionOptions): Extensions {
     MetisParagraph,
     MetisSpan,
     CodeBlockLowlight.configure({
-      lowlight: createLowlight(all),
+      lowlight: CODE_BLOCK_HIGHLIGHTER,
       defaultLanguage: 'plaintext',
     }),
     TextAlign.configure({
@@ -83,25 +96,23 @@ function createSharedExtensions(options: TSharedExtensionOptions): Extensions {
 export function createEditorExtensions(
   options: TEditorExtensionOptions,
 ): Extensions {
-  const { placeholder, listClassName } = options
+  const { placeholder } = options
 
   return [
-    ...createSharedExtensions({ keepTrailingLine: true, listClassName }),
-    Placeholder.configure({ placeholder }),
+    ...createSharedExtensions({ keepTrailingLine: true }),
+    Placeholder.configure({
+      placeholder: ({ editor }) =>
+        editor.isEmpty ? placeholder : TOOLBAR_SHORTCUT_HINT,
+    }),
   ]
 }
 
 /**
  * The extensions for the rich text viewer.
- * @param options How the viewer extensions should be configured.
  */
-export function createViewerExtensions(
-  options: TViewerExtensionOptions = {},
-): Extensions {
-  const { listClassName } = options
-
+export function createViewerExtensions(): Extensions {
   return [
-    ...createSharedExtensions({ keepTrailingLine: false, listClassName }),
+    ...createSharedExtensions({ keepTrailingLine: false }),
     // These 3 extensions below are not currently utilized anywhere in the
     // app. They are here for future-proofing and will especially be useful
     // when we render all of the documentation files via the UI.
@@ -123,10 +134,6 @@ type TSharedExtensionOptions = {
    * @note Only useful where there is a cursor.
    */
   keepTrailingLine: boolean
-  /**
-   * The class name applied to list items.
-   */
-  listClassName?: string
 }
 
 /**
@@ -137,18 +144,4 @@ type TEditorExtensionOptions = {
    * The text shown while the editor is empty.
    */
   placeholder: string
-  /**
-   * The class name applied to list items.
-   */
-  listClassName?: string
-}
-
-/**
- * What {@link createViewerExtensions} needs to build a viewer's extensions.
- */
-type TViewerExtensionOptions = {
-  /**
-   * The class name applied to list items.
-   */
-  listClassName?: string
 }

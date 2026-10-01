@@ -1,5 +1,4 @@
 import { migrations } from './migrations'
-import { RichTextToolbox } from '@metis/toolbox/rich-text/RichTextToolbox'
 
 /**
  * A target available in the METIS target environment that enables a user
@@ -32,10 +31,8 @@ const SuccessChanceMod = TargetSchema.create({
       groupingId: 'main',
       default: 0,
       tooltipDescription:
-        `This allows you to positively or negatively affect the chance of success for all actions within the node. A positive value increases the chance of success, while a negative value decreases the chance of success.` +
-        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
-        `For example, entering 11 here will increase a success chance of 50% to 61%.` +
-        RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK +
+        `This allows you to positively or negatively affect the chance of success for all actions within the node. A positive value increases the chance of success, while a negative value decreases the chance of success.\n\n` +
+        `For example, entering 11 here will increase a success chance of 50% to 61%.\n\n` +
         `*Note: If the result is less than 0%, then the chance of success will be 0%. If the result is greater than 100%, then the chance of success will be 100%.*`,
     },
   ],

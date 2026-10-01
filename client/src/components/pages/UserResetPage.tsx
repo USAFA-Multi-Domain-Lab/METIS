@@ -2,6 +2,7 @@ import { useGlobalContext } from '@client/context/global'
 import { compute } from '@client/toolbox'
 import {
   useEventListener,
+  useForcedUpdates,
   useMountHandler,
   useRequireLogin,
 } from '@client/toolbox/hooks'
@@ -33,7 +34,8 @@ export default function UserResetPage(): TReactElement | null {
 
   const globalContext = useGlobalContext()
   const { notify, navigateTo, finishLoading } = globalContext.actions
-  const [areUnsavedChanges, setAreUnsavedChanges] = useState<boolean>(false)
+  const [areUnsubmittedChanges, setAreUnsubmittedChanges] =
+    useState<boolean>(false)
   const navigationButtonEngine = useButtonSvgEngine({
     elements: [ProfileButton()],
   })
@@ -45,22 +47,25 @@ export default function UserResetPage(): TReactElement | null {
   /* -- LOGIN-SPECIFIC LOGIC -- */
 
   const { user } = useRequireLogin()
+  const forceUpdate = useForcedUpdates()
 
   /* -- HOOKS -- */
 
   const password = useUserTextField({
     user,
     property: 'password1',
+    forceUpdate,
     isValid: (user) => user.hasValidPassword1,
     invalidMessage: PASSWORD_FORMAT_MESSAGE,
-    onChange: () => setAreUnsavedChanges(true),
+    onChange: () => setAreUnsubmittedChanges(true),
   })
   const confirmPassword = useUserTextField({
     user,
     property: 'password2',
+    forceUpdate,
     isValid: (user) => user.hasValidPassword2,
     invalidMessage: PASSWORD_FORMAT_MESSAGE,
-    onChange: () => setAreUnsavedChanges(true),
+    onChange: () => setAreUnsubmittedChanges(true),
   })
 
   /* -- COMPUTED -- */
@@ -93,10 +98,10 @@ export default function UserResetPage(): TReactElement | null {
   })
 
   /**
-   * Whether the save button is disabled.
+   * Whether the submit button is disabled.
    */
-  const saveDisabled = compute<TButtonTextDisabled>(() =>
-    !areUnsavedChanges || !user.canSave ? 'full' : 'none',
+  const submitDisabled = compute<TButtonTextDisabled>(() =>
+    !areUnsubmittedChanges || !user.canSave ? 'full' : 'none',
   )
 
   /* -- EFFECTS -- */
@@ -108,7 +113,7 @@ export default function UserResetPage(): TReactElement | null {
     done()
   })
 
-  // Save the new password when enter is pressed away from the form. Enter
+  // Submit the form when enter is pressed away from it. Enter
   // inside the form submits it without any help.
   useEventListener(document, 'keydown', (event: KeyboardEvent) => {
     if (!UNMODIFIED_KEYSTROKES.enter.matches(event)) return
@@ -121,11 +126,11 @@ export default function UserResetPage(): TReactElement | null {
   /* -- FUNCTIONS -- */
 
   /**
-   * This is called to save any changes made.
+   * This is called to submit the form.
    */
-  const save = async (): Promise<void> => {
-    if (saveDisabled !== 'none') return
-    setAreUnsavedChanges(false)
+  const submit = async (): Promise<void> => {
+    if (submitDisabled !== 'none') return
+    setAreUnsubmittedChanges(false)
 
     try {
       await ClientUser.$resetPassword(user)
@@ -140,18 +145,18 @@ export default function UserResetPage(): TReactElement | null {
         notify('Failed to reset password.')
       }
 
-      setAreUnsavedChanges(true)
+      setAreUnsubmittedChanges(true)
     }
   }
 
   /**
    * This is called when the password form is submitted, which happens
-   * when the save button is clicked and when enter is pressed
+   * when the submit button is clicked and when enter is pressed
    * while a field has focus.
    */
   const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>): void => {
     event.preventDefault()
-    save()
+    submit()
   }
 
   /* -- RENDER -- */
@@ -190,8 +195,8 @@ export default function UserResetPage(): TReactElement | null {
           <div className='Buttons'>
             <ButtonText
               type='submit'
-              text={'Save'}
-              disabled={saveDisabled}
+              text={'Submit'}
+              disabled={submitDisabled}
               onClick={() => {}}
             />
           </div>

@@ -7,7 +7,6 @@ import { ClientEffect } from '@client/missions/effects/ClientEffect'
 import { useRequireLogin } from '@client/toolbox/hooks'
 import type { MissionComponentIssue } from '@shared/missions/MissionComponentIssue'
 import { ClassList } from '@shared/toolbox/html/ClassList'
-import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import { useState } from 'react'
 import { useMissionPageContext } from '../context'
 import type { TIssues_P } from './Issues'
@@ -46,9 +45,7 @@ export default function IssueItem({
 
   let rootClasses = new ClassList('IssueItem')
   let description =
-    `${issue.message}` +
-    `${RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK}` +
-    `**Click to view associated component**`
+    `${issue.message}\n\n` + `**Click to view associated component**`
 
   /* -- FUNCTIONS -- */
 

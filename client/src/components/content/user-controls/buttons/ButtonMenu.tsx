@@ -8,6 +8,7 @@ import {
   useResizeObserver,
   useUnmountHandler,
 } from '@client/toolbox/hooks'
+import { UNMODIFIED_KEYSTROKES } from '@client/toolbox/keyboard'
 import { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useRef, useState } from 'react'
@@ -136,9 +137,11 @@ export default function ButtonMenu({
   // the window.
   useEventListener(window, ['resize'], onCloseRequest)
 
-  // Close the menu when the user hits
-  // a key.
-  useEventListener(document, ['keydown'], (event) => {
+  // Close the menu when the user presses escape. Every other key is left
+  // alone, so a press meant for whatever sits behind the menu still
+  // reaches it.
+  useEventListener(document, ['keydown'], (event: KeyboardEvent) => {
+    if (!UNMODIFIED_KEYSTROKES.escape.matches(event)) return
     event.preventDefault()
     onCloseRequest()
   })

@@ -3,12 +3,18 @@ import { ClientUser } from '@client/users/ClientUser'
 import { describe, expect, jest, test } from '@jest/globals'
 import { act, renderHook } from '@testing-library/react'
 
-// The hook reads `forceUpdate` off the global context, and the module it
-// takes `usePostInitEffect` from imports the same context at its top, so
-// the context has to stand in for both. Nothing else here is mocked.
+// The module the hook takes `usePostInitEffect` from imports the global
+// context at its top, so the context has to stand in for it. Nothing else
+// here is mocked.
 jest.mock('@client/context/global', () => ({
-  useGlobalContext: () => ({ actions: { forceUpdate: () => {} } }),
+  useGlobalContext: () => ({ actions: {} }),
 }))
+
+/**
+ * Stands in for the re-render the page hands the hook. Nothing here reads
+ * what it does, only that the hook can be given one.
+ */
+const forceUpdate = () => {}
 
 /**
  * Shown beneath the username field when the username is malformed.
@@ -21,7 +27,7 @@ describe('useUserTextField', () => {
   test('Leaves a property alone while its field has not been edited', () => {
     let user = ClientUser.createNew({ passwordIsRequired: true })
     let { result, rerender } = renderHook(() =>
-      useUserTextField({ user, property: 'password1' }),
+      useUserTextField({ user, property: 'password1', forceUpdate }),
     )
 
     // The field displays an empty string without putting one on the user,
@@ -39,7 +45,7 @@ describe('useUserTextField', () => {
   test('Writes the empty string onto the user when an edited field is cleared', () => {
     let user = ClientUser.createNew({ passwordIsRequired: true })
     let { result } = renderHook(() =>
-      useUserTextField({ user, property: 'password1' }),
+      useUserTextField({ user, property: 'password1', forceUpdate }),
     )
 
     act(() => result.current.setValue('correcthorse'))
@@ -60,6 +66,7 @@ describe('useUserTextField', () => {
       useUserTextField({
         user,
         property: 'username',
+        forceUpdate,
         isValid: (user) => user.hasValidUsername,
         invalidMessage: INVALID_USERNAME_MESSAGE,
       }),
@@ -79,6 +86,7 @@ describe('useUserTextField', () => {
       useUserTextField({
         user,
         property: 'username',
+        forceUpdate,
         isValid: (user) => user.hasValidUsername,
         invalidMessage: INVALID_USERNAME_MESSAGE,
         onChange,

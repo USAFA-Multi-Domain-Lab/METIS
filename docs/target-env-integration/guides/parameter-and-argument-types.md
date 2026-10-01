@@ -11,6 +11,7 @@ A target declares **parameters**, and METIS renders an input for each one in the
 - [Reading Arguments in a Script](#reading-arguments-in-a-script)
 - [string](#string)
 - [large-string](#large-string)
+  - [Sanitization](#sanitization)
 - [number](#number)
 - [boolean](#boolean)
 - [dropdown](#dropdown)
@@ -35,7 +36,7 @@ There are six parameter types. Every one of them is declared in the `parameters`
 | `type`              | Renders as                            | Argument value your script receives                   |
 | ------------------- | ------------------------------------- | ----------------------------------------------------- |
 | `string`            | Single-line text input                | `string`                                              |
-| `large-string`      | Multi-line text area                  | `string`                                              |
+| `large-string`      | Rich text editor                      | `string` holding HTML                                 |
 | `number`            | Numeric input                         | `number`, or `number \| null` when optional           |
 | `boolean`           | Toggle switch                         | `boolean`                                             |
 | `dropdown`          | Dropdown of predefined options        | The selected option's `value`                         |
@@ -56,7 +57,7 @@ Every parameter type accepts these properties.
 | `tooltipDescription` | `string`             | No       | Help text shown in a hover tooltip beside the label.                   |
 | `dependencies`       | `TargetDependency[]` | No       | Conditions that must pass for the parameter to be shown.              |
 
-Help text is `tooltipDescription`. There is no `description` property on a parameter — see [Mistyped Properties Are Ignored](#mistyped-properties-are-ignored).
+Help text is `tooltipDescription`, and it is rendered as Markdown. There is no `description` property on a parameter — see [Mistyped Properties Are Ignored](#mistyped-properties-are-ignored).
 
 ### Required Parameters and Defaults
 
@@ -229,7 +230,7 @@ A `pattern` mismatch also raises an issue on the effect, so the mission author s
 
 ## large-string
 
-A multi-line text area, for content that runs longer than a single line. It takes the same properties as `string` apart from `pattern` and `title`, which it does not support.
+A rich text editor, for content that runs longer than a single line. The author writes formatted text — headings, lists, emphasis, links, colors, and alignment — so the argument reaches your script as a `string` of HTML rather than as plain text. It takes the same properties as `string` apart from `pattern` and `title`, which it does not support.
 
 ```typescript
 {
@@ -242,6 +243,16 @@ A multi-line text area, for content that runs longer than a single line. It take
   tooltipDescription: 'Shown to the force when the effect runs.',
 }
 ```
+
+### Sanitization
+
+METIS cleans every `large-string` value as the mission is saved. Only the elements and attributes the editor itself writes are kept, and everything else is dropped. A script, an image, or an event handler such as `onerror` is removed rather than rejected, so the save succeeds and the markup is simply gone when the value is read back.
+
+The `style` attribute is narrowed further, to `color`, `line-height`, and `text-align`. A declaration that can name a resource or move an element on the page is dropped. The declarations that survive are rewritten in the CSS parser's notation, so a color written as `#52b1ff` reads back as `rgb(82, 177, 255)`.
+
+Every path that writes a mission goes through this, including the REST API, an imported mission file, and a migration that sets a value. Expect the value you read back to differ from the one you wrote.
+
+> **Note:** Only `large-string` is treated as rich text. A `string` value is stored exactly as it was typed, so ordinary writing that uses angle brackets, such as `Report to <commander>`, keeps them.
 
 ## number
 

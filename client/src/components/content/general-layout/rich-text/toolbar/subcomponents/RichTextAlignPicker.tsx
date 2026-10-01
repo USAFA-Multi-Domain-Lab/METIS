@@ -1,5 +1,5 @@
 import Tooltip from '@client/components/content/communication/Tooltip'
-import { compute, getOs } from '@client/toolbox'
+import { compute } from '@client/toolbox'
 import { getIconPath } from '@client/toolbox/icons'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useRichTextContext } from '../../RichText'
@@ -29,6 +29,15 @@ export default function RichTextAlignPicker(): TReactElement | null {
       editor.isActive({ textAlign: value }),
     ).value
 
+  /**
+   * Writes the description for an alignment button's tooltip.
+   * @param label The alignment label.
+   * @param keystrokeLabel The keystroke label.
+   * @returns The tooltip description.
+   */
+  const writeTooltipDescription = (label: string, keystrokeLabel: string) =>
+    `**${label}**\n` + `\`${keystrokeLabel}\``
+
   /* -- COMPUTED -- */
 
   /**
@@ -46,7 +55,7 @@ export default function RichTextAlignPicker(): TReactElement | null {
 
   return (
     <div className='AlignPicker' style={style}>
-      {ALIGN_OPTIONS.map(({ value, icon, label, mac, windows }) => (
+      {ALIGN_OPTIONS.map(({ value, icon, label, keystrokeLabel }) => (
         <button
           key={value}
           type='button'
@@ -58,7 +67,7 @@ export default function RichTextAlignPicker(): TReactElement | null {
         >
           <img src={getIconPath(icon)} alt={label} />
           <Tooltip
-            description={`**${label}**\n${getOs() === 'windows' ? windows : mac}`}
+            description={writeTooltipDescription(label, keystrokeLabel)}
           />
         </button>
       ))}

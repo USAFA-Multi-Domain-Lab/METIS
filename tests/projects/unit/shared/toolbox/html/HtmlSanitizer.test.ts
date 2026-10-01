@@ -67,7 +67,7 @@ describe('HtmlSanitizer', () => {
     expect(result).toContain('href="https://example.com"')
     expect(result).toContain('target="_blank"')
     expect(result).toContain('rel="noopener"')
-    expect(result).toContain('style="color: #52b1ff"')
+    expect(result).toContain('style="color: rgb(82, 177, 255);"')
 
     // Nothing the author wrote was dropped, and sanitizing what came back
     // changes nothing further.
@@ -81,7 +81,9 @@ describe('HtmlSanitizer', () => {
     const result = HtmlSanitizer.sanitize(
       '<p style="color: red; background: url(https://example.test/x.png); text-align: center">Message</p>',
     )
-    expect(result).toBe('<p style="color: red; text-align: center;">Message</p>')
+    expect(result).toBe(
+      '<p style="color: red; text-align: center;">Message</p>',
+    )
     expect(result).not.toContain('example.test')
   })
 
@@ -94,11 +96,16 @@ describe('HtmlSanitizer', () => {
     expect(result).not.toContain('z-index')
   })
 
-  test('Leaves an attribute holding only color, line height, and alignment as written', () => {
-    const styled =
-      '<span style="color: #52b1ff; line-height: 2; text-align: center">Text</span>'
-
-    expect(HtmlSanitizer.sanitize(styled)).toBe(styled)
+  // The attribute is written back in the CSS parser's notation, so the hex
+  // color comes back as rgb(), and sanitizing that again changes nothing.
+  test('Keeps every declaration in an attribute holding only color, line height, and alignment', () => {
+    let result = HtmlSanitizer.sanitize(
+      '<span style="color: #52b1ff; line-height: 2; text-align: center">Text</span>',
+    )
+    expect(result).toBe(
+      '<span style="color: rgb(82, 177, 255); line-height: 2; text-align: center;">Text</span>',
+    )
+    expect(HtmlSanitizer.sanitize(result)).toBe(result)
   })
 
   test('Removes the style attribute entirely when nothing in it is allowed', () => {
@@ -121,11 +128,6 @@ describe('HtmlSanitizer', () => {
     expect(result).not.toContain('background')
   })
 
-  // Appended by the review to pin Medium #1. Expected to fail until the
-  // finding is closed: a declaration the CSS parser cannot parse never
-  // reaches the filter, so it stays in the attribute as written. The
-  // background shorthand fails to parse once it carries a position; the
-  // vendor-prefixed property is not implemented at all.
   test('Removes a declaration the CSS parser does not recognize', () => {
     const positioned = HtmlSanitizer.sanitize(
       '<p style="background: url(https://example.test/x.png) no-repeat left top; color: red">Text</p>',

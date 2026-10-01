@@ -10,7 +10,6 @@ import { ClientResourcePool } from '@client/missions/forces/ClientResourcePool'
 import { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import type { ClientTargetArgument } from '@client/target-environments/arguments/ClientTargetArgument'
 import { useObjectFormSync } from '@client/toolbox/hooks'
-import { RichTextToolbox } from '@shared/toolbox/rich-text/RichTextToolbox'
 import { useMemo, useRef } from 'react'
 import { useMissionPageContext } from '../../context'
 import type {
@@ -156,11 +155,7 @@ export default function MissionComponentTargetDetail({
         <div className='Icon' style={computeOutlineIconStyling(item)}></div>
         <div className='Name'>{item.name}</div>
         <Tooltip
-          description={
-            `${item.name}` +
-            `${RichTextToolbox.MARKDOWN_PARAGRAPH_BREAK}` +
-            `**Click to reveal in outline**`
-          }
+          description={`${item.name}\n\n` + `**Click to reveal in outline**`}
         />
       </div>
     )

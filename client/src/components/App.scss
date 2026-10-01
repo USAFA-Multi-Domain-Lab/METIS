@@ -54,9 +54,16 @@
     background-color: rgba($color-accent-dark, 0.925);
     font-size: 0.9em;
 
-    .RichText p {
-      margin: 0;
-      padding: 0;
+    .RichText {
+      p:first-child {
+        margin-top: 0;
+        padding-top: 0;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
     }
   }
 

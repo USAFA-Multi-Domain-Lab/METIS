@@ -1,3 +1,7 @@
+import {
+  KEYBOARD_SHORTCUTS,
+  UNMODIFIED_KEYSTROKES,
+} from '@client/toolbox/keyboard'
 import type { Editor, EditorEvents } from '@tiptap/react'
 import { useRef, useState } from 'react'
 import type { TDetailWithInput_P } from '.'
@@ -12,10 +16,17 @@ import { useErrorMessages } from './hooks/useErrorMessages'
 
 const BLANK_ERROR_MESSAGE: string = 'At least one character is required here.'
 
+const TOOLBAR_HELP_DESCRIPTION: string =
+  '###### Rich Text\n\n' +
+  'This field supports formatted text including markdown (e.g. headings, lists, italic, hyperlinks, code blocks, etc.).\n\n' +
+  '***For a detailed list of supported formatting options and their keyboard shortcuts, click the help icon below.***\n\n' +
+  '###### Toolbar Controls:\n\n' +
+  `\`${KEYBOARD_SHORTCUTS.pinRichTextToolbar.keystrokeLabel}\` *Pin/Unpin the toolbar.*\n\n` +
+  `\`${UNMODIFIED_KEYSTROKES.escape.keystrokeLabel}\` *Closes the toolbar and any submenus (e.g. font color).*\n\n`
+
 /**
- * This will render a detail for
- * a form, with a label and a text
- * field for entering information.
+ * This will render a detail for a form, with a label and a text field for
+ * entering information.
  */
 export function DetailLargeString({
   fieldType,
@@ -36,18 +47,28 @@ export function DetailLargeString({
 
   const [focused, setFocused] = useState<boolean>(false)
   const editorRef = useRef<Editor | null>(null)
-  const buttonEngine = useButtonSvgEngine({
+  const footerEngine = useButtonSvgEngine({
     elements: [
       {
-        key: 'file',
+        key: 'help',
         type: 'button',
-        icon: 'file',
-        description: 'Click here to view the shortcuts for this editor.',
+        icon: 'question',
+        description: TOOLBAR_HELP_DESCRIPTION,
+        onClick: () => window.open('/files/shortcuts.html', '_blank'),
       },
     ],
   })
 
+  /* -- REFS -- */
+
+  /**
+   * A reference to the scrolling element within the field. This helps with the
+   * positioning and functionality of the toolbar that is held inside it.
+   */
+  const fieldScrollElement = useRef<HTMLDivElement>(null)
+
   /* -- COMPUTED -- */
+
   let { displayError, activeErrorMessage } = useErrorMessages({
     errorMessage,
     fieldType,
@@ -122,21 +143,26 @@ export function DetailLargeString({
         labelClassName={labelClasses.value}
         tooltipDescription={tooltipDescription}
         fieldType={fieldType}
-      >
-        <a href='/files/shortcuts.html' target='_blank' className='Shortcuts'>
-          <ButtonSvgPanel engine={buttonEngine} />
-        </a>
-      </DetailTitleRow>
-      <RichText
-        content={stateValue}
-        className={fieldClasses.value}
-        placeholder={placeholder}
-        editorRef={editorRef}
-        onUpdate={onUpdate}
-        onFocus={() => setFocused(true)}
-        onBlur={onBlur}
-        type={disabled ? 'viewer' : 'editor'}
       />
+      <div className={fieldClasses.value}>
+        <div className='FieldScroll' ref={fieldScrollElement}>
+          <RichText
+            content={stateValue}
+            placeholder={placeholder}
+            editorRef={editorRef}
+            onUpdate={onUpdate}
+            onFocus={() => setFocused(true)}
+            onBlur={onBlur}
+            type={disabled ? 'viewer' : 'editor'}
+            toolbarAnchor={fieldScrollElement}
+          />
+        </div>
+        {!disabled && (
+          <div className='FieldFooter'>
+            <ButtonSvgPanel engine={footerEngine} />
+          </div>
+        )}
+      </div>
       <div className={fieldErrorClasses.value}>{activeErrorMessage}</div>
     </div>
   )

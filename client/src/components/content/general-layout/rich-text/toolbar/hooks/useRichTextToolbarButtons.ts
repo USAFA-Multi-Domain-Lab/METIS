@@ -1,5 +1,9 @@
 import type { TButtonSvgEngine } from '@client/components/content/user-controls/buttons/panels/types'
-import { getOs } from '@client/toolbox'
+import type { TKeystrokeLabelDefinition } from '@client/toolbox/keyboard'
+import {
+  KEYBOARD_SHORTCUTS,
+  writeKeystrokeLabel,
+} from '@client/toolbox/keyboard'
 import type { Editor } from '@tiptap/react'
 import type { ButtonSvgEngine } from '../../../../user-controls/buttons/panels/engines'
 import { useButtonSvgEngine } from '../../../../user-controls/buttons/panels/hooks'
@@ -136,13 +140,12 @@ const isButtonDisabled = (editor: Editor, button: TMetisIcon): boolean => {
 
 /**
  * Returns the shortcut text for a button, worded for the keyboard that the end-user
- * is currently using.
- * @param windowsKeys The shortcut as it reads on Windows.
- * @param macKeys The shortcut as it reads on macOS.
+ * is currently using and formatted as inline code.
+ * @param keystroke The keys and modifiers the shortcut uses.
  * @returns The shortcut text.
  */
-const shortcut = (windowsKeys: string, macKeys: string): string =>
-  getOs() === 'windows' ? windowsKeys : macKeys
+const shortcut = (keystroke: TKeystrokeLabelDefinition): string =>
+  `\`${writeKeystrokeLabel(keystroke)}\``
 
 /**
  * Every button the toolbar shows, in the order it shows them.
@@ -162,7 +165,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'undo',
       label: '**Undo**',
-      description: shortcut('`ctrl+z`', '`cmd+z`'),
+      description: shortcut({ keys: 'z', usesModifier: true }),
       onClick: () => editor.commands.undo(),
     },
     {
@@ -170,7 +173,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'redo',
       label: '**Redo**',
-      description: shortcut('`ctrl+shift+z`', '`cmd+shift+z`'),
+      description: shortcut({ keys: 'z', usesModifier: true, usesShift: true }),
       onClick: () => editor.commands.redo(),
     },
     {
@@ -178,7 +181,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'ordered-list',
       label: '**Ordered List**',
-      description: shortcut('`ctrl+shift+7`', '`cmd+shift+7`'),
+      description: shortcut({ keys: '7', usesModifier: true, usesShift: true }),
       onClick: () => editor.commands.toggleOrderedList(),
     },
     {
@@ -186,7 +189,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'bullet-list',
       label: '**Bullet List**',
-      description: shortcut('`ctrl+shift+8`', '`cmd+shift+8`'),
+      description: shortcut({ keys: '8', usesModifier: true, usesShift: true }),
       onClick: () => editor.commands.toggleBulletList(),
     },
     {
@@ -194,10 +197,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'align-left',
       label: '**Text Align**',
-      description: shortcut(
-        '`ctrl+shift+a` to cycle',
-        '`cmd+shift+a` to cycle',
-      ),
+      description: `\`${KEYBOARD_SHORTCUTS.cycleRichTextAlignment.keystrokeLabel}\` to cycle`,
       onClick: () => toolbar.togglePicker('align'),
     },
     {
@@ -205,10 +205,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'line-spacing',
       label: '**Line Spacing**',
-      description: shortcut(
-        '`ctrl+shift+p` to cycle',
-        '`cmd+shift+p` to cycle',
-      ),
+      description: `\`${KEYBOARD_SHORTCUTS.cycleRichTextLineSpacing.keystrokeLabel}\` to cycle`,
       onClick: () => toolbar.togglePicker('line-spacing'),
     },
     {
@@ -216,10 +213,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'heading',
       label: '**Headings**',
-      description: shortcut(
-        '`ctrl+shift+h` to cycle',
-        '`cmd+shift+h` to cycle',
-      ),
+      description: `\`${KEYBOARD_SHORTCUTS.cycleRichTextHeadingLevel.keystrokeLabel}\` to cycle`,
       onClick: () => toolbar.togglePicker('heading'),
     },
     {
@@ -227,7 +221,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'bold',
       label: '**Bold**',
-      description: shortcut('`ctrl+b`', '`cmd+b`'),
+      description: shortcut({ keys: 'b', usesModifier: true }),
       onClick: () => editor.commands.toggleBold(),
     },
     {
@@ -235,7 +229,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'italic',
       label: '**Italic**',
-      description: shortcut('`ctrl+i`', '`cmd+i`'),
+      description: shortcut({ keys: 'i', usesModifier: true }),
       onClick: () => editor.commands.toggleItalic(),
     },
     {
@@ -243,7 +237,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'underline',
       label: '**Underline**',
-      description: shortcut('`ctrl+u`', '`cmd+u`'),
+      description: shortcut({ keys: 'u', usesModifier: true }),
       onClick: () => editor.commands.toggleUnderline(),
     },
     {
@@ -251,7 +245,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'strike',
       label: '**Strikethrough**',
-      description: shortcut('`ctrl+shift+s`', '`cmd+shift+s`'),
+      description: shortcut({ keys: 's', usesModifier: true, usesShift: true }),
       onClick: () => editor.commands.toggleStrike(),
     },
     {
@@ -259,10 +253,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'font-color',
       label: '**Font Color**',
-      description: shortcut(
-        '`ctrl+shift+c` to cycle',
-        '`cmd+shift+c` to cycle',
-      ),
+      description: `\`${KEYBOARD_SHORTCUTS.cycleRichTextFontColor.keystrokeLabel}\` to cycle`,
       onClick: () => toolbar.togglePicker('color'),
     },
     {
@@ -270,7 +261,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'code',
       label: '**Inline Code**',
-      description: shortcut('`ctrl+e`', '`cmd+e`'),
+      description: shortcut({ keys: 'e', usesModifier: true }),
       onClick: () => editor.commands.toggleCode(),
     },
     {
@@ -278,7 +269,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'code-block',
       label: '**Code Block**',
-      description: shortcut('`ctrl+alt+c`', '`cmd+opt+c`'),
+      description: shortcut({ keys: 'c', usesModifier: true, usesAlt: true }),
       onClick: () => editor.commands.toggleCodeBlock(),
     },
     {
@@ -286,7 +277,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'link',
       label: '**Link**',
-      description: shortcut('`ctrl+k`', '`cmd+k`'),
+      description: `\`${KEYBOARD_SHORTCUTS.toggleRichTextLink.keystrokeLabel}\``,
       onClick: async () => await toggleLink(editor),
     },
     {
@@ -294,7 +285,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'blockquote',
       label: '**Blockquote**',
-      description: shortcut('`ctrl+shift+b`', '`cmd+shift+b`'),
+      description: shortcut({ keys: 'b', usesModifier: true, usesShift: true }),
       onClick: () => editor.commands.toggleBlockquote(),
     },
     {
@@ -302,7 +293,7 @@ function createRichTextToolbarButtons(
       type: 'button',
       icon: 'clear-format',
       label: '**Clear Format**',
-      description: shortcut('`ctrl+alt+0`', '`cmd+opt+0`'),
+      description: `\`${KEYBOARD_SHORTCUTS.clearRichTextFormatting.keystrokeLabel}\``,
       onClick: () => {
         editor.commands.unsetAllMarks()
         editor.commands.clearNodes()

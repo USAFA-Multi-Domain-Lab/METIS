@@ -169,7 +169,7 @@ Properties every parameter carries, whatever its type:
 | `name`               | `string` | Display name                                                                        |
 | `groupingId`         | `string` | Groups related parameters together in the interface. Optional                       |
 | `dependencies`       | `array`  | Encoded strings, each a condition on another parameter's value. Optional            |
-| `tooltipDescription` | `string` | Hover help text. Optional                                                           |
+| `tooltipDescription` | `string` | Hover help text, written in Markdown. Optional                                      |
 
 Available parameter types:
 
