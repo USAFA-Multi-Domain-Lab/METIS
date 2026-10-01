@@ -95,7 +95,8 @@
       flex-wrap: nowrap;
     }
 
-    .DetailIconSelector {
+    .DetailIconSelector,
+    .DetailLargeString {
       grid-column: span 2;
     }
   }
