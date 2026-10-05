@@ -184,12 +184,11 @@ export default function SessionMemberList({
    */
   const getItemButtonHidden = (
     button: string,
-    member: ClientSessionMember | null,
+    member: ClientSessionMember,
   ): boolean => {
-    // Hide all controls if there is no member, the current member
-    // can't manage members, or the target member can manage members.
+    // Hide all controls if the current member can't manage
+    // members, or the target member can manage members.
     if (
-      !member ||
       !session.member.isAuthorized('manageSessionMembers') ||
       member.isAuthorized('manageSessionMembers')
     ) {

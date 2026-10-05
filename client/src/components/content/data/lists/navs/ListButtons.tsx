@@ -26,6 +26,7 @@ export default function ListButtons<
     aggregateButtonLayout,
     getItemButtonDisabled,
     getItemButtonHidden,
+    getItemButtonDescription,
   } = listContext
   const [selection] = state.selection
   const [buttonOverflowCount] = state.buttonOverflowCount
@@ -47,14 +48,18 @@ export default function ListButtons<
     // items refresh, so resolve the live item by id to reflect remote
     // updates such as status changes.
     const selected = items.find(({ _id }) => _id === selection?._id) ?? null
-    itemButtonIcons.forEach((icon) =>
+    itemButtonIcons.forEach((icon) => {
       buttonEngine.setDisabled(
         icon,
         !selected ||
           getItemButtonDisabled(icon, selected) ||
           getItemButtonHidden(icon, selected),
-      ),
-    )
+      )
+      buttonEngine.setDescription(
+        icon,
+        selected ? getItemButtonDescription(icon, selected) : '',
+      )
+    })
   }, [selection, items])
 
   useEffect(() => {
