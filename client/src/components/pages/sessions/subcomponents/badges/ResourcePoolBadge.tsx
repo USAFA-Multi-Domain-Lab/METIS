@@ -26,7 +26,7 @@ export default function ResourcePoolBadge({
   // Follow the balance with the resource's
   // description, if it has one.
   if (pool.description) {
-    description += `\n${pool.description}`
+    description += `\n\n${pool.description}`
   }
   // Update value to infinity symbol if resources
   // are configured to be infinite.
