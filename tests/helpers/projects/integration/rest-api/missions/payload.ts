@@ -1,4 +1,5 @@
-import { Mission, type TMissionSaveJson } from '@shared/missions/Mission'
+import { BLUE, GREEN, RED } from '@shared/colors'
+import type { TMissionSaveJson } from '@shared/missions/Mission'
 import {
   MissionAction,
   type TMissionActionJson,
@@ -113,7 +114,7 @@ export function createMissionPayload(
       createForce(fixtureIds, {
         localKey: '1',
         name: 'Blue Force',
-        color: Mission.BLUE,
+        color: BLUE,
         introMessage: 'Blue force intro',
         revealAllNodes: false,
         fuelBalance:
@@ -125,7 +126,7 @@ export function createMissionPayload(
       createForce(fixtureIds, {
         localKey: '2',
         name: 'Red Force',
-        color: Mission.RED,
+        color: RED,
         introMessage: 'Red force intro',
         revealAllNodes: true,
         fuelBalance:
@@ -209,14 +210,14 @@ function createForce(
         localKey: '1',
         prototypeId: fixtureIds.rootPrototypeId,
         name: `${config.name} Root`,
-        color: Mission.BLUE,
+        color: BLUE,
         description: `${config.name} root description`,
       }),
       createNode({
         localKey: '2',
         prototypeId: fixtureIds.objectivePrototypeId,
         name: `${config.name} Objective`,
-        color: Mission.GREEN,
+        color: GREEN,
         description: `${config.name} objective description`,
         preExecutionText: 'Execute the action from here.',
         executable: true,

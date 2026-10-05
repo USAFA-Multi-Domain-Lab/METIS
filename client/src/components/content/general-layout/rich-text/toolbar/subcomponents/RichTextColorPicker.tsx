@@ -1,14 +1,10 @@
 import Tooltip from '@client/components/content/communication/Tooltip'
 import { compute } from '@client/toolbox'
-import { Mission } from '@shared/missions/Mission'
+import { COLOR_OPTIONS, getColorName } from '@shared/colors'
 import { ClassList } from '@shared/toolbox/html/ClassList'
+import { ColorToolbox } from '@shared/toolbox/html/ColorToolbox'
 import { useRichTextContext } from '../../RichText'
-import {
-  getActiveFontColor,
-  getColorName,
-  normalizeColor,
-  toggleFontColor,
-} from '../helpers/font-color'
+import { getActiveFontColor, toggleFontColor } from '../helpers/font-color'
 import { useRichTextToolbarContext } from '../RichTextToolbar'
 import './RichTextColorPicker.scss'
 
@@ -32,7 +28,7 @@ export default function RichTextColorPicker(): TReactElement | null {
   const generateClassName = (color: string) =>
     new ClassList('ColorSwatch').set(
       'Selected',
-      !!activeColor && normalizeColor(color) === normalizeColor(activeColor),
+      !!activeColor && ColorToolbox.equals(color, activeColor),
     ).value
 
   /* -- COMPUTED -- */
@@ -57,7 +53,7 @@ export default function RichTextColorPicker(): TReactElement | null {
 
   return (
     <div className='ColorPicker' style={style}>
-      {Mission.COLOR_OPTIONS.map((color) => (
+      {COLOR_OPTIONS.map((color) => (
         <button
           key={color}
           type='button'
