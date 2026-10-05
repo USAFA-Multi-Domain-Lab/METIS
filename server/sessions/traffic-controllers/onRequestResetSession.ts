@@ -1,5 +1,4 @@
 import { ServerEmittedError } from '@shared/connect/errors/ServerEmittedError'
-import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { createServerSessionController } from './createServerSessionController'
 
 /**
@@ -11,67 +10,29 @@ export const onRequestResetSession =
   createServerSessionController<'request-reset-session'>(
     async function (this, member, event) {
       // Build request for response data.
-      let fulfilledRequest = member.buildResponseRequestData(event, {
-        fulfilled: true,
-      })
-      let unfulfilledRequest = member.buildResponseRequestData(event, {
-        fulfilled: false,
-      })
+      let request = member.buildResponseRequestData(event)
 
       // If the member does not have the correct permissions
-      // to start the session, then emit an error.
+      // to reset the session, then emit an error.
       if (!member.isAuthorized('startEndSessions')) {
         return member.emitError(
           new ServerEmittedError(
             ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-            { request: fulfilledRequest },
-          ),
-        )
-      }
-      // Resets are only permitted from a settled, running session. This
-      // rejects transitional states ('starting', 'ending', 'resetting'),
-      // which prevents a reset from racing an in-flight setup/teardown, as
-      // well as 'unstarted' and 'ended'.
-      if (this._state !== 'started') {
-        return member.emitError(
-          new ServerEmittedError(
-            ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-            { request: fulfilledRequest },
+            { request },
           ),
         )
       }
 
-      this._state = 'resetting'
-      this.emitToAll('session-resetting', {
-        data: {},
-        request: unfulfilledRequest,
-      })
+      // Reset the session, emitting an error if the
+      // reset is rejected outright.
+      let reset: Promise<boolean>
+      try {
+        reset = this.reset({ request })
+      } catch (error: any) {
+        if (!(error instanceof ServerEmittedError)) throw error
+        return member.emitError(error)
+      }
 
-      // Perform teardown.
-      await this.tearDown()
-      // If teardown failed, do not proceed.
-      if (this.teardownFailed) return
-
-      // Assign a new instance ID.
-      this._instanceId = StringToolbox.generateRandomId()
-
-      this.resetRealms()
-
-      // Clear all tasks (setup, teardown, and live) for the new
-      // instance.
-      this._environmentTasks = []
-
-      // Perform setup.
-      await this.setUp()
-      // If setup failed, do not proceed.
-      if (this.setupFailed) return
-
-      // Mark as started and emit the response to
-      // all members.
-      this._state = 'started'
-      this.emitStartResponses(event, member, 'session-reset')
-
-      // Perform any effect triggered by session start.
-      this.applyMissionEffects('session-start')
+      await reset
     },
   )
