@@ -12,6 +12,7 @@
   - [General Types, Enumerations, Variables, and Properties of Classes, Types and Interfaces](#general-types-enumerations-variables-and-properties-of-classes-types-and-interfaces)
   - [Notes](#notes)
   - [Defaults](#defaults)
+  - [Generic Parameters](#generic-parameters)
   - [Deprecated Code](#deprecated-code)
   - [Examples](#examples)
   - [Code References](#code-references)
@@ -212,6 +213,20 @@ export interface IMetisServerOptions {
    */
   mongoPassword?: string
 }
+```
+
+### Generic Parameters
+
+Generic parameters of a type, function, method, or class can be documented with the `@template` tag, followed by the name of the parameter, followed by its description. This isn't strictly enforced, but it should be added to new or changed generics, especially where a parameter changes how the type behaves. Use `@template` rather than `@param` for generic parameters.
+
+```tsx
+/**
+ * Takes the registered response of the provided method
+ * and forces the request property to be required.
+ * @template TMethod The response method whose event is returned.
+ */
+export type TGuaranteeRequest<TMethod extends TResponseMethod> =
+  TResponseEvents[TMethod] & { request: TRequestOfResponse }
 ```
 
 ### Deprecated Code
