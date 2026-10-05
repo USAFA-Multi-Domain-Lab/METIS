@@ -1,15 +1,20 @@
 import Prompt from '@client/components/content/communication/Prompt'
+import { color } from '@client/components/content/general-layout/rich-text/formatting'
 import { useGlobalContext } from '@client/context/global'
-import { SessionBasic } from '@client/sessions/SessionBasic'
 import { SessionClient } from '@client/sessions/SessionClient'
 import { compute } from '@client/toolbox'
 import { usePeriodicRerender, useRequireLogin } from '@client/toolbox/hooks'
+import { RED } from '@shared/colors'
 import type { MetisComponent } from '@shared/MetisComponent'
+import { SessionBasic } from '@shared/sessions/SessionBasic'
 import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { TGetListButtonLabel, TOnListButtonClick } from '../List'
 import List from '../List'
 import type {
+  TGetItemButtonDescription,
+  TGetItemButtonDisabled,
+  TGetItemButtonHidden,
   TGetItemButtonLabel,
   TOnItemButtonClick,
   TOnItemSelection,
@@ -54,12 +59,12 @@ export default function SessionList({
     }
 
     // If the user has no write permissions whatsoever
-    // for a session, there is no need to show it.
+    // for a session, there is no need to show them.
     if (
       login.user.isAuthorized('sessions_write_native') ||
       login.user.isAuthorized('sessions_write_foreign')
     ) {
-      buttons.push('remove')
+      buttons.push('stop', 'force-stop')
     }
 
     return buttons
@@ -160,8 +165,69 @@ export default function SessionList({
     switch (button) {
       case 'open':
         return 'Join'
-      case 'remove':
-        return 'Hard Delete'
+      case 'stop':
+        return 'End Session'
+      case 'force-stop':
+        return 'Force End'
+      default:
+        return ''
+    }
+  }
+
+  /**
+   * Gets whether a session item button is disabled.
+   */
+  const getSessionItemButtonDisabled: TGetItemButtonDisabled<SessionBasic> = (
+    button,
+    session,
+  ) => {
+    switch (button) {
+      case 'stop':
+        return (
+          !login.user.canWriteToSession(session) ||
+          (session.state !== 'unstarted' && session.state !== 'started')
+        )
+      case 'force-stop':
+        return !login.user.canWriteToSession(session)
+      default:
+        return false
+    }
+  }
+
+  /**
+   * Gets whether a session item button is hidden.
+   */
+  const getSessionItemButtonHidden: TGetItemButtonHidden<SessionBasic> = (
+    button,
+    session,
+  ) => {
+    switch (button) {
+      // Force End is only offered once a clean
+      // end is no longer the next step.
+      case 'force-stop':
+        return session.state === 'unstarted' || session.state === 'started'
+      default:
+        return false
+    }
+  }
+
+  /**
+   * Gets the tooltip description for a session item button,
+   * explaining why End Session cannot be used, if it can't.
+   */
+  const getSessionItemButtonDescription: TGetItemButtonDescription<
+    SessionBasic
+  > = (button, session) => {
+    if (button !== 'stop') return ''
+
+    switch (session.state) {
+      case 'starting':
+        return 'The session is still setting up.'
+      case 'ending':
+        if (session.teardownFailed) return 'The session failed to tear down.'
+        else return 'The session is already ending.'
+      case 'resetting':
+        return 'The session is resetting.'
       default:
         return ''
     }
@@ -223,30 +289,65 @@ export default function SessionList({
 
   /**
    * Handler for when a session is requested to
-   * be torn down.
+   * be ended cleanly.
    */
-  const onSessionTearDown = async (session: SessionBasic) => {
-    // Confirm tear down.
-    let { choice } = await prompt(
-      `Are you sure you want to perform a hard delete for the "${session.name}" session? This will end the session, skipping typical shutdown procedures.`,
-      Prompt.ConfirmationChoices,
-      {
-        dangerous: true,
-        dangerousChoices: ['Confirm'],
-      },
-    )
+  const onSessionEnd = async (session: SessionBasic) => {
+    // Confirm end.
+    let message =
+      `Are you sure you want to end the "${session.name}" session?\n\n` +
+      `Its members will be removed, and the session will be torn down.`
+
+    let { choice } = await prompt(message, Prompt.ConfirmationChoices)
+
+    // If confirmed, end session.
+    if (choice === 'Confirm') {
+      try {
+        beginLoading('Ending session...')
+        await SessionClient.$end(session._id)
+        finishLoading()
+        // An unstarted session has nothing to tear down,
+        // so it has already ended by now.
+        if (session.state === 'unstarted') {
+          notify(`Successfully ended the "${session.name}" session.`)
+        } else {
+          notify(`The "${session.name}" session is ending.`)
+        }
+        refresh()
+      } catch (error) {
+        finishLoading()
+        notify(`Failed to end the "${session.name}" session.`)
+      }
+    }
+  }
+
+  /**
+   * Handler for when a session is requested to
+   * be force ended.
+   */
+  const onSessionForceEnd = async (session: SessionBasic) => {
+    // Confirm force end.
+    let message =
+      `Are you sure you want to force end the "${session.name}" session? ` +
+      `This will end the session immediately, skipping any teardown that ` +
+      `has not finished.\n\n` +
+      `**${color('WARNING', RED)}** — this can have unintended consequences, such as ` +
+      `leaving integrations in a broken state.`
+
+    let { choice } = await prompt(message, Prompt.ConfirmationChoices, {
+      dangerousChoices: ['Confirm'],
+    })
 
     // If confirmed, delete session.
     if (choice === 'Confirm') {
       try {
-        beginLoading('Deleting session...')
+        beginLoading('Ending session...')
         await SessionClient.$delete(session._id)
         finishLoading()
-        notify(`Successfully deleted the "${session.name}" session.`)
+        notify(`Successfully ended the "${session.name}" session.`)
         refresh()
       } catch (error) {
         finishLoading()
-        notify(`Failed to delete the "${session.name}" session.`)
+        notify(`Failed to end the "${session.name}" session.`)
       }
     }
   }
@@ -294,8 +395,11 @@ export default function SessionList({
       case 'open':
         onSessionSelection(item)
         break
-      case 'remove':
-        onSessionTearDown(item)
+      case 'stop':
+        onSessionEnd(item)
+        break
+      case 'force-stop':
+        onSessionForceEnd(item)
         break
       default:
         console.warn('Unknown button clicked in session list.')
@@ -323,27 +427,9 @@ export default function SessionList({
         column: 'launchedAt',
         direction: 'descending',
       }}
-      getItemButtonDisabled={(button, session) => {
-        switch (button) {
-          case 'remove':
-            // The user can remove a session if their
-            // permissions and ownership of the session
-            // correspond.
-            let isOwner = session?.ownerId === login.user._id
-            let hasNativeWrite = login.user.isAuthorized(
-              'sessions_write_native',
-            )
-            let hasForeignWrite = login.user.isAuthorized(
-              'sessions_write_foreign',
-            )
-            let canRemove =
-              (hasNativeWrite && isOwner) || (hasForeignWrite && !isOwner)
-
-            return !canRemove
-          default:
-            return false
-        }
-      }}
+      getItemButtonDisabled={getSessionItemButtonDisabled}
+      getItemButtonHidden={getSessionItemButtonHidden}
+      getItemButtonDescription={getSessionItemButtonDescription}
       getColumnLabel={getSessionColumnLabel}
       getCellContent={getSessionCellContent}
       getColumnWidth={getSessionColumnWidth}

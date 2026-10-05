@@ -71,6 +71,7 @@ declare global {
     | 'file'
     | 'flag'
     | 'font-color'
+    | 'force-stop'
     | 'gear'
     | 'group'
     | 'hammer'

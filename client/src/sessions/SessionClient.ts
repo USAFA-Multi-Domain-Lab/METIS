@@ -30,6 +30,7 @@ import type {
   TSessionJson,
 } from '@shared/sessions/MissionSession'
 import { MissionSession } from '@shared/sessions/MissionSession'
+import { SessionBasic } from '@shared/sessions/SessionBasic'
 import type { TSessionRealmJson } from '@shared/sessions/SessionRealm'
 import type { TEnvironmentTaskJson } from '@shared/target-environments/TargetEnvironmentTask'
 import type { TInstanceOrArray } from '@shared/toolbox/arrays/ArrayToolbox'
@@ -38,7 +39,6 @@ import axios from 'axios'
 import type { TMetisClientComponents } from '..'
 import { ClientChatChannel } from './chat/ClientChatChannel'
 import { ClientSessionMember } from './ClientSessionMember'
-import { SessionBasic } from './SessionBasic'
 import { SessionRealmBasic } from './SessionRealmBasic'
 import { onActionExecutionCompleted } from './traffic-controllers/onActionExecutionCompleted'
 import { onActionExecutionInitiated } from './traffic-controllers/onActionExecutionInitiated'
@@ -1634,6 +1634,28 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       return sessionId
     } catch (error) {
       console.error('Failed to launch session.')
+      console.error(error)
+      throw error
+    }
+  }
+
+  /**
+   * Cleanly ends a started session with the given ID, tearing it
+   * down before it is destroyed. Unlike {@link $delete}, this runs
+   * the session's teardown, so it is the preferred way to end a
+   * session from outside of it.
+   * @param _id The ID of the session to end.
+   * @resolves Once session teardown has been initiated. Teardown will
+   * process in the background, and once complete, the session will
+   * officially end.
+   * @rejects If failed to initiate session teardown.
+   */
+  public static async $end(_id: string): Promise<void> {
+    try {
+      // Call API to end session.
+      await axios.post(`${MissionSession.API_ENDPOINT}/${_id}/end/`)
+    } catch (error) {
+      console.error('Failed to end session.')
       console.error(error)
       throw error
     }

@@ -8,6 +8,7 @@ import defineRequests, {
 } from '../../../middleware/requests'
 import { auth } from '../../../middleware/users'
 import { deleteSession } from '../controllers/sessions/[_id].delete'
+import { endSession } from '../controllers/sessions/[_id]/end.post'
 import { downloadMissionFile } from '../controllers/sessions/files/[_id]/download.get'
 import { getSessions } from '../controllers/sessions/index.get'
 import { launchSession } from '../controllers/sessions/launch.post'
@@ -52,6 +53,8 @@ const routerMap = (router: Router, server: MetisServer, done: () => void) => {
   router.get('/', auth({}), getSessions)
 
   /* -- UPDATE -- */
+
+  router.post('/:_id/end/', auth({}), endSession)
 
   router.get(
     '/files/:_id/download',
