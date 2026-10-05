@@ -21,22 +21,9 @@ export const deleteSession: TExpressHandler = (request, response) => {
       throw new StatusError(`Session with ID "${_id}" not found.`, 404)
     }
 
-    // Determine authorization details for the requester
-    // and the session.
-    let ownsSession: boolean = session.ownerId === requester._id
-    let hasNativeWrite: boolean = requester.isAuthorized([
-      'sessions_write_native',
-    ])
-    let hasForeignWrite: boolean = requester.isAuthorized([
-      'sessions_write_foreign',
-    ])
-
     // Confirm the requester is authorized to write
     // to the session.
-    if (
-      (ownsSession && !hasNativeWrite) ||
-      (!ownsSession && !hasForeignWrite)
-    ) {
+    if (!requester.canWriteToSession(session)) {
       return ApiResponse.sendStatus(response, 401)
     }
 
