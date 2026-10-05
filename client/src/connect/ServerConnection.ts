@@ -6,9 +6,9 @@ import type {
   TClientMethod,
   TGenericClientEvents,
   TGenericClientMethod,
+  TGuaranteeRequest,
   TRequestEvents,
   TRequestMethod,
-  TResponseEvents,
   TResponseMethod,
   TServerConnectionStatus,
   TServerEvent,
@@ -687,9 +687,12 @@ export type TServerHandler<TMethod extends TServerMethod> = (
 
 /**
  * Represents a listener for a response to a request.
+ * @note A response only reaches its listener through the request it
+ * carries, so the request is always present here, even on response
+ * events the server can also emit without one.
  */
 export type TServerResponseListener<TMethod extends TResponseMethod> = (
-  event: TResponseEvents[TMethod] | TServerEvents['error'],
+  event: TGuaranteeRequest<TMethod> | TServerEvents['error'],
 ) => void
 
 /**

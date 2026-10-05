@@ -75,14 +75,18 @@ export type TRequestOfResponse = {
 
 /**
  * Represents an event emitted by the server in response to a request by the client.
+ * @template TOptionalRequest Whether the server may also emit the event with no request
+ * behind it, such as when the action was triggered over REST.
  */
-export interface TResponseEvent<
+export type TResponseEvent<
   TMethod extends string,
   TData extends {},
   TReqEvent extends TRequestEvent<string, {}>,
-> extends TConnectEvent<TMethod, TData> {
-  request: TRequestOfResponse
-}
+  TOptionalRequest extends boolean = false,
+> = TConnectEvent<TMethod, TData> &
+  (TOptionalRequest extends true
+    ? { request?: TRequestOfResponse }
+    : { request: TRequestOfResponse })
 
 /**
  * Represents any event emitted by the server in response to a request by the client.
@@ -563,7 +567,8 @@ export type TResponseEvents = {
   'session-starting': TResponseEvent<
     'session-starting',
     {},
-    TClientEvents['request-start-session']
+    TClientEvents['request-start-session'],
+    true
   >
   /**
    * Occurs when the session starts while the client is joined.
@@ -586,7 +591,8 @@ export type TResponseEvents = {
        */
       realmBasics: TSessionRealmBasicJson[]
     },
-    TClientEvents['request-start-session']
+    TClientEvents['request-start-session'],
+    true
   >
   /**
    * Occurs when the session is ending (transitionary state).
@@ -594,7 +600,8 @@ export type TResponseEvents = {
   'session-ending': TResponseEvent<
     'session-ending',
     {},
-    TClientEvents['request-end-session']
+    TClientEvents['request-end-session'],
+    true
   >
   /**
    * Occurs when the session ends while the client is joined.
@@ -610,7 +617,8 @@ export type TResponseEvents = {
   'session-resetting': TResponseEvent<
     'session-resetting',
     {},
-    TClientEvents['request-reset-session']
+    TClientEvents['request-reset-session'],
+    true
   >
   /**
    * Occurs when the session has been reset.
@@ -633,7 +641,8 @@ export type TResponseEvents = {
        */
       realmBasics: TSessionRealmBasicJson[]
     },
-    TClientEvents['request-reset-session']
+    TClientEvents['request-reset-session'],
+    true
   >
   /**
    * Occurs when configuration of the session is updated.
@@ -903,6 +912,13 @@ export type TResponseEvents = {
     TClientEvents['request-switch-realm']
   >
 }
+
+/**
+ * Takes the registered response of the provided method
+ * and forces the request property to be required.
+ */
+export type TGuaranteeRequest<TMethod extends TResponseMethod> =
+  TResponseEvents[TMethod] & { request: TRequestOfResponse }
 
 /**
  * All WS events emitted by the server, or caused due to a change in the connection with the server.
