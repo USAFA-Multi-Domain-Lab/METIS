@@ -1,7 +1,6 @@
 import { useGlobalContext } from '@client/context/global'
 import { ClientFileReference } from '@client/files/ClientFileReference'
 import { ClientMission } from '@client/missions/ClientMission'
-import type { SessionBasic } from '@client/sessions/SessionBasic'
 import { SessionClient } from '@client/sessions/SessionClient'
 import { compute } from '@client/toolbox'
 import {
@@ -10,6 +9,7 @@ import {
   useUnmountHandler,
 } from '@client/toolbox/hooks'
 import { ClientUser } from '@client/users/ClientUser'
+import type { SessionBasic } from '@shared/sessions/SessionBasic'
 import { PromiseManager } from '@shared/toolbox/promises/PromiseManager'
 import { AxiosError } from 'axios'
 import { useRef, useState } from 'react'
