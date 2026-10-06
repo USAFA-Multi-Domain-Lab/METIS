@@ -389,16 +389,6 @@ export default function SessionPage(
     done()
   })
 
-  // On session reset, reselect the force in
-  // the mission, since a new force object
-  // will be created.
-  useEventListener(server, 'session-reset', () => {
-    selectForce(
-      () => subscribedMission.getForceById(selectedForce?._id) ?? null,
-    )
-    notify('All progress has been reset by a manager.')
-  })
-
   // Add navigation middleware to properly
   // quit the session before the user navigates
   // away.
