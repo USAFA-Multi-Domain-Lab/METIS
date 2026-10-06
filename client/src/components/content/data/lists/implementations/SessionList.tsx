@@ -9,6 +9,7 @@ import type { MetisComponent } from '@shared/MetisComponent'
 import { SessionBasic } from '@shared/sessions/SessionBasic'
 import { DateToolbox } from '@shared/toolbox/dates/DateToolbox'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import { AxiosError } from 'axios'
 import type { TGetListButtonLabel, TOnListButtonClick } from '../List'
 import List from '../List'
 import type {
@@ -315,7 +316,7 @@ export default function SessionList({
         refresh()
       } catch (error) {
         finishLoading()
-        notify(`Failed to end the "${session.name}" session.`)
+        onEndFailure(session, error)
       }
     }
   }
@@ -347,8 +348,29 @@ export default function SessionList({
         refresh()
       } catch (error) {
         finishLoading()
-        notify(`Failed to end the "${session.name}" session.`)
+        onEndFailure(session, error)
       }
+    }
+  }
+
+  /**
+   * Notifies the user that ending or force ending a session failed.
+   * A session that could not be found was most likely already ended
+   * elsewhere, such as while the confirmation prompt was open, so the
+   * list is refreshed to drop it.
+   * @param session The session that failed to end.
+   * @param error The error thrown while ending it.
+   */
+  const onEndFailure = (session: SessionBasic, error: unknown) => {
+    let notFound = error instanceof AxiosError && error.response?.status === 404
+
+    if (notFound) {
+      notify(
+        `The "${session.name}" session could not be found. Most likely it has already ended.`,
+      )
+      refresh()
+    } else {
+      notify(`Failed to end the "${session.name}" session.`)
     }
   }
 
