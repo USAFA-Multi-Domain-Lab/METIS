@@ -1640,14 +1640,15 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
   }
 
   /**
-   * Cleanly ends a started session with the given ID, tearing it
-   * down before it is destroyed. Unlike {@link $delete}, this runs
-   * the session's teardown, so it is the preferred way to end a
+   * Cleanly ends a session with the given ID. A started session is torn
+   * down before it is destroyed, while an unstarted one, having nothing
+   * to tear down, is destroyed right away. Unlike {@link $delete}, this
+   * runs the session's teardown, so it is the preferred way to end a
    * session from outside of it.
    * @param _id The ID of the session to end.
    * @resolves Once session teardown has been initiated. Teardown will
    * process in the background, and once complete, the session will
-   * officially end.
+   * officially end. An unstarted session has already ended by then.
    * @rejects If failed to initiate session teardown.
    */
   public static async $end(_id: string): Promise<void> {
