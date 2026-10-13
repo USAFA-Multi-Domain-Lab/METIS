@@ -297,6 +297,48 @@ describe('/api/v1/missions', () => {
     assertMissionMatchesExpectedData(fetched, created)
   })
 
+  test('POST /api/v1/missions/ rejects an unknown field on an action and creates nothing', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let requestBody: TAnyObject = createMissionPayload()
+    requestBody.forces[0].nodes[1].actions[0].color = 'red'
+
+    let createResponse = await client.post('/api/v1/missions/', requestBody)
+    expect(createResponse.status).toBe(400)
+
+    let missions = await fetchAllMissions(client)
+    expect(missions.map(({ name }) => name)).not.toContain(requestBody.name)
+  })
+
+  test('POST /api/v1/missions/ rejects a null prototype and creates nothing', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let requestBody: TAnyObject = createMissionPayload()
+    requestBody.prototypes.push(null)
+
+    let createResponse = await client.post('/api/v1/missions/', requestBody)
+    expect(createResponse.status).toBe(400)
+
+    let missions = await fetchAllMissions(client)
+    expect(missions.map(({ name }) => name)).not.toContain(requestBody.name)
+  })
+
+  test('POST /api/v1/missions/ rejects a null resource and creates nothing', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let requestBody: TAnyObject = createMissionPayload()
+    requestBody.resources.push(null)
+
+    let createResponse = await client.post('/api/v1/missions/', requestBody)
+    expect(createResponse.status).toBe(400)
+
+    let missions = await fetchAllMissions(client)
+    expect(missions.map(({ name }) => name)).not.toContain(requestBody.name)
+  })
+
   test('POST /api/v1/missions/ sanitizes large-string effect arguments and leaves other argument types alone', async () => {
     let { client } = await createTestContext()
     await loginWithAccess(client, 'admin')
