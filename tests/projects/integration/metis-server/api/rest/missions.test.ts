@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, test } from '@jest/globals'
 import type { TMissionExistingJson } from '@shared/missions/Mission'
+import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import type { TUserJson } from '@shared/users/User'
 import { Types } from 'mongoose'
 import { assertMissionMatchesExpectedData } from 'tests/helpers/projects/integration/rest-api/missions/assertions'
@@ -202,6 +203,98 @@ describe('/api/v1/missions', () => {
 
     let fetched = await fetchMission(client, created._id)
     assertMissionMatchesExpectedData(fetched, updatePayload)
+  })
+
+  test('PUT /api/v1/missions/ rejects an unknown field on one of two actions and keeps both actions', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    // Give the objective node a second action so one can carry the bad
+    // field while the other stays valid.
+    let payload = createMissionPayload()
+    let objectiveActions = payload.forces[0].nodes[1].actions
+    let secondAction = structuredClone(objectiveActions[0])
+    secondAction._id = generateRandomId()
+    secondAction.name = 'Action 2'
+    secondAction.localKey = '2'
+    for (let cost of secondAction.resourceCosts) cost._id = generateRandomId()
+    for (let effect of secondAction.effects) {
+      effect._id = generateRandomId()
+      for (let argument of effect.arguments) argument._id = generateRandomId()
+    }
+    objectiveActions.push(secondAction)
+
+    let created = await createMission(client, payload)
+    let requestBody: TAnyObject = createMissionUpdatePayload(created)
+    requestBody.forces[0].nodes[1].actions[0].color = 'red'
+
+    let updateResponse = await client.put('/api/v1/missions/', requestBody)
+    expect(updateResponse.status).toBe(400)
+
+    let fetched = await fetchMission(client, created._id)
+    expect(fetched.forces[0].nodes[1].actions).toHaveLength(2)
+    assertMissionMatchesExpectedData(fetched, created)
+  })
+
+  test('PUT /api/v1/missions/ rejects an unknown top-level field', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let created = await createMission(client)
+    let requestBody: TAnyObject = createMissionUpdatePayload(created)
+    requestBody.color = 'red'
+
+    let updateResponse = await client.put('/api/v1/missions/', requestBody)
+    expect(updateResponse.status).toBe(400)
+
+    let fetched = await fetchMission(client, created._id)
+    assertMissionMatchesExpectedData(fetched, created)
+  })
+
+  test('PUT /api/v1/missions/ rejects a null action', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let created = await createMission(client)
+    let requestBody: TAnyObject = createMissionUpdatePayload(created)
+    requestBody.forces[0].nodes[1].actions[0] = null
+
+    let updateResponse = await client.put('/api/v1/missions/', requestBody)
+    expect(updateResponse.status).toBe(400)
+
+    let fetched = await fetchMission(client, created._id)
+    assertMissionMatchesExpectedData(fetched, created)
+  })
+
+  test('PUT /api/v1/missions/ rejects a null force', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let created = await createMission(client)
+    let requestBody: TAnyObject = createMissionUpdatePayload(created)
+    requestBody.forces[0] = null
+
+    let updateResponse = await client.put('/api/v1/missions/', requestBody)
+    expect(updateResponse.status).toBe(400)
+
+    let fetched = await fetchMission(client, created._id)
+    assertMissionMatchesExpectedData(fetched, created)
+  })
+
+  test('PUT /api/v1/missions/ rejects two nodes sharing an _id', async () => {
+    let { client } = await createTestContext()
+    await loginWithAccess(client, 'admin')
+
+    let created = await createMission(client)
+    let requestBody: TAnyObject = createMissionUpdatePayload(created)
+    let nodes = requestBody.forces[0].nodes
+    nodes[1]._id = nodes[0]._id
+
+    let updateResponse = await client.put('/api/v1/missions/', requestBody)
+    expect(updateResponse.status).toBe(400)
+
+    let fetched = await fetchMission(client, created._id)
+    assertMissionMatchesExpectedData(fetched, created)
   })
 
   test('POST /api/v1/missions/ sanitizes large-string effect arguments and leaves other argument types alone', async () => {
