@@ -566,10 +566,12 @@ export abstract class TargetEnvSandboxing {
   /**
    * Initializes the {@link TargetEnvSandbox} class
    * for use.
+   * @param typeChecksEnabled Whether to type check the target environments,
+   * so that any with type errors are skipped when they are registered.
    */
-  public static initialize() {
+  public static initialize(typeChecksEnabled: boolean) {
     TargetEnvSandboxing.determineTsConfigPaths()
-    TargetEnvSandboxing.typeCheckEnvironments()
+    if (typeChecksEnabled) TargetEnvSandboxing.typeCheckEnvironments()
     TargetEnvSandboxing.loadGlobals()
     TargetEnvSandboxing.addImportMiddleware()
     TargetEnvSandboxing.overrideTimingFunctions()

@@ -230,6 +230,19 @@ export class MetisServer {
   }
 
   /**
+   * Whether target environments are type checked on startup, so that any
+   * with type errors are skipped rather than loaded.
+   */
+  private _targetEnvTypeChecksEnabled: boolean
+  /**
+   * Whether target environments are type checked on startup, so that any
+   * with type errors are skipped rather than loaded.
+   */
+  public get targetEnvTypeChecksEnabled(): boolean {
+    return this._targetEnvTypeChecksEnabled
+  }
+
+  /**
    * The path to the SSL key file (if any).
    */
   private _sslKeyPath: string | undefined
@@ -346,6 +359,8 @@ export class MetisServer {
     this._wsRateLimitDuration = completedOptions.wsRateLimitDuration
     this._fileStoreDir = completedOptions.fileStoreDir
     this._backupsEnabled = completedOptions.backupsEnabled
+    this._targetEnvTypeChecksEnabled =
+      completedOptions.targetEnvTypeChecksEnabled
     this._sslKeyPath = completedOptions.sslKeyPath
     this._sslCertPath = completedOptions.sslCertPath
     this._maxLoginAttempts = completedOptions.maxLoginAttempts
@@ -450,7 +465,7 @@ export class MetisServer {
       initializeLoggers(expressApp)
 
       // Initialize target-environment sandboxing.
-      TargetEnvSandboxing.initialize()
+      TargetEnvSandboxing.initialize(this.targetEnvTypeChecksEnabled)
       // Register target environments.
       ServerTargetEnvironment.scan()
       // Validate target IDs.
@@ -818,6 +833,7 @@ export class MetisServer {
       'WS_RATE_LIMIT_DURATION',
       'FILE_STORE_DIR',
       'DB_BACKUPS_ENABLED',
+      'TARGET_ENV_TYPE_CHECKS_ENABLED',
       'MAX_LOGIN_ATTEMPTS',
       'LOGIN_LOCKOUT_DURATION',
       'LOGIN_ATTEMPT_WINDOW',
@@ -866,6 +882,9 @@ export class MetisServer {
         wsRateLimitDuration: parseInt(process.env.WS_RATE_LIMIT_DURATION!),
         fileStoreDir: process.env.FILE_STORE_DIR!,
         backupsEnabled: BooleanToolbox.parse(process.env.DB_BACKUPS_ENABLED!),
+        targetEnvTypeChecksEnabled: BooleanToolbox.parse(
+          process.env.TARGET_ENV_TYPE_CHECKS_ENABLED!,
+        ),
         sslKeyPath: process.env.SSL_KEY_PATH,
         sslCertPath: process.env.SSL_CERT_PATH,
         maxLoginAttempts: parseInt(process.env.MAX_LOGIN_ATTEMPTS!),
