@@ -1,6 +1,7 @@
 import { describe, expect, test } from '@jest/globals'
-import { TestToolbox } from 'tests/helpers/TestToolbox'
+import { Agent } from 'node:http'
 import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
+import { TestToolbox } from 'tests/helpers/TestToolbox'
 
 describe('Rate limiting', () => {
   const sleep = async (ms: number): Promise<void> => {
@@ -35,11 +36,12 @@ describe('Rate limiting', () => {
     await sleep(windowMs + 250)
 
     let requestCount = Math.max(httpRateLimit + 50, 150)
+    let connectionPool = new Agent({ keepAlive: true, maxSockets: 50 })
     let responses = await Promise.all(
       Array.from({ length: requestCount }).map(() =>
-        client.get('/api/v1/info/'),
+        client.get('/api/v1/info/', { httpAgent: connectionPool }),
       ),
-    )
+    ).finally(() => connectionPool.destroy())
 
     let statusCodes = responses.map((r) => r.status)
     let okCount = statusCodes.filter((s) => s === 200).length
