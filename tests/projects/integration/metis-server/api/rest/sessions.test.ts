@@ -5,13 +5,18 @@ import {
   beforeEach,
   describe,
   expect,
+  jest,
   test,
 } from '@jest/globals'
 import { ServerMissionFile } from '@server/missions/files/ServerMissionFile'
 import type { ServerSessionMember } from '@server/sessions/ServerSessionMember'
+import type { SessionServer } from '@server/sessions/SessionServer'
+import { ServerEnvironmentTask } from '@server/target-environments/ServerEnvironmentTask'
+import { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
 import type { TMissionFileJson } from '@shared/missions/files/MissionFile'
 import { Types } from 'mongoose'
 import { createMissionPayload } from 'tests/helpers/projects/integration/rest-api/missions/payload'
+import { launchPlayableSession } from 'tests/helpers/session/scenarios'
 import type { TestHttpClient } from 'tests/helpers/TestHttpClient'
 import { TestSession } from 'tests/helpers/TestSession'
 import { TestSuiteSetup } from 'tests/helpers/TestSuiteSetup'
@@ -35,6 +40,7 @@ describe('/api/v1/sessions', () => {
 
   afterEach(() => {
     TestSession.disposeAll()
+    jest.restoreAllMocks()
   })
 
   beforeAll(async () => {
@@ -109,6 +115,76 @@ describe('/api/v1/sessions', () => {
     let mission = member.subscribedRealm.mission
 
     mission.files.push(ServerMissionFile.fromJson(file, mission))
+  }
+
+  /**
+   * Lists the sessions visible to the given client.
+   * @param client The authenticated client to list with.
+   * @resolves With the listed session JSON.
+   */
+  async function listSessions(client: TestHttpClient): Promise<any[]> {
+    let response = await client.get('/api/v1/sessions/')
+    expect(response.status).toBe(200)
+    return response.data
+  }
+
+  /**
+   * Polls the session list until the given session no longer appears.
+   * @param client The authenticated client to list with.
+   * @param sessionId The ID of the session expected to leave the list.
+   * @param timeoutMs How long to keep polling before failing.
+   * @resolves Once the session is no longer listed.
+   * @rejects If the session is still listed when the timeout elapses.
+   */
+  async function waitForSessionToLeaveList(
+    client: TestHttpClient,
+    sessionId: string,
+    timeoutMs: number = 5000,
+  ): Promise<void> {
+    let deadline = Date.now() + timeoutMs
+
+    while (Date.now() < deadline) {
+      let sessions = await listSessions(client)
+      if (!sessions.some((session) => session._id === sessionId)) return
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    }
+
+    throw new Error(`Session "${sessionId}" is still listed.`)
+  }
+
+  /**
+   * Replaces the session's teardown with one that runs a single teardown
+   * hook task whose script fails, so the session's real `teardownFailed`
+   * check reads the failure the same way it would for a broken
+   * environment.
+   * @param session The live session whose teardown should fail.
+   * @note The environment is built here and never registered, so no
+   * installed target environment is involved.
+   */
+  function makeTeardownFail(session: SessionServer): void {
+    let environment = new ServerTargetEnvironment(
+      'test-env',
+      'Test Env',
+      'A self-contained environment whose teardown fails.',
+      '1.0.0',
+      [],
+      [],
+      'test-env-root',
+    )
+
+    jest.spyOn(session, 'tearDown').mockImplementation(async () => {
+      let task = ServerEnvironmentTask.create(
+        session,
+        environment,
+        session.realms[0]?.name ?? 'Test Realm',
+        { kind: 'hook', method: 'environment-teardown' },
+        async () => {
+          throw new Error('Teardown failed on purpose.')
+        },
+      )
+      task.announce()
+      await task.run()
+    })
   }
 
   test('Requires auth to list sessions', async () => {
@@ -362,6 +438,202 @@ describe('/api/v1/sessions', () => {
       `/api/v1/sessions/files/${missionFileId}/download`,
     )
     expect(forbidden.status).toBe(403)
+  })
+
+  test('POST /api/v1/sessions/:_id/end/ requires auth to end a session', async () => {
+    let { client } = await createTestContext()
+
+    let response = await client.post(
+      `/api/v1/sessions/${new Types.ObjectId().toHexString()}/end/`,
+    )
+
+    expect(response.status).toBe(401)
+  })
+
+  test('POST /api/v1/sessions/:_id/end/ returns 404 when ending a session that does not exist', async () => {
+    let { client } = await createTestContext()
+    await createTestUser({ username, password })
+    await loginUser(client, { username, password })
+
+    let response = await client.post(
+      `/api/v1/sessions/${new Types.ObjectId().toHexString()}/end/`,
+    )
+
+    expect(response.status).toBe(404)
+  })
+
+  test('POST /api/v1/sessions/:_id/end/ rejects ending a session someone else owns without foreign session write', async () => {
+    let { client: ownerClient } = await createTestContext()
+    let { client: foreignClient } = await createTestContext()
+
+    let ownerUser = `${suitePrefix}_end_owner_${generateRandomId()}`
+    let foreignUser = `${suitePrefix}_end_foreign_${generateRandomId()}`
+    await createTestUser({ username: ownerUser, password })
+    await createTestUser({ username: foreignUser, password })
+    await loginUser(ownerClient, { username: ownerUser, password })
+    await loginUser(foreignClient, { username: foreignUser, password })
+
+    let sessionId = await launchSession(
+      ownerClient,
+      suiteMissionId,
+      `${suitePrefix}_end_owned_${generateRandomId()}`,
+    )
+
+    let response = await foreignClient.post(
+      `/api/v1/sessions/${sessionId}/end/`,
+    )
+
+    expect(response.status).toBe(401)
+    let sessions = await listSessions(ownerClient)
+    expect(sessions.some((session) => session._id === sessionId)).toBe(true)
+  })
+
+  test('POST /api/v1/sessions/:_id/end/ allows ending a session someone else owns with foreign session write', async () => {
+    let { client: ownerClient } = await createTestContext()
+    let { client: adminClient } = await createTestContext()
+
+    let ownerUser = `${suitePrefix}_end_owner_${generateRandomId()}`
+    let adminUser = `${suitePrefix}_end_admin_${generateRandomId()}`
+    await createTestUser({ username: ownerUser, password })
+    await createTestUser({ username: adminUser, password, accessId: 'admin' })
+    await loginUser(ownerClient, { username: ownerUser, password })
+    await loginUser(adminClient, { username: adminUser, password })
+
+    let sessionId = await launchSession(
+      ownerClient,
+      suiteMissionId,
+      `${suitePrefix}_end_foreign_${generateRandomId()}`,
+    )
+
+    let response = await adminClient.post(`/api/v1/sessions/${sessionId}/end/`)
+
+    expect(response.status).toBe(202)
+  })
+
+  test('POST /api/v1/sessions/:_id/end/ allows an owner to end their own unstarted session, which leaves the list', async () => {
+    let { client } = await createTestContext()
+    await createTestUser({ username, password })
+    await loginUser(client, { username, password })
+
+    let sessionId = await launchSession(
+      client,
+      suiteMissionId,
+      `${suitePrefix}_end_native_${generateRandomId()}`,
+    )
+
+    let response = await client.post(`/api/v1/sessions/${sessionId}/end/`)
+
+    expect(response.status).toBe(202)
+    let sessions = await listSessions(client)
+    expect(sessions.some((session) => session._id === sessionId)).toBe(false)
+  })
+
+  test('POST /api/v1/sessions/:_id/end/ ends a started session, removing its members without a request attached, and drops it once torn down', async () => {
+    let { context } = await launchPlayableSession({
+      namePrefix: `${suitePrefix}_end_started`,
+      members: [{ force: 0 }],
+    })
+    let session = context.session
+    let memberContexts = [context.owner, ...context.members]
+
+    // Hold teardown open until the test releases it, so the members can
+    // be checked while the session is still ending rather than after it
+    // has been destroyed. The real teardown runs once released.
+    let tearDown = session.tearDown.bind(session)
+    let releaseTeardown: () => void = () => {}
+    let teardownGate = new Promise<void>(
+      (resolve) => (releaseTeardown = resolve),
+    )
+    jest.spyOn(session, 'tearDown').mockImplementation(async () => {
+      await teardownGate
+      await tearDown()
+    })
+
+    // Listen before ending so that no `session-ending` is missed.
+    let endingEvents = memberContexts.map((memberContext) =>
+      TestSession.waitFor(memberContext, 'session-ending'),
+    )
+
+    let response = await context.owner.client.post(
+      `/api/v1/sessions/${context.id}/end/`,
+    )
+
+    expect(response.status).toBe(202)
+    for (let event of await Promise.all(endingEvents)) {
+      expect(event.request).toBeUndefined()
+    }
+    expect(session.joinedMembers.length).toBe(0)
+
+    releaseTeardown()
+    await waitForSessionToLeaveList(context.owner.client, context.id)
+  })
+
+  test('POST /api/v1/sessions/:_id/end/ leaves a session whose teardown fails ending, and rejects ending it again', async () => {
+    let { context } = await launchPlayableSession({
+      namePrefix: `${suitePrefix}_end_teardown_failed`,
+      members: [{ force: 0 }],
+    })
+    makeTeardownFail(context.session)
+
+    let endingEvent = TestSession.waitFor(context.owner, 'session-ending')
+    let firstResponse = await context.owner.client.post(
+      `/api/v1/sessions/${context.id}/end/`,
+    )
+    expect(firstResponse.status).toBe(202)
+    await endingEvent
+
+    // Wait for the failed teardown to settle.
+    let session = context.session
+    await new Promise<void>((resolve) => {
+      let check = () => {
+        if (session.teardownFailed) return resolve()
+        setTimeout(check, 20)
+      }
+      check()
+    })
+
+    let sessions = await listSessions(context.owner.client)
+    let listed = sessions.find((listed) => listed._id === context.id)
+    expect(listed?.state).toBe('ending')
+    expect(listed?.teardownFailed).toBe(true)
+
+    let secondResponse = await context.owner.client.post(
+      `/api/v1/sessions/${context.id}/end/`,
+    )
+    expect(secondResponse.status).toBe(409)
+  })
+
+  test('POST /api/v1/sessions/:_id/end/ rejects ending a session that is still starting, and lets it finish starting', async () => {
+    let { context } = await launchPlayableSession({
+      namePrefix: `${suitePrefix}_end_starting`,
+      members: [{ force: 0 }],
+      start: false,
+    })
+    let session = context.session
+
+    // Hold setup open until the test releases it, so the session
+    // stays in the `starting` state while the end is requested.
+    let releaseSetup: () => void = () => {}
+    let setupGate = new Promise<void>((resolve) => (releaseSetup = resolve))
+    jest.spyOn(session, 'setUp').mockImplementation(() => setupGate)
+
+    let startingEvent = TestSession.waitFor(context.owner, 'session-starting')
+    TestSession.send(context.owner, {
+      method: 'request-start-session',
+      requestId: generateRandomId(),
+      data: {},
+    })
+    await startingEvent
+
+    let response = await context.owner.client.post(
+      `/api/v1/sessions/${context.id}/end/`,
+    )
+    expect(response.status).toBe(409)
+
+    let startedEvent = TestSession.waitFor(context.owner, 'session-started')
+    releaseSetup()
+    await startedEvent
+    expect(session.state).toBe('started')
   })
 
   afterAll(async () => {
