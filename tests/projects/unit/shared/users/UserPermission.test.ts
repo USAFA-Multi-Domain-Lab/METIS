@@ -2,6 +2,7 @@ import { describe, expect, test } from '@jest/globals'
 import { User } from '@shared/users/User'
 import { UserAccess } from '@shared/users/UserAccess'
 import { UserPermission } from '@shared/users/UserPermission'
+import { TestUser } from 'tests/helpers/projects/unit/users/TestUser.helpers'
 
 describe('UserPermission.hasPermissions', () => {
   test('Allows higher-level permission to satisfy more specific requirement', () => {
@@ -20,7 +21,10 @@ describe('UserPermission.hasPermissions', () => {
       UserPermission.AVAILABLE_PERMISSIONS.sessions_join_manager_native,
     ]
 
-    let denied = UserPermission.hasPermissions(permissions, 'sessions_join_manager')
+    let denied = UserPermission.hasPermissions(
+      permissions,
+      'sessions_join_manager',
+    )
 
     expect(denied).toBe(false)
   })
@@ -212,31 +216,3 @@ describe('User validation helpers', () => {
     expect(User.isValidPassword('has space')).toBe(false)
   })
 })
-
-/**
- * Test-only User implementation for exercising authorization logic.
- */
-class TestUser extends User {
-  public constructor(options: {
-    accessId: Parameters<typeof UserAccess.get>[0]
-    expressPermissions?: UserPermission[]
-  }) {
-    let access = UserAccess.get(options.accessId)
-    let expressPermissions = options.expressPermissions ?? []
-
-    super(
-      'test-user',
-      'tester',
-      access,
-      'Test',
-      'User',
-      false,
-      expressPermissions,
-      User.DEFAULT_PROPERTIES.preferences,
-      null,
-      null,
-      null,
-      null,
-    )
-  }
-}

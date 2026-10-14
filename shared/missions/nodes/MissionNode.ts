@@ -91,11 +91,6 @@ export abstract class MissionNode<
   }
 
   /**
-   * The description for the node.
-   */
-  public description: string
-
-  /**
    * The text that is sent to the output panel when the node
    * is clicked on.
    */
@@ -658,14 +653,12 @@ export abstract class MissionNode<
     super(
       data._id ?? MissionNode.DEFAULT_PROPERTIES._id,
       data.name ?? MissionNode.DEFAULT_PROPERTIES.name,
-      false,
+      data.description ?? MissionNode.DEFAULT_PROPERTIES.description,
     )
 
     // Set properties from data.
     this.force = force
     this._color = data.color ?? MissionNode.DEFAULT_PROPERTIES.color
-    this.description =
-      data.description ?? MissionNode.DEFAULT_PROPERTIES.description
     this.preExecutionText =
       data.preExecutionText ?? MissionNode.DEFAULT_PROPERTIES.preExecutionText
     this._executable =

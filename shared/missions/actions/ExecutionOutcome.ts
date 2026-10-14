@@ -98,7 +98,7 @@ export abstract class ExecutionOutcome<
     initialState: TOutcomeState,
     execution: TExecution<T>,
   ) {
-    super(_id, '', false)
+    super(_id, '')
 
     this._state = initialState
     this.execution = execution

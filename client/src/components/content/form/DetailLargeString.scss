@@ -28,13 +28,15 @@
 
     .FieldFooter {
       display: flex;
+      justify-content: end;
       align-items: center;
       flex-shrink: 0;
       padding: 0.25em 0.5em;
       border-top: 1px solid rgba($color-primary-light, 0.08);
 
       .ButtonSvg {
-        margin: 0;
+        margin: 0.1em 0;
+        font-size: 1.4em;
       }
     }
   }

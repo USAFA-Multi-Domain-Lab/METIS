@@ -1,34 +1,11 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  jest,
-  test,
-} from '@jest/globals'
-import path from 'path'
+import { describe, expect, test } from '@jest/globals'
 import {
   assertMigratedMission,
   createPreMigrationMission,
 } from 'tests/helpers/projects/unit/migrations/build_000055.helpers'
-
-const BUILD_FILE_PATH = path.resolve(
-  process.cwd(),
-  'server/database/builds/build_000055.js',
-)
-const mongoshGlobals = global as typeof globalThis & Partial<TMongoshGlobals>
+import { runDatabaseBuild } from 'tests/helpers/projects/unit/migrations/database-build.helpers'
 
 describe('build_000055 database migration', () => {
-  beforeEach(() => {
-    jest.resetModules()
-  })
-
-  afterEach(() => {
-    Reflect.deleteProperty(mongoshGlobals, 'db')
-    Reflect.deleteProperty(mongoshGlobals, 'print')
-    Reflect.deleteProperty(mongoshGlobals, 'use')
-  })
-
   test('migrates a pre-build-55 mission into the new multi-resource shape', () => {
     let mission = createCreditsMission('mission-1')
     let { missionUpdateOne, infosUpdateOne, missionResults } = runBuild(mission)
@@ -139,26 +116,10 @@ function runBuild(missions: TPreMigrationMission | TPreMigrationMission[]) {
   }
 
   let originalMissions = structuredClone(missions)
-  let cursorMissions = structuredClone(missions)
-  let missionUpdateOne = jest.fn<TMissionUpdateOne>()
-  let infosUpdateOne = jest.fn<TInfoUpdateOne>()
-
-  mongoshGlobals.use = jest.fn()
-  mongoshGlobals.print = jest.fn()
-  mongoshGlobals.db = {
-    missions: {
-      find: jest.fn(() => createCursor(cursorMissions)),
-      updateOne: missionUpdateOne,
-    },
-    infos: {
-      updateOne: infosUpdateOne,
-    },
-  }
-
-  // This build runs on require, so set the mongosh globals first.
-  jest.isolateModules(() => {
-    require(BUILD_FILE_PATH)
-  })
+  let { missionUpdateOne, infosUpdateOne } = runDatabaseBuild<
+    TPreMigrationMission,
+    TMissionUpdatePayload
+  >(55, missions)
 
   let missionResults: TMissionMigrationResult[] =
     missionUpdateOne.mock.calls.map(([filter, updatePayload]) => {
@@ -213,26 +174,7 @@ function findOriginalMissionById(
   return originalMission
 }
 
-function createCursor<T>(items: T[]) {
-  let index = 0
-
-  return {
-    hasNext: () => index < items.length,
-    next: () => items[index++],
-  }
-}
-
 type TPreMigrationMission = ReturnType<typeof createPreMigrationMission>
-
-type TInfoUpdateOne = (
-  filter: Record<string, never>,
-  updatePayload: { $set: { schemaBuildNumber: 55 } },
-) => void
-
-type TMissionUpdateOne = (
-  filter: TMissionUpdateFilter,
-  updatePayload: TMissionUpdatePayload,
-) => void
 
 interface TMissionMigrationResult {
   migratedMission: TMigratedMissionResult
@@ -244,27 +186,9 @@ interface TMigratedMissionResult extends Record<string, unknown> {
   resources: Array<{ _id: string }>
 }
 
-interface TMissionUpdateFilter {
-  _id: string
-}
-
 interface TMissionUpdatePayload {
   $set: Record<string, unknown> & {
     resources: Array<{ _id: string }>
   }
   $unset: Record<string, string>
-}
-
-interface TMongoshGlobals {
-  use: ReturnType<typeof jest.fn>
-  print: ReturnType<typeof jest.fn>
-  db: {
-    missions: {
-      find: ReturnType<typeof jest.fn>
-      updateOne: ReturnType<typeof jest.fn>
-    }
-    infos: {
-      updateOne: ReturnType<typeof jest.fn>
-    }
-  }
 }

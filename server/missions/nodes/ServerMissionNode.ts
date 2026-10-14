@@ -6,6 +6,7 @@ import type { TMissionNodeJson } from '@shared/missions/nodes/MissionNode'
 import { MissionNode } from '@shared/missions/nodes/MissionNode'
 import type { TNodeAlertSeverityLevel } from '@shared/missions/nodes/NodeAlert'
 import { NodeAlert } from '@shared/missions/nodes/NodeAlert'
+import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
 import { ServerActionExecution } from '../actions/ServerActionExecution'
 import type { ServerExecutionOutcome } from '../actions/ServerExecutionOutcome'
@@ -126,9 +127,7 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
         return self.force.toTargetEnvContext()
       },
       get actions() {
-        return self.actions.map((action) =>
-          action.toTargetEnvContext(),
-        )
+        return self.actions.map((action) => action.toTargetEnvContext())
       },
       hasChildren: self.hasChildren,
       hasSiblings: self.hasSiblings,
@@ -204,28 +203,39 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
   /**
    * Validates the actions of the node.
    * @param actions The actions to validate.
-   * @returns True if the actions are valid, false otherwise.
+   * @throws A validation error if the actions are invalid.
    */
   public static validateActions(actions: TMissionNodeJson['actions']): void {
     let actionKeys: TMissionActionJson['localKey'][] = []
 
+    if (!ArrayToolbox.isArrayOf(actions, 'object')) {
+      throw generateValidationError(
+        'The actions of the node must be an array of objects.',
+      )
+    }
+
     for (const action of actions) {
-      const { baseProcessTime, baseSuccessChance, resourceCosts } = action
+      const { baseProcessTime, baseSuccessChance } = action
 
       // PROCESS TIME
-      let isValidNumber = ServerMissionAction.PROCESS_TIME_REGEX.test(
-        baseProcessTime.toString(),
-      )
-      if (!isValidNumber) {
-        throw generateValidationError(
-          `Process time "${baseProcessTime}" is not a valid number for action "{ _id: ${action._id}, name: ${action.name} }".`,
+      // A value that isn't a number is left to Mongoose, which reports
+      // it on its own path.
+      if (typeof baseProcessTime === 'number') {
+        let isValidNumber = ServerMissionAction.PROCESS_TIME_REGEX.test(
+          baseProcessTime.toString(),
         )
-      }
-      let lessThanMax = baseProcessTime <= ServerMissionAction.PROCESS_TIME_MAX
-      if (!lessThanMax) {
-        throw generateValidationError(
-          `Process time "${baseProcessTime}" exceeds the maximum process time "${ServerMissionAction.PROCESS_TIME_MAX}" for action "{ _id: ${action._id}, name: ${action.name} }".`,
-        )
+        if (!isValidNumber) {
+          throw generateValidationError(
+            `Process time "${baseProcessTime}" is not a valid number for action "{ _id: ${action._id}, name: ${action.name} }".`,
+          )
+        }
+        let lessThanMax =
+          baseProcessTime <= ServerMissionAction.PROCESS_TIME_MAX
+        if (!lessThanMax) {
+          throw generateValidationError(
+            `Process time "${baseProcessTime}" exceeds the maximum process time "${ServerMissionAction.PROCESS_TIME_MAX}" for action "{ _id: ${action._id}, name: ${action.name} }".`,
+          )
+        }
       }
 
       // SUCCESS CHANCE
@@ -237,6 +247,16 @@ export class ServerMissionNode extends MissionNode<TMetisServerComponents> {
       }
 
       // RESOURCE COSTS
+      // A value that isn't an array is left to Mongoose, which reports it
+      // on its own path.
+      let resourceCosts = Array.isArray(action.resourceCosts)
+        ? action.resourceCosts
+        : []
+      if (!ArrayToolbox.isArrayOf(resourceCosts, 'object')) {
+        throw generateValidationError(
+          `The resource costs must be objects in action "{ _id: ${action._id}, name: ${action.name} }".`,
+        )
+      }
       for (const cost of resourceCosts) {
         let nonNegativeInteger = NumberToolbox.isNonNegativeInteger(
           cost.baseAmount,

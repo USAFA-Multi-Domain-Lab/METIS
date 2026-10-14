@@ -1,5 +1,13 @@
 # changelog
 
+# version-2.5.3 | 10-14-2026
+
+- Sessions can now be ended cleanly from the home page. Ending a session this way runs the same teardown as ending it from within the session, so connected integrations are left in a proper state. A forced end is still available, but only for a session stuck partway through starting, resetting, or ending, and it now warns what it skips.
+- A new "until success" action type has been added. An action of this type can be attempted again after a failed or aborted execution, and locks once it succeeds.
+- Resources can now be given a description, which is shown when hovering over the resource during a session.
+- Missions containing malformed data, such as an imported file that was edited by hand, are now rejected with a message describing what is wrong, rather than failing with an unclear error.
+- Various bug fixes and design improvements throughout the application.
+
 # version-2.5.2 | 9-23-2026
 
 - Rich text now looks the same everywhere it appears, whether it is being edited or only displayed.

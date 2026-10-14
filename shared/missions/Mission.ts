@@ -4,6 +4,18 @@ import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import type { TCreatedByJson, User } from '@shared/users/User'
+import type { TValidColor } from '../colors'
+import {
+  BLUE,
+  BROWN,
+  GREEN,
+  MAGENTA,
+  ORANGE,
+  PURPLE,
+  RED,
+  WHITE,
+  YELLOW,
+} from '../colors'
 import { context } from '../context'
 import type { MetisComponent } from '../MetisComponent'
 import { TargetArgument } from '../target-environments/arguments/TargetArgument'
@@ -249,7 +261,7 @@ export abstract class Mission<
     fileData: TMissionFileJson[],
     effectData: TEffectSessionTriggeredJson[],
   ) {
-    super(_id, name, false)
+    super(_id, name)
 
     this.versionNumber = versionNumber
     this.createdAt = createdAt
@@ -936,63 +948,18 @@ export abstract class Mission<
   public static readonly MAX_STRUCTURE_DEPTH: number = 64
 
   /**
-   * The color white.
+   * Options when setting the color of nodes and forces.
    */
-  public static readonly WHITE: string = '#ffffff'
-
-  /**
-   * The color red.
-   */
-  public static readonly RED: string = '#fd6b72'
-
-  /**
-   * The color orange.
-   */
-  public static readonly ORANGE: string = '#ff9c50'
-
-  /**
-   * The color brown.
-   */
-  public static readonly BROWN: string = '#b79769'
-
-  /**
-   * The color yellow.
-   */
-  public static readonly YELLOW: string = '#ffdb67'
-
-  /**
-   * The color green.
-   */
-  public static readonly GREEN: string = '#7ed321'
-
-  /**
-   * The color blue.
-   */
-  public static readonly BLUE: string = '#52b1ff'
-
-  /**
-   * The color purple.
-   */
-  public static readonly PURPLE: string = '#bc6fec'
-
-  /**
-   * The color magenta.
-   */
-  public static readonly MAGENTA: string = '#ff6dce'
-
-  /**
-   * Options when setting the color of nodes.
-   */
-  public static readonly COLOR_OPTIONS: string[] = [
-    Mission.WHITE,
-    Mission.RED,
-    Mission.ORANGE,
-    Mission.BROWN,
-    Mission.YELLOW,
-    Mission.GREEN,
-    Mission.BLUE,
-    Mission.PURPLE,
-    Mission.MAGENTA,
+  public static readonly COLOR_OPTIONS: TValidColor[] = [
+    WHITE,
+    RED,
+    ORANGE,
+    BROWN,
+    YELLOW,
+    GREEN,
+    BLUE,
+    PURPLE,
+    MAGENTA,
   ]
 
   /**

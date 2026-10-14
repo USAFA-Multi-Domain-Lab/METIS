@@ -74,7 +74,7 @@ export class ListUpload
     payloadSize: number,
     options: TListUploadOptions = {},
   ) {
-    super(StringToolbox.generateRandomId(), name, false)
+    super(StringToolbox.generateRandomId(), name)
 
     const { onCancel } = options
 

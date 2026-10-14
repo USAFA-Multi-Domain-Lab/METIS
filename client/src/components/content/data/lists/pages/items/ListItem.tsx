@@ -45,6 +45,7 @@ export default function ListItem<T extends MetisComponent>({
     onItemDblClick,
     getItemButtonDisabled,
     getItemButtonHidden,
+    getItemButtonDescription,
     getAdditionalItemClasses,
     getWarningText,
   } = listContext
@@ -319,14 +320,15 @@ export default function ListItem<T extends MetisComponent>({
   }, [item])
 
   useEffect(() => {
-    // Enable/disable and show/hide the row's option-menu buttons based
-    // on this row's own item. The item is always the fresh instance
-    // (rows are keyed by id and re-rendered on updates), so the menu
-    // reflects remote changes such as status updates even while
-    // selected.
+    // Enable/disable, show/hide, and describe the row's option-menu
+    // buttons based on this row's own item. The item is always the
+    // fresh instance (rows are keyed by id and re-rendered on updates),
+    // so the menu reflects remote changes such as status updates even
+    // while selected.
     itemButtonIcons.forEach((icon) => {
       optionsEngine.setDisabled(icon, getItemButtonDisabled(icon, item))
       optionsEngine.setHidden(icon, getItemButtonHidden(icon, item))
+      optionsEngine.setDescription(icon, getItemButtonDescription(icon, item))
     })
   }, [item])
 
@@ -479,7 +481,7 @@ export type TGetItemButtonPermission<TItem extends MetisComponent> = (
 export type TGetItemButtonDisabled<TItem extends MetisComponent> = (
   // button: TSvgPanelElement['icon'],
   button: string,
-  item: TItem | null,
+  item: TItem,
 ) => boolean
 
 /**
@@ -491,8 +493,20 @@ export type TGetItemButtonDisabled<TItem extends MetisComponent> = (
  */
 export type TGetItemButtonHidden<TItem extends MetisComponent> = (
   button: string,
-  item: TItem | null,
+  item: TItem,
 ) => boolean
+
+/**
+ * Gets the tooltip description for the item's button.
+ * @param button The button for which to get the description.
+ * @param item The item the button belongs to.
+ * @returns The description.
+ * @default () => ''
+ */
+export type TGetItemButtonDescription<TItem extends MetisComponent> = (
+  button: string,
+  item: TItem,
+) => string
 
 /**
  * A callback for when an item in the list is clicked.

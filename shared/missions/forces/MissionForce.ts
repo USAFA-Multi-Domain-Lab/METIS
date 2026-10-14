@@ -1,6 +1,16 @@
 import type { TAnyObject } from '@shared/toolbox/objects/ObjectToolbox'
 import { JsonSerializableArray } from '@shared/toolbox/serialization/JsonSerializableArray'
 import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
+import {
+  BLUE,
+  BROWN,
+  GREEN,
+  MAGENTA,
+  PURPLE,
+  RED,
+  WHITE,
+  YELLOW,
+} from '../../colors'
 import { context } from '../../context'
 import { Mission, type TMission, type TMissionJsonOptions } from '../Mission'
 import { MissionComponent } from '../MissionComponent'
@@ -207,7 +217,6 @@ export abstract class MissionForce<
     super(
       data._id ?? MissionForce.DEFAULT_PROPERTIES._id,
       data.name ?? MissionForce.DEFAULT_PROPERTIES.name,
-      false,
     )
 
     // Set properties.
@@ -551,49 +560,49 @@ export abstract class MissionForce<
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Friendly Force',
-        color: Mission.BLUE,
+        color: BLUE,
         localKey: '1',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Enemy Force',
-        color: Mission.RED,
+        color: RED,
         localKey: '2',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Guerrilla Force',
-        color: Mission.YELLOW,
+        color: YELLOW,
         localKey: '3',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Local National Force',
-        color: Mission.GREEN,
+        color: GREEN,
         localKey: '4',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'White Cell',
-        color: Mission.WHITE,
+        color: WHITE,
         localKey: '5',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Non-State Actors',
-        color: Mission.BROWN,
+        color: BROWN,
         localKey: '6',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Coalition Force',
-        color: Mission.PURPLE,
+        color: PURPLE,
         localKey: '7',
       },
       {
         ...MissionForce.DEFAULT_PROPERTIES,
         name: 'Civilian Industry',
-        color: Mission.MAGENTA,
+        color: MAGENTA,
         localKey: '8',
       },
     ]

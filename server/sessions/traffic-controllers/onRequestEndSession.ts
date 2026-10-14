@@ -10,56 +10,39 @@ export const onRequestEndSession =
   createServerSessionController<'request-end-session'>(
     async function (this, member, event) {
       // Build request for response data.
-      let fulfilledRequest = member.buildResponseRequestData(event, {
-        fulfilled: true,
-      })
-      let unfulfilledRequest = member.buildResponseRequestData(event, {
-        fulfilled: false,
-      })
+      let request = member.buildResponseRequestData(event)
       let connection = member.connection
 
       // If the member does not have the correct permissions
-      // to start the session, then emit an error.
+      // to end the session, then emit an error.
       if (!member.isAuthorized('startEndSessions')) {
         return member.emitError(
           new ServerEmittedError(
             ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-            { request: fulfilledRequest },
+            { request },
           ),
         )
       }
-      // If the session is not in the 'started' state,
-      // then emit an error.
-      if (this._state !== 'started') {
-        return member.emitError(
-          new ServerEmittedError(
-            ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-            { request: fulfilledRequest },
-          ),
-        )
+      // End the session, emitting an error if the
+      // end is rejected outright.
+      let teardown: Promise<boolean>
+      try {
+        teardown = this.end({ request })
+      } catch (error: any) {
+        if (!(error instanceof ServerEmittedError)) throw error
+        return member.emitError(error)
       }
 
-      // Emit ending event. Then, once tear down is complete,
-      // emit ended event.
-      this._state = 'ending'
-      this.emitToAll('session-ending', {
-        data: {},
-        request: unfulfilledRequest,
-      })
-      this.clearMembers()
-      await this.tearDown()
-
+      // Once tear down is complete, emit ended event.
       // If teardown failed, do not proceed.
-      if (this.teardownFailed) return
+      let tornDown = await teardown
+      if (!tornDown) return
 
-      // Mark the session as ended.
-      this._state = 'ended'
       // Must use connection directly because the member
       // has already had the connection detached.
       connection?.emit('session-ended', {
         data: { sessionId: this._id },
-        request: fulfilledRequest,
+        request,
       })
-      this.destroy()
     },
   )

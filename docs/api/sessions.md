@@ -12,6 +12,7 @@ Only these four operations are available over REST. Everything that happens *dur
   - [Launch Session](#launch-session)
   - [Get All Sessions](#get-all-sessions)
   - [Download Mission File](#download-mission-file)
+  - [End Session](#end-session)
   - [Delete Session](#delete-session)
 - [Data Types](#data-types)
   - [Session Object](#session-object)
@@ -166,9 +167,28 @@ Two things are checked in turn:
 - 404 Not Found – No such file in the caller's realm
 - 500 Internal Server Error – Server error during download
 
+### End Session
+
+Ends a session cleanly, running the same teardown as a manager ending it from within the session. Joined members are removed, then target-environment teardown runs before the session is destroyed. An unstarted session has nothing to tear down and is destroyed right away.
+
+**HTTP Method:** `POST`  
+**Path:** `/api/v1/sessions/:_id/end/`
+
+**Required Permission(s)**: `sessions_write_native` to end a session you own, `sessions_write_foreign` to end anyone else's.
+
+The response is sent as soon as the session begins ending, without waiting on teardown. The session leaves [Get All Sessions](#get-all-sessions) once teardown finishes. If teardown fails, it stays listed in the `ending` state with `teardownFailed` set, and can only be removed with [Delete Session](#delete-session).
+
+**Status Codes**:
+
+- 202 Accepted – The session has begun ending
+- 401 Unauthorized – Missing authentication, or the caller lacks the permission for this session
+- 404 Not Found – Session not found
+- 409 Conflict – The session is starting, resetting, or already ending, and cannot be ended cleanly
+- 500 Internal Server Error – Server error while ending
+
 ### Delete Session
 
-Destroys a session.
+Destroys a session immediately, skipping any teardown that has not finished. This is what the home page's Force End uses, and it is meant for a session stuck partway through starting, resetting, or ending. Use [End Session](#end-session) to end a session cleanly.
 
 **HTTP Method:** `DELETE`  
 **Path:** `/api/v1/sessions/:_id/`
@@ -243,7 +263,7 @@ Two normalizations are applied to the configuration on the way in, so what comes
 | `started`   | Active; participants can interact                             |
 | `ending`    | Running target-environment teardown                           |
 | `ended`     | Complete                                                      |
-| `resetting` | Returning to `unstarted` so the mission can be played again   |
+| `resetting` | Tearing down and setting up again, returning to `started` with all progress back at the start |
 
 ### Member Roles
 
@@ -280,8 +300,8 @@ Standalone has a consequence for integrations: a target environment that has not
 
 | Permission                     | Grants                                        |
 | ------------------------------ | --------------------------------------------- |
-| `sessions_write_native`        | Launch and destroy your own sessions          |
-| `sessions_write_foreign`       | Destroy sessions owned by someone else        |
+| `sessions_write_native`        | Launch, end, and destroy your own sessions    |
+| `sessions_write_foreign`       | End and destroy sessions owned by someone else |
 | `sessions_write`               | Both of the above                             |
 | `sessions_join_participant`    | Join a session as a participant               |
 | `sessions_join_observer`       | Join a session as an observer                 |

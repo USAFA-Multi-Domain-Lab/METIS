@@ -97,11 +97,6 @@ export abstract class MissionAction<
   }
 
   /**
-   * The description of the action.
-   */
-  public description: string
-
-  /**
    * Categorizes an action, defining how it will behave in the mission.
    */
   public type: TActionType
@@ -256,6 +251,19 @@ export abstract class MissionAction<
   }
 
   /**
+   * Whether any execution of this action has succeeded,
+   * such as when deciding whether an until-success action
+   * can still be executed.
+   */
+  public get hasEverSucceeded(): boolean {
+    let { outcomes } = this.node
+    return outcomes.some(
+      (outcome) =>
+        outcome.actionId === this._id && outcome.status === 'success',
+    )
+  }
+
+  /**
    * Whether the associated force has enough resources
    * remaining to perform the action, given the resource
    * cost.
@@ -303,6 +311,8 @@ export abstract class MissionAction<
    * return false for them.
    * @note Single-use actions have a limit of 1 execution, so this
    * will return true if the action has been executed once.
+   * @note Until-success actions have no limit until one of their
+   * executions succeeds, so this will return true once that happens.
    */
   public get executionLimitReached(): boolean {
     let { type, executionCount } = this
@@ -313,6 +323,10 @@ export abstract class MissionAction<
       case 'single-use':
         // Single-use actions have a limit of 1 execution.
         return executionCount >= 1
+      case 'until-success':
+        // Until-success actions are limited once an
+        // execution of the action succeeds.
+        return this.hasEverSucceeded
       default:
         console.warn(
           `Unrecognized action type in MissionAction.executionLimitReached: ${type}`,
@@ -338,12 +352,10 @@ export abstract class MissionAction<
     super(
       data._id ?? MissionAction.DEFAULT_PROPERTIES._id,
       data.name ?? MissionAction.DEFAULT_PROPERTIES.name,
-      false,
+      data.description ?? MissionAction.DEFAULT_PROPERTIES.description,
     )
 
     this.node = node
-    this.description =
-      data.description ?? MissionAction.DEFAULT_PROPERTIES.description
     this.type = data.type ?? MissionAction.DEFAULT_PROPERTIES.type
     this.baseProcessTime =
       data.baseProcessTime ?? MissionAction.DEFAULT_PROPERTIES.baseProcessTime
@@ -515,10 +527,11 @@ export abstract class MissionAction<
   /**
    * The different types available for an action.
    */
-  public static readonly TYPES: ['repeatable', 'single-use'] & TActionType[] = [
+  public static readonly TYPES = [
     'repeatable',
     'single-use',
-  ]
+    'until-success',
+  ] as const satisfies TActionType[]
 
   /**
    * The minimum process time for an action in milliseconds.
@@ -755,8 +768,10 @@ export type TMissionActionDefaultJson = Required<
  * Categorizes an action, defining how it will behave in the mission.
  * @option 'repeatable' - The action can be executed multiple times.
  * @option 'single-use' - The action can only be executed once.
+ * @option 'until-success' - The action can be executed multiple times
+ * until one of its executions succeeds.
  */
-export type TActionType = 'repeatable' | 'single-use'
+export type TActionType = 'repeatable' | 'single-use' | 'until-success'
 
 /**
  * The property of a {@link MissionAction} that a modifier targets.

@@ -30,6 +30,7 @@ import type {
   TSessionJson,
 } from '@shared/sessions/MissionSession'
 import { MissionSession } from '@shared/sessions/MissionSession'
+import { SessionBasic } from '@shared/sessions/SessionBasic'
 import type { TSessionRealmJson } from '@shared/sessions/SessionRealm'
 import type { TEnvironmentTaskJson } from '@shared/target-environments/TargetEnvironmentTask'
 import type { TInstanceOrArray } from '@shared/toolbox/arrays/ArrayToolbox'
@@ -38,7 +39,6 @@ import axios from 'axios'
 import type { TMetisClientComponents } from '..'
 import { ClientChatChannel } from './chat/ClientChatChannel'
 import { ClientSessionMember } from './ClientSessionMember'
-import { SessionBasic } from './SessionBasic'
 import { SessionRealmBasic } from './SessionRealmBasic'
 import { onActionExecutionCompleted } from './traffic-controllers/onActionExecutionCompleted'
 import { onActionExecutionInitiated } from './traffic-controllers/onActionExecutionInitiated'
@@ -333,11 +333,13 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       (realm) => new SessionRealmBasic(realm),
     )
 
-    this._activeExecutions = []
     this._unreadChatMessageCount = new Map(
       Object.entries(unreadChatChannelMessages),
     )
     this._initialPendingSessionPanelAlerts = pendingSessionPanelAlerts
+
+    this._activeExecutions = []
+    this.resumeActiveExecutions()
 
     // Add listeners to detect events that are
     // emitted to the client.
@@ -659,6 +661,18 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
 
     // Handle request within node.
     node.handleRequestMade('request-send-output')
+  }
+
+  /**
+   * Picks up the executions already running when the server handed this
+   * session over and starts counting them down.
+   */
+  private resumeActiveExecutions(): void {
+    this._activeExecutions = this.subscribedMission.allNodes
+      .flatMap((node) => node.executions)
+      .filter((execution) => execution.timeRemaining > 0)
+
+    if (this._activeExecutions.length > 0) this.tickActiveExecutions()
   }
 
   /**
@@ -1338,6 +1352,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       }),
     )
     let executionLimitReached = action.executionLimitReached
+    let untilSuccess = action.type === 'until-success'
 
     // Handle case when there are not enough resources.
     // Build a message which specifies which resources
@@ -1364,7 +1379,9 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     if (!nodeReady) {
       reasons.push('Node is not ready to execute.')
     }
-    if (executionLimitReached) {
+    if (executionLimitReached && untilSuccess) {
+      reasons.push('This action has already succeeded.')
+    } else if (executionLimitReached) {
       reasons.push('Execution limit for this action has been reached.')
     }
 
@@ -1617,6 +1634,29 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       return sessionId
     } catch (error) {
       console.error('Failed to launch session.')
+      console.error(error)
+      throw error
+    }
+  }
+
+  /**
+   * Cleanly ends a session with the given ID. A started session is torn
+   * down before it is destroyed, while an unstarted one, having nothing
+   * to tear down, is destroyed right away. Unlike {@link $delete}, this
+   * runs the session's teardown, so it is the preferred way to end a
+   * session from outside of it.
+   * @param _id The ID of the session to end.
+   * @resolves Once session teardown has been initiated. Teardown will
+   * process in the background, and once complete, the session will
+   * officially end. An unstarted session has already ended by then.
+   * @rejects If failed to initiate session teardown.
+   */
+  public static async $end(_id: string): Promise<void> {
+    try {
+      // Call API to end session.
+      await axios.post(`${MissionSession.API_ENDPOINT}/${_id}/end/`)
+    } catch (error) {
+      console.error('Failed to end session.')
       console.error(error)
       throw error
     }

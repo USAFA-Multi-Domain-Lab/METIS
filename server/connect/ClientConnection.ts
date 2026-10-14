@@ -324,7 +324,22 @@ export class ClientConnection {
           this.login.user,
         )
         let member = session.join(this)
-        let started = await session.start(member, event, {
+
+        // If the member does not have the correct permissions
+        // to start the session, then emit an error.
+        if (!member.isAuthorized('startEndSessions')) {
+          return this.emitError(
+            new ServerEmittedError(
+              ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
+              { request: this.buildResponseRequestData(event) },
+            ),
+          )
+        }
+
+        // Start the session. The request is left unfulfilled so it
+        // stays open for the `play-test-started` response below.
+        let started = await session.start({
+          request: this.buildResponseRequestData(event),
           fulfillOnStarted: false,
         })
 
@@ -352,6 +367,11 @@ export class ClientConnection {
               request: this.buildResponseRequestData(event),
             }),
           )
+        }
+        // A `ServerEmittedError` means the start was rejected
+        // outright, so pass it along to the client.
+        else if (error instanceof ServerEmittedError) {
+          this.emitError(error)
         } else {
           this.emitError(
             new ServerEmittedError(ServerEmittedError.CODE_SERVER_ERROR, {

@@ -367,21 +367,27 @@ export class WebSocketApi extends Api {
 
     // If there's a host...
     if (options.host) {
-      // Use a regular expression to check if the host contains a port.
-      let portRegex: RegExp = /.*:([0-9]+).*/
-      // If the host contains a port...
-      if (portRegex.test(options.host)) {
+      // Split off any path that follows the address, so that the
+      // port is looked for, and added, before the path.
+      let pathIndex: number = options.host.indexOf('/')
+      let address: string =
+        pathIndex === -1 ? options.host : options.host.slice(0, pathIndex)
+      let path: string = pathIndex === -1 ? '' : options.host.slice(pathIndex)
+      // Use a regular expression to check if the address contains a port.
+      let portRegex: RegExp = /:([0-9]+)$/
+      // If the address contains a port...
+      if (portRegex.test(address)) {
         // Add the entire host.
         url += options.host
       }
       // Or if there's a separate port...
       else if (options.port) {
-        // Add the host and the port.
-        url += `${options.host}:${options.port}`
+        // Add the address, the port, and the path.
+        url += `${address}:${options.port}${path}`
       }
-      // Otherwise, add the host and the default port.
+      // Otherwise, add the address, the default port, and the path.
       else {
-        url += `${options.host}:${defaultPort}`
+        url += `${address}:${defaultPort}${path}`
       }
     }
     // Or if there's a port without host...

@@ -1,4 +1,10 @@
 import { MetisComponent } from '../MetisComponent'
+import type {
+  MissionSession,
+  TSessionBasicJson,
+  TSessionJson,
+} from '../sessions/MissionSession'
+import type { SessionBasic } from '../sessions/SessionBasic'
 import { DateToolbox } from '../toolbox/dates/DateToolbox'
 import { StringToolbox } from '../toolbox/strings/StringToolbox'
 import type { TUserAccess } from './UserAccess'
@@ -87,7 +93,7 @@ export abstract class User<
      */
     public createdByUsername: string | null,
   ) {
-    super(_id, '', false)
+    super(_id, '')
   }
 
   /**
@@ -275,6 +281,21 @@ export abstract class User<
     } else {
       return false
     }
+  }
+
+  /**
+   * Checks whether the user can write to the given session, such as
+   * ending or deleting it. Owners need `sessions_write_native`, and
+   * everyone else needs `sessions_write_foreign`.
+   * @param session The session to check, in any form.
+   * @returns Whether the user can write to the session.
+   */
+  public canWriteToSession = (
+    session: TSessionBasicJson | TSessionJson | MissionSession | SessionBasic,
+  ): boolean => {
+    let isOwner = session.ownerId === this._id
+    if (isOwner) return this.isAuthorized('sessions_write_native')
+    else return this.isAuthorized('sessions_write_foreign')
   }
 
   /**
@@ -583,8 +604,10 @@ export interface TUserDefaultJson extends Omit<TUserJson, 'password'> {
  * createdBy field should be a user that is already
  * saved to the database.
  */
-export interface TCreatedByJson
-  extends Omit<TUserExistingJson, 'preferences' | 'expressPermissionIds'> {
+export interface TCreatedByJson extends Omit<
+  TUserExistingJson,
+  'preferences' | 'expressPermissionIds'
+> {
   // The createdBy field must be a string to
   // prevent infinite reference loops.
   createdBy: string
@@ -598,10 +621,10 @@ type RequireIdDeep<T> = {
   [K in keyof T]-?: K extends '_id'
     ? NonNullable<T[K]> // force `_id` to be required and non-nullable
     : T[K] extends (infer U)[]
-    ? RequireIdDeep<U>[]
-    : T[K] extends object
-    ? RequireIdDeep<T[K]>
-    : T[K]
+      ? RequireIdDeep<U>[]
+      : T[K] extends object
+        ? RequireIdDeep<T[K]>
+        : T[K]
 }
 
 /**

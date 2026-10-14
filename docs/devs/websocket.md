@@ -48,6 +48,8 @@ Events fall into four groups along two axes — who sent it, and whether it answ
 
 The request/response pairing is the part worth understanding. A response event carries a `request` property holding the originating event, the ID of the client that sent it, and whether it has been fulfilled. That is what lets a client correlate an answer with the thing it asked, and it is why most responses are named as completed facts (`session-started`) rather than as commands.
 
+The session lifecycle responses — `session-starting`, `session-started`, `session-ending`, `session-resetting`, and `session-reset` — are the exception: they can also arrive with no `request` at all. A session ended from the home page, through the [End Session](../api/sessions.md#end-session) REST route, has no WebSocket request behind it, and members are still told it is ending.
+
 Responses are not private. A request from one member usually produces a response delivered to everyone who should see it — `force-assigned` reaches the whole session, not just the manager who asked.
 
 **Realms scope delivery.** A member receives events for the realm they are subscribed to. In a standalone session, where every participant has their own realm, one participant's action produces no events for another. See [Realms](architecture.md#the-realm-model).
@@ -58,26 +60,26 @@ Every event METIS defines, grouped as above.
 
 ### Client Requests
 
-| Event                            | Purpose                                               |
-| -------------------------------- | ----------------------------------------------------- |
-| `request-start-session`          | Start a session from the lobby                        |
-| `request-end-session`            | End a running session                                 |
-| `request-reset-session`          | Return a session to `unstarted` so it can be replayed |
-| `request-config-update`          | Change the session configuration                      |
-| `request-join-session`           | Join a session                                        |
-| `request-quit-session`           | Leave a session                                       |
-| `request-current-session`        | Fetch the caller's current session state              |
-| `request-play-test`              | Launch a throwaway play-test bound to this connection |
-| `request-switch-realm`           | Subscribe the caller to a different realm             |
-| `request-kick`                   | Remove a member from the session                      |
-| `request-ban`                    | Remove a member and bar them from rejoining           |
-| `request-unban`                  | Lift a ban                                            |
-| `request-assign-force`           | Assign a member to a force                            |
-| `request-assign-role`            | Change a member's role                                |
-| `request-open-node`              | Open a node                                           |
-| `request-execute-action`         | Execute an action on a node                           |
-| `request-send-output`            | Send a message to the output panel                    |
-| `request-acknowledge-node-alert` | Acknowledge a node alert                              |
+| Event                            | Purpose                                                                           |
+| -------------------------------- | --------------------------------------------------------------------------------- |
+| `request-start-session`          | Start a session from the lobby                                                    |
+| `request-end-session`            | End a running session                                                             |
+| `request-reset-session`          | Tear down and set up a running session again, returning all progress to the start |
+| `request-config-update`          | Change the session configuration                                                  |
+| `request-join-session`           | Join a session                                                                    |
+| `request-quit-session`           | Leave a session                                                                   |
+| `request-current-session`        | Fetch the caller's current session state                                          |
+| `request-play-test`              | Launch a throwaway play-test bound to this connection                             |
+| `request-switch-realm`           | Subscribe the caller to a different realm                                         |
+| `request-kick`                   | Remove a member from the session                                                  |
+| `request-ban`                    | Remove a member and bar them from rejoining                                       |
+| `request-unban`                  | Lift a ban                                                                        |
+| `request-assign-force`           | Assign a member to a force                                                        |
+| `request-assign-role`            | Change a member's role                                                            |
+| `request-open-node`              | Open a node                                                                       |
+| `request-execute-action`         | Execute an action on a node                                                       |
+| `request-send-output`            | Send a message to the output panel                                                |
+| `request-acknowledge-node-alert` | Acknowledge a node alert                                                          |
 
 ### Server Responses
 

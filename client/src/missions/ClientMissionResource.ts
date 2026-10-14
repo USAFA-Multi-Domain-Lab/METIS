@@ -67,6 +67,7 @@ export class ClientMissionResource
               mission,
               datum._id,
               datum.name,
+              datum.description,
               datum.icon,
               datum.order,
             ),
@@ -77,6 +78,7 @@ export class ClientMissionResource
       mission,
       data._id,
       data.name,
+      data.description,
       data.icon,
       data.order,
     )
@@ -108,6 +110,7 @@ export class ClientMissionResource
       mission,
       StringToolbox.generateRandomId(),
       resolvedName,
+      MissionResource.DEFAULT_PROPERTIES.description,
       resolvedIcon,
       order,
     )
@@ -126,9 +129,15 @@ export class ClientMissionResource
     mission: ClientMission,
     _id: string,
     name: string,
-    icon: TMetisIcon = MissionResource.DEFAULT_PROPERTIES.icon,
   ): ClientMissionResource {
-    return new ClientMissionResource(mission, _id, name, icon, 0)
+    return new ClientMissionResource(
+      mission,
+      _id,
+      name,
+      '',
+      MissionResource.DEFAULT_PROPERTIES.icon,
+      0,
+    )
   }
 
   /**

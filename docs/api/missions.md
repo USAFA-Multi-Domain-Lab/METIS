@@ -42,6 +42,7 @@ Creates a new mission with specified configuration and resources.
     {
       "_id": "662270879c5ca781c218abc1",
       "name": "Resources",
+      "description": "",
       "icon": "resources/coins",
       "order": 1
     }
@@ -99,6 +100,7 @@ Creates a new mission with specified configuration and resources.
     {
       "_id": "662270879c5ca781c218abc1",
       "name": "Resources",
+      "description": "",
       "icon": "resources/coins",
       "order": 1
     }
@@ -214,6 +216,7 @@ Retrieves a specific mission by ID with full details.
     {
       "_id": "662270879c5ca781c218abc1",
       "name": "Resources",
+      "description": "",
       "icon": "resources/coins",
       "order": 1
     }
@@ -293,6 +296,7 @@ Updates an existing mission.
     {
       "_id": "662270879c5ca781c218abc1",
       "name": "Points",
+      "description": "",
       "icon": "resources/trophy",
       "order": 1
     }
@@ -505,9 +509,14 @@ The `structure` field defines the hierarchical organization of the prototypes. E
 - Authentication is required for all operations
 - All deletes are soft deletes (sets deleted=true)
 - Timestamps and creator information are automatically tracked
+- Validation of a create or update:
+  - An unrecognized field on an entry within the mission, such as a node or an action, rejects the request with a 400.
+  - A list holding something other than objects, such as a `null` force or action, also rejects the request with a 400.
+  - An unrecognized field at the top level of the request body is dropped rather than rejected.
 - Export/Import features:
   - Exports include all associated files and metadata
   - Imports preserve all mission data and relationships
+  - An imported file with an unrecognized field anywhere in its mission data fails to import, with a message naming the field and asking for it to be deleted
   - Mission files are managed through the file store
 
 ## Related Documentation

@@ -136,7 +136,7 @@ export abstract class MissionFile<
      */
     protected readonly _mission: T['mission'],
   ) {
-    super(_id, '', false)
+    super(_id, '')
 
     if (!this.orphaned) this.lastKnownName = reference.name
     else reference.name = lastKnownName

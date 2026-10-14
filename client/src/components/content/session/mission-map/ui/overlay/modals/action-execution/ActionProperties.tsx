@@ -12,7 +12,6 @@ import {
 } from '@shared/sessions/MissionSession'
 import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
-import { StringToolbox } from '@shared/toolbox/strings/StringToolbox'
 import { useState } from 'react'
 import './ActionProperties.scss'
 
@@ -102,13 +101,23 @@ export default function ActionProperties({
           active={action.opensNode}
           icon={'door'}
           value={null}
-          description={'Opens Node'}
+          description={'Opens the node revealing any descendants.'}
         />
         <PropertyBadge
           active={action.type === 'repeatable'}
           icon={'repeat'}
           value={null}
-          description={StringToolbox.toTitleCase(action.type)}
+          description={
+            'Can be executed any number of times, provided other requirements are met.'
+          }
+        />
+        <PropertyBadge
+          active={action.type === 'until-success'}
+          icon={'until-success'}
+          value={null}
+          description={
+            'Can retry only after failed attempts, provided other requirements are met.'
+          }
         />
       </PropertyBadges>
     </div>

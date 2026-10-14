@@ -75,6 +75,27 @@
       padding: 0.2em 0.4em;
     }
 
+    // The caret drawn on an edge of inline code, inside or outside the
+    // code element. It replaces the browser's caret there, which is always
+    // drawn inside the code.
+    &.CodeEdgeCaret {
+      caret-color: transparent;
+    }
+
+    .CodeCaret {
+      display: none;
+    }
+
+    &.ProseMirror-focused .CodeCaret {
+      display: inline-block;
+      width: 0;
+      height: 1.2em;
+      margin-right: -1px;
+      vertical-align: text-bottom;
+      border-left: 1px solid currentColor;
+      animation: code-caret-blink 1s step-end infinite;
+    }
+
     pre {
       font-size: 0.95em;
       padding: 1.75em;
@@ -169,5 +190,11 @@
   .Viewer > p:last-child:empty,
   .Viewer > p:last-child:has(> br.ProseMirror-trailingBreak:only-child) {
     display: none;
+  }
+}
+
+@keyframes code-caret-blink {
+  50% {
+    opacity: 0;
   }
 }

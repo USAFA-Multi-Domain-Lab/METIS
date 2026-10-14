@@ -127,8 +127,6 @@ const environment = TargetEnvSchema.create({
   version: '1.0.0',
 })
 
-let dbConnection: DatabaseClient | null = null
-
 environment.on('environment-setup', async (context) => {
   if (!context.config.targetEnvConfig) {
     throw new Error('No database configuration selected.')
@@ -139,7 +137,7 @@ environment.on('environment-setup', async (context) => {
 
   console.log('Connecting to database...')
 
-  dbConnection = new DatabaseClient({
+  const dbConnection = new DatabaseClient({
     host,
     port,
     database,
@@ -151,15 +149,21 @@ environment.on('environment-setup', async (context) => {
 
   console.log(`✅ Connected to database: ${database}`)
 
-  // Store connection in globalStore for targets to access
-  context.globalStore.set('dbConnection', dbConnection)
+  // Store connection in localStore for targets to access
+  context.localStore.use<DatabaseClient | null>('dbConnection', null).value =
+    dbConnection
 })
 
 environment.on('environment-teardown', async (context) => {
-  if (dbConnection) {
+  const dbConnection = context.localStore.use<DatabaseClient | null>(
+    'dbConnection',
+    null,
+  )
+
+  if (dbConnection.value) {
     console.log('Closing database connection...')
-    await dbConnection.disconnect()
-    dbConnection = null
+    await dbConnection.value.disconnect()
+    dbConnection.value = null
     console.log('✅ Database connection closed')
   }
 })
@@ -195,9 +199,9 @@ environment.on('environment-setup', async (context) => {
 
   const { token, expiresAt } = response.data
 
-  // Store token in globalStore for targets to use
-  context.globalStore.set('authToken', token)
-  context.globalStore.set('tokenExpiry', expiresAt)
+  // Store token in localStore for targets to use
+  context.localStore.use<string | null>('authToken', null).value = token
+  context.localStore.use<string | null>('tokenExpiry', null).value = expiresAt
 
   console.log('✅ API authentication successful')
 })
@@ -205,7 +209,9 @@ environment.on('environment-setup', async (context) => {
 environment.on('environment-teardown', async (context) => {
   if (!context.config.targetEnvConfig) return
 
-  const token = context.globalStore.get('authToken')
+  const authToken = context.localStore.use<string | null>('authToken', null)
+  const tokenExpiry = context.localStore.use<string | null>('tokenExpiry', null)
+  const token = authToken.value
   if (!token) return
 
   const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
@@ -224,8 +230,8 @@ environment.on('environment-teardown', async (context) => {
   } catch (error) {
     console.log('⚠️ Logout failed (token may have expired)')
   } finally {
-    context.globalStore.delete('authToken')
-    context.globalStore.delete('tokenExpiry')
+    authToken.value = null
+    tokenExpiry.value = null
   }
 })
 
@@ -258,10 +264,10 @@ environment.on('environment-setup', async (context) => {
     api.get('/locations'),
   ])
 
-  // Cache in globalStore
-  context.globalStore.set('users', users.data)
-  context.globalStore.set('devices', devices.data)
-  context.globalStore.set('locations', locations.data)
+  // Cache in localStore
+  context.localStore.use<any[]>('users', []).value = users.data
+  context.localStore.use<any[]>('devices', []).value = devices.data
+  context.localStore.use<any[]>('locations', []).value = locations.data
 
   console.log(
     `✅ Cached ${users.data.length} users, ${devices.data.length} devices, ${locations.data.length} locations`,
@@ -270,9 +276,9 @@ environment.on('environment-setup', async (context) => {
 
 environment.on('environment-teardown', async (context) => {
   // Clear cache
-  context.globalStore.delete('users')
-  context.globalStore.delete('devices')
-  context.globalStore.delete('locations')
+  context.localStore.use<any[]>('users', []).value = []
+  context.localStore.use<any[]>('devices', []).value = []
+  context.localStore.use<any[]>('locations', []).value = []
 
   console.log('✅ Cache cleared')
 })
@@ -330,40 +336,49 @@ environment.on('environment-setup', async (context) => {
 Always clean up resources in teardown, even if setup failed:
 
 ```typescript
-let connection: Connection | null = null
-
 environment.on('environment-setup', async (context) => {
-  connection = await createConnection()
+  const connection = context.localStore.use<Connection | null>(
+    'connection',
+    null,
+  )
+  connection.value = await createConnection()
 })
 
 environment.on('environment-teardown', async (context) => {
-  if (connection) {
+  const connection = context.localStore.use<Connection | null>(
+    'connection',
+    null,
+  )
+
+  if (connection.value) {
     try {
-      await connection.close()
+      await connection.value.close()
     } catch (error) {
       console.log(`⚠️ Cleanup warning: ${error.message}`)
     } finally {
-      connection = null
+      connection.value = null
     }
   }
 })
 ```
 
-### Use globalStore for Shared State
+### Use localStore for Shared State
 
-Store resources in `globalStore` so targets can access them:
+Store resources in `localStore` so targets can access them. Avoid module-level variables, which every session on the server shares, and `globalStore`, which every target environment in the session shares:
 
 ```typescript
 environment.on('environment-setup', async (context) => {
   const api = RestApi.fromConfig(context.config.targetEnvConfig.data)
 
   // Store for targets to use
-  context.globalStore.set('api', api)
+  context.localStore.use<RestApi | null>('api', null).value = api
 })
 
 // In target scripts:
 script: async (context) => {
-  const api = context.globalStore.get('api')
+  const api = context.localStore.use<RestApi | null>('api', null).value
+  if (!api) throw new Error('API not set up')
+
   const response = await api.get('/endpoint')
 }
 ```
@@ -419,8 +434,6 @@ const environment = TargetEnvSchema.create({
   version: '1.0.0',
 })
 
-let wsConnection: WebSocketApi | null = null
-
 environment.on('environment-setup', async (context) => {
   if (!context.config.targetEnvConfig) {
     throw new Error('No WebSocket configuration selected.')
@@ -429,26 +442,29 @@ environment.on('environment-setup', async (context) => {
   console.log('Establishing WebSocket connection...')
 
   try {
-    wsConnection = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
+    const wsConnection = WebSocketApi.fromConfig(
+      context.config.targetEnvConfig.data,
+    )
 
     // Set up event handlers
-    wsConnection.on('connect', () => {
+    wsConnection.addEventListener('open', () => {
       console.log('✅ WebSocket connected')
     })
 
-    wsConnection.on('disconnect', () => {
+    wsConnection.addEventListener('close', () => {
       console.log('⚠️ WebSocket disconnected')
     })
 
-    wsConnection.on('error', (error) => {
+    wsConnection.addEventListener('error', ({ error }) => {
       console.log(`❌ WebSocket error: ${error.message}`)
     })
 
+    // Store for targets to use
+    context.localStore.use<WebSocketApi | null>('wsConnection', null).value =
+      wsConnection
+
     // Connect
     await wsConnection.connect()
-
-    // Store for targets to use
-    context.globalStore.set('wsConnection', wsConnection)
   } catch (error) {
     console.log(`❌ WebSocket setup failed: ${error.message}`)
     throw error
@@ -456,17 +472,21 @@ environment.on('environment-setup', async (context) => {
 })
 
 environment.on('environment-teardown', async (context) => {
-  if (wsConnection) {
+  const wsConnection = context.localStore.use<WebSocketApi | null>(
+    'wsConnection',
+    null,
+  )
+
+  if (wsConnection.value) {
     console.log('Closing WebSocket connection...')
 
     try {
-      await wsConnection.disconnect()
+      await wsConnection.value.disconnect()
       console.log('✅ WebSocket disconnected')
     } catch (error) {
       console.log(`⚠️ WebSocket disconnect error: ${error.message}`)
     } finally {
-      wsConnection = null
-      context.globalStore.delete('wsConnection')
+      wsConnection.value = null
     }
   }
 })
@@ -504,7 +524,7 @@ export default environment
 
 **Solutions:**
 
-1. Ensure you're storing resources in `context.globalStore`
+1. Ensure you're storing resources in `context.localStore`
 2. Verify targets are accessing the correct store key
 3. Check that setup completed successfully before targets execute
 

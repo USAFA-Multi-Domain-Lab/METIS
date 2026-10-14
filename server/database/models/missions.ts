@@ -102,21 +102,7 @@ const findByIdAndModify = (
       // Extract the updated properties.
       let { _id: missionId, ...rest } = updates ?? {}
       // Update every property besides the _id.
-      Object.assign(missionDoc, { ...rest })
-      // todo: Confirm if this works or should be removed.
-      // todo: The concern here is that Mongoose will drop
-      // todo: objects with unknown fields and important data
-      // todo: may get wiped.
-      // Validate synchronously before calling save(). If Object.assign triggered
-      // any StrictModeErrors (e.g., session-only fields like `modifiers` reaching
-      // the DB layer), Mongoose will have silently dropped those sub-documents from
-      // their arrays rather than throwing. Calling validateSync() here surfaces those
-      // cast errors immediately, so save() is never called with corrupted data.
-      // let syncError = missionDoc.validateSync()
-      // if (syncError) throw syncError
-      // // Save the changes. validateBeforeSave is disabled because validateSync()
-      // // above already handles this — preventing validation from running twice.
-      // missionDoc = await missionDoc.save({ validateBeforeSave: false })
+      missionDoc.set(rest)
       missionDoc = await missionDoc.save()
       // Otherwise, resolve with the mission document.
       return resolve(missionDoc)
@@ -547,6 +533,7 @@ export const missionSchema = new MissionSchema(
     },
     resources: {
       required: true,
+      validate: ServerMission.validateResourceList,
       type: [
         {
           _id: { type: String, required: true },
@@ -554,6 +541,12 @@ export const missionSchema = new MissionSchema(
             type: String,
             required: true,
             maxlength: Mission.MAX_RESOURCE_NAME_LENGTH,
+          },
+          description: {
+            type: String,
+            required: false,
+            default: '',
+            set: sanitizeHtml,
           },
           icon: {
             type: String,
@@ -564,6 +557,7 @@ export const missionSchema = new MissionSchema(
       ],
     },
     files: {
+      validate: ServerMission.validateFileList,
       type: [
         {
           _id: { type: String, required: true },
@@ -590,7 +584,7 @@ export const missionSchema = new MissionSchema(
       ],
     },
     effects: {
-      required: false,
+      required: true,
       validate: ServerMission.createEffectsValidator([
         'session-setup',
         'session-start',
@@ -618,30 +612,32 @@ export const missionSchema = new MissionSchema(
 
 /* -- SCHEMA MIDDLEWARE -- */
 
-// todo: Confirm if this works or should be removed.
-// todo: The concern here is that Mongoose will drop
-// todo: objects with unknown fields and important data
-// todo: may get wiped.
-// // Called before document validation. Surfaces CastErrors that Mongoose
-// // records during construction when unknown fields on sub-documents cause
-// // them to be silently dropped from their arrays. These errors are cleared
-// // when Mongoose's validate() step runs, so they must be caught here first.
-// // This hook only fires when validateBeforeSave is true (the create() path);
-// // findByIdAndModify uses validateBeforeSave: false and is covered separately.
-// missionSchema.pre<TMissionDoc>('validate', function (next) {
-//   const errors = this.errors
-//   if (errors) {
-//     const keys = Object.keys(errors)
-//     if (keys.length > 0) return next((errors as unknown as Record<string, Error>)[keys[0]])
-//   }
-//   return next()
-// })
+// Called before a mission is validated. Rejects the save when a
+// subdocument was dropped for having a field that isn't in the schema,
+// naming that field instead of the error its absence causes.
+missionSchema.pre<TMissionDoc>('validate', function (next) {
+  let recordedErrors = Object.entries(this.errors ?? {})
+
+  for (let [path, error] of recordedErrors) {
+    if (!(error instanceof mongoose.Error.CastError)) continue
+    let reason = error.reason
+    if (!(reason instanceof mongoose.Error.StrictModeError)) continue
+    let entryId = error.value?._id
+
+    return next(
+      MetisDatabase.generateValidationError(
+        `Field "${reason.path}" on the entry with ID "${entryId}" at "${path}" is not in schema and strict mode is set to throw.`,
+      ),
+    )
+  }
+
+  return next()
+})
 
 // Called before a save is made to the database.
-missionSchema.pre<TMissionDoc>('save', function (next) {
+missionSchema.pre<TMissionDoc>('save', async function () {
   let mission: TMissionSaveJson = this.toJSON()
-  ServerMission.validate(mission, next)
-  return next()
+  ServerMission.validate(mission)
 })
 
 // Called before a find or update is made to the database.

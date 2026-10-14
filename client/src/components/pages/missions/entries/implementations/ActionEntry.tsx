@@ -131,6 +131,7 @@ export default function ActionEntry({
         value={description}
         setValue={setDescription}
         placeholder='Enter description...'
+        tooltipDescription='Shown to session members when they select an action to execute.'
         disabled={viewMode === 'preview'}
         key={`${action._id}_description`}
       />

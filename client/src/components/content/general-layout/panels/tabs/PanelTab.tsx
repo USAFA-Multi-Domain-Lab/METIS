@@ -29,6 +29,9 @@ export default function PanelTab({ view }: TPanelTab_P): TReactElement | null {
           },
         ]
       : [],
+    // Rebuilt when the icon or its disabled state changes, since the engine
+    // otherwise keeps the values it was first given.
+    dependencies: [view.icon, view.disabled],
   })
 
   /* -- EFFECTS -- */

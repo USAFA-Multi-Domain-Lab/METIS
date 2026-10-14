@@ -125,7 +125,7 @@ export abstract class TargetEnvironmentTask<
     // identify one. The ID is serialized so it stays stable across the
     // wire and across the queued -> running -> resolved transitions.
     // Name is overwritten, so a blank string is used here.
-    super(_id, '', false)
+    super(_id, '')
     this._status = status
     this._error = error
   }

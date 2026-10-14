@@ -35,12 +35,18 @@ export abstract class Target<
   public abstract get migrationVersions(): string[]
 
   protected constructor(
+    /**
+     * A unique identifier for the target.
+     */
     _id: string,
+    /**
+     * The display name for the target.
+     */
     name: string,
     /**
      * Describes what the target is.
      */
-    public description: string,
+    description: string,
 
     /**
      * The parameters which define the arguments that must
@@ -53,9 +59,8 @@ export abstract class Target<
      */
     public environment: TTargetEnv<T>,
   ) {
-    super(_id, name, false)
+    super(_id, name, description)
 
-    this.description = description
     this.parameters = parameters
     this.environment = environment
   }

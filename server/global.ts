@@ -140,6 +140,13 @@ declare global {
     backupsEnabled: boolean
 
     /**
+     * Whether target environments are type checked on startup, so that any
+     * with type errors are skipped rather than loaded.
+     * @default true
+     */
+    targetEnvTypeChecksEnabled: boolean
+
+    /**
      * The path to the SSL key file (if any).
      */
     sslKeyPath?: string

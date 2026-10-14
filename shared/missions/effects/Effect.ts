@@ -184,11 +184,6 @@ export abstract class Effect<
   public order: number
 
   /**
-   * Describes the purpose of the effect.
-   */
-  public description: string
-
-  /**
    * Every argument the effect holds, stale ones included, as the live list
    * rather than a copy. This is what gets persisted, so an argument left
    * behind by a parameter's type change survives a save instead of being
@@ -308,7 +303,7 @@ export abstract class Effect<
     args: TTargetArgumentJson[],
     localKey: string,
   ) {
-    super(_id, name, false)
+    super(_id, name, description)
 
     // Determine the target based on the target ID
     // and environment ID provided.
@@ -319,7 +314,6 @@ export abstract class Effect<
     this.targetEnvironmentVersion = targetEnvironmentVersion
     this.context = context
     this.order = order
-    this.description = description
     this.localKey = localKey
     this.allArguments = this.parseArguments(args)
     this.sortArguments()

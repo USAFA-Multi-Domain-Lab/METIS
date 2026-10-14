@@ -1,11 +1,11 @@
-import { MetisComponent } from '@shared/MetisComponent'
+import { MetisComponent } from '../MetisComponent'
+import { User } from '../users/User'
 import type {
   TSessionAccessibility,
   TSessionBasicJson,
   TSessionConfig,
   TSessionState,
-} from '@shared/sessions/MissionSession'
-import { User } from '@shared/users/User'
+} from './MissionSession'
 
 /**
  * More basic representation of a session.
@@ -131,9 +131,9 @@ export class SessionBasic
     if (superText) return superText
 
     if (this.setupFailed) {
-      return 'The session encountered an error during setup. For details concerning the error, please reference the server logs. Please perform a hard delete and recreate this session.'
+      return 'The session encountered an error during setup. For details concerning the error, please reference the server logs. Please use Force End to end this session, then recreate it.'
     } else if (this.teardownFailed) {
-      return 'The session encountered an error during teardown. For details concerning the error, please reference the server logs. Please perform a hard delete for this session.'
+      return 'The session encountered an error during teardown. For details concerning the error, please reference the server logs. Please use Force End to end this session.'
     }
 
     return ''
@@ -149,7 +149,7 @@ export class SessionBasic
   }
 
   public constructor(data: TSessionBasicJson) {
-    super(data._id, data.name, false)
+    super(data._id, data.name)
 
     // Parse the data.
     this.missionId = data.missionId

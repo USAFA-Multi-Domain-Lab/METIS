@@ -41,4 +41,35 @@ export class ColorToolbox {
     // Return white or black based on luminance
     return luminance > 186 ? '#000' : '#fff'
   }
+
+  /**
+   * Normalizes a CSS color string to `rgb(r, g, b)` format for cross-format
+   * comparison. Browsers normalize `element.style.color` to RGB when parsing
+   * HTML, so a color stored as `#fd6b72` on save becomes `rgb(253, 107, 114)`
+   * on reload. Passing both sides through this function makes comparisons
+   * format-agnostic.
+   * @param color The color to normalize.
+   * @returns The color in `rgb(r, g, b)` format.
+   */
+  public static normalizeColor(color: string): string {
+    if (!color.startsWith('#') || color.length !== 7) return color
+    const r = parseInt(color.slice(1, 3), 16)
+    const g = parseInt(color.slice(3, 5), 16)
+    const b = parseInt(color.slice(5, 7), 16)
+    return `rgb(${r}, ${g}, ${b})`
+  }
+
+  /**
+   * Checks whether two CSS color strings are the same color, even when one
+   * is a six-digit hex color (`#rrggbb`) and the other its `rgb(r, g, b)`
+   * form, such as a hex color saved by the editor and the `rgb()` form the
+   * browser reports back for it. Any other format only matches when written
+   * exactly the same.
+   * @param a The first color.
+   * @param b The second color.
+   * @returns Whether the colors are the same.
+   */
+  public static equals(a: string, b: string): boolean {
+    return ColorToolbox.normalizeColor(a) === ColorToolbox.normalizeColor(b)
+  }
 }

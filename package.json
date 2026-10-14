@@ -1,7 +1,7 @@
 {
   "name": "metis",
   "description": "METIS uses an ambiguous node-topography and hierarchy structure to build a framework relayed effects from across all war-fighting domains. Designed to be adaptable to a wide verity of use cases, from cyberspace targeting to global logistical operations. As a secondary function, and equally as flexible is the open software design that uses API to perform as a relay hub and/or effects-emitter to link multiple simulation programs and other applications.",
-  "version": "2.5.2",
+  "version": "2.5.3",
   "private": true,
   "main": "server/start.ts",
   "scripts": {
@@ -31,6 +31,7 @@
     "@floating-ui/dom": "^1.7.6",
     "@tiptap/core": "^3.31.3",
     "@tiptap/extension-bubble-menu": "^3.31.3",
+    "@tiptap/extension-code": "^3.31.3",
     "@tiptap/extension-code-block-lowlight": "^3.31.3",
     "@tiptap/extension-floating-menu": "^3.31.3",
     "@tiptap/extension-link": "^3.31.3",
@@ -54,7 +55,7 @@
     "cors": "^2.8.5",
     "dateformat": "^5.0.3",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2",
+    "express": "^4.22.3",
     "express-rate-limit": "^7.2.0",
     "express-session": "^1.17.3",
     "express-winston": "^4.2.0",

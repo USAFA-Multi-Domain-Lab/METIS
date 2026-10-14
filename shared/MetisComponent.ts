@@ -45,6 +45,24 @@ export abstract class MetisComponent {
   }
 
   /**
+   * @see {@link MetisComponent.description}
+   */
+  protected _description: string
+  /**
+   * Text explaining the component to users, such as in a
+   * tooltip or a details panel. Empty when the component
+   * has nothing to explain.
+   * @note This can be overridden in any subclass
+   * to customize this property.
+   */
+  public get description(): string {
+    return this._description
+  }
+  public set description(description: string) {
+    this._description = description
+  }
+
+  /**
    * Cache for {@link deleted} field.
    */
   protected _deleted: boolean
@@ -132,11 +150,16 @@ export abstract class MetisComponent {
      */
     name: string,
     /**
+     * Text explaining the component to users.
+     */
+    description: string = '',
+    /**
      * Whether the component is considered deleted in the system.
      */
-    deleted: boolean,
+    deleted: boolean = false,
   ) {
     this._name = name
+    this._description = description
     this._deleted = deleted
     this._disabled = false
     this._disabledReason = ''

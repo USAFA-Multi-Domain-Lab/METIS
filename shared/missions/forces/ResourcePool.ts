@@ -70,6 +70,14 @@ export abstract class ResourcePool<
   }
 
   /**
+   * The description of the {@link MissionResource} this pool tracks.
+   */
+  // Overridden
+  public override get description(): string {
+    return this.resource.description
+  }
+
+  /**
    * The {@link MissionResource} this pool tracks.
    */
   public readonly resource: T['resource']
@@ -148,7 +156,7 @@ export abstract class ResourcePool<
     excluded: boolean,
     balance: number,
   ) {
-    super(_id, '', false)
+    super(_id, '')
     this.resource = resource
     this.force = force
     this.localKey = localKey

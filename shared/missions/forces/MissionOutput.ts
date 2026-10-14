@@ -187,7 +187,7 @@ export abstract class MissionOutput<
    * @param options The options for creating the output.
    */
   public constructor(force: TForce<T>, data: TOutputJson) {
-    super(data._id, '', false)
+    super(data._id, '')
 
     this.context = data.context
     this.prefix = data.prefix

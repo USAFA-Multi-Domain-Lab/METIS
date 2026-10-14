@@ -10,6 +10,7 @@ import { Markdown } from '@tiptap/markdown'
 import type { Extensions } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { all, createLowlight } from 'lowlight'
+import MetisCode from './code'
 import MetisParagraph from './paragraph'
 import MetisSpan from './span'
 
@@ -18,7 +19,7 @@ import MetisSpan from './span'
  * line has nothing to select, and the toolbar otherwise only appears if text
  * has been selected.
  */
-const TOOLBAR_SHORTCUT_HINT: string = `Press ${KEYBOARD_SHORTCUTS.pinRichTextToolbar.keystrokeLabel} for formatting options`
+const TOOLBAR_SHORTCUT_HINT: string = `${KEYBOARD_SHORTCUTS.pinRichTextToolbar.keystrokeLabel} for toolbar`
 
 /**
  * Colors the code inside code blocks. It is built once and shared by every
@@ -37,6 +38,7 @@ function createSharedExtensions(options: TSharedExtensionOptions): Extensions {
   return [
     StarterKit.configure({
       paragraph: false,
+      code: false,
       codeBlock: false,
       link: false,
       // An empty paragraph is kept at the end of the content so there is
@@ -69,6 +71,7 @@ function createSharedExtensions(options: TSharedExtensionOptions): Extensions {
       },
     }),
     MetisParagraph,
+    MetisCode,
     MetisSpan,
     CodeBlockLowlight.configure({
       lowlight: CODE_BLOCK_HIGHLIGHTER,
@@ -101,8 +104,12 @@ export function createEditorExtensions(
   return [
     ...createSharedExtensions({ keepTrailingLine: true }),
     Placeholder.configure({
+      // An empty editor shows its placeholder until it's focused, then
+      // the shortcut hint like any other empty line the cursor is on.
       placeholder: ({ editor }) =>
-        editor.isEmpty ? placeholder : TOOLBAR_SHORTCUT_HINT,
+        editor.isEmpty && !editor.isFocused
+          ? placeholder
+          : TOOLBAR_SHORTCUT_HINT,
     }),
   ]
 }

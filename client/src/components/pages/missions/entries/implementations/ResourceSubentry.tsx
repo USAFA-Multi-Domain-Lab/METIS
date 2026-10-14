@@ -1,3 +1,4 @@
+import { DetailLargeString } from '@client/components/content/form/DetailLargeString'
 import { DetailString } from '@client/components/content/form/DetailString'
 import { DetailIconSelector } from '@client/components/content/form/icon-selectors/DetailIconSelector'
 import ButtonSvgPanel from '@client/components/content/user-controls/buttons/panels/ButtonSvgPanel'
@@ -31,8 +32,9 @@ export default function ResourceSubentry({
   const { onChange, viewMode } = useMissionPageContext()
   const {
     name: [name, setName],
+    description: [description, setDescription],
     icon: [icon, setIcon],
-  } = useObjectFormSync(resource, ['name', 'icon'], {
+  } = useObjectFormSync(resource, ['name', 'description', 'icon'], {
     onChange: () => onChange(resource),
   })
   const [usingDefaultName, setUsingDefaultName] = useState<boolean>(
@@ -139,6 +141,16 @@ export default function ResourceSubentry({
         setValue={setIcon}
         icons={new Set(MissionResource.ICONS)}
         disabled={viewMode === 'preview'}
+      />
+      <DetailLargeString
+        fieldType='optional'
+        label='Description'
+        value={description}
+        setValue={setDescription}
+        placeholder='Enter description...'
+        tooltipDescription='Shown to session members when they hover over this resource.'
+        disabled={viewMode === 'preview'}
+        key={`${resource._id}_description`}
       />
     </div>
   )

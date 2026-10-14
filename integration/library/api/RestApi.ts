@@ -93,21 +93,27 @@ export class RestApi extends Api {
 
     // If there's an host...
     if (options.host) {
-      // Use a regular expression to check if the host contains a port.
-      let portRegex: RegExp = /.*:([0-9]+).*/
-      // If the host contains a port...
-      if (portRegex.test(options.host)) {
+      // Split off any path that follows the address, so that the
+      // port is looked for, and added, before the path.
+      let pathIndex: number = options.host.indexOf('/')
+      let address: string =
+        pathIndex === -1 ? options.host : options.host.slice(0, pathIndex)
+      let path: string = pathIndex === -1 ? '' : options.host.slice(pathIndex)
+      // Use a regular expression to check if the address contains a port.
+      let portRegex: RegExp = /:([0-9]+)$/
+      // If the address contains a port...
+      if (portRegex.test(address)) {
         // Add the entire host.
         baseUrl += options.host
       }
-      // Or if the host contains a port...
+      // Or if there's a separate port...
       else if (options.port) {
-        // Add the host and the port.
-        baseUrl += `${options.host}:${options.port}`
+        // Add the address, the port, and the path.
+        baseUrl += `${address}:${options.port}${path}`
       }
-      // Otherwise, add the host and the default port.
+      // Otherwise, add the address, the default port, and the path.
       else {
-        baseUrl += `${options.host}:${defaultPort}`
+        baseUrl += `${address}:${defaultPort}${path}`
       }
     }
     // Or if there's a port...

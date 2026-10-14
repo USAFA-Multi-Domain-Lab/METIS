@@ -22,6 +22,7 @@ import ListResizeHandler from './ListResizeHandler'
 import ListValidator from './ListValidator'
 import ListNav from './navs/ListNav'
 import type {
+  TGetItemButtonDescription,
   TGetItemButtonDisabled,
   TGetItemButtonHidden,
   TGetItemButtonLabel,
@@ -107,6 +108,7 @@ export function createDefaultListProps<
     getItemButtonPermissions: () => [],
     getItemButtonDisabled: () => false,
     getItemButtonHidden: () => false,
+    getItemButtonDescription: () => '',
     getColumnWidth: () => '10em',
     onSelect: () => {},
     onItemDblClick: () => {},
@@ -851,6 +853,17 @@ export type TList_P<TItem extends MetisComponent> = {
    * @default () => false
    */
   getItemButtonHidden?: TGetItemButtonHidden<TItem>
+  /**
+   * Gets the description shown in the tooltip of the item's button,
+   * beneath its label.
+   * @param button The button for which to get the description.
+   * @param item The item the button belongs to.
+   * @returns The description.
+   * @note Evaluated per-item, which is useful for providing additional
+   * context for the button.
+   * @default () => ''
+   */
+  getItemButtonDescription?: TGetItemButtonDescription<TItem>
   /**
    * Gets the width of the given column.
    * @param column The column for which to get the width.

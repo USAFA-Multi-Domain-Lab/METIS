@@ -4,12 +4,12 @@ import type { ServerTarget } from '@server/target-environments/ServerTarget'
 import type { ServerTargetEnvironment } from '@server/target-environments/ServerTargetEnvironment'
 import { ServerUser } from '@server/users/ServerUser'
 import { targetArgumentJsonSchema } from '@shared/target-environments/arguments/TargetArgument'
+import { ArrayToolbox } from '@shared/toolbox/arrays/ArrayToolbox'
 import { NumberToolbox } from '@shared/toolbox/numbers/NumberToolbox'
 import {
   ObjectToolbox,
   type TAnyObject,
 } from '@shared/toolbox/objects/ObjectToolbox'
-import type { CallbackWithoutResultAndOptionalError } from 'mongoose'
 import mongoose from 'mongoose'
 import type {
   TEffectJson,
@@ -294,15 +294,28 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   /**
    * Validates the forces of the mission.
    * @param forces The forces to validate.
-   * @returns True if the forces are valid, false otherwise.
+   * @throws A validation error if the forces are invalid.
    */
   public static validateForces(forces: TMissionSaveJson['forces']): void {
     let forceKeys: TMissionForceSaveJson['localKey'][] = []
 
+    if (!ArrayToolbox.isArrayOf(forces, 'object')) {
+      throw generateValidationError('The forces must be an array of objects.')
+    }
+
     for (const force of forces) {
-      // Check for valid resource pool instances.
+      // Check for valid resource pool instances. A value that isn't an
+      // array is left to Mongoose, which reports it on its own path.
       let poolIds: string[] = []
-      for (const instance of force.resourcePools) {
+      let resourcePools = Array.isArray(force.resourcePools)
+        ? force.resourcePools
+        : []
+      if (!ArrayToolbox.isArrayOf(resourcePools, 'object')) {
+        throw generateValidationError(
+          `The resource pools must be objects in force "{ _id: ${force._id}, name: ${force.name} }".`,
+        )
+      }
+      for (let instance of resourcePools) {
         const nonNegativeInteger = NumberToolbox.isNonNegativeInteger(
           instance.initialBalance,
         )
@@ -340,11 +353,17 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   /**
    * Validates the prototypes of the mission.
    * @param prototypes The prototypes to validate.
-   * @returns True if the prototypes are valid, false otherwise.
+   * @throws A validation error if the prototypes are invalid.
    */
   public static validatePrototypes(
     prototypes: TMissionSaveJson['prototypes'],
   ): void {
+    if (!ArrayToolbox.isArrayOf(prototypes, 'object')) {
+      throw generateValidationError(
+        'The prototypes must be an array of objects.',
+      )
+    }
+
     for (const prototype of prototypes) {
       const nonNegativeInteger = NumberToolbox.isNonNegativeInteger(
         prototype.depthPadding,
@@ -354,6 +373,32 @@ export class ServerMission extends Mission<TMetisServerComponents> {
           `The depth padding must be a positive integer for the prototype "{ _id: ${prototype._id} }".`,
         )
       }
+    }
+  }
+
+  /**
+   * Validates the resource list of the mission.
+   * @param resources The resources to validate.
+   * @throws A validation error if the resources are invalid.
+   */
+  public static validateResourceList(
+    resources: TMissionSaveJson['resources'],
+  ): void {
+    if (!ArrayToolbox.isArrayOf(resources, 'object')) {
+      throw generateValidationError(
+        'The resources must be an array of objects.',
+      )
+    }
+  }
+
+  /**
+   * Validates the file list of the mission.
+   * @param files The files to validate.
+   * @throws A validation error if the files are invalid.
+   */
+  public static validateFileList(files: TMissionSaveJson['files']): void {
+    if (!ArrayToolbox.isArrayOf(files, 'object')) {
+      throw generateValidationError('The files must be an array of objects.')
     }
   }
 
@@ -690,6 +735,12 @@ export class ServerMission extends Mission<TMetisServerComponents> {
     return (effects: TEffectJson[]): void => {
       let effectKeys: TEffectJson['localKey'][] = []
 
+      if (!ArrayToolbox.isArrayOf(effects, 'object')) {
+        throw generateValidationError(
+          'The effects must be an array of objects.',
+        )
+      }
+
       for (const effect of effects) {
         const validTrigger = validTriggers.includes(effect.trigger)
 
@@ -707,8 +758,18 @@ export class ServerMission extends Mission<TMetisServerComponents> {
         }
         effectKeys.push(effect.localKey)
 
-        // Validate each argument's structure against the schema.
-        for (const arg of effect.arguments) {
+        // Validate each argument's structure against the schema. A value
+        // that isn't an array is left to Mongoose, which reports it on
+        // its own path.
+        let effectArguments = Array.isArray(effect.arguments)
+          ? effect.arguments
+          : []
+        if (!ArrayToolbox.isArrayOf(effectArguments, 'object')) {
+          throw generateValidationError(
+            `The arguments must be objects in effect "{ _id: ${effect._id}, name: ${effect.name} }".`,
+          )
+        }
+        for (const arg of effectArguments) {
           const result = targetArgumentJsonSchema.safeParse(arg)
           if (!result.success) {
             throw generateValidationError(
@@ -723,12 +784,9 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   /**
    * Validates the mission data.
    * @param missionJson The mission data to validate.
-   * @param next The callback to call with the results.
+   * @throws A validation error for the first check that fails.
    */
-  public static validate(
-    missionJson: TMissionSaveJson,
-    next: CallbackWithoutResultAndOptionalError,
-  ): void {
+  public static validate(missionJson: TMissionSaveJson): void {
     // Get the initial structure.
     let initStructure: TMissionSaveJson['structure'] = missionJson.structure
     // Array to store the structure keys.
@@ -739,27 +797,27 @@ export class ServerMission extends Mission<TMetisServerComponents> {
     // Check for duplicate _id's.
     results = this.idCheckerAlgorithm(missionJson)
     // Check for error.
-    if (results.error) return next(results.error)
+    if (results.error) throw results.error
 
     // Validate node structure.
     results = this.validateStructure(initStructure)
     // Check for error.
-    if (results.error) return next(results.error)
+    if (results.error) throw results.error
     // Check for structure keys.
     if (results.structureKeys) structureKeys = results.structureKeys
 
     results = this.validateResources(missionJson)
-    if (results.error) return next(results.error)
+    if (results.error) throw results.error
 
     // Validate the mission forces.
     results = this.validateMissionForces(missionJson, structureKeys)
     // Check for error.
-    if (results.error) return next(results.error)
+    if (results.error) throw results.error
 
     // Validate the mission files.
     results = this.validateMissionFiles(missionJson.files)
     // Check for error.
-    if (results.error) return next(results.error)
+    if (results.error) throw results.error
 
     // Log any issues found in the mission
     // to the database logger.

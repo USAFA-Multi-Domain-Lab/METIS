@@ -25,12 +25,18 @@ export abstract class TargetEnvironment<
    * Creates a new {@link TargetEnvironment} Object.
    */
   protected constructor(
+    /**
+     * A unique identifier for the target environment.
+     */
     _id: string,
+    /**
+     * The display name for the target environment.
+     */
     name: string,
     /**
      * Describes what the target environment is.
      */
-    public description: string,
+    description: string,
     /**
      * The current version of the target environment.
      */
@@ -48,9 +54,8 @@ export abstract class TargetEnvironment<
      */
     public readonly multiRealmSupport: boolean = false,
   ) {
-    super(_id, name, false)
+    super(_id, name, description)
 
-    this.description = description
     this.version = version
     this._configs = []
   }

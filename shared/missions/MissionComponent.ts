@@ -129,8 +129,13 @@ export abstract class MissionComponent<
     return result
   }
 
-  public constructor(id: string, name: string, deleted: boolean) {
-    super(id, name, deleted)
+  public constructor(
+    id: string,
+    name: string,
+    description: string = '',
+    deleted: boolean = false,
+  ) {
+    super(id, name, description, deleted)
     // Defer initial issue check to ensure all
     // components are constructed and registered.
     queueMicrotask(() =>

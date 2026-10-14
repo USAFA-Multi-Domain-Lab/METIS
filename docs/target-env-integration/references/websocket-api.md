@@ -211,6 +211,7 @@ The WebSocket API automatically constructs connection URLs:
 | `{ protocol: 'ws', host: 'localhost', port: 8080 }` | `ws://localhost:8080`       |
 | `{ protocol: 'wss', host: 'api.example.com' }`      | `wss://api.example.com:443` |
 | `{ host: 'example.com:9000' }`                      | `ws://example.com:9000`     |
+| `{ host: 'example.com/feed' }`                      | `ws://example.com:80/feed`  |
 | `{ port: 3000 }`                                    | `ws://localhost:3000`       |
 | `{}` (empty)                                        | `ws://localhost:80`         |
 
@@ -868,8 +869,6 @@ Using WebSocket with environment lifecycle hooks:
 ```typescript
 import { WebSocketApi } from '@metis/api/WebSocketApi'
 
-let wsConnection: WebSocketApi | null = null
-
 const environment = TargetEnvSchema.create({
   name: 'WebSocket Environment',
   // ... other properties
@@ -884,7 +883,9 @@ environment.on('environment-setup', async (context) => {
   console.log('Establishing WebSocket connection...')
 
   try {
-    wsConnection = WebSocketApi.fromConfig(context.config.targetEnvConfig.data)
+    const wsConnection = WebSocketApi.fromConfig(
+      context.config.targetEnvConfig.data,
+    )
 
     // Configure event listeners
     wsConnection.addEventListener('open', () => {
@@ -901,9 +902,12 @@ environment.on('environment-setup', async (context) => {
 
     // Connect
     await wsConnection.connect()
+
+    // Keep the connection in the store so each session has its own
+    context.localStore.use<WebSocketApi | null>('wsConnection', null).value =
+      wsConnection
     console.log('WebSocket ready for use')
   } catch (error) {
-    wsConnection = null
     console.log(`❌ WebSocket setup failed: ${error.message}`)
     throw error
   }
@@ -911,11 +915,16 @@ environment.on('environment-setup', async (context) => {
 
 // Clean up during teardown
 environment.on('environment-teardown', async (context) => {
-  if (wsConnection) {
+  const wsConnection = context.localStore.use<WebSocketApi | null>(
+    'wsConnection',
+    null,
+  )
+
+  if (wsConnection.value) {
     console.log('Closing WebSocket connection...')
     try {
-      wsConnection.disconnect(1000, 'Environment teardown')
-      wsConnection = null
+      await wsConnection.value.disconnect(1000, 'Environment teardown')
+      wsConnection.value = null
       console.log('✅ WebSocket disconnected')
     } catch (error) {
       console.log(`⚠️ WebSocket disconnect error: ${error.message}`)
@@ -939,6 +948,11 @@ export default TargetSchema.create({
     },
   ],
   script: async (context, { payload }) => {
+    const wsConnection = context.localStore.use<WebSocketApi | null>(
+      'wsConnection',
+      null,
+    ).value
+
     if (!wsConnection || !wsConnection.isConnected) {
       throw new Error('WebSocket not connected')
     }

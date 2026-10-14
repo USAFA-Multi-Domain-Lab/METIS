@@ -80,8 +80,10 @@ export default function LobbyPage({
    * Status message for when session start is initiated.
    */
   const startStatus = compute<string>(() => {
+    // todo: Offer Force End on this page when setup fails, rather
+    // todo: than sending the manager home to find it.
     if (setupFailed) {
-      return ' The session encountered an error during setup. For details concerning the error, please reference the server logs. Please navigate home and perform a hard delete. Then, relaunch the session and try again.'
+      return ' The session encountered an error during setup. For details concerning the error, please reference the server logs. Please navigate home and use Force End to end the session. Then, relaunch the session and try again.'
     }
     return 'Session start initiated by manager. Session will start once setup is complete...'
   })

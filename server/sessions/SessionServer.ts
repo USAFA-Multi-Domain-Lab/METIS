@@ -691,64 +691,48 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
    * Runs the full start sequence for the session: initializes the mode,
    * dismisses members without any visibility, transitions through
    * `'starting'`, performs full setup, and transitions to `'started'`.
-   * @param member The member whose request drives the start.
-   * @param event The request event being fulfilled.
+   * Members are kept informed throughout, however the start came about.
    * @param options Additional options to customize how the start is processed.
-   * @returns `true` if the session started successfully; `false` if it was
-   * rejected (unauthorized/conflicting state — an error is emitted to the
-   * member) or setup failed.
+   * @resolves To whether setup succeeded.
+   * @throws A {@link ServerEmittedError} if the start is rejected outright,
+   * such as when the session has already started or its config is
+   * incomplete. This is thrown right away, before anything changes, and
+   * carries the given request, fulfilled, so the caller can emit it as is.
+   * @note Authorizing who may start the session is left to the caller.
    */
-  public async start(
-    member: ServerSessionMember,
-    event: TClientEvents['request-start-session' | 'request-play-test'],
-    options: TSessionStartOptions = {},
-  ): Promise<boolean> {
-    const { fulfillOnStarted = true } = options
+  public start(options: TSessionStartOptions = {}): Promise<boolean> {
+    const { request, fulfillOnStarted = true } = options
 
-    // Build request for response data.
-    let fulfilledRequest = member.buildResponseRequestData(event, {
-      fulfilled: true,
-    })
-    let unfulfilledRequest = member.buildResponseRequestData(event, {
+    let unfulfilledRequest = request && {
+      ...request,
       fulfilled: false,
-    })
-
-    // If the member does not have the correct permissions
-    // to start the session, then emit an error.
-    if (!member.isAuthorized('startEndSessions')) {
-      member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_UNAUTHORIZED_OPERATION,
-          { request: fulfilledRequest },
-        ),
-      )
-      return false
     }
+    let fulfilledRequest = request && {
+      ...request,
+      fulfilled: true,
+    }
+
     // If the session has already previously started,
-    // then emit an error.
+    // then throw an error.
     if (this._state !== 'unstarted') {
-      member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
-          {
-            request: fulfilledRequest,
-          },
-        ),
+      throw new ServerEmittedError(
+        ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
+        {
+          request: fulfilledRequest,
+        },
       )
-      return false
     }
 
     // A standalone session mints one realm per participant, so
     // starting one with no participants would produce a blank session
     // with nothing to play. Reject the start rather than allow that.
     if (this.config.mode === 'standalone' && !this.hasForceAssignableMembers) {
-      member.emitError(
-        new ServerEmittedError(
-          ServerEmittedError.CODE_SESSION_NO_PARTICIPANTS,
-          { request: fulfilledRequest },
-        ),
+      throw new ServerEmittedError(
+        ServerEmittedError.CODE_SESSION_NO_PARTICIPANTS,
+        {
+          request: fulfilledRequest,
+        },
       )
-      return false
     }
 
     // Confirm the config is in the correct state before
@@ -759,13 +743,10 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       { requireComplete: true },
     )
     if (configProblem) {
-      member.emitError(
-        new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
-          request: fulfilledRequest,
-          message: configProblem,
-        }),
-      )
-      return false
+      throw new ServerEmittedError(ServerEmittedError.CODE_INVALID_DATA, {
+        message: configProblem,
+        request: fulfilledRequest,
+      })
     }
 
     this.initializeMode()
@@ -803,28 +784,177 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
     })
 
     // Perform setup.
-    await this.setUp()
-
-    // If the setup failed...
-    if (this.setupFailed) {
-      // ...and it is a test session, then destroy it.
-      if (this.config.isTest) {
-        this._state = 'ended'
-        this.destroy()
+    return this.setUp().then(() => {
+      // If the setup failed...
+      if (this.setupFailed) {
+        // ...and it is a test session, then destroy it.
+        if (this.config.isTest) {
+          this._state = 'ended'
+          this.destroy()
+        }
+        // ...do not proceed.
+        return false
       }
-      // ...do not proceed.
-      return false
+
+      // Mark the session as started.
+      this._state = 'started'
+      this.emitStartResponses('session-started', {
+        request: fulfillOnStarted ? fulfilledRequest : unfulfilledRequest,
+      })
+      // Perform any effect triggered by session start.
+      this.applyMissionEffects('session-start')
+
+      return true
+    })
+  }
+
+  /**
+   * Cleanly ends the session. A started session has its members removed
+   * and is torn down, then destroyed once teardown succeeds. If teardown
+   * fails, the session is left in the `ending` state, where it can still
+   * be force-ended with {@link destroy}. An unstarted session has nothing
+   * to tear down, so it is destroyed right away. Members are kept
+   * informed, however the end came about.
+   * @param options Additional options to customize how the end is processed.
+   * @resolves To whether teardown succeeded, which is always `true` for an
+   * unstarted session.
+   * @throws A {@link ServerEmittedError} if the end is rejected outright,
+   * such as when the session is in the middle of setup, teardown, or a
+   * reset. This is thrown right away, before anything changes, and carries
+   * the given request, fulfilled, so the caller can emit it as is.
+   * @note Authorizing who may end the session is left to the caller.
+   * @note A given request is never fulfilled here, so the caller is
+   * expected to send the final response once the end has finished.
+   */
+  public end(options: TSessionEndOptions = {}): Promise<boolean> {
+    const { request } = options
+
+    let unfulfilledRequest = request && {
+      ...request,
+      fulfilled: false,
+    }
+    let fulfilledRequest = request && {
+      ...request,
+      fulfilled: true,
     }
 
-    // Mark the session as started.
-    this._state = 'started'
-    this.emitStartResponses(event, member, 'session-started', {
-      fulfilled: fulfillOnStarted,
-    })
-    // Perform any effect triggered by session start.
-    this.applyMissionEffects('session-start')
+    // If the session is neither unstarted nor
+    // started, then throw an error.
+    if (this._state !== 'unstarted' && this._state !== 'started') {
+      throw new ServerEmittedError(
+        ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
+        {
+          request: fulfilledRequest,
+        },
+      )
+    }
 
-    return true
+    // An unstarted session has nothing to tear down,
+    // so destroy it right away. Destroying it notifies
+    // and removes any members waiting in the lobby.
+    if (this._state === 'unstarted') {
+      this._state = 'ended'
+      this.destroy()
+      return Promise.resolve(true)
+    }
+
+    // Emit ending event, then remove members
+    // and tear down.
+    this._state = 'ending'
+    this.emitToAll('session-ending', {
+      data: {},
+      request: unfulfilledRequest,
+    })
+    this.clearMembers()
+
+    return this.tearDown().then(() => {
+      // If teardown failed, do not proceed.
+      if (this.teardownFailed) return false
+
+      // Mark the session as ended.
+      this._state = 'ended'
+      this.destroy()
+
+      return true
+    })
+  }
+
+  /**
+   * Resets a started session to a fresh instance of itself: tears it
+   * down, gives it a new instance ID, resets its realms and tasks, sets
+   * it back up, and returns it to `'started'`. Members stay joined and
+   * are kept informed throughout, however the reset came about.
+   * @param options Additional options to customize how the reset is processed.
+   * @resolves To whether both teardown and setup succeeded.
+   * @throws A {@link ServerEmittedError} if the reset is rejected outright,
+   * such as when the session is not in the `started` state. This is thrown
+   * right away, before anything changes, and carries the given request,
+   * fulfilled, so the caller can emit it as is.
+   * @note Authorizing who may reset the session is left to the caller.
+   */
+  public reset(options: TSessionResetOptions = {}): Promise<boolean> {
+    const { request } = options
+
+    let unfulfilledRequest = request && {
+      ...request,
+      fulfilled: false,
+    }
+    let fulfilledRequest = request && {
+      ...request,
+      fulfilled: true,
+    }
+
+    // Resets are only permitted from a settled, running session. This
+    // rejects transitional states ('starting', 'ending', 'resetting'),
+    // which prevents a reset from racing an in-flight setup/teardown, as
+    // well as 'unstarted' and 'ended'.
+    if (this._state !== 'started') {
+      throw new ServerEmittedError(
+        ServerEmittedError.CODE_SESSION_CONFLICTING_STATE,
+        {
+          request: fulfilledRequest,
+        },
+      )
+    }
+
+    // Emit resetting event, then tear down.
+    this._state = 'resetting'
+    this.emitToAll('session-resetting', {
+      data: {},
+      request: unfulfilledRequest,
+    })
+
+    return this.tearDown().then(() => {
+      // If teardown failed, do not proceed.
+      if (this.teardownFailed) return false
+
+      // Assign a new instance ID.
+      this._instanceId = StringToolbox.generateRandomId()
+
+      this.resetRealms()
+
+      // Clear all tasks (setup, teardown, and live) for the new
+      // instance.
+      this._environmentTasks = []
+
+      // Perform setup.
+      return this.setUp().then(() => {
+        // If setup failed, do not proceed.
+        if (this.setupFailed) return false
+
+        // Mark as started and emit the response to
+        // all members.
+        this._state = 'started'
+        this.emitStartResponses('session-reset', {
+          request: fulfilledRequest,
+        })
+
+        // Perform any effect triggered by session start.
+        this.applyMissionEffects('session-start')
+
+        return true
+      })
+    })
   }
 
   /**
@@ -1135,24 +1265,14 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
   /**
    * Builds and emits the response events to all members of the session
    * when the session is started or is reset.
-   * @param member The member that emitted the initial request.
-   * @param event The associated request event.
    * @param responseMethod The method of the event to emit (start or reset).
    * @param options Additional options controlling the responses.
    */
   protected emitStartResponses(
-    event: TClientEvents[
-      | 'request-start-session'
-      | 'request-reset-session'
-      | 'request-play-test'],
-    member: ServerSessionMember,
     responseMethod: 'session-started' | 'session-reset',
     options: TEmitStartResponsesOptions = {},
   ): void {
-    const { fulfilled = true } = options
-    let request = member.buildResponseRequestData(event, {
-      fulfilled,
-    })
+    const { request } = options
 
     for (let member of this.joinedMembers) {
       let hasCompleteVisibility = member.isAuthorized('completeVisibility')
@@ -1774,26 +1894,50 @@ export type TMembersForForceOptions = {
 }
 
 /**
+ * Options shared by the methods that move a session between states,
+ * such as {@link SessionServer.start} and {@link SessionServer.end}.
+ */
+export type TSessionTransitionOptions = {
+  /**
+   * The WS request that prompted the transition, if there was one, so the
+   * requester can follow what happens to it. Its `fulfilled` value is
+   * ignored, since each method sets it on every response. A rejection
+   * carries it fulfilled, since the error is the final response, while the
+   * `session-starting` and `session-ending` broadcasts carry it unfulfilled,
+   * since more follows them.
+   */
+  request?: TRequestOfResponse
+}
+
+/**
  * Additional options for the {@link SessionServer.start} method.
  */
-export type TSessionStartOptions = {
+export type TSessionStartOptions = TSessionTransitionOptions & {
   /**
-   * Whether the emitted `session-started` response marks the request as
-   * fulfilled. Defaults to `true` for a normal start (where `session-started`
-   * is the terminal response). The play-test flow passes `false` so its
-   * request stays open for a following `play-test-started` terminal response.
+   * Whether `session-started` fulfills the request. A caller that sends
+   * a response of its own afterward, such as the play-test flow, passes
+   * `false` to keep the request open for it.
    * @default true
    */
   fulfillOnStarted?: boolean
 }
 
 /**
+ * Additional options for the {@link SessionServer.end} method.
+ */
+export type TSessionEndOptions = TSessionTransitionOptions & {}
+
+/**
+ * Additional options for the {@link SessionServer.reset} method.
+ */
+export type TSessionResetOptions = TSessionTransitionOptions & {}
+
+/**
  * Additional options for the {@link SessionServer.emitStartResponses} method.
  */
 export type TEmitStartResponsesOptions = {
   /**
-   * Whether the emitted responses mark the request as fulfilled.
-   * @default true
+   * The WS request the responses answer, if there was one.
    */
-  fulfilled?: boolean
+  request?: TRequestOfResponse
 }
