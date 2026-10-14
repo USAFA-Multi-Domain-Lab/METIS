@@ -377,6 +377,32 @@ export class ServerMission extends Mission<TMetisServerComponents> {
   }
 
   /**
+   * Validates the resource list of the mission.
+   * @param resources The resources to validate.
+   * @throws A validation error if the resources are invalid.
+   */
+  public static validateResourceList(
+    resources: TMissionSaveJson['resources'],
+  ): void {
+    if (!ArrayToolbox.isArrayOf(resources, 'object')) {
+      throw generateValidationError(
+        'The resources must be an array of objects.',
+      )
+    }
+  }
+
+  /**
+   * Validates the file list of the mission.
+   * @param files The files to validate.
+   * @throws A validation error if the files are invalid.
+   */
+  public static validateFileList(files: TMissionSaveJson['files']): void {
+    if (!ArrayToolbox.isArrayOf(files, 'object')) {
+      throw generateValidationError('The files must be an array of objects.')
+    }
+  }
+
+  /**
    * Algorithm to validate the mission's prototype structure tree.
    * @param currentStructure The current structure to validate.
    * @param rootKey The key of the current structure.

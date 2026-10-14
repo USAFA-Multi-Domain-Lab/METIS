@@ -533,6 +533,7 @@ export const missionSchema = new MissionSchema(
     },
     resources: {
       required: true,
+      validate: ServerMission.validateResourceList,
       type: [
         {
           _id: { type: String, required: true },
@@ -556,6 +557,7 @@ export const missionSchema = new MissionSchema(
       ],
     },
     files: {
+      validate: ServerMission.validateFileList,
       type: [
         {
           _id: { type: String, required: true },
