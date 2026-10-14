@@ -131,9 +131,9 @@ export class SessionBasic
     if (superText) return superText
 
     if (this.setupFailed) {
-      return 'The session encountered an error during setup. For details concerning the error, please reference the server logs. Please perform a hard delete and recreate this session.'
+      return 'The session encountered an error during setup. For details concerning the error, please reference the server logs. Please use Force End to end this session, then recreate it.'
     } else if (this.teardownFailed) {
-      return 'The session encountered an error during teardown. For details concerning the error, please reference the server logs. Please perform a hard delete for this session.'
+      return 'The session encountered an error during teardown. For details concerning the error, please reference the server logs. Please use Force End to end this session.'
     }
 
     return ''

@@ -346,9 +346,9 @@ export default function SessionPage(
    */
   const sessionResetMessage = compute((): string => {
     if (resetSetupFailed) {
-      return 'The session encountered an error during setup. For details concerning the error, please reference the server logs. Please navigate home and perform a hard delete. Then, relaunch the session and try again.'
+      return 'The session encountered an error during setup. For details concerning the error, please reference the server logs. Please navigate home and use Force End to end the session. Then, relaunch the session and try again.'
     } else if (resetTeardownFailed) {
-      return 'The session encountered an error during teardown. For details concerning the error, please reference the server logs. Please navigate home and perform a hard delete. Then, relaunch the session and try again.'
+      return 'The session encountered an error during teardown. For details concerning the error, please reference the server logs. Please navigate home and use Force End to end the session. Then, relaunch the session and try again.'
     } else {
       return 'Session reset initiated by a manager. Once teardown and setup are complete, the page will refresh...'
     }
