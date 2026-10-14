@@ -236,7 +236,7 @@ describe('/api/v1/missions', () => {
     assertMissionMatchesExpectedData(fetched, created)
   })
 
-  test('PUT /api/v1/missions/ rejects an unknown top-level field', async () => {
+  test('PUT /api/v1/missions/ drops an unknown top-level field', async () => {
     let { client } = await createTestContext()
     await loginWithAccess(client, 'admin')
 
@@ -244,10 +244,13 @@ describe('/api/v1/missions', () => {
     let requestBody: TAnyObject = createMissionUpdatePayload(created)
     requestBody.color = 'red'
 
+    // The route's body filter strips keys it does not list, so the
+    // update goes through without the unknown field.
     let updateResponse = await client.put('/api/v1/missions/', requestBody)
-    expect(updateResponse.status).toBe(400)
+    expect(updateResponse.status).toBe(200)
 
     let fetched = await fetchMission(client, created._id)
+    expect(fetched).not.toHaveProperty('color')
     assertMissionMatchesExpectedData(fetched, created)
   })
 
