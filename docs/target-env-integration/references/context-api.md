@@ -527,7 +527,7 @@ script: async (context, { applyTo }) => {
 | `TTargetEnvExposedNode`     | `'node'`         | `actions`, `parent`, `children`, `siblings`, `opened`, `blocked`, `revealed`, `executing`, `force` |
 | `TTargetEnvExposedAction`   | `'action'`       | `successChance`, `processTime`, `resourceCosts`, `effects`, `type`, `executionCount`, `node`       |
 | `TTargetEnvExposedPool`     | `'resourcePool'` | `balance`, `initialBalance`, `allowNegative`, `excluded`, `resource`, `force`                      |
-| `TTargetEnvExposedResource` | `'resource'`     | `icon`, `order`, `mission`                                                                         |
+| `TTargetEnvExposedResource` | `'resource'`     | `description`, `icon`, `order`, `mission`                                                          |
 | `TTargetEnvExposedFile`     | `'missionFile'`  | `originalName`, `alias`, `extension`, `mimetype`, `size`, `initialAccess`                          |
 
 > **Note:** A file's `componentType` is `'missionFile'`, and that is also the name used in `validComponentTypes`.
