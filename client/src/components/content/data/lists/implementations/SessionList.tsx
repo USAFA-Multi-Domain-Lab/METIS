@@ -223,12 +223,15 @@ export default function SessionList({
 
     switch (session.state) {
       case 'starting':
-        return 'The session is still setting up.'
+        if (session.setupFailed) return 'The session failed to set up.'
+        else return 'The session is still setting up.'
       case 'ending':
         if (session.teardownFailed) return 'The session failed to tear down.'
         else return 'The session is already ending.'
       case 'resetting':
-        return 'The session is resetting.'
+        if (session.teardownFailed) return 'The session failed to tear down.'
+        else if (session.setupFailed) return 'The session failed to set up.'
+        else return 'The session is resetting.'
       default:
         return ''
     }
