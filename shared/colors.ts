@@ -62,8 +62,8 @@ export const COLORS_BY_NAME = {
 } as const satisfies Record<string, string>
 
 /**
- * The approved METIS colors, offered wherever a color can be
- * picked, such as for nodes, forces, and rich text.
+ * The approved METIS colors offered when picking a color in rich
+ * text.
  */
 export const COLOR_OPTIONS: TValidColor[] = Object.values(COLORS_BY_NAME)
 
