@@ -1,6 +1,10 @@
 @use '@client/assets/styles/config.scss' as *;
 
 .OutputInfo {
+  // Kept above the message text, whose rich text block otherwise covers the
+  // output info and blocks hovering and clicking it.
+  position: relative;
+  z-index: 1;
   float: left;
   margin-right: 0.5em;
   // Set by the output message if it has text that renders inline
