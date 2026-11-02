@@ -1,5 +1,10 @@
 # changelog
 
+# version-2.5.4 | 11-2-2026
+
+- Tooltips no longer appear as an empty bubble before their text loads, and no longer get stuck on screen after the mouse moves away.
+- The node locator next to a session output can be hovered and clicked again.
+
 # version-2.5.3 | 10-14-2026
 
 - Sessions can now be ended cleanly from the home page. Ending a session this way runs the same teardown as ending it from within the session, so connected integrations are left in a proper state. A forced end is still available, but only for a session stuck partway through starting, resetting, or ending, and it now warns what it skips.
