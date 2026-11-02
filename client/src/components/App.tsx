@@ -243,6 +243,16 @@ export default function (props: {}): TReactElement | null {
     effect()
   }, [login === null])
 
+  // Shows the tooltip once its text is in place, so it never appears as an
+  // empty bubble. The rich text inside the tooltip puts the text in place
+  // during its own effect, which runs before this one.
+  useEffect(() => {
+    let tooltip_elm: HTMLDivElement | null = tooltips.current
+    if (!tooltip_elm) return
+    tooltip_elm.dataset.displayedDescription = tooltipDescription
+    tooltip_elm.style.opacity = tooltipDescription ? '1' : '0'
+  }, [tooltipDescription])
+
   // Logs the user out if the server emits a logout event.
   useEventListener(server, 'logout-user-update', async () => {
     await logout()

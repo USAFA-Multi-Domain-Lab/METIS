@@ -44,7 +44,7 @@ Do **not** conditionally include/exclude the `<Tooltip>` element itself based on
 
 ## 3. Dynamic Descriptions
 
-When the tooltip text should change based on state, compute it as a `let` variable before the return statement and pass it to `description`. The component re-registers its event listeners whenever `description` changes, so the correct text is always shown.
+When the tooltip text should change based on state, compute it as a `let` variable before the return statement and pass it to `description`. The component always works from the latest `description`, and rechecks whether the tooltip should show whenever it changes, so the correct text is always shown.
 
 ```tsx
 let tooltipDescription = isSelected ? 'Deselect item' : 'Select item'
