@@ -76,6 +76,12 @@ export class HtmlSanitizer {
    * attributes removed.
    */
   public static sanitize(html: string): string {
+    // Mongoose runs a schema field's setter on its empty default every time it
+    // builds a subdocument, which makes empty strings nearly every call on a
+    // large mission. There is nothing in one to remove, and DOMPurify still
+    // costs a full parse to confirm that.
+    if (html === '') return html
+
     return DOMPurify.sanitize(html, {
       ALLOWED_TAGS: HtmlSanitizer.ALLOWED_ELEMENTS,
       ALLOWED_ATTR: HtmlSanitizer.ALLOWED_ATTRIBUTES,

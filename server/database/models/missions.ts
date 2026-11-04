@@ -195,6 +195,73 @@ const sanitizeHtml = (html: string): string => {
 }
 
 /**
+ * The element names that mark a value as HTML: everything the rich text
+ * editor can produce, plus the ones that can carry a script. Names that
+ * also read as plain writing, such as "time", "output", "data", and
+ * "section", are left out, because a plain string holding something like
+ * "report at <time>" would otherwise be taken for HTML and have that word
+ * removed. That omission is why this only ever adds to what the recorded
+ * type already catches. It must never be used to decide whether to
+ * sanitize at all, since the names left out can carry a script too.
+ */
+const HTML_TAG_NAMES = [
+  'a',
+  'br',
+  'p',
+  'strong',
+  'b',
+  'em',
+  'i',
+  'u',
+  'ul',
+  'ol',
+  'li',
+  'code',
+  'pre',
+  'hr',
+  'blockquote',
+  'h[1-6]',
+  's',
+  'del',
+  'strike',
+  'span',
+  'div',
+  'script',
+  'iframe',
+  'img',
+  'svg',
+  'object',
+  'embed',
+  'form',
+  'input',
+  'button',
+  'link',
+  'meta',
+  'style',
+  'video',
+  'audio',
+  'table',
+  'tr',
+  'td',
+  'th',
+  'tbody',
+  'thead',
+  'textarea',
+  'base',
+  'math',
+]
+
+/**
+ * Matches an opening or closing tag for any of {@link HTML_TAG_NAMES}.
+ * @note Shared across calls, which is only safe while it has no "g" or "y"
+ * flag, since those make a pattern remember where its last match ended.
+ */
+const HTML_TAG_PATTERN = new RegExp(
+  `</?(?:${HTML_TAG_NAMES.join('|')})\\b[^>]*>`,
+  'i',
+)
+
+/**
  * Sanitizes the HTML held by the rich-text arguments in an effect's
  * argument list.
  * @param argumentEntries The arguments being written to the effect.
@@ -203,65 +270,6 @@ const sanitizeHtml = (html: string): string => {
  */
 const sanitizeArgumentValues = (argumentEntries: unknown): unknown => {
   if (!Array.isArray(argumentEntries)) return argumentEntries
-
-  // The element names that mark a value as HTML: everything the rich text
-  // editor can produce, plus the ones that can carry a script. Names that
-  // also read as plain writing, such as "time", "output", "data", and
-  // "section", are left out, because a plain string holding something like
-  // "report at <time>" would otherwise be taken for HTML and have that word
-  // removed. That omission is why this only ever adds to what the recorded
-  // type already catches. It must never be used to decide whether to
-  // sanitize at all, since the names left out can carry a script too.
-  const htmlTagNames = [
-    'a',
-    'br',
-    'p',
-    'strong',
-    'b',
-    'em',
-    'i',
-    'u',
-    'ul',
-    'ol',
-    'li',
-    'code',
-    'pre',
-    'hr',
-    'blockquote',
-    'h[1-6]',
-    's',
-    'del',
-    'strike',
-    'span',
-    'div',
-    'script',
-    'iframe',
-    'img',
-    'svg',
-    'object',
-    'embed',
-    'form',
-    'input',
-    'button',
-    'link',
-    'meta',
-    'style',
-    'video',
-    'audio',
-    'table',
-    'tr',
-    'td',
-    'th',
-    'tbody',
-    'thead',
-    'textarea',
-    'base',
-    'math',
-  ]
-  const htmlTagPattern = new RegExp(
-    `</?(?:${htmlTagNames.join('|')})\\b[^>]*>`,
-    'i',
-  )
 
   return argumentEntries.map((entry) => {
     // Leave anything that cannot hold HTML exactly as it is.
@@ -278,7 +286,7 @@ const sanitizeArgumentValues = (argumentEntries: unknown): unknown => {
     // the value itself is what says whether it holds HTML.
     const holdsHtml =
       entry.type === 'large-string' ||
-      (entry.type === 'unknown' && htmlTagPattern.test(entry.value))
+      (entry.type === 'unknown' && HTML_TAG_PATTERN.test(entry.value))
 
     if (!holdsHtml) return entry
 
