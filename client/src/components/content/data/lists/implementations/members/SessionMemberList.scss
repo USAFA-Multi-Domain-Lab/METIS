@@ -48,9 +48,8 @@
               background: $color-primary-dark;
               border: 1px solid $color-faded;
               border-radius: 0.5em;
-              position: relative;
               z-index: $z-index-member-list-dropdown;
-              top: 0.525em;
+              margin: 0.525em 0;
             }
 
             .DropdownOption {

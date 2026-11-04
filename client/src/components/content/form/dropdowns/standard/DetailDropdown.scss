@@ -20,5 +20,12 @@
         }
       }
     }
+
+    // Floating options sit over the page, placed beside
+    // the field while they are open.
+    &.FloatingOptions .AvailableOptions {
+      position: fixed;
+      box-sizing: border-box;
+    }
   }
 }

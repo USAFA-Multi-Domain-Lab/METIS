@@ -183,6 +183,7 @@ export default function SessionMemberForceCell({
         }}
         emptyText='Assign force'
         disabled={forceLock}
+        floatingOptions
       />
     )
   }

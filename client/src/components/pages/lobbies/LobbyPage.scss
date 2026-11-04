@@ -20,6 +20,13 @@
     > .Panel .PanelView {
       box-sizing: border-box;
       padding-top: 1.5em;
+
+      // Lift the open tab above the navigation while one of the
+      // member list's dropdowns is open, so its options can reach
+      // over the navigation.
+      &.Active:has(.Field.FloatingOptions.Expanded) {
+        z-index: $z-index-member-list-dropdown;
+      }
     }
 
     .Section {

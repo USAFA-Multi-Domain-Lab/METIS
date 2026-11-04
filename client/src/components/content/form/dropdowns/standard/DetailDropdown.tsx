@@ -2,7 +2,7 @@ import { LocalContext, LocalContextProvider } from '@client/context/local'
 import { compute } from '@client/toolbox'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import type { ReactNode } from 'react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { TDetailBase_P, TDetailOptional_P, TDetailRequired_P } from '../..'
 import DetailTitleRow from '../../DetailTitleRow'
 import { useCollapseOnOutsideClick } from '../../hooks/useCollapseOnOutsideClick'
@@ -59,6 +59,7 @@ export function DetailDropdown<TOption>(
     errorMessage: props.errorMessage ?? '',
     errorType: props.errorType ?? 'default',
     isExpanded: props.isExpanded ?? false,
+    floatingOptions: props.floatingOptions ?? false,
   }
   // Extract props.
   const {
@@ -78,15 +79,21 @@ export function DetailDropdown<TOption>(
     tooltipDescription,
     emptyText,
     handleInvalidOption,
+    floatingOptions,
   } = defaultedProps
 
   /* -- STATE -- */
 
   const state: TDetailDropdown_S = {
     expanded: useState<boolean>(false),
+    floatingOptionsStyle: useState<React.CSSProperties>({}),
   }
   const [expanded, setExpanded] = state.expanded
+  const [floatingOptionsStyle, setFloatingOptionsStyle] =
+    state.floatingOptionsStyle
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const fieldRef = useRef<HTMLDivElement>(null)
+  const availableOptionsRef = useRef<HTMLDivElement>(null)
 
   /* -- COMPUTED -- */
 
@@ -135,6 +142,7 @@ export function DetailDropdown<TOption>(
     })
   rootClasses.add('DetailDropdownCommon')
   fieldClasses.switch('Expanded', 'Collapsed', expanded)
+  fieldClasses.set('FloatingOptions', floatingOptions)
 
   /**
    * The class names for the element displaying all
@@ -195,6 +203,29 @@ export function DetailDropdown<TOption>(
       }
     }
   }, [options, handleInvalidOption.method])
+
+  // Keep floating options beside the field while they are open,
+  // placing them before the browser paints them.
+  useLayoutEffect(() => {
+    if (!floatingOptions || !expanded) return
+
+    const placeOptions = () => {
+      let field = fieldRef.current
+      let availableOptions = availableOptionsRef.current
+      if (!field || !availableOptions) return
+      setFloatingOptionsStyle(placeFloatingOptions(field, availableOptions))
+    }
+
+    placeOptions()
+    window.addEventListener('resize', placeOptions)
+    // Capture scrolling in any container, not only the page.
+    document.addEventListener('scroll', placeOptions, true)
+
+    return () => {
+      window.removeEventListener('resize', placeOptions)
+      document.removeEventListener('scroll', placeOptions, true)
+    }
+  }, [floatingOptions, expanded])
 
   useCollapseOnOutsideClick(expanded, setExpanded, dropdownRef)
 
@@ -286,7 +317,7 @@ export function DetailDropdown<TOption>(
           tooltipDescription={tooltipDescription}
           fieldType={fieldType}
         />
-        <div className={fieldClasses.value}>
+        <div className={fieldClasses.value} ref={fieldRef}>
           <DropdownOption
             selected
             onClick={() => (!disabled ? setExpanded(!expanded) : null)}
@@ -294,7 +325,13 @@ export function DetailDropdown<TOption>(
             <div className={stateValueClasses.value}>{valueDisplayed}</div>
             <div className='Indicator'>▼</div>
           </DropdownOption>
-          <div className={availableOptionsClasses.value}>{optionsJsx}</div>
+          <div
+            className={availableOptionsClasses.value}
+            style={floatingOptions ? floatingOptionsStyle : undefined}
+            ref={availableOptionsRef}
+          >
+            {optionsJsx}
+          </div>
         </div>
         <div className={fieldErrorClasses.value}>
           {warningTooltipDescription}
@@ -302,6 +339,34 @@ export function DetailDropdown<TOption>(
       </div>
     </LocalContextProvider>
   )
+}
+
+/**
+ * Places a dropdown's floating options on the screen beside its
+ * field. They open below the field, or above it when they don't
+ * fit below and there is more room above.
+ * @param field The field of the dropdown.
+ * @param availableOptions The element holding the options.
+ * @returns The style that places the options.
+ * @note The gap between the field and the options comes from the
+ * margin the stylesheet gives the options.
+ */
+function placeFloatingOptions(
+  field: HTMLElement,
+  availableOptions: HTMLElement,
+): React.CSSProperties {
+  let fieldBounds = field.getBoundingClientRect()
+  let roomAbove = fieldBounds.top
+  let roomBelow = window.innerHeight - fieldBounds.bottom
+  let opensUpward =
+    availableOptions.offsetHeight > roomBelow && roomAbove > roomBelow
+
+  return {
+    left: fieldBounds.left,
+    width: fieldBounds.width,
+    top: opensUpward ? undefined : fieldBounds.bottom,
+    bottom: opensUpward ? window.innerHeight - fieldBounds.top : undefined,
+  }
 }
 
 /* -- TYPES -- */
@@ -315,6 +380,14 @@ type TDetailDropdownBase_P = TDetailBase_P & {
    * @default false
    */
   isExpanded?: boolean
+  /**
+   * Whether the options float over the page instead of pushing the
+   * content below the field down. Floating options aren't cut off by
+   * the containers around the field, and open above the field when
+   * there isn't room on screen below it.
+   * @default false
+   */
+  floatingOptions?: boolean
   /**
    * The unique class name for the detail.
    */
@@ -599,4 +672,8 @@ export interface TDetailDropdown_S {
    * Whether the dropdown is expanded or not.
    */
   expanded: TReactState<boolean>
+  /**
+   * Where floating options sit on the screen while they are open.
+   */
+  floatingOptionsStyle: TReactState<React.CSSProperties>
 }
