@@ -542,7 +542,10 @@ export class MetisServer {
       expressApp.use(cookieParser())
       expressApp.use(this._sessionMiddleware)
       expressApp.use(express.urlencoded({ limit: '10mb', extended: true }))
-      expressApp.use(express.json({ limit: '10mb' }))
+      // Saving sends the whole mission. This stays just under MongoDB's 16 MiB
+      // document cap, since a mission takes up slightly more space stored than
+      // it does as JSON.
+      expressApp.use(express.json({ limit: '15mb' }))
 
       // rate limiter
       expressApp.use(this.limiter)
