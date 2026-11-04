@@ -34,6 +34,13 @@ export abstract class Target<
    */
   public abstract get migrationVersions(): string[]
 
+  /**
+   * The {@link parameters} keyed by ID. Loading a mission looks a parameter up
+   * for every argument of every effect, repeatedly, so a search of the list is
+   * too slow for missions with many effects.
+   */
+  private parametersById: Map<string, TTargetParameter>
+
   protected constructor(
     /**
      * A unique identifier for the target.
@@ -63,6 +70,14 @@ export abstract class Target<
 
     this.parameters = parameters
     this.environment = environment
+    this.parametersById = new Map()
+
+    // The first parameter with a given ID is the one that gets used.
+    for (let parameter of parameters) {
+      if (!this.parametersById.has(parameter._id)) {
+        this.parametersById.set(parameter._id, parameter)
+      }
+    }
   }
 
   /**
@@ -88,7 +103,7 @@ export abstract class Target<
    * @returns The parameter with the specified ID, or undefined if not found.
    */
   public getParameterById(parameterId: string): TTargetParameter | undefined {
-    return this.parameters.find((param) => param._id === parameterId)
+    return this.parametersById.get(parameterId)
   }
 
   /**
