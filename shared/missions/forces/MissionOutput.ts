@@ -193,6 +193,7 @@ export abstract class MissionOutput<
     this.prefix = data.prefix
     this.message = data.message
     this.time = data.time
+    this.memberId = data.memberId
     this.force = force
 
     if (force._id !== data.forceId) {
