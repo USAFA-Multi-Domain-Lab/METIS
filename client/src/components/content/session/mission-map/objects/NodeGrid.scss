@@ -1,0 +1,23 @@
+@use '../../../../../assets/styles/config.scss' as *;
+
+.NodeGrid {
+  $grid-color: rgba($color-primary-light, 0.16);
+  $grid-line-width: 0.0015em;
+
+  // Fill the map, behind the scene. This sits above the pan
+  // controller, so it must let the mouse through to it.
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: $z-map-scene;
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(
+    to right,
+    $grid-color 0 $grid-line-width,
+    transparent 2px calc(100% - #{$grid-line-width}),
+    $grid-color calc(100% - #{$grid-line-width}) 100%
+  );
+  background-repeat: repeat;
+}

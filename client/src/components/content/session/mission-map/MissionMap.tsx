@@ -21,8 +21,8 @@ import {
 } from '../../user-controls/buttons/panels/hooks'
 import './MissionMap.scss'
 import Scene from './Scene'
-import Grid from './objects/Grid'
 import Line from './objects/Line'
+import NodeGrid, { calculateNodeGridOffset } from './objects/NodeGrid'
 import PrototypeSlot from './objects/PrototypeSlot'
 import type { TMapCompatibleNode } from './objects/nodes'
 import { MapNode } from './objects/nodes'
@@ -97,16 +97,6 @@ export const CAMERA_ZOOM_STAGES: number[] = compute((): number[] => {
   // Return results.
   return stages
 })
-
-/**
- * Whether the mission map EM grid is enabled.
- */
-export const MAP_EM_GRID_ENABLED = false
-
-/**
- * Whether the mission map node grid is enabled.
- */
-export const MAP_NODE_GRID_ENABLED = true
 
 /**
  * The maximum zoom level where the node's content will be displayed.
@@ -197,6 +187,7 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
   const elements: TMissionMap_E = {
     root: useRef<HTMLDivElement>(null),
     scene: useRef<HTMLDivElement>(null),
+    nodeGrid: useRef<HTMLDivElement>(null),
   }
 
   /**
@@ -210,6 +201,11 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
           // Set the scene element's position to the
           // negative of the camera position.
           elements.scene.current.style.transform = `translate(${-cameraPosition.x}em, ${-cameraPosition.y}em)`
+        }
+        // The node grid only follows the camera horizontally,
+        // since its lines run the full height of the map.
+        if (elements.nodeGrid.current) {
+          elements.nodeGrid.current.style.backgroundPositionX = `${calculateNodeGridOffset(cameraPosition)}em`
         }
       },
     }),
@@ -225,6 +221,9 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
         setNodeContentVisible(cameraZoom.x <= MAX_NODE_CONTENT_ZOOM)
         if (elements.scene.current) {
           elements.scene.current.style.fontSize = `${1 / cameraZoom.x}px`
+        }
+        if (elements.nodeGrid.current) {
+          elements.nodeGrid.current.style.fontSize = `${1 / cameraZoom.x}px`
         }
       },
     }),
@@ -871,14 +870,17 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
           cameraPosition={cameraPosition}
           cameraZoom={cameraZoom}
         />
+        <NodeGrid
+          cameraPosition={cameraPosition}
+          cameraZoom={cameraZoom}
+          ref={elements.nodeGrid}
+        />
         <Scene
           cameraPosition={cameraPosition}
           cameraZoom={cameraZoom}
           ref={elements.scene}
         >
           {/* Scene objects */}
-          <Grid type={'em'} enabled={MAP_EM_GRID_ENABLED} />
-          <Grid type={'node'} enabled={MAP_NODE_GRID_ENABLED} />
           {linesJsx}
           {nodesJsx}
           {slotsJsx}
@@ -948,6 +950,10 @@ export type TMissionMap_E = {
    * The scene element of the map.
    */
   scene: React.RefObject<HTMLDivElement | null>
+  /**
+   * The root element of the node grid.
+   */
+  nodeGrid: React.RefObject<HTMLDivElement | null>
 }
 
 /**
