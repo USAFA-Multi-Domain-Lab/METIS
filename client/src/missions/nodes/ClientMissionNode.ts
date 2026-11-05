@@ -75,7 +75,7 @@ export class ClientMissionNode
   }
   public set exclude(value: boolean) {
     this._exclude = value
-    this.force.handleStructureChange()
+    this.mission.handleStructureChange()
     this.emitEvent('set-exclude')
     this.mission.emitEvent('set-node-exclusion', this)
   }

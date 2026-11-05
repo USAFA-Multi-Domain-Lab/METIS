@@ -33,6 +33,12 @@ export class ClientMissionForce
   public relationshipLines: TWithKey<TLine_P>[]
 
   /**
+   * The mission's structure change key when this force's layout was last
+   * calculated. A mismatch means the layout is out of date.
+   */
+  private structureChangeKey: string | null
+
+  /**
    * Manages the force's event listeners and events.
    */
   private eventManager: EventManager<TForceEventMethods, TForceEventArgs>
@@ -63,6 +69,7 @@ export class ClientMissionForce
   ) {
     super(mission, data)
     this.relationshipLines = []
+    this.structureChangeKey = null
 
     // Initialize event manager.
     this.eventManager = new EventManager(this)
@@ -94,10 +101,11 @@ export class ClientMissionForce
   }
 
   /**
-   * Handles a change in the mission's structure, anything that
-   * would change the structure of the mission's node tree.
+   * Creates and removes nodes so that the force has one for each prototype.
+   * @note This can't wait until the force is displayed, since saving the
+   * mission sends the nodes of every force.
    */
-  public handleStructureChange(): void {
+  public syncNodes(): void {
     // Loop through prototypes, and ensure that
     // a corresponding nodes exists.
     for (let prototype of this.mission.prototypes) {
@@ -121,11 +129,18 @@ export class ClientMissionForce
         if (node.prototype.deleted) node.delete()
       }
     }
+  }
 
-    // Reposition nodes and draw the lines between them.
+  /**
+   * Positions the nodes and draws the lines between them, unless they
+   * already reflect the mission's current structure.
+   */
+  public refreshLayout(): void {
+    if (this.structureChangeKey === this.mission.structureChangeKey) return
+
+    this.structureChangeKey = this.mission.structureChangeKey
     this.positionNodes()
     this.drawRelationshipLines()
-    this.emitEvent('structure-change')
   }
 
   /**
@@ -575,14 +590,8 @@ export class ClientMissionForce
  * Triggered when an output is sent.
  * @option 'modify-forces'
  * Triggered when the force was manipulated by an effect.
- * @option 'structure-change'
- * Triggered when the structure of the force changes.
  */
-export type TForceEventMethods =
-  | 'activity'
-  | 'output'
-  | 'modify-forces'
-  | 'structure-change'
+export type TForceEventMethods = 'activity' | 'output' | 'modify-forces'
 
 /**
  * The argument(s) used in the event handler for the force's event manager.

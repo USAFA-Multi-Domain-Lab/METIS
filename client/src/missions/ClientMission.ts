@@ -596,11 +596,13 @@ export class ClientMission
     // between prototypes.
     this.drawRelationshipLines()
 
-    // Draw the relationship lines
-    // between nodes in forces.
-    this.forces.forEach((force) => {
-      force.handleStructureChange()
-    })
+    // Every force needs its nodes kept in step
+    // with the prototypes, displayed or not.
+    this.forces.forEach((force) => force.syncNodes())
+
+    // Only the force on the map needs its layout now.
+    // The others catch up when they are selected.
+    ClientMission.getForceFromSelection(this.selection)?.refreshLayout()
 
     // Emit the structure change event.
     this.emitEvent('structure-change')
@@ -1098,6 +1100,10 @@ export class ClientMission
     }
 
     this._selection = selection
+
+    // The map reads the force's layout in response to the event
+    // below, so it must be up to date before the event is emitted.
+    ClientMission.getForceFromSelection(selection)?.refreshLayout()
 
     this.emitEvent('selection')
 

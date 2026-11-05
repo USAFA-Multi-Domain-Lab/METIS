@@ -118,6 +118,13 @@ export abstract class MissionForce<
   public nodes: T['node'][]
 
   /**
+   * Where each node sits in {@link nodes}, keyed by the ID of its prototype.
+   * This can fall behind {@link nodes}, so a position must be checked against
+   * the array before it's trusted.
+   */
+  private nodePositions: Map<string, number>
+
+  /**
    * The root node of the force.
    */
   public root: T['node']
@@ -229,6 +236,7 @@ export abstract class MissionForce<
     this.localKey = data.localKey ?? mission.generateForceKey()
     this.resourcePools = new JsonSerializableArray()
     this.nodes = []
+    this.nodePositions = new Map()
     this._outputs = []
     this.root = this.createNode(MissionForce.ROOT_NODE_PROPERTIES)
 
@@ -423,7 +431,31 @@ export abstract class MissionForce<
    */
   public getNodeFromPrototype(prototypeId: string): TNode<T> | undefined {
     if (prototypeId === this.mission.root._id) return this.root
-    else return this.nodes.find((node) => node.prototype._id === prototypeId)
+
+    let position = this.nodePositions.get(prototypeId)
+    let indexedNode = position === undefined ? undefined : this.nodes[position]
+    if (indexedNode?.prototype._id === prototypeId) return indexedNode
+
+    // The index may be out of date, or this force may have no such node.
+    let node = this.nodes.find((node) => node.prototype._id === prototypeId)
+    if (node) this.indexNodes()
+    return node
+  }
+
+  /**
+   * Rebuilds {@link nodePositions} from the current {@link nodes}.
+   */
+  private indexNodes(): void {
+    this.nodePositions.clear()
+
+    this.nodes.forEach((node, position) => {
+      let prototypeId = node.prototype._id
+
+      // The first node for a prototype is the one that gets used.
+      if (!this.nodePositions.has(prototypeId)) {
+        this.nodePositions.set(prototypeId, position)
+      }
+    })
   }
 
   /**
