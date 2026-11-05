@@ -128,6 +128,7 @@ export class ServerSessionMember extends SessionMember<TMetisServerComponents> {
       fileExposure: { expose: 'none' },
       sessionDataExposure: { expose: 'member-specific', memberId: this._id },
       rootEffectsExposure: { expose: 'none' },
+      actionEffectsExposure: { expose: 'none' },
     }
 
     // Complete visibility takes precedence over any force assignment,

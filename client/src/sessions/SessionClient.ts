@@ -9,6 +9,7 @@ import { ClientMission } from '@client/missions/ClientMission'
 import type { ClientMissionNode } from '@client/missions/nodes/ClientMissionNode'
 import { ClientSessionRealm } from '@client/sessions/ClientSessionRealm'
 import { ClientEnvironmentTask } from '@client/target-environments/ClientEnvironmentTask'
+import { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
 import { Logging } from '@client/toolbox/Logging'
 import { ClientUser } from '@client/users/ClientUser'
 import type {
@@ -83,6 +84,21 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
    * The ID of the member for this client connection.
    */
   private memberId: ClientSessionMember['_id']
+
+  /**
+   * @see {@link TSessionJson.targetEnvironmentIds}
+   */
+  private targetEnvironmentIds: string[]
+
+  /**
+   * The target environments the mission relies on. This is
+   * only populated for members who can configure the session.
+   */
+  public get targetEnvironments(): ClientTargetEnvironment[] {
+    return this.targetEnvironmentIds.flatMap((environmentId) => {
+      return ClientTargetEnvironment.REGISTRY.get(environmentId) ?? []
+    })
+  }
 
   /**
    * The session member for this client connection.
@@ -295,6 +311,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       ownerFirstName,
       ownerLastName,
       launchedAt,
+      targetEnvironmentIds,
       realms: realmData,
       realmBasics: realmBasicData,
       members: memberData,
@@ -328,6 +345,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
     // Set the rest of the data.
     this.server = server
     this.memberId = memberId
+    this.targetEnvironmentIds = targetEnvironmentIds
     this._state = state
     this._realmBasics = realmBasicData.map(
       (realm) => new SessionRealmBasic(realm),
@@ -431,6 +449,7 @@ export class SessionClient extends MissionSession<TMetisClientComponents> {
       ownerFirstName: this.ownerFirstName,
       ownerLastName: this.ownerLastName,
       launchedAt: this.launchedAt.toISOString(),
+      targetEnvironmentIds: this.targetEnvironmentIds,
       mission: this.mission.toExistingJson({
         forceExposure: { expose: 'none' },
         fileExposure: { expose: 'none' },

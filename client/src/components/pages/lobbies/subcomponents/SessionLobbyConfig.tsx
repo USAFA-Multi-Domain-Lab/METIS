@@ -112,7 +112,7 @@ export default function SessionLobbyConfig({
           <div className='PanelContent'>
             <TargetEnvironmentConfig
               sessionConfig={session.config}
-              mission={mission}
+              targetEnvironments={session.targetEnvironments}
               disabled={disabled}
               approveChange={approveChange}
               onChange={commit}

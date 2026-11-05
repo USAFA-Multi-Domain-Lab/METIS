@@ -750,6 +750,12 @@ export type TSessionJson = {
    */
   _id: string
   /**
+   * The IDs of the target environments the mission relies on. Only members
+   * who can configure the session receive these. The mission can't provide
+   * them, since the effects that name them aren't sent to session members.
+   */
+  targetEnvironmentIds: string[]
+  /**
    * The state of the session (unstarted, started, ended).
    */
   state: TSessionState

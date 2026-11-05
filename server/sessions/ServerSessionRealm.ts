@@ -215,12 +215,14 @@ export class ServerSessionRealm extends SessionRealm<TMetisServerComponents> {
           // data. If node visibility ever varies member to member within a
           // force, this must switch to emitMemberSpecific (see the matching
           // note in onRequestOpenNode.ts).
+          // Session members have no use for the effects on actions.
           revealedDescendants: descendants.map((descendant) =>
             descendant.toJson({
               sessionDataExposure: {
                 expose: 'member-specific',
                 memberId: members[0]._id,
               },
+              actionEffectsExposure: { expose: 'none' },
             }),
           ),
           revealedDescendantPrototypes: prototypes.map((prototype) =>

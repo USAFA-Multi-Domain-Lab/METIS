@@ -324,6 +324,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       rootEffectsExposure: { expose: 'none' },
     }
     let environmentTasks: TEnvironmentTaskJson[] = []
+    let targetEnvironmentIds: string[] = []
     let chatChannels: TChatChannelJson[] = []
     let pendingSessionPanelAlerts: TSessionPanelAlert[] = []
     let unreadChatChannelMessages: Record<string, number> = {}
@@ -340,6 +341,14 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       // of every realm so they can switch between them.
       if (requester.isAuthorized('completeVisibility')) {
         realmBasics = this.realms.map((realm) => realm.toBasicJson())
+      }
+
+      // A requester who can configure the session needs to know
+      // which target environments there are to configure.
+      if (requester.isAuthorized('configureSessions')) {
+        targetEnvironmentIds = this.mission.targetEnvironments.map(
+          (environment) => environment._id,
+        )
       }
 
       // If the requester is authorized to view target environment
@@ -380,6 +389,7 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
       ownerLastName: this.ownerLastName,
       launchedAt: this.launchedAt.toISOString(),
       mission: this.mission.toExistingJson(missionJsonOptions),
+      targetEnvironmentIds,
       realms,
       realmBasics,
       members: this._members.map((member) => member.toJson()),
@@ -1430,12 +1440,14 @@ export class SessionServer extends MissionSession<TMetisServerComponents> {
         _id: node._id,
         forceId: node.forceId,
         structure: structure,
+        // Session members have no use for the effects on actions.
         revealedDescendants: descendants.map((n) =>
           n.toJson({
             sessionDataExposure: {
               expose: 'member-specific',
               memberId: member._id,
             },
+            actionEffectsExposure: { expose: 'none' },
           }),
         ),
         revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),

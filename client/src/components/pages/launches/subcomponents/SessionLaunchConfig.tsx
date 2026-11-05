@@ -44,7 +44,7 @@ export default function SessionLaunchConfig({
           <div className='PanelContent'>
             <TargetEnvironmentConfig
               sessionConfig={sessionConfig}
-              mission={mission}
+              targetEnvironments={mission.targetEnvironments}
               onChange={onChangeWrapper}
             />
           </div>

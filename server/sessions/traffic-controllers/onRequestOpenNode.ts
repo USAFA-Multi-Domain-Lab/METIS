@@ -103,12 +103,14 @@ export const onRequestOpenNode =
             forceId: node.forceId,
             opened: true,
             structure: structure,
+            // Session members have no use for the effects on actions.
             revealedDescendants: descendants.map((n) =>
               n.toJson({
                 sessionDataExposure: {
                   expose: 'member-specific',
                   memberId: member._id,
                 },
+                actionEffectsExposure: { expose: 'none' },
               }),
             ),
             revealedDescendantPrototypes: prototypes.map((p) => p.toJson()),

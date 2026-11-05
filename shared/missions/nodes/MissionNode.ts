@@ -973,7 +973,7 @@ export type TMissionNodeJson = TMissionNodeJsonBase &
  */
 export type TNodeJsonOptions = Pick<
   TForceJsonOptions,
-  'sessionDataExposure' | 'rootEffectsExposure'
+  'sessionDataExposure' | 'rootEffectsExposure' | 'actionEffectsExposure'
 >
 
 /**

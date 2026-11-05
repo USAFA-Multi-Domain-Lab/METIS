@@ -415,8 +415,10 @@ export abstract class MissionAction<
    * @returns The JSON for the action.
    */
   public serialize(options: TActionJsonOptions = {}): TMissionActionJson {
-    const { sessionDataExposure = Mission.DEFAULT_SESSION_DATA_EXPOSURE } =
-      options
+    const {
+      sessionDataExposure = Mission.DEFAULT_SESSION_DATA_EXPOSURE,
+      actionEffectsExposure = Mission.DEFAULT_ACTION_EFFECTS_EXPOSURE,
+    } = options
 
     let json: TMissionActionJson = {
       _id: this._id,
@@ -431,7 +433,10 @@ export abstract class MissionAction<
       opensNode: this.opensNode,
       opensNodeHidden: this.opensNodeHidden,
       localKey: this.localKey,
-      effects: this.effects.map((effect) => effect.toExecutionTriggeredJson()),
+      effects:
+        actionEffectsExposure.expose === 'all'
+          ? this.effects.map((effect) => effect.toExecutionTriggeredJson())
+          : [],
     }
 
     switch (sessionDataExposure.expose) {
@@ -699,7 +704,10 @@ export abstract class MissionAction<
 /**
  * Options for serializing a {@link MissionAction} to JSON.
  */
-export type TActionJsonOptions = Pick<TNodeJsonOptions, 'sessionDataExposure'>
+export type TActionJsonOptions = Pick<
+  TNodeJsonOptions,
+  'sessionDataExposure' | 'actionEffectsExposure'
+>
 
 /**
  * Extracts the action type from a registry of

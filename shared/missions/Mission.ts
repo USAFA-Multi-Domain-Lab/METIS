@@ -856,13 +856,10 @@ export abstract class Mission<
    * broadcast.
    */
   public getDisabledEnvironments(config: TSessionConfig): string[] {
-    let disabled = new Set(config.explicitlyDisabledEnvironments)
-    if (config.mode === 'standalone') {
-      for (let environment of this.targetEnvironments) {
-        if (!environment.multiRealmSupport) disabled.add(environment._id)
-      }
-    }
-    return [...disabled]
+    return Mission.determineDisabledEnvironments(
+      config,
+      this.targetEnvironments,
+    )
   }
 
   /**
@@ -1005,6 +1002,36 @@ export abstract class Mission<
    * a mission with the `toJson` method.
    */
   public static get DEFAULT_ROOT_EFFECTS_EXPOSURE(): TRootEffectsExposure {
+    return {
+      expose: 'all',
+    }
+  }
+
+  /**
+   * Determines which of the given target environments a session
+   * configuration disables, whether explicitly or through its mode.
+   * @param config The session configuration.
+   * @param environments The target environments the mission relies on.
+   * @returns The IDs of the disabled target environments.
+   */
+  public static determineDisabledEnvironments(
+    config: TSessionConfig,
+    environments: Array<{ _id: string; multiRealmSupport: boolean }>,
+  ): string[] {
+    let disabled = new Set(config.explicitlyDisabledEnvironments)
+    if (config.mode === 'standalone') {
+      for (let environment of environments) {
+        if (!environment.multiRealmSupport) disabled.add(environment._id)
+      }
+    }
+    return [...disabled]
+  }
+
+  /**
+   * The default action effects exposure options when exporting
+   * a mission with the `toJson` method.
+   */
+  public static get DEFAULT_ACTION_EFFECTS_EXPOSURE(): TActionEffectsExposure {
     return {
       expose: 'all',
     }
@@ -1411,6 +1438,12 @@ export type TMissionJsonOptions = {
    * @default { expose: 'all' }
    */
   rootEffectsExposure?: TRootEffectsExposure
+  /**
+   * Whether or not to expose the effects that are stored on
+   * actions, which run when an action is executed.
+   * @default { expose: 'all' }
+   */
+  actionEffectsExposure?: TActionEffectsExposure
 }
 
 /**
@@ -1469,6 +1502,15 @@ export type TFileExposure =
  * No root-level effects are exposed.
  */
 export type TRootEffectsExposure = { expose: 'all' } | { expose: 'none' }
+
+/**
+ * Options for `TMissionJsonOptions.actionEffectsExposure`.
+ * @option 'all'
+ * All effects on actions are exposed.
+ * @option 'none'
+ * No effects on actions are exposed, leaving each action's list empty.
+ */
+export type TActionEffectsExposure = { expose: 'all' } | { expose: 'none' }
 
 /**
  * Base interface for additional options used in lookup

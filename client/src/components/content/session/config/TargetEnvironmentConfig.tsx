@@ -1,6 +1,6 @@
-import type { ClientMission } from '@client/missions/ClientMission'
 import type { ClientTargetEnvironment } from '@client/target-environments/ClientTargetEnvironment'
 import { compute } from '@client/toolbox'
+import { Mission } from '@shared/missions/Mission'
 import type { TSessionConfig } from '@shared/sessions/MissionSession'
 import type { TTargetEnvConfig } from '@shared/target-environments/types'
 import { ClassList } from '@shared/toolbox/html/ClassList'
@@ -17,7 +17,7 @@ import { useConfigUpdater } from './useConfigUpdater'
  */
 export default function TargetEnvironmentConfig({
   sessionConfig,
-  mission,
+  targetEnvironments,
   disabled = false,
   approveChange = () => true,
   onChange = () => {},
@@ -31,7 +31,7 @@ export default function TargetEnvironmentConfig({
     // Default each target environment to its first configuration
     // when the session config does not already specify one.
     const configs = { ...sessionConfig.targetEnvConfigs }
-    for (const targetEnv of mission.targetEnvironments) {
+    for (const targetEnv of targetEnvironments) {
       if (targetEnv.configs.length && !configs[targetEnv._id]) {
         configs[targetEnv._id] = targetEnv.configs[0]._id
       }
@@ -64,10 +64,10 @@ export default function TargetEnvironmentConfig({
    * config broadcast to stay correct.
    */
   const disabledTargetEnvs = compute<string[]>(() =>
-    mission.getDisabledEnvironments({
-      ...sessionConfig,
-      explicitlyDisabledEnvironments: explicitlyDisabled,
-    }),
+    Mission.determineDisabledEnvironments(
+      { ...sessionConfig, explicitlyDisabledEnvironments: explicitlyDisabled },
+      targetEnvironments,
+    ),
   )
 
   /**
@@ -84,7 +84,7 @@ export default function TargetEnvironmentConfig({
    * the state disabling all produces.
    */
   const allTargetEnvsExplicitlyDisabled = compute<boolean>(
-    () => explicitlyDisabled.length === mission.targetEnvironments.length,
+    () => explicitlyDisabled.length === targetEnvironments.length,
   )
 
   /* -- FUNCTIONS -- */
@@ -116,7 +116,7 @@ export default function TargetEnvironmentConfig({
    */
   const disableAll = () => {
     if (allTargetEnvsExplicitlyDisabled) return
-    let allIds = mission.targetEnvironments.map((env) => env._id)
+    let allIds = targetEnvironments.map((env) => env._id)
     setExplicitlyDisabled(allIds)
   }
 
@@ -158,7 +158,7 @@ export default function TargetEnvironmentConfig({
    * JSX for target environment configuration settings.
    */
   const envConfigContent = compute<TReactElement[]>(() => {
-    return mission.targetEnvironments.map((targetEnv) => {
+    return targetEnvironments.map((targetEnv) => {
       // Determine if the target environment is enabled.
       let targetEnvironmentDisabled = disabledTargetEnvs.includes(targetEnv._id)
       // Determine the selected configuration for the target environment.
@@ -209,7 +209,7 @@ export default function TargetEnvironmentConfig({
 
   /* -- RENDER -- */
 
-  if (mission.targetEnvironments.length === 0) {
+  if (targetEnvironments.length === 0) {
     return (
       <div className='TargetEnvironmentConfig'>
         <div className='EnvTitle'>Target Environments</div>
@@ -262,9 +262,9 @@ type TTargetEnvConfig_P = {
    */
   sessionConfig: TSessionConfig
   /**
-   * The mission to which the target environments belong.
+   * The target environments the mission relies on.
    */
-  mission: ClientMission
+  targetEnvironments: ClientTargetEnvironment[]
   /**
    * Whether all configuration options are locked from editing.
    * @default false
