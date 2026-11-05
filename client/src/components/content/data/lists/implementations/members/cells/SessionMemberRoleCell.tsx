@@ -111,6 +111,7 @@ export default function SessionMemberRoleCell({
         }}
         emptyText='Assign role'
         disabled={roleLock}
+        floatingOptions
       />
     )
   }
