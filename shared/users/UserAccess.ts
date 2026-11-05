@@ -52,7 +52,6 @@ export class UserAccess implements TUserAccess {
       [
         UserPermission.AVAILABLE_PERMISSIONS.sessions_join_participant,
         UserPermission.AVAILABLE_PERMISSIONS.sessions_read,
-        UserPermission.AVAILABLE_PERMISSIONS.environments_read,
       ],
     ),
     instructor: new UserAccess(

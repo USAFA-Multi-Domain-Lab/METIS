@@ -231,7 +231,7 @@ export default function (props: {}): TReactElement | null {
   // This is called to handle logins.
   useEffect(() => {
     async function effect(): Promise<void> {
-      if (login !== null) {
+      if (login?.user.isAuthorized('environments_read')) {
         try {
           // Load target environments.
           await ClientTargetEnvironment.$populateRegistry()

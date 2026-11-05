@@ -102,6 +102,7 @@ export class ClientTargetEnvironment extends TargetEnvironment<TMetisClientCompo
         )
         // Create new target environments from the data.
         data.map((datum) => ClientTargetEnvironment.fromJson(datum).register())
+        resolve()
       } catch (error: any) {
         console.error('Failed to load target environments.')
         console.error(error)
