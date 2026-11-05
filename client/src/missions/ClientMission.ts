@@ -1395,10 +1395,11 @@ export class ClientMission
       files: [],
       prototypes: [],
       structure: {},
+      effects: [],
     }
     // Forward data to fromExistingJson method,
     // passing empty arrays for forces, files,
-    // and prototypes.
+    // prototypes, and effects.
     return ClientMission.fromExistingJson(existingJson, options)
   }
 
