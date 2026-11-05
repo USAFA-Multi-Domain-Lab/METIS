@@ -1,5 +1,14 @@
 # changelog
 
+# version-2.5.5 | 11-4-2026
+
+- Large missions now perform much better, with faster loading, quicker responses on the mission map, and smoother zooming and panning.
+- The size limit for saving a mission has been increased to 15 MB, and saving large missions is now faster.
+- The home page and sessions now load less data, shortening load times for everyone in a session.
+- Private outputs now stay private after a member refreshes or joins a session.
+- The session member list now shows each member's username, and sorts by username by default.
+- Various bug fixes and design improvements throughout the application.
+
 # version-2.5.4 | 11-2-2026
 
 - Tooltips no longer appear as an empty bubble before their text loads, and no longer get stuck on screen after the mouse moves away.
