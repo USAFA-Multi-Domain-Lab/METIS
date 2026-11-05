@@ -72,7 +72,7 @@ describe('UserPermission.hasPermissions', () => {
 
     let allowed = UserPermission.hasPermissions(permissions, [
       'sessions_read',
-      'environments_read',
+      'sessions_join_participant',
     ])
 
     expect(allowed).toBe(true)

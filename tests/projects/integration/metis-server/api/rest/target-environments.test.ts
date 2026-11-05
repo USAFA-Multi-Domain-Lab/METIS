@@ -54,15 +54,14 @@ describe('/api/v1/target-environments', () => {
     expect(response.status).toBe(401)
   })
 
-  test('Student can list target environments', async () => {
+  test('Student cannot list target environments', async () => {
     let { client } = await createTestContext()
     await createTestUser({ username, password, accessId: 'student' })
     await loginUser(client, { username, password })
 
     let response = await client.get('/api/v1/target-environments/')
 
-    expect(response.status).toBe(200)
-    expect(Array.isArray(response.data)).toBe(true)
+    expect(response.status).toBe(403)
   })
 
   test('Admin can list target environments', async () => {
