@@ -55,6 +55,8 @@ export default function SessionMemberList({
    */
   const getColumnLabel = (column: keyof ClientSessionMember): string => {
     switch (column) {
+      case 'username':
+        return 'Username'
       case 'role':
         return 'Role'
       case 'assignedForce':
@@ -302,7 +304,12 @@ export default function SessionMemberList({
       <List<ClientSessionMember>
         name={'Members'}
         items={members}
-        columns={['role', 'assignedForce', 'status']}
+        columns={['username', 'role', 'assignedForce', 'status']}
+        initialSorting={{
+          method: 'column-based',
+          column: 'username',
+          direction: 'ascending',
+        }}
         searchBlacklist={['role', 'assignedForce']}
         getColumnWidth={getColumnWidth}
         getColumnLabel={getColumnLabel}
