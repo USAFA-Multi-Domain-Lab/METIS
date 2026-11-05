@@ -101,6 +101,12 @@ const findByIdAndModify = (
 
       // Extract the updated properties.
       let { _id: missionId, ...rest } = updates ?? {}
+      // Mongoose searches an existing array for every entry set over it, which
+      // takes seconds on a large mission. An empty array leaves nothing to
+      // search, and these arrays are being replaced in full either way.
+      for (let [property, value] of Object.entries(rest)) {
+        if (Array.isArray(value)) missionDoc.set(property, [])
+      }
       // Update every property besides the _id.
       missionDoc.set(rest)
       missionDoc = await missionDoc.save()
