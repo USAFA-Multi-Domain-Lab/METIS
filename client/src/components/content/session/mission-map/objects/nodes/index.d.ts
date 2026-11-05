@@ -8,7 +8,6 @@ import type {
   TNodeExecutionState,
 } from '@shared/missions/nodes/MissionNode'
 import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
-import type { Vector1D } from '@shared/toolbox/numbers/vectors/Vector1D'
 import type { Vector2D } from '@shared/toolbox/numbers/vectors/Vector2D'
 import MissionMap from '../../MissionMap'
 
@@ -159,9 +158,9 @@ export type TMapNode_P<TNode extends TMapCompatibleNode> = {
    */
   node: TNode
   /**
-   * The current camera zoom.
+   * Whether the camera is close enough to show the node's name and icon.
    */
-  cameraZoom: Vector1D
+  contentVisible: boolean
   /**
    * Handler for when the node is selected.
    * @default () => {}

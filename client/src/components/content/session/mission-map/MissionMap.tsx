@@ -19,10 +19,15 @@ import {
   useButtonSvgLayout,
   useButtonSvgs,
 } from '../../user-controls/buttons/panels/hooks'
+import {
+  calcSceneMouseCoords,
+  calculateNodeGridOffset,
+  calculateNodeHeight,
+} from './map-math'
 import './MissionMap.scss'
 import Scene from './Scene'
 import Line from './objects/Line'
-import NodeGrid, { calculateNodeGridOffset } from './objects/NodeGrid'
+import NodeGrid from './objects/NodeGrid'
 import PrototypeSlot from './objects/PrototypeSlot'
 import type { TMapCompatibleNode } from './objects/nodes'
 import { MapNode } from './objects/nodes'
@@ -31,6 +36,7 @@ import PanController from './ui/PanController'
 import MapOverlay from './ui/overlay/MapOverlay'
 import MapPreferences from './ui/overlay/modals/MapPreferences'
 import type { TTabBarTab } from './ui/tabs/TabBar'
+import { useMapCulling } from './useMapCulling'
 
 /* -- CONSTANTS -- */
 
@@ -207,6 +213,7 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
         if (elements.nodeGrid.current) {
           elements.nodeGrid.current.style.backgroundPositionX = `${calculateNodeGridOffset(cameraPosition)}em`
         }
+        updateRenderedBounds()
       },
     }),
   )
@@ -225,9 +232,13 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
         if (elements.nodeGrid.current) {
           elements.nodeGrid.current.style.fontSize = `${1 / cameraZoom.x}px`
         }
+        updateRenderedBounds()
       },
     }),
   )
+
+  const { mapSize, updateRenderedBounds, isNodeRendered, isLineRendered } =
+    useMapCulling(elements.root, cameraPosition, cameraZoom)
 
   const state: TMissionMap_S = {
     selectedForce: defaultedProps.selectedForce,
@@ -266,7 +277,7 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
   const [nodeCenteringTarget, setNodeCenteringTarget] =
     useState<TMapCompatibleNode | null>(null)
 
-  const [, setNodeContentVisible] = state.nodeContentVisible
+  const [nodeContentVisible, setNodeContentVisible] = state.nodeContentVisible
 
   /* -- COMPUTED -- */
 
@@ -458,35 +469,22 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
   }
 
   /**
-   * @see {@link TMissionMap_C.centerOnMap}
+   * Centers the camera on the position of the given node.
+   * @param node The node in question.
+   * @note This works from the node's position, since a node
+   * outside of the rendered bounds has no element to measure.
    */
   const centerOnMap = (node: TMapCompatibleNode): void => {
-    if (!elements.root.current) {
-      console.warn('Could not access elements on MissionMap.')
-      return
-    }
-
-    let nodeElement: HTMLDivElement | null =
-      elements.root.current.querySelector(`.MapNode_${node._id}`)
-
-    if (!nodeElement) {
-      console.warn(`Could not find element for node ${node._id}.`)
-      return
-    }
-
-    let rootBoundingBox = elements.root.current.getBoundingClientRect()
-    let nodeBoundingBox = nodeElement.getBoundingClientRect()
-    let rootDomMidpoint = new Vector2D(
-      rootBoundingBox.x + rootBoundingBox.width / 2,
-      rootBoundingBox.y + rootBoundingBox.height / 2,
-    )
-    let nodeDomMidpoint = new Vector2D(
-      nodeBoundingBox.x + nodeBoundingBox.width / 2,
-      nodeBoundingBox.y + nodeBoundingBox.height / 2,
-    )
-    let domDistance = Vector2D.difference(nodeDomMidpoint, rootDomMidpoint)
-    let distance = domDistance.scaleBy(cameraZoom)
-    let destination = cameraPosition.clone().translateBy(distance)
+    let { width, height } = mapSize.current
+    // A node's position is the center of its top edge.
+    let nodeHeight =
+      calculateNodeHeight(node) + ClientMissionNode.VERTICAL_PADDING * 2
+    let destination = node.position
+      .clone()
+      .translate(
+        (width * cameraZoom.x) / -2,
+        (nodeHeight - height * cameraZoom.x) / 2,
+      )
 
     panSmoothly(destination)
   }
@@ -603,13 +601,18 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
     let forceOfNodeIsNextForce: boolean =
       forceOfNode?._id === nextSelectedForce?._id
 
-    // If the selected force in on the verge of
+    // If the selected force is on the verge of
     // being updated, and the next-selected force
     // is the force hosting the node, then cache
     // the node so that the node-centering can be
     // processed after the selection is handled.
     if (selectedForceWillChange && forceOfNodeIsNextForce) {
       setNodeCenteringTarget(node)
+    }
+    // Otherwise, center it now, as long as
+    // the node is a part of what is displayed.
+    else if (forceOfNode?._id === selectedForce?._id) {
+      centerOnMap(node)
     }
   })
 
@@ -756,7 +759,6 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
    */
   const computed: TMissionMap_C = {
     zoomSmoothly,
-    centerOnMap,
   }
 
   /* -- RENDER -- */
@@ -766,15 +768,13 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
    * @memoized
    */
   const linesJsx = useMemo((): TReactElement[] => {
-    if (selectedForce === null) {
-      return mission.relationshipLines.map((lineData) => {
+    let lines = (selectedForce ?? mission).relationshipLines
+
+    return lines
+      .filter(isLineRendered)
+      .map((lineData) => {
         return <Line key={lineData.key} {...removeKey(lineData)} />
       })
-    } else {
-      return selectedForce.relationshipLines.map((lineData) => {
-        return <Line key={lineData.key} {...removeKey(lineData)} />
-      })
-    }
   }, [
     // ! Recomputes when:
     // The mission changes.
@@ -784,6 +784,8 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
     structureChangeKey,
     // The selected force changes.
     selectedForce,
+    // The rendered bounds move.
+    isLineRendered,
   ])
 
   /**
@@ -802,17 +804,19 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
       onSelect: ((node: TNode) => void) | null,
       applyTooltip: ((node: TNode) => string) | null,
     ): TReactElement[] => {
-      return nodes.map((node) => {
-        return (
-          <MapNode
-            key={node._id}
-            node={node}
-            cameraZoom={cameraZoom}
-            onSelect={onSelect}
-            applyTooltip={applyTooltip}
-          />
-        )
-      })
+      return nodes
+        .filter(isNodeRendered)
+        .map((node) => {
+          return (
+            <MapNode
+              key={node._id}
+              node={node}
+              contentVisible={nodeContentVisible}
+              onSelect={onSelect}
+              applyTooltip={applyTooltip}
+            />
+          )
+        })
     }
 
     // If a force is selected, render the nodes
@@ -831,9 +835,11 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
     structureChangeKey,
     // Whether the camera zoom crosses the threshold where
     // the node names should be displayed/hidden.
-    cameraZoom.x > MAX_NODE_CONTENT_ZOOM,
+    nodeContentVisible,
     // The selected force changes.
     selectedForce,
+    // The rendered bounds move.
+    isNodeRendered,
   ])
 
   /**
@@ -896,43 +902,6 @@ export default function MissionMap(props: TMissionMap_P): TReactElement | null {
       </div>
     </LocalContextProvider>
   )
-}
-
-/* -- FUNCTIONS -- */
-
-/**
- * @param mapBounds The bounds of the map element in the DOM.
- * @param clientMouseCoords The clientX and clientY of the window.
- * @param cameraPosition The position of the camera on the map.
- * @param cameraZoom The zoom level of the camera on the map.
- * @returns The coordinates on the map where the cursor currently is, accounts for the camera position and zooming.
- */
-function calcSceneMouseCoords(
-  mapBounds: DOMRect,
-  clientMouseCoords: Vector2D,
-  cameraPosition: Vector2D,
-  cameraZoom: Vector1D,
-): Vector2D {
-  // Calculate the coordinates of the mouse relative to the
-  // map bounds, rather than the client window.
-  let mapMouseCoords: Vector2D = clientMouseCoords
-    .clone()
-    .translate(-mapBounds.x, -mapBounds.y)
-
-  // Calculate the coordinates of the mouse relative to the
-  // scene, with the camera position and zoom taken into account.
-  let sceneMouseCoords: Vector2D = mapMouseCoords
-    .clone()
-    // Scale the mouse coordinates by the inverse of the camera zoom
-    // to convert the mouse coordinates from screen pixel units to scene
-    // units.
-    .scaleBy(cameraZoom)
-    // Translate the mouse coordinates by the camera position to
-    // determine the true position of the mouse in the scene.
-    .translateBy(cameraPosition)
-
-  // Return the result.
-  return sceneMouseCoords
 }
 
 /* -- TYPES -- */
@@ -1036,11 +1005,6 @@ export type TMissionMap_C = {
    * @param destination The new zoom level.
    */
   zoomSmoothly: (destination: Vector1D) => void
-  /**
-   * Centers the camera on the position of the given node.
-   * @param node The node in question.
-   */
-  centerOnMap: (node: TMapCompatibleNode) => void
 }
 
 /**

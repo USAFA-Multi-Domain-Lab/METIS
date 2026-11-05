@@ -14,7 +14,7 @@ import type { NodeAlert } from '@shared/missions/nodes/NodeAlert'
 import { ClassList } from '@shared/toolbox/html/ClassList'
 import { useRef, useState } from 'react'
 import type { TMapCompatibleNode, TMapNode_P, TNodeButton } from '.'
-import { useMapContext } from '../../MissionMap'
+import { calculateNodeHeight } from '../../map-math'
 import './MapNode.scss'
 
 /* -- FUNCTIONS -- */
@@ -36,14 +36,12 @@ function calculateProgressOffset(execution: ClientActionExecution): number {
  */
 export default function MapNode<TNode extends TMapCompatibleNode>({
   node,
+  contentVisible,
   onSelect,
   applyTooltip = () => '',
 }: TMapNode_P<TNode>): TReactElement | null {
   /* -- STATE -- */
 
-  const localContext = useMapContext()
-  const { centerOnMap, state } = localContext
-  const [nodeContentVisible] = state.nodeContentVisible
   const [name, setName] = useState<string>(node.name)
   const [color, setColor] = useState<string>(node.color)
   const [excluded, setExcluded] = useState<boolean>(node.exclude)
@@ -159,12 +157,6 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
   // icon changes.
   useEventListener(node, 'new-icon', () => setIcon(node.icon))
 
-  // Center the node on the map when an
-  // event to do so is emitted.
-  useEventListener(node, 'center-on-map', () => {
-    centerOnMap(node)
-  })
-
   /* -- COMPUTED -- */
 
   const { mission } = node
@@ -189,17 +181,10 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
    * @memoized
    */
   const rootStyle: React.CSSProperties = compute(() => {
-    let neededHeight: number =
-      ClientMissionNode.LINE_HEIGHT *
-      ClientMissionNode.FONT_SIZE *
-      node.nameLineCount
     let x: number = node.position.x
     let y: number = node.position.y
     let width: number = ClientMissionNode.WIDTH
-    let height: number = Math.max(
-      ClientMissionNode.DEFAULT_NAME_NEEDED_HEIGHT,
-      neededHeight,
-    )
+    let height: number = calculateNodeHeight(node)
     let verticalPadding: number = ClientMissionNode.VERTICAL_PADDING
     // Undefined will default to the background
     // color defined already in the CSS.
@@ -214,14 +199,8 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
 
     // If the camera is zoomed out too far,
     // make the background color the node's color.
-    if (!nodeContentVisible && !blocked && !cutOff) {
+    if (!contentVisible && !blocked && !cutOff) {
       backgroundColor = color
-    }
-
-    // If there are buttons to display, add height
-    // for them.
-    if (buttons.length > 0) {
-      height += ClientMissionNode.BUTTONS_HEIGHT
     }
 
     return {
@@ -350,7 +329,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
 
     // Add the hidden class if the camera is
     // zoomed out too far.
-    if (!nodeContentVisible) {
+    if (!contentVisible) {
       classList.push('Hidden')
     }
 
@@ -365,7 +344,7 @@ export default function MapNode<TNode extends TMapCompatibleNode>({
 
     // Add the hidden class if the camera is
     // zoomed out too far.
-    if (!nodeContentVisible) {
+    if (!contentVisible) {
       classList.push('Hidden')
     }
 
